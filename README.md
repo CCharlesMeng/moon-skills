@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 前端 AI Workflow Skills
 
 这是一套面向前端仓库的轻量 AI workflow skills。
@@ -164,3 +165,12 @@ GitHub `context-check` 对接说明见：
 如果一个 skill 需要你写很长的提示词，通常说明这个 skill 还不够好。
 
 日常目标应该始终是：**一句话就能用。**
+=======
+# moon-skills
+
+Public skill repository for reusable agent skills.
+
+## Included Skills
+
+- `openclaw-feishu-multi-agent`: Build and troubleshoot OpenClaw multi-agent workflows on Feishu.
+>>>>>>> 99bdbf44e49fb1cba4dd410e091d5fde4feb9f89
