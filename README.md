@@ -1,0 +1,166 @@
+# 前端 AI Workflow Skills
+
+这是一套面向前端仓库的轻量 AI workflow skills。
+
+目标不是让 AI 一次性“理解一切”，而是让它先建立**足够可信、足够可用**的上下文，然后在开发、调试和治理过程中持续演进。
+
+核心原则：
+
+- 代码、测试、配置、现有 spec 文档是真源
+- `.project-context` 是索引层，不是第二份源码
+- 共享参考模式优先于模块细节
+- 上下文先做到“可以开始”，再逐步补全
+
+## 核心 Skill
+
+### `initialize`
+
+首次为仓库建立 `.project-context`。
+
+负责：
+
+- 建 `profile.yaml`
+- 建 `references.yaml`
+- 建 `features/index.yaml`
+- 建 `PROFILE.md`
+- 可选安装 GitHub `context-check`
+
+不负责：
+
+- 完整架构文档
+- 完整 feature tree
+- 持续维护
+
+一句话使用方式：
+
+```markdown
+请用 initialize 为 <模块> 的 <功能> 建立第一版可开发上下文。
+```
+
+### `sync-context`
+
+在已有 `.project-context` 的前提下，按变更增量同步上下文资产。
+
+负责：
+
+- 更新 `profile.yaml`
+- 更新 `references.yaml`
+- 更新 `features/index.yaml`
+- 维护 freshness / confidence / uncertainty
+- 可选安装或调整 GitHub `context-check`
+
+不负责：
+
+- 首次初始化
+- 事故调试
+
+一句话使用方式：
+
+```markdown
+请用 sync-context 为 <模块> 的 <功能> 做开发前预热。
+```
+
+GitHub `context-check` 对接说明见：
+
+- [skills/sync-context/github-context-check.md](skills/sync-context/github-context-check.md)
+
+### `immune-debug`
+
+用于处理 bug、回归、测试失败和异常行为，并在修复后给出免疫决策。
+
+负责：
+
+- 调试闭环
+- 结构化复盘
+- 免疫决策
+- 必要时回推 `initialize` / `sync-context`
+
+不负责：
+
+- 普通功能开发
+- 日常上下文维护
+
+一句话使用方式：
+
+```markdown
+请用 immune-debug 处理这个 <问题>，并给出免疫决策。
+```
+
+### `audit`
+
+用于周期性审查 `.project-context` 资产是否失真、过期、噪音过大或规则失效。
+
+负责审查：
+
+- `profile.yaml`
+- `references.yaml`
+- `features/index.yaml`
+- `PROFILE.md`
+- `immune-registry.yaml`
+- `immune-candidates.yaml`
+- `context-check.yml`
+- `impact-rules.yaml`
+
+一句话使用方式：
+
+```markdown
+请用 audit 审查当前 `.project-context` 资产，重点看 <范围> 是否失真。
+```
+
+详细指南见：
+
+- [skills/audit/asset-review-guide.md](skills/audit/asset-review-guide.md)
+
+## 最短上手路径
+
+### 1. 首次接入 AI 的仓库
+
+```markdown
+请用 initialize 为 <模块> 的 <功能> 建立第一版可开发上下文。
+```
+
+### 2. 已有 `.project-context`，准备做功能
+
+```markdown
+请用 sync-context 为 <模块> 的 <功能> 做开发前预热。
+```
+
+### 3. GitHub `context-check` 失败
+
+```markdown
+请用 sync-context 修复这次 PR 的 context-check，只更新必要的 `.project-context` 资产。
+```
+
+### 4. 出现 bug / 回归 / 测试失败
+
+```markdown
+请用 immune-debug 处理这个 <问题>，并给出免疫决策。
+```
+
+### 5. 做周期性治理
+
+```markdown
+请用 audit 审查当前 `.project-context` 资产，重点看 references、features、immune assets 和 context-check 是否失真。
+```
+
+## 仓库结构
+
+当前核心目录：
+
+- `skills/initialize/`
+- `skills/sync-context/`
+- `skills/immune-debug/`
+- `skills/audit/`
+
+## 说明
+
+这套技能当前刻意保持克制：
+
+- 不额外拆出 `implement`
+- 不要求完整 feature tree
+- 不默认生成全量架构文档
+- 不默认用 bot PR 偷偷改主分支
+
+如果一个 skill 需要你写很长的提示词，通常说明这个 skill 还不够好。
+
+日常目标应该始终是：**一句话就能用。**

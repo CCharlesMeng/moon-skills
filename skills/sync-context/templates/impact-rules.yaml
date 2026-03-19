@@ -1,0 +1,20 @@
+feature:
+  - "apps/*/src/pages/**"
+  - "apps/*/src/features/**"
+  - "docs/specs/**"
+  - "**/__tests__/**"
+
+reference:
+  - "packages/shared-ui/**"
+  - "packages/shared-hooks/**"
+  - "packages/api-client/**"
+  - "packages/*/src/components/**"
+  - "packages/*/src/hooks/**"
+
+structure:
+  - "pnpm-workspace.yaml"
+  - "package.json"
+  - "apps/*/src/routes/**"
+  - "apps/*/src/app/**"
+  - "packages/**/package.json"
+  - "apps/**/package.json"

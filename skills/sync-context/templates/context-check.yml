@@ -1,0 +1,52 @@
+name: context-check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - ".project-context/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: context-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  context-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Detect impact
+        id: impact
+        run: |
+          python ".project-context/scripts/manage_context.py" detect-impact \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --rules ".project-context/impact-rules.yaml" \
+            --format github-output >> "$GITHUB_OUTPUT"
+
+      - name: No context impact
+        if: steps.impact.outputs.impact == 'none'
+        run: |
+          echo "No context impact detected." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check context sync
+        if: steps.impact.outputs.impact != 'none'
+        run: |
+          python ".project-context/scripts/manage_context.py" sync \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --impact "${{ steps.impact.outputs.impact }}" \
+            --check

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "openclaw-feishu-multi-agent": {
+      "source": "git@github.com:CCharlesMeng/moon-skills.git",
+      "sourceType": "git",
+      "computedHash": "d1ee70d6a7654a424a30fd29f70cc41899ad7f86e48f5678fd80ff377e65a72a"
+    }
+  }
+}
