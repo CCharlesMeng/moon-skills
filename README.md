@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 前端 AI Workflow Skills
 
 这是一套面向前端仓库的轻量 AI workflow skills。
@@ -89,9 +88,9 @@ GitHub `context-check` 对接说明见：
 
 ### `audit`
 
-用于周期性审查 `.project-context` 资产是否失真、过期、噪音过大或规则失效。
+用于周期性审查 `.project-context` 资产是否失真、过期、噪音过大或规则失效，并在交付后承担默认的 reflect 入口。
 
-负责审查：
+负责审查与最小治理：
 
 - `profile.yaml`
 - `references.yaml`
@@ -101,6 +100,8 @@ GitHub `context-check` 对接说明见：
 - `immune-candidates.yaml`
 - `context-check.yml`
 - `impact-rules.yaml`
+- 交付后 reflect 的判断与路由
+- 必要时对 immune 资产做最小有效治理
 
 一句话使用方式：
 
@@ -111,6 +112,28 @@ GitHub `context-check` 对接说明见：
 详细指南见：
 
 - [skills/audit/asset-review-guide.md](skills/audit/asset-review-guide.md)
+
+### `reflect`（closing protocol）
+
+这不是一个独立 skill，而是当前技能流里的收尾协议。
+
+第一版默认通过以下路由实现：
+
+- `audit` 负责做交付后的 post-ship reflect
+- `sync-context` 负责把值得保留的 context 结论写回 `.project-context`
+- `immune-debug` 只负责事故型 reflect 和 immune 决策
+
+第一版不负责：
+
+- 新建 `skills/reflect/`
+- 引入 `reflect-log.yaml` 或独立 retro schema
+- 做跨周趋势报表
+
+一句话使用方式：
+
+```markdown
+请先用 audit 对这轮交付做 reflect，重点看可复用模式、context 漂移和是否需要沉淀 immune asset；如果输出要求写回 context，再用 sync-context 完成落盘。
+```
 
 ## 最短上手路径
 
@@ -138,7 +161,13 @@ GitHub `context-check` 对接说明见：
 请用 immune-debug 处理这个 <问题>，并给出免疫决策。
 ```
 
-### 5. 做周期性治理
+### 5. 完成一轮交付后做 reflect
+
+```markdown
+请先用 audit 对这轮交付做 reflect，重点看可复用模式、context 漂移和是否需要沉淀 immune asset；如果输出要求写回 context，再用 sync-context 完成落盘。
+```
+
+### 6. 做周期性治理
 
 ```markdown
 请用 audit 审查当前 `.project-context` 资产，重点看 references、features、immune assets 和 context-check 是否失真。
@@ -152,12 +181,16 @@ GitHub `context-check` 对接说明见：
 - `skills/sync-context/`
 - `skills/immune-debug/`
 - `skills/audit/`
+- `skills/openclaw-feishu-multi-agent/`
+
+当前不单独建立 `skills/reflect/` 目录；第一版 reflect 通过 `audit`、`sync-context`、`immune-debug` 的路由协作实现。
 
 ## 说明
 
 这套技能当前刻意保持克制：
 
 - 不额外拆出 `implement`
+- `reflect` 先不拆成独立 skill
 - 不要求完整 feature tree
 - 不默认生成全量架构文档
 - 不默认用 bot PR 偷偷改主分支
@@ -165,12 +198,5 @@ GitHub `context-check` 对接说明见：
 如果一个 skill 需要你写很长的提示词，通常说明这个 skill 还不够好。
 
 日常目标应该始终是：**一句话就能用。**
-=======
-# moon-skills
 
-Public skill repository for reusable agent skills.
-
-## Included Skills
-
-- `openclaw-feishu-multi-agent`: Build and troubleshoot OpenClaw multi-agent workflows on Feishu.
->>>>>>> 99bdbf44e49fb1cba4dd410e091d5fde4feb9f89
+这个仓库里也可以包含独立的集成类 skill，例如 `openclaw-feishu-multi-agent`。

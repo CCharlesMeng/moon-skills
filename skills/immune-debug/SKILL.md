@@ -9,6 +9,8 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 
 这个 skill 用于在调试结束后补上闭环：一旦问题已经被调查、修复并验证，你必须继续判断这次事故是否值得沉淀为可复用工程防护资产。
 
+它处理的是 incident reflect，而不是一轮交付结束后的 sprint-level reflect。
+
 这是一个刚性流程型 skill。
 
 **必需基础 skill：** 使用 `superpowers:systematic-debugging` 负责根因调查、假设验证、修复实施和修复验证。
@@ -42,6 +44,7 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 - 与事故无关的常规重构
 - 纯文档工作
 - 没有 bug、失败或回归前提的试探性清理
+- 没有事故，只是想回顾一轮交付
 
 ## 工作流
 
@@ -103,6 +106,12 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 4. 广域、高风险或不确定防护必须先进候选区。
 
 参考 [immune-decision-matrix.md](immune-decision-matrix.md)。
+
+## 与交付后 reflect 的边界
+
+- 本 skill 的结构化复盘属于 incident reflect：围绕一次具体故障、修复和免疫决策收束
+- 如果一次交付里出现了多个事故、多模块联动修复，或结论已经超出单次事故范围，应在交付结束后再用 `audit` 做一次 sprint-level reflect
+- `immune-debug` 负责决定是否沉淀长期防护；`audit` 负责总结整轮交付的 reusable learnings、context drift 和 next sprint pressure
 
 ## 降级模式
 
@@ -180,6 +189,8 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 - 资产写入: 正式区 | 候选区 | 无
 - 人工复核: 是 | 否
 ```
+
+如果这次事故只是某轮交付的一部分，且结论需要跨模块或跨问题汇总，完成本 skill 后应额外运行一次 `audit` 做交付后 reflect。
 
 完整黄金输出见 [examples.md](examples.md)。
 维护者验证见 [validation-scenarios.md](validation-scenarios.md)。
