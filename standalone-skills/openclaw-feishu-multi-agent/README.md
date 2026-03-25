@@ -2,6 +2,20 @@
 
 A reusable skill for building and troubleshooting OpenClaw multi-agent collaboration on Feishu.
 
+## Install
+
+Recommended install path from the repository root:
+
+```bash
+./setup --host auto --bundle openclaw-feishu-multi-agent --write
+```
+
+If this repository has been cloned into another project's `.agents/skills/moon-skills`:
+
+```bash
+cd .agents/skills/moon-skills && ./setup --host auto --bundle openclaw-feishu-multi-agent --write
+```
+
 ## What It Solves
 
 This skill helps users set up a coordinator agent plus one or more specialist agents in a shared Feishu group, while working around the fact that Feishu bots cannot directly trigger other bots.

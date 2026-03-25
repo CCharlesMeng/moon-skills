@@ -6,5 +6,13 @@
 
 - `brainstorming/`
 - `systematic-debugging/`
+- `writing-plans/`
+- `subagent-driven-development/`
+- `executing-plans/`
+- `test-driven-development/`
+- `verification-before-completion/`
+- `using-git-worktrees/`
+- `requesting-code-review/`
+- `finishing-a-development-branch/`
 
-这些目录会被 `scripts/install_workflow_skills.py` 直接复制到目标 skill 目录中，保持原始目录名不变，以避免 sibling 文档和脚本引用失效。
+这些目录现在会通过仓库根的 `./setup --bundle workflow` 一起 materialize 到目标宿主的 skills 根目录中，保持原始目录名不变，以避免 sibling 文档和脚本引用失效。

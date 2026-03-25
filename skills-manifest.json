@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "packageName": "moon-skills",
+  "bundles": {
+    "workflow": {
+      "roots": [
+        "initialize",
+        "sync-context",
+        "immune-debug",
+        "audit",
+        "brainstorming"
+      ]
+    },
+    "openclaw-feishu-multi-agent": {
+      "roots": [
+        "openclaw-feishu-multi-agent"
+      ]
+    }
+  },
+  "skills": {
+    "initialize": {
+      "source": "skills/initialize",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "sync-context": {
+      "source": "skills/sync-context",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "immune-debug": {
+      "source": "skills/immune-debug",
+      "category": "workflow",
+      "dependencies": [
+        "systematic-debugging"
+      ]
+    },
+    "audit": {
+      "source": "skills/audit",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "brainstorming": {
+      "source": "vendor/superpowers/brainstorming",
+      "category": "vendored",
+      "dependencies": [
+        "writing-plans"
+      ]
+    },
+    "systematic-debugging": {
+      "source": "vendor/superpowers/systematic-debugging",
+      "category": "vendored",
+      "dependencies": [
+        "test-driven-development",
+        "verification-before-completion"
+      ]
+    },
+    "writing-plans": {
+      "source": "vendor/superpowers/writing-plans",
+      "category": "vendored",
+      "dependencies": [
+        "subagent-driven-development",
+        "executing-plans"
+      ]
+    },
+    "subagent-driven-development": {
+      "source": "vendor/superpowers/subagent-driven-development",
+      "category": "vendored",
+      "dependencies": [
+        "using-git-worktrees",
+        "requesting-code-review",
+        "finishing-a-development-branch",
+        "test-driven-development",
+        "executing-plans"
+      ]
+    },
+    "executing-plans": {
+      "source": "vendor/superpowers/executing-plans",
+      "category": "vendored",
+      "dependencies": [
+        "using-git-worktrees",
+        "finishing-a-development-branch"
+      ]
+    },
+    "test-driven-development": {
+      "source": "vendor/superpowers/test-driven-development",
+      "category": "vendored",
+      "dependencies": []
+    },
+    "verification-before-completion": {
+      "source": "vendor/superpowers/verification-before-completion",
+      "category": "vendored",
+      "dependencies": []
+    },
+    "using-git-worktrees": {
+      "source": "vendor/superpowers/using-git-worktrees",
+      "category": "vendored",
+      "dependencies": []
+    },
+    "requesting-code-review": {
+      "source": "vendor/superpowers/requesting-code-review",
+      "category": "vendored",
+      "dependencies": []
+    },
+    "finishing-a-development-branch": {
+      "source": "vendor/superpowers/finishing-a-development-branch",
+      "category": "vendored",
+      "dependencies": []
+    },
+    "openclaw-feishu-multi-agent": {
+      "source": "standalone-skills/openclaw-feishu-multi-agent",
+      "category": "standalone",
+      "dependencies": []
+    }
+  }
+}
