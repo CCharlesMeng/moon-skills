@@ -130,19 +130,25 @@ agent:{targetAgentId}:feishu:group:oc_xxx
 
 ## Utility Scripts
 
+下面命令里的 `<skill-root>` 指当前这套 skill 的目录，例如：
+
+- `~/.agents/skills/openclaw-feishu-multi-agent`
+- `~/.cursor/skills/openclaw-feishu-multi-agent`
+- 仓库内源目录 `standalone-skills/openclaw-feishu-multi-agent`
+
 ### 1. 统一入口
 
 优先使用统一入口，避免记多个脚本名：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/manage_feishu_multi_agent.py" --help
+python "<skill-root>/scripts/manage_feishu_multi_agent.py" --help
 ```
 
 如果想一把跑完“生成 -> 落地 -> 审计”：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/manage_feishu_multi_agent.py" bootstrap \
-  --roles ".cursor/skills/openclaw-feishu-multi-agent/roles.example.json" \
+python "<skill-root>/scripts/manage_feishu_multi_agent.py" bootstrap \
+  --roles "<skill-root>/roles.example.json" \
   --output-dir "/tmp/openclaw-feishu-artifacts" \
   --apply-identities
 ```
@@ -154,8 +160,8 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/manage_feishu_multi_a
 当用户还没配好多 agent，或希望把角色表转换成可落地文档时，运行：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/render_feishu_multi_agent.py" \
-  --roles ".cursor/skills/openclaw-feishu-multi-agent/roles.example.json" \
+python "<skill-root>/scripts/render_feishu_multi_agent.py" \
+  --roles "<skill-root>/roles.example.json" \
   --output-dir "/tmp/openclaw-feishu-artifacts"
 ```
 
@@ -179,7 +185,7 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/render_feishu_multi_a
 当用户已经有多 agent，想快速检查 `openclaw.json` 是否与角色表一致时，运行：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/audit_feishu_multi_agent.py" \
+python "<skill-root>/scripts/audit_feishu_multi_agent.py" \
   --roles "/path/to/roles.json" \
   --config "~/.openclaw/openclaw.json"
 ```
@@ -197,7 +203,7 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/audit_feishu_multi_ag
 当用户希望把角色表直接应用到自己的 OpenClaw 环境时，先 dry-run：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/apply_feishu_multi_agent.py" \
+python "<skill-root>/scripts/apply_feishu_multi_agent.py" \
   --roles "/path/to/roles.json" \
   --apply-identities
 ```
@@ -205,7 +211,7 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/apply_feishu_multi_ag
 确认无误后再写入：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/apply_feishu_multi_agent.py" \
+python "<skill-root>/scripts/apply_feishu_multi_agent.py" \
   --roles "/path/to/roles.json" \
   --apply-identities \
   --write --backup
@@ -227,7 +233,7 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/apply_feishu_multi_ag
 当某个 agent “像是收到了，但没回群”，优先检查并按需修复 session metadata：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/repair_feishu_group_sessions.py" \
+python "<skill-root>/scripts/repair_feishu_group_sessions.py" \
   --roles "/path/to/roles.json" \
   --group-id "oc_xxx"
 ```
@@ -235,7 +241,7 @@ python ".cursor/skills/openclaw-feishu-multi-agent/scripts/repair_feishu_group_s
 如需直接写回：
 
 ```bash
-python ".cursor/skills/openclaw-feishu-multi-agent/scripts/repair_feishu_group_sessions.py" \
+python "<skill-root>/scripts/repair_feishu_group_sessions.py" \
   --roles "/path/to/roles.json" \
   --group-id "oc_xxx" \
   --fix --backup
