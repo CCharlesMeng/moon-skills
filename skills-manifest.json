@@ -42,14 +42,20 @@
     },
     "brainstorming": {
       "source": "vendor/superpowers/brainstorming",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/brainstorming",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "brainstorming",
       "dependencies": [
         "writing-plans"
       ]
     },
     "systematic-debugging": {
       "source": "vendor/superpowers/systematic-debugging",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/systematic-debugging",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "systematic-debugging",
       "dependencies": [
         "test-driven-development",
         "verification-before-completion"
@@ -57,7 +63,10 @@
     },
     "writing-plans": {
       "source": "vendor/superpowers/writing-plans",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/writing-plans",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "writing-plans",
       "dependencies": [
         "subagent-driven-development",
         "executing-plans"
@@ -65,7 +74,10 @@
     },
     "subagent-driven-development": {
       "source": "vendor/superpowers/subagent-driven-development",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/subagent-driven-development",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "subagent-driven-development",
       "dependencies": [
         "using-git-worktrees",
         "requesting-code-review",
@@ -76,7 +88,10 @@
     },
     "executing-plans": {
       "source": "vendor/superpowers/executing-plans",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/executing-plans",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "executing-plans",
       "dependencies": [
         "using-git-worktrees",
         "finishing-a-development-branch"
@@ -84,27 +99,42 @@
     },
     "test-driven-development": {
       "source": "vendor/superpowers/test-driven-development",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/test-driven-development",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "test-driven-development",
       "dependencies": []
     },
     "verification-before-completion": {
       "source": "vendor/superpowers/verification-before-completion",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/verification-before-completion",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "verification-before-completion",
       "dependencies": []
     },
     "using-git-worktrees": {
       "source": "vendor/superpowers/using-git-worktrees",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/using-git-worktrees",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "using-git-worktrees",
       "dependencies": []
     },
     "requesting-code-review": {
       "source": "vendor/superpowers/requesting-code-review",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/requesting-code-review",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "requesting-code-review",
       "dependencies": []
     },
     "finishing-a-development-branch": {
       "source": "vendor/superpowers/finishing-a-development-branch",
-      "category": "vendored",
+      "vendorFallback": "vendor/superpowers/finishing-a-development-branch",
+      "category": "superpowers",
+      "officialPackage": "obra/superpowers",
+      "officialSkill": "finishing-a-development-branch",
       "dependencies": []
     },
     "openclaw-feishu-multi-agent": {

@@ -190,20 +190,26 @@ GitHub `context-check` 对接说明见：
 2. 再在这个 checkout 里运行 `./setup`
 3. `setup` 会把真正需要被宿主发现的 skill 平铺到同级 skills 根目录
 
+对于 workflow 里依赖的 `superpowers` skills，安装优先级现在是：
+
+1. 复用目标宿主或本机标准 skills 根里已存在的官方 superpowers 安装
+2. 若缺失，则尝试通过官方渠道安装：`npx skills add obra/superpowers`
+3. 只有官方安装不可用或失败时，才回退到本仓库的 `vendor/superpowers/`
+
 ### 1. repo-local 安装到另一个仓库
 
 如果你想让另一个仓库直接可用，推荐 clone 到该仓库的 `.agents/skills/` 或 `.cursor/skills/`：
 
 ```bash
 git clone https://github.com/CCharlesMeng/moon-skills.git .agents/skills/moon-skills
-cd .agents/skills/moon-skills && ./setup --host auto --bundle workflow
+cd .agents/skills/moon-skills && ./setup --host auto --bundle workflow --write
 ```
 
 如果目标宿主是 Cursor：
 
 ```bash
 git clone https://github.com/CCharlesMeng/moon-skills.git .cursor/skills/moon-skills
-cd .cursor/skills/moon-skills && ./setup --host auto --bundle workflow
+cd .cursor/skills/moon-skills && ./setup --host auto --bundle workflow --write
 ```
 
 ### 2. user-global 安装
@@ -212,14 +218,14 @@ cd .cursor/skills/moon-skills && ./setup --host auto --bundle workflow
 
 ```bash
 git clone https://github.com/CCharlesMeng/moon-skills.git ~/.agents/skills/moon-skills
-cd ~/.agents/skills/moon-skills && ./setup --host auto --bundle workflow
+cd ~/.agents/skills/moon-skills && ./setup --host auto --bundle workflow --write
 ```
 
 也可以先 clone 到任意目录，再显式指定宿主：
 
 ```bash
 git clone https://github.com/CCharlesMeng/moon-skills.git ~/moon-skills
-cd ~/moon-skills && ./setup --host agents --bundle workflow
+cd ~/moon-skills && ./setup --host agents --bundle workflow --write
 ```
 
 ### 3. 安装哪些 bundle
@@ -227,7 +233,7 @@ cd ~/moon-skills && ./setup --host agents --bundle workflow
 默认推荐安装 `workflow`：
 
 ```bash
-./setup --host auto --bundle workflow
+./setup --host auto --bundle workflow --write
 ```
 
 它会完整装入：
@@ -250,13 +256,13 @@ cd ~/moon-skills && ./setup --host agents --bundle workflow
 如果你只想安装独立的 OpenClaw skill：
 
 ```bash
-./setup --host auto --bundle openclaw-feishu-multi-agent
+./setup --host auto --bundle openclaw-feishu-multi-agent --write
 ```
 
 如果你想 workflow 和 standalone 一起装：
 
 ```bash
-./setup --host auto --all
+./setup --host auto --all --write
 ```
 
 ### 4. 常用参数
@@ -283,6 +289,18 @@ cd ~/moon-skills && ./setup --host agents --bundle workflow
 
 ```bash
 ./setup --host auto --bundle workflow --mode copy --write
+```
+
+如果你只想使用本机或目标目录里已经存在的官方 superpowers，不允许 fallback 到 vendor：
+
+```bash
+./setup --host auto --bundle workflow --write --no-vendor-fallback
+```
+
+如果你明确不想使用官方 superpowers 渠道，直接走 vendored fallback：
+
+```bash
+./setup --host auto --bundle workflow --write --no-official
 ```
 
 兼容旧入口：

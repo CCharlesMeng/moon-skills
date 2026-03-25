@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +58,7 @@ class SetupSkillsTests(unittest.TestCase):
                     "copy",
                     "--all",
                     "--write",
+                    "--no-official",
                 ]
             )
 
@@ -69,6 +71,133 @@ class SetupSkillsTests(unittest.TestCase):
                 "openclaw-feishu-multi-agent",
             ):
                 self.assertTrue((target_dir / skill_id / "SKILL.md").exists())
+
+    def test_reuses_local_official_skill_before_vendor(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir) / "target-skills"
+            official_root = Path(temp_dir) / "official-skills"
+            official_skill = official_root / "brainstorming"
+            official_skill.mkdir(parents=True)
+            (official_skill / "SKILL.md").write_text("official", encoding="utf-8")
+            (official_skill / "marker.txt").write_text("official-source", encoding="utf-8")
+
+            with mock.patch.object(
+                setup_skills,
+                "build_search_roots",
+                return_value=[target_dir, official_root],
+            ), mock.patch.object(
+                setup_skills,
+                "stage_official_superpowers_install",
+                side_effect=RuntimeError("official install not needed for this test"),
+            ):
+                exit_code = setup_skills.main(
+                    [
+                        "--target-dir",
+                        str(target_dir),
+                        "--mode",
+                        "copy",
+                        "--bundle",
+                        "workflow",
+                        "--write",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue((target_dir / "brainstorming" / "marker.txt").exists())
+
+    def test_official_install_success_avoids_vendor_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir) / "skills"
+            staging_root = Path(temp_dir) / "staging" / ".agents" / "skills"
+            official_skill = staging_root / "brainstorming"
+            official_skill.mkdir(parents=True)
+            (official_skill / "SKILL.md").write_text("official", encoding="utf-8")
+            (official_skill / "marker.txt").write_text("official-remote", encoding="utf-8")
+
+            with (
+                mock.patch.object(
+                    setup_skills,
+                    "build_search_roots",
+                    return_value=[target_dir],
+                ),
+                mock.patch.object(
+                    setup_skills,
+                    "stage_official_superpowers_install",
+                    return_value=staging_root,
+                ) as install_mock,
+            ):
+                exit_code = setup_skills.main(
+                    [
+                        "--target-dir",
+                        str(target_dir),
+                        "--mode",
+                        "copy",
+                        "--bundle",
+                        "workflow",
+                        "--write",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue((target_dir / "brainstorming" / "marker.txt").exists())
+            install_mock.assert_called_once()
+
+    def test_official_install_failure_falls_back_to_vendor(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir) / "skills"
+
+            with (
+                mock.patch.object(
+                    setup_skills,
+                    "build_search_roots",
+                    return_value=[target_dir],
+                ),
+                mock.patch.object(
+                    setup_skills,
+                    "stage_official_superpowers_install",
+                    side_effect=RuntimeError("official install failed"),
+                ),
+            ):
+                exit_code = setup_skills.main(
+                    [
+                        "--target-dir",
+                        str(target_dir),
+                        "--mode",
+                        "copy",
+                        "--bundle",
+                        "workflow",
+                        "--write",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue((target_dir / "brainstorming" / "SKILL.md").exists())
+            self.assertFalse((target_dir / "brainstorming" / "marker.txt").exists())
+
+    def test_no_official_uses_vendor_directly(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir) / "skills"
+
+            with mock.patch.object(
+                setup_skills,
+                "stage_official_superpowers_install",
+            ) as install_mock:
+                exit_code = setup_skills.main(
+                    [
+                        "--target-dir",
+                        str(target_dir),
+                        "--mode",
+                        "copy",
+                        "--bundle",
+                        "workflow",
+                        "--write",
+                        "--no-official",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue((target_dir / "brainstorming" / "SKILL.md").exists())
+            install_mock.assert_not_called()
 
 
 if __name__ == "__main__":

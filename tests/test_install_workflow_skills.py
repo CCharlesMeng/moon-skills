@@ -22,7 +22,7 @@ class InstallWorkflowSkillsTests(unittest.TestCase):
 
             with redirect_stdout(output):
                 exit_code = install_workflow_skills.main(
-                    ["--target-dir", str(target_dir)]
+                    ["--target-dir", str(target_dir), "--no-official"]
                 )
 
             self.assertEqual(exit_code, 0)
@@ -36,7 +36,7 @@ class InstallWorkflowSkillsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             target_dir = Path(temp_dir) / "skills"
             exit_code = install_workflow_skills.main(
-                ["--target-dir", str(target_dir), "--write"]
+                ["--target-dir", str(target_dir), "--write", "--no-official"]
             )
 
             self.assertEqual(exit_code, 0)
@@ -56,7 +56,9 @@ class InstallWorkflowSkillsTests(unittest.TestCase):
     def test_force_with_backup_keeps_previous_copy(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             target_dir = Path(temp_dir) / "skills"
-            install_workflow_skills.main(["--target-dir", str(target_dir), "--write"])
+            install_workflow_skills.main(
+                ["--target-dir", str(target_dir), "--write", "--no-official"]
+            )
 
             marker = target_dir / "initialize" / "marker.txt"
             marker.write_text("custom change", encoding="utf-8")
@@ -70,6 +72,7 @@ class InstallWorkflowSkillsTests(unittest.TestCase):
                         "--write",
                         "--force",
                         "--backup",
+                        "--no-official",
                     ]
                 )
 

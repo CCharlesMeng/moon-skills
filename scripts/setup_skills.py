@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
+import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -30,9 +31,12 @@ LOCAL_HOST_MARKERS = {
 @dataclass(frozen=True)
 class SkillSpec:
     name: str
-    source: Path
+    source: Path | None
     category: str
     dependencies: tuple[str, ...]
+    official_package: str | None = None
+    official_skill: str | None = None
+    vendor_fallback: Path | None = None
 
 
 def load_manifest(path: Path) -> dict:
@@ -126,17 +130,24 @@ def backup_existing_target(target: Path, backup: bool) -> None:
 def build_skill_specs(manifest: dict, repo_root: Path) -> dict[str, SkillSpec]:
     specs: dict[str, SkillSpec] = {}
     for skill_id, data in manifest["skills"].items():
+        source = data.get("source")
+        vendor_fallback = data.get("vendorFallback") or source
         specs[skill_id] = SkillSpec(
             name=skill_id,
-            source=(repo_root / data["source"]).resolve(),
+            source=(repo_root / source).resolve() if source else None,
             category=data["category"],
             dependencies=tuple(data.get("dependencies", [])),
+            official_package=data.get("officialPackage"),
+            official_skill=data.get("officialSkill"),
+            vendor_fallback=(repo_root / vendor_fallback).resolve() if vendor_fallback else None,
         )
     return specs
 
 
-def install_skill(
-    skill: SkillSpec,
+def materialize_skill(
+    name: str,
+    source: Path,
+    category: str,
     target_root: Path,
     *,
     write: bool,
@@ -144,18 +155,18 @@ def install_skill(
     backup: bool,
     mode: str,
 ) -> None:
-    if not skill.source.exists():
-        raise FileNotFoundError(f"Missing source for {skill.name}: {skill.source}")
+    if not source.exists():
+        raise FileNotFoundError(f"Missing source for {name}: {source}")
 
-    target = target_root / skill.name
+    target = target_root / name
 
     if target.exists() and not force:
-        print(f"skip: {skill.name} already exists at {target} (use --force to overwrite)")
+        print(f"skip: {name} already exists at {target} (use --force to overwrite)")
         return
 
     if not write:
         action = "overwrite" if target.exists() else "install"
-        print(f"dry-run: would {action} {skill.name} ({skill.category}) to {target}")
+        print(f"dry-run: would {action} {name} ({category}) to {target}")
         return
 
     target_root.mkdir(parents=True, exist_ok=True)
@@ -165,17 +176,191 @@ def install_skill(
 
     try:
         if mode == "symlink":
-            symlink_skill_tree(skill.source, target)
+            symlink_skill_tree(source, target)
         else:
-            copy_skill_tree(skill.source, target)
+            copy_skill_tree(source, target)
     except OSError:
         if mode != "symlink":
             raise
-        copy_skill_tree(skill.source, target)
-        print(f"written: {skill.name} -> {target} (fallback: copy)")
+        copy_skill_tree(source, target)
+        print(f"written: {name} -> {target} (fallback: copy)")
         return
 
-    print(f"written: {skill.name} -> {target}")
+    print(f"written: {name} -> {target}")
+
+
+def build_search_roots(target_root: Path) -> list[Path]:
+    roots = [target_root]
+    for candidate in GLOBAL_TARGETS.values():
+        if candidate != target_root:
+            roots.append(candidate)
+    return roots
+
+
+def locate_skill_directory(skill_name: str, roots: list[Path]) -> Path | None:
+    for root in roots:
+        direct = root / skill_name
+        if (direct / "SKILL.md").exists():
+            return direct
+    return None
+
+
+def locate_skill_in_tree(root: Path, skill_name: str) -> Path | None:
+    if not root.exists():
+        return None
+    direct = root / skill_name
+    if (direct / "SKILL.md").exists():
+        return direct
+    for skill_file in root.rglob("SKILL.md"):
+        if skill_file.parent.name == skill_name:
+            return skill_file.parent
+    return None
+
+
+def stage_official_superpowers_install(
+    package: str,
+    *,
+    requested_skills: list[str],
+) -> Path:
+    if shutil.which("npx") is None:
+        raise RuntimeError("npx is required for official superpowers installation")
+
+    temp_workspace = Path(tempfile.mkdtemp(prefix="moon-skills-superpowers-"))
+    command = ["npx", "skills", "add", package]
+    if len(requested_skills) == 1:
+        command.extend(["--skill", requested_skills[0]])
+
+    subprocess.run(
+        command,
+        cwd=temp_workspace,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return temp_workspace / ".agents" / "skills"
+
+
+def resolve_superpowers_source(skill: SkillSpec) -> Path:
+    if skill.vendor_fallback is None:
+        raise FileNotFoundError(f"Missing vendor fallback for {skill.name}")
+    return skill.vendor_fallback
+
+
+def install_superpowers_skills(
+    skill_ids: list[str],
+    skill_specs: dict[str, SkillSpec],
+    target_root: Path,
+    *,
+    write: bool,
+    force: bool,
+    backup: bool,
+    mode: str,
+    prefer_official: bool,
+    superpowers_source: str,
+    allow_vendor_fallback: bool,
+) -> None:
+    search_roots = build_search_roots(target_root)
+    missing_for_official: list[str] = []
+
+    for skill_id in skill_ids:
+        skill = skill_specs[skill_id]
+        target = target_root / skill_id
+        if target.exists() and not force:
+            print(f"skip: {skill_id} already exists at {target} (use --force to overwrite)")
+            continue
+
+        if prefer_official:
+            existing = locate_skill_directory(skill_id, search_roots)
+            if existing is not None and existing.parent != target_root:
+                materialize_skill(
+                    skill.name,
+                    existing,
+                    "official-installed",
+                    target_root,
+                    write=write,
+                    force=force,
+                    backup=backup,
+                    mode=mode,
+                )
+                continue
+            missing_for_official.append(skill_id)
+            if not write:
+                print(
+                    f"dry-run: would install {skill_id} via official superpowers source "
+                    f"({superpowers_source}) into {target}"
+                )
+            continue
+
+        materialize_skill(
+            skill.name,
+            resolve_superpowers_source(skill),
+            "vendor-fallback",
+            target_root,
+            write=write,
+            force=force,
+            backup=backup,
+            mode=mode,
+        )
+
+    if not prefer_official or not missing_for_official or not write:
+        return
+
+    staged_root: Path | None = None
+    official_error: Exception | None = None
+    try:
+        staged_root = stage_official_superpowers_install(
+            superpowers_source,
+            requested_skills=missing_for_official,
+        )
+    except Exception as exc:  # noqa: BLE001
+        official_error = exc
+
+    unresolved: list[str] = []
+    if staged_root is not None:
+        for skill_id in missing_for_official:
+            staged_skill = locate_skill_in_tree(staged_root, skill_id)
+            if staged_skill is None:
+                unresolved.append(skill_id)
+                continue
+            materialize_skill(
+                skill_id,
+                staged_skill,
+                "official-remote",
+                target_root,
+                write=write,
+                force=force,
+                backup=backup,
+                mode=mode,
+            )
+    else:
+        unresolved = missing_for_official[:]
+
+    if not unresolved:
+        return
+
+    if not allow_vendor_fallback:
+        reason = str(official_error) if official_error is not None else "missing staged official skills"
+        raise RuntimeError(
+            f"Official superpowers install did not provide required skills: {', '.join(unresolved)} ({reason})"
+        )
+
+    if official_error is not None:
+        print(f"warn: official superpowers install failed ({official_error}); using vendor fallback")
+    else:
+        print(f"warn: official superpowers install missing {', '.join(unresolved)}; using vendor fallback")
+
+    for skill_id in unresolved:
+        skill = skill_specs[skill_id]
+        materialize_skill(
+            skill.name,
+            resolve_superpowers_source(skill),
+            "vendor-fallback",
+            target_root,
+            write=write,
+            force=force,
+            backup=backup,
+            mode=mode,
+        )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -216,10 +401,40 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--list", action="store_true", help="List bundles and skills, then exit.")
     parser.add_argument(
+        "--superpowers-source",
+        default="obra/superpowers",
+        help="Official superpowers package/repository source used by `npx skills add`.",
+    )
+    parser.add_argument(
+        "--prefer-official",
+        dest="prefer_official",
+        action="store_true",
+        help="Prefer existing or official-installed superpowers skills before vendor fallback.",
+    )
+    parser.add_argument(
+        "--no-official",
+        dest="prefer_official",
+        action="store_false",
+        help="Disable official superpowers resolution and use vendor fallback directly.",
+    )
+    parser.add_argument(
+        "--allow-vendor-fallback",
+        dest="allow_vendor_fallback",
+        action="store_true",
+        help="Allow vendored superpowers skills when official install is unavailable.",
+    )
+    parser.add_argument(
+        "--no-vendor-fallback",
+        dest="allow_vendor_fallback",
+        action="store_false",
+        help="Fail instead of falling back to vendored superpowers skills.",
+    )
+    parser.add_argument(
         "--manifest",
         default=str(DEFAULT_MANIFEST),
         help="Path to the installation manifest.",
     )
+    parser.set_defaults(prefer_official=True, allow_vendor_fallback=True)
     return parser
 
 
@@ -260,18 +475,44 @@ def main(argv: list[str] | None = None) -> int:
     print("skills:")
     for skill_id in skill_ids:
         spec = skill_specs[skill_id]
-        print(f"- {skill_id} ({spec.category})")
+        if spec.official_package:
+            print(f"- {skill_id} ({spec.category}, official={spec.official_package})")
+        else:
+            print(f"- {skill_id} ({spec.category})")
 
     print()
-    for skill_id in skill_ids:
-        install_skill(
-            skill_specs[skill_id],
+    official_skill_ids = [
+        skill_id for skill_id in skill_ids if skill_specs[skill_id].official_package is not None
+    ]
+    regular_skill_ids = [skill_id for skill_id in skill_ids if skill_id not in official_skill_ids]
+
+    for skill_id in regular_skill_ids:
+        skill = skill_specs[skill_id]
+        if skill.source is None:
+            raise FileNotFoundError(f"Missing source for {skill.name}")
+        materialize_skill(
+            skill.name,
+            skill.source,
+            skill.category,
             target_root,
             write=args.write,
             force=args.force,
             backup=args.backup,
             mode=args.mode,
         )
+
+    install_superpowers_skills(
+        official_skill_ids,
+        skill_specs,
+        target_root,
+        write=args.write,
+        force=args.force,
+        backup=args.backup,
+        mode=args.mode,
+        prefer_official=args.prefer_official,
+        superpowers_source=args.superpowers_source,
+        allow_vendor_fallback=args.allow_vendor_fallback,
+    )
 
     if not args.write:
         print()

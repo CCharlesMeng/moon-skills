@@ -4,6 +4,8 @@
 
 推荐安装方式不是手动拷目录，而是从仓库根执行 `./setup`，按 bundle 安装。
 
+这里的 standalone bundle 不依赖 `superpowers` 官方安装渠道；是否启用 official-first 只影响 workflow 里那些 process skills 的来源选择。
+
 例如，只安装当前唯一的 standalone skill：
 
 ```bash
