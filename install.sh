@@ -49,14 +49,32 @@ clone_or_pull() {
 	local target="$1"
 	if [[ -d "$target/.git" ]]; then
 		git -C "$target" pull --ff-only
-	elif [[ -e "$target" ]]; then
-		echo "fatal: destination path '$target' already exists and is not a git clone." >&2
-		echo "Remove or rename it, or set MOON_SKILLS_PATH to a different directory." >&2
-		exit 1
-	else
+		return
+	fi
+
+	if [[ ! -e "$target" ]]; then
 		mkdir -p "$(dirname "$target")"
 		git clone "$REPO_URL" "$target"
+		return
 	fi
+
+	if [[ -f "$target" ]]; then
+		echo "fatal: '$target' exists and is a file, not a directory." >&2
+		exit 1
+	fi
+
+	if [[ ! -d "$target" ]]; then
+		echo "fatal: '$target' exists and is not a directory." >&2
+		exit 1
+	fi
+
+	# Directory exists but is not a git checkout (e.g. old manual copy). Preserve it and clone fresh.
+	local bak="${target}.moon-skills-backup.$(date +%Y%m%d%H%M%S)"
+	echo "install.sh: '$target' is not a git clone; moving aside to:" >&2
+	echo "  $bak" >&2
+	mv "$target" "$bak"
+	mkdir -p "$(dirname "$target")"
+	git clone "$REPO_URL" "$target"
 }
 
 TARGET="$(resolve_target)"

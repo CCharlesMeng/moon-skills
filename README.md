@@ -295,6 +295,8 @@ GitHub `context-check` 对接说明见：
 curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/install.sh | bash -s -- --host auto --bundle workflow --write
 ```
 
+若 `.cursor/skills/moon-skills` 已存在但不是 `git clone` 出来的（例如早期手动拷目录），`install.sh` 会把它**整目录重命名**为 `moon-skills.moon-skills-backup.<时间戳>`，再重新 clone，旧内容仍保留在备份目录里。
+
 若本地已有 moon-skills 目录，也可以直接调用其中的脚本（等价于上面一条）：
 
 ```bash
