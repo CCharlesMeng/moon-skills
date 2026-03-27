@@ -105,7 +105,7 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 3. 选择能有效预防复发的最小持久防护。
 4. 广域、高风险或不确定防护必须先进候选区。
 
-参考 [immune-decision-matrix.md](immune-decision-matrix.md)。
+参考 [references/immune-decision-matrix.md](references/immune-decision-matrix.md)。
 
 ## 与交付后 reflect 的边界
 
@@ -192,5 +192,5 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 
 如果这次事故只是某轮交付的一部分，且结论需要跨模块或跨问题汇总，完成本 skill 后应额外运行一次 `audit` 做交付后 reflect。
 
-完整黄金输出见 [examples.md](examples.md)。
-维护者验证见 [validation-scenarios.md](validation-scenarios.md)。
+完整黄金输出见 [references/examples.md](references/examples.md)。
+维护者验证见 [references/validation-scenarios.md](references/validation-scenarios.md)。

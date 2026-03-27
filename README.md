@@ -69,7 +69,7 @@
 
 GitHub `context-check` 对接说明见：
 
-- [skills/sync-context/github-context-check.md](skills/sync-context/github-context-check.md)
+- [skills/sync-context/references/github-context-check.md](skills/sync-context/references/github-context-check.md)
 
 ### `immune-debug`
 
@@ -118,7 +118,76 @@ GitHub `context-check` 对接说明见：
 
 详细指南见：
 
-- [skills/audit/asset-review-guide.md](skills/audit/asset-review-guide.md)
+- [skills/audit/references/asset-review-guide.md](skills/audit/references/asset-review-guide.md)
+
+### `analysis-spec`
+
+把模糊需求压成可执行分析包。内含五步认知链：准备（需求分级 + 上下文预热）→ 摸底 → 自学习 → 多轮澄清 → 目标规格。
+
+负责：
+
+- 需求分级与上下文预热
+- 现状摸底与风险识别
+- 三色置信度自学习（🔴 / 🟡 / 🟢）
+- 用户可控粒度的多轮澄清（全量 / 按需 / 最小）
+- 目标行为、风险清单和证据计划
+- 内置 4 个领域检查清单（前端 / 后端 / 集成 / 风险记忆），支持仓库级自定义扩展
+
+不负责：
+
+- 技术选型
+- 切片设计
+- 实现计划
+
+一句话使用方式：
+
+```markdown
+请完成 analysis-spec：准备 → 摸底 → 自学习 → 澄清 → 规格，产出 analysis-spec.md。
+```
+
+### `slice-plan`
+
+基于 analysis-spec 把需求切成最小可交付 slices。
+
+负责：
+
+- 按用户路径和页面状态切片
+- 每个 slice 的验证方式和回滚边界
+- 执行顺序和依赖关系
+- 迁移类需求的 compatibility slice 和 feature flag 策略
+
+不负责：
+
+- 分析需求
+- 实现代码
+- 做验证
+
+一句话使用方式：
+
+```markdown
+请基于 analysis-spec 产出 slice-plan，每个 slice 写清验证方式和回滚边界。
+```
+
+### `spec-check`
+
+在交付结束时逐条对账 analysis-spec 的承诺与实际交付结果。这是每次标准交付的必经步骤，不是治理审计。
+
+负责：
+
+- 逐条标记 TargetBehavior 为 `as_specified` / `intentionally_changed` / `deferred` / `abandoned`
+- 检查隐性偏差
+- 为后续 `audit` 提供结构化输入
+
+不负责：
+
+- reflect 和 reusable learnings（交给 `audit`）
+- context 或 immune 的持久化决策
+
+一句话使用方式：
+
+```markdown
+请做 spec-check，逐条对账 analysis-spec 和最终交付。
+```
 
 ### `reflect`（closing protocol）
 
@@ -158,25 +227,43 @@ GitHub `context-check` 对接说明见：
 请用 sync-context 为 <模块> 的 <功能> 做开发前预热。
 ```
 
-### 3. GitHub `context-check` 失败
+### 3. 把需求变成可执行分析包
+
+```markdown
+请先做 request-classification 和 sync-context 预热，然后完成 analysis-spec。
+```
+
+### 4. 把分析包切成可交付 slices
+
+```markdown
+请基于 analysis-spec 产出 slice-plan，每个 slice 写清验证方式和回滚边界。
+```
+
+### 5. 交付后做 spec 对账
+
+```markdown
+请做 spec-check，逐条对账 analysis-spec 和最终交付。
+```
+
+### 6. GitHub `context-check` 失败
 
 ```markdown
 请用 sync-context 修复这次 PR 的 context-check，只更新必要的 `.project-context` 资产。
 ```
 
-### 4. 出现 bug / 回归 / 测试失败
+### 7. 出现 bug / 回归 / 测试失败
 
 ```markdown
 请用 immune-debug 处理这个 <问题>，并给出免疫决策。
 ```
 
-### 5. 完成一轮交付后做 reflect
+### 8. 完成一轮交付后做 reflect
 
 ```markdown
 请先用 audit 对这轮交付做 reflect，重点看可复用模式、context 漂移和是否需要沉淀 immune asset；如果输出要求写回 context，再用 sync-context 完成落盘。
 ```
 
-### 6. 做周期性治理
+### 9. 做周期性治理
 
 ```markdown
 请用 audit 审查当前 `.project-context` 资产，重点看 references、features、immune assets 和 context-check 是否失真。
@@ -242,6 +329,9 @@ cd ~/moon-skills && ./setup --host agents --bundle workflow --write
 - `sync-context`
 - `immune-debug`
 - `audit`
+- `analysis-spec`
+- `slice-plan`
+- `spec-check`
 - `brainstorming`
 - `systematic-debugging`
 - `writing-plans`
@@ -317,10 +407,13 @@ python "scripts/install_workflow_skills.py" --write
 - `skills/sync-context/`
 - `skills/immune-debug/`
 - `skills/audit/`
+- `skills/analysis-spec/`
+- `skills/slice-plan/`
+- `skills/spec-check/`
 - `standalone-skills/openclaw-feishu-multi-agent/`
 - `vendor/superpowers/`
 
-当前不单独建立 `skills/reflect/` 目录；第一版 reflect 通过 `audit`、`sync-context`、`immune-debug` 的路由协作实现。
+`reflect` 不单独建立 skill 目录，通过 `audit`、`sync-context`、`immune-debug` 的路由协作实现。
 
 ## 说明
 
@@ -340,6 +433,8 @@ python "scripts/install_workflow_skills.py" --write
 
 ## 方法论文档
 
-- [front-end-sdd.md](front-end-sdd.md)：面向前端工程、优先适配存量项目改造，同时兼容混合前端项目局部迭代的 SDD 方法论流程。
-- 稳定基座仍是 `initialize`、`sync-context`、`immune-debug`、`audit`。
-- 推荐补齐的中段 skill 架构为 `legacy-baseline`、`behavior-spec`、`slice-plan`、`frontend-verify`、`closure-audit`；其中 `behavior-spec` 内含 `self-study + strict clarify + behavior spec`，`slice-plan` 负责把行为规格收敛成可执行切片。
+- [analysis-driven-sdd.md](analysis-driven-sdd.md)：分析驱动 SDD 方法论全文。
+- 稳定基座：`initialize`、`sync-context`、`immune-debug`、`audit`。
+- 中段核心：`analysis-spec`（5-phase：准备 → 摸底 → 自学习 → 澄清 → 规格）、`slice-plan`、`spec-check`。
+- 内置 4 个领域检查清单（前端 / 后端 / 集成 / 风险记忆），支持仓库级自定义扩展。
+- 所有工件统一归入 `docs/specs/<topic>/`，不散放。

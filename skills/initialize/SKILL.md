@@ -72,7 +72,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 目标是让后续任务能快速定位，不是输出完整架构文档。
 
-字段指导见 [profile-schema.md](profile-schema.md)。
+字段指导见 [references/profile-schema.md](references/profile-schema.md)。
 
 ### Phase 2：建立共享参考模式索引
 
@@ -87,7 +87,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 优先记录 `refs`，不要堆长篇 prose。
 
-字段指导见 [references-schema.md](references-schema.md)。
+字段指导见 [references/references-schema.md](references/references-schema.md)。
 
 ### Phase 3：建立关键特性索引
 
@@ -99,7 +99,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 不要在初始化阶段强行补全完整 feature tree。
 
-字段指导见 [feature-index-schema.md](feature-index-schema.md)。
+字段指导见 [references/feature-index-schema.md](references/feature-index-schema.md)。
 
 ### Phase 4：生成人类摘要与可选骨架
 
@@ -124,7 +124,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 优先复用 `sync-context` 自带的模板和脚本，保持不同仓库间行为一致。
 
-完整对接方式见 `sync-context` 下的 [github-context-check.md](../sync-context/github-context-check.md)。
+完整对接方式见 `sync-context` 下的 [references/github-context-check.md](../sync-context/references/github-context-check.md)。
 
 如有必要，可顺手创建以下空骨架以稳定后续工作流输入：
 
