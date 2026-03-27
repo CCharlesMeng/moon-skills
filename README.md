@@ -29,7 +29,7 @@
 - 建 `references.yaml`
 - 建 `features/index.yaml`
 - 建 `PROFILE.md`
-- 视仓库特征按需起草 `.project-context/lenses/` 项目级检查清单
+- 视仓库特征按需提炼并确认 `.project-context/lenses/` 项目级检查清单
 - 可选安装 GitHub `context-check`
 
 不负责：

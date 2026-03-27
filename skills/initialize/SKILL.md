@@ -101,9 +101,9 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 字段指导见 [references/feature-index-schema.md](references/feature-index-schema.md)。
 
-### Phase 3.5：按需起草项目级 lens
+### Phase 3.5：按需起草并确认项目级 lens
 
-当仓库存在默认 lens 覆盖不够、但会在多个产品特性中反复出现的校验维度时，可在初始化阶段顺手起草 `.project-context/lenses/`。
+当仓库存在默认 lens 覆盖不够、但会在多个产品特性中反复出现的校验维度时，可在初始化阶段提炼候选 lens，并在落盘前直接与用户确认。
 
 触发信号：
 
@@ -117,12 +117,23 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - 默认生成 `0-3` 个项目级 lens；如果默认 lens 足够，就不要创建自定义 lens
 - 每个 lens 保持 `4-8` 条检查项，只描述跨多个特性的产品校验维度
 - 不要把页面细节、一次性需求、实现方案或空泛口号写进 lens
-- 低置信推断可以先作为草稿输出，但必须在 `PROFILE.md` 中标明待确认点
+- 项目级 lens 本体只允许写入已确认、可长期复用的检查项
+- 不要在 lens 文件中写 `draft` 时间、`待确认`、`assumption` 等过程性信息
+- 会影响 lens 是否成立的低置信前提，必须在初始化过程中直接向用户确认；未确认前不得写入 lens 本体
+
+执行步骤：
+
+1. 基于代码、文档和已有上下文提炼候选 lens
+2. 抽取会影响 lens 成立范围的低置信前提
+3. 在初始化过程中直接向用户确认这些前提
+4. 仅将确认后的 lens 写入 `.project-context/lenses/`
+5. 未确认内容保留在 `PROFILE.md` 的上下文缺口中，不进入 lens 本体
 
 输出形式：
 
-- 在 `.project-context/lenses/` 下创建草稿文件
-- 在 `PROFILE.md` 中说明为什么创建这些 lens、它们覆盖哪些特性级风险、哪些点仍待确认
+- 在对话中先展示候选 lens 与待确认点
+- 确认后在 `.project-context/lenses/` 下创建正式文件
+- 在 `PROFILE.md` 中说明为什么创建这些 lens、它们覆盖哪些特性级风险、以及仍未收敛的上下文缺口
 
 ### Phase 4：生成人类摘要与可选骨架
 
@@ -174,7 +185,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - `.project-context/features/index.yaml`
 - `.project-context/PROFILE.md`
 
-可选骨架 / 草稿：
+可选骨架 / 产物：
 
 - `.github/workflows/context-check.yml`
 - `.project-context/lenses/*.md`
@@ -191,7 +202,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - 仓库结构已经足够导航
 - 至少找到一批项目级共享参考模式
 - 当前高价值区域已有最小特性索引
-- 项目级 lens 已明确为"无需新增"或已生成少量草稿
+- 项目级 lens 已明确为"无需新增"或已完成直接确认并生成少量正式文件
 - 重要未知项已经显式写出
 - 下一次 AI 任务已经可以基于这些资产开始工作
 
@@ -204,7 +215,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - 仓库类型与主要模块
 - 已识别共享参考模式概览
 - 关键特性覆盖概览
-- 是否起草了项目级 lens，以及它们覆盖的主题
+- 是否创建了项目级 lens、它们覆盖的主题、以及是否经过直接确认
 - 最重要的未知项
 
 ### Files Created
