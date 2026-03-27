@@ -12,7 +12,7 @@
 ./setup --host auto --bundle openclaw-feishu-multi-agent --write
 ```
 
-如果你已经把仓库 clone 到另一个项目的 `.agents/skills/moon-skills`：
+如果你已经把仓库 clone 到另一个项目的 `.agents/skills/moon-skills`，更新时可在宿主仓库根执行 `bash .agents/skills/moon-skills/install.sh ...`（会先 `git pull`），或见主 README 的 `curl ... install.sh` 用法。
 
 ```bash
 cd .agents/skills/moon-skills && ./setup --host auto --bundle openclaw-feishu-multi-agent --write
