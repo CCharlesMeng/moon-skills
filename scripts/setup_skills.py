@@ -43,6 +43,42 @@ def load_manifest(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def discover_skills_subdir_ids(repo_root: Path) -> list[str]:
+    """Directories under skills/ that contain SKILL.md, sorted by name."""
+    skills_dir = repo_root / "skills"
+    if not skills_dir.is_dir():
+        return []
+    return sorted(
+        p.name
+        for p in skills_dir.iterdir()
+        if p.is_dir() and (p / "SKILL.md").exists()
+    )
+
+
+def hydrate_workflow_bundle_from_skills_dir(manifest: dict, repo_root: Path) -> None:
+    """Ensure workflow bundle installs every first-party skill under skills/ (see SKILL.md)."""
+    discovered = discover_skills_subdir_ids(repo_root)
+    if not discovered:
+        return
+
+    skills = manifest["skills"]
+    for name in discovered:
+        if name not in skills:
+            skills[name] = {
+                "source": f"skills/{name}",
+                "category": "workflow",
+                "dependencies": [],
+            }
+
+    wf = manifest["bundles"].get("workflow")
+    if wf is None:
+        return
+
+    old_roots = list(wf["roots"])
+    extra = [r for r in old_roots if r not in discovered]
+    wf["roots"] = list(discovered) + extra
+
+
 def resolve_bundle_skills(manifest: dict, bundle_names: list[str]) -> list[str]:
     skills = manifest["skills"]
     bundles = manifest["bundles"]
@@ -445,6 +481,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest_path = Path(args.manifest).expanduser().resolve()
     repo_root = manifest_path.parent
     manifest = load_manifest(manifest_path)
+    hydrate_workflow_bundle_from_skills_dir(manifest, repo_root)
 
     if args.all:
         bundle_names = list(manifest["bundles"].keys())

@@ -4,10 +4,13 @@
   "bundles": {
     "workflow": {
       "roots": [
-        "initialize",
-        "sync-context",
-        "immune-debug",
+        "analysis-spec",
         "audit",
+        "immune-debug",
+        "initialize",
+        "slice-plan",
+        "spec-check",
+        "sync-context",
         "brainstorming"
       ]
     },
@@ -37,6 +40,21 @@
     },
     "audit": {
       "source": "skills/audit",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "analysis-spec": {
+      "source": "skills/analysis-spec",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "slice-plan": {
+      "source": "skills/slice-plan",
+      "category": "workflow",
+      "dependencies": []
+    },
+    "spec-check": {
+      "source": "skills/spec-check",
       "category": "workflow",
       "dependencies": []
     },

@@ -334,7 +334,7 @@ cd ~/moon-skills && ./setup --host agents --bundle workflow --write
 ./setup --host auto --bundle workflow --write
 ```
 
-它会完整装入：
+它会完整装入 `skills/` 下每个带 `SKILL.md` 的目录（若仓库里新增此类目录，无需改 manifest 也会随 `workflow` 装上），以及 `brainstorming` 及其依赖的 superpowers 链：
 
 - `initialize`
 - `sync-context`
