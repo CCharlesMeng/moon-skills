@@ -273,8 +273,8 @@ GitHub `context-check` 对接说明见：
 
 现在推荐使用 `gstack` 风格的安装方式：
 
-1. 先把本仓库 clone 到宿主的 skills 根目录下，目录名固定为 `moon-skills`
-2. 再在这个 checkout 里运行 `./setup`
+1. 用仓库根目录的 `install.sh` 在宿主仓库里**首次 clone 或后续 `git pull`**（同一套命令可重复执行，不会因目录已存在而失败）
+2. `install.sh` 会在目标路径运行 `./setup`
 3. `setup` 会把真正需要被宿主发现的 skill 平铺到同级 skills 根目录
 
 对于 workflow 里依赖的 `superpowers` skills，安装优先级现在是：
@@ -285,30 +285,39 @@ GitHub `context-check` 对接说明见：
 
 ### 1. repo-local 安装到另一个仓库
 
-如果你想让另一个仓库直接可用，推荐 clone 到该仓库的 `.agents/skills/` 或 `.cursor/skills/`：
+在**宿主仓库根目录**执行（首次安装与更新用**同一命令**；已存在 checkout 时会 `git pull --ff-only` 再跑 `setup`）：
+
+**Cursor（默认装到 `.cursor/skills/moon-skills`）**
+
+`raw.githubusercontent.com` 与 `https://github.com/CCharlesMeng/moon-skills/raw/main/install.sh` 指向同一文件；路径里第二段是**分支名**（本仓库默认分支为 `main`）。若 `curl` 仍返回 404，说明远端尚未包含 `install.sh`，需先在本仓库执行 `git push`，或暂时改用下面「已有目录」里的 `bash …/install.sh`。
 
 ```bash
-git clone https://github.com/CCharlesMeng/moon-skills.git .agents/skills/moon-skills
-cd .agents/skills/moon-skills && ./setup --host auto --bundle workflow --write
+curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/install.sh | bash -s -- --host auto --bundle workflow --write
 ```
 
-如果目标宿主是 Cursor：
+若本地已有 moon-skills 目录，也可以直接调用其中的脚本（等价于上面一条）：
 
 ```bash
-git clone https://github.com/CCharlesMeng/moon-skills.git .cursor/skills/moon-skills
-cd .cursor/skills/moon-skills && ./setup --host auto --bundle workflow --write
+bash .cursor/skills/moon-skills/install.sh --host auto --bundle workflow --write
 ```
+
+**Agents / 其他路径**（通过环境变量指定目录名仍为 `moon-skills`；对管道右侧的 `bash` 需用 `env` 传入变量）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/install.sh | env MOON_SKILLS_PATH=.agents/skills/moon-skills bash -s -- --host auto --bundle workflow --write
+```
+
+仍想手写 `git clone` 时，注意：**不要**对已存在的目录再次 clone；更新应改为在 checkout 内 `git pull` 后执行 `./setup`，或直接改用上面的 `install.sh`。
 
 ### 2. user-global 安装
 
-如果你想装到当前用户级别：
+装到用户目录时指定路径即可（同样支持重复执行以更新）：
 
 ```bash
-git clone https://github.com/CCharlesMeng/moon-skills.git ~/.agents/skills/moon-skills
-cd ~/.agents/skills/moon-skills && ./setup --host auto --bundle workflow --write
+curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/install.sh | env MOON_SKILLS_PATH="$HOME/.agents/skills/moon-skills" bash -s -- --host auto --bundle workflow --write
 ```
 
-也可以先 clone 到任意目录，再显式指定宿主：
+也可以先 clone 到任意目录，再显式指定宿主（在已有 checkout 里更新用 `git pull` + `./setup`）：
 
 ```bash
 git clone https://github.com/CCharlesMeng/moon-skills.git ~/moon-skills
