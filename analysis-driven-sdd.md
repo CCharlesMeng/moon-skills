@@ -300,6 +300,22 @@ Lens 是一组注入到 `analysis-spec` Phase D 的领域检查项。不是 skil
 | `integration-lens` | 跨两个以上边界 | 输入输出契约与版本边界、错误链路与降级路径、跨团队回滚边界、feature flag/灰度/staged rollout、跨边界联合验证 |
 | `risk-memory-lens` | 高危模块或历史事故（除 patch-lite 外默认开启） | 见下方输入源 |
 
+### 项目化 lens 的边界
+
+项目可以在 `.project-context/lenses/` 下补充自定义 lens，但它们只应该描述默认 lens 覆盖不够、且会在多个产品特性中反复出现的校验维度。
+
+建议约束：
+
+- 默认新增 `0-3` 个项目化 lens
+- 每个 lens 保持 `4-8` 条检查项
+- 优先关注工作流、可见性 / 权限、通知 / 审计、副作用边界、租户边界
+- 不要写单页面细节、一次性需求或"体验要好"这类空泛口号
+
+示例：
+
+- good case：`workflow`、`tenant-visibility`、`audit-notify`
+- bad case：`order-detail-page`、`quality`、`misc`
+
 ### frontend-lens 检查项
 
 在 Phase D 中逐项回答：

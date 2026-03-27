@@ -101,6 +101,29 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 字段指导见 [references/feature-index-schema.md](references/feature-index-schema.md)。
 
+### Phase 3.5：按需起草项目级 lens
+
+当仓库存在默认 lens 覆盖不够、但会在多个产品特性中反复出现的校验维度时，可在初始化阶段顺手起草 `.project-context/lenses/`。
+
+触发信号：
+
+- 多个特性共享同一种工作流 / 状态机 / 角色动作边界
+- 多个特性反复出现同一种可见性 / 权限 / 租户 / 审计 / 通知约束
+- 现有文档、代码、历史事故反复指向同一类产品风险
+- 这些维度如果漏检，会在后续 `analysis-spec` 中持续造成验收缺口
+
+约束：
+
+- 默认生成 `0-3` 个项目级 lens；如果默认 lens 足够，就不要创建自定义 lens
+- 每个 lens 保持 `4-8` 条检查项，只描述跨多个特性的产品校验维度
+- 不要把页面细节、一次性需求、实现方案或空泛口号写进 lens
+- 低置信推断可以先作为草稿输出，但必须在 `PROFILE.md` 中标明待确认点
+
+输出形式：
+
+- 在 `.project-context/lenses/` 下创建草稿文件
+- 在 `PROFILE.md` 中说明为什么创建这些 lens、它们覆盖哪些特性级风险、哪些点仍待确认
+
 ### Phase 4：生成人类摘要与可选骨架
 
 创建 `.project-context/PROFILE.md`，帮助维护者快速审查首轮结果是否明显失真。
@@ -151,9 +174,10 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - `.project-context/features/index.yaml`
 - `.project-context/PROFILE.md`
 
-可选骨架：
+可选骨架 / 草稿：
 
 - `.github/workflows/context-check.yml`
+- `.project-context/lenses/*.md`
 - `.project-context/impact-rules.yaml`
 - `.project-context/scripts/manage_context.py`
 - `.project-context/scripts/context_common.py`
@@ -167,6 +191,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - 仓库结构已经足够导航
 - 至少找到一批项目级共享参考模式
 - 当前高价值区域已有最小特性索引
+- 项目级 lens 已明确为"无需新增"或已生成少量草稿
 - 重要未知项已经显式写出
 - 下一次 AI 任务已经可以基于这些资产开始工作
 
@@ -179,6 +204,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - 仓库类型与主要模块
 - 已识别共享参考模式概览
 - 关键特性覆盖概览
+- 是否起草了项目级 lens，以及它们覆盖的主题
 - 最重要的未知项
 
 ### Files Created
@@ -187,6 +213,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 - references 路径
 - feature index 路径
 - summary 路径
+- lens 草稿路径（若生成）
 - 可选骨架路径
 
 ### 后续补全提示
