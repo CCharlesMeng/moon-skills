@@ -289,7 +289,7 @@ GitHub `context-check` 对接说明见：
 
 **Cursor（默认装到 `.cursor/skills/moon-skills`）**
 
-`raw.githubusercontent.com` 与 `https://github.com/CCharlesMeng/moon-skills/raw/main/install.sh` 指向同一文件；路径里第二段是**分支名**（本仓库默认分支为 `main`）。若 `curl` 仍返回 404，说明远端尚未包含 `install.sh`，需先在本仓库执行 `git push`，或暂时改用下面「已有目录」里的 `bash …/install.sh`。
+`https://raw.githubusercontent.com/<owner>/<repo>/<ref>/<path>` 中 `<ref>` 为分支或 tag（本仓库默认分支为 `main`）。与 `https://github.com/CCharlesMeng/moon-skills/raw/main/install.sh` 等价。若 `curl` 返回 404：要么远端还没有 `install.sh`（需合并并 `git push`），要么是刚推送后 CDN 尚未刷新，可过几分钟再试，或改用下面「已有目录」里的 `bash …/install.sh`。
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/install.sh | bash -s -- --host auto --bundle workflow --write
