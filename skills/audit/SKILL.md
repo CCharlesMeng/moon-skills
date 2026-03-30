@@ -1,5 +1,5 @@
 ---
-name: 审计项目资产
+name: audit
 description: 用于周期性审查 `.project-context` 下的仓库上下文、共享参考模式、关键特性索引、免疫资产和 GitHub context-check 配置，并在每轮交付后做一次 post-ship reflect，确保资产保持可信、精简且可维护。
 ---
 

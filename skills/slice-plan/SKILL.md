@@ -1,5 +1,5 @@
 ---
-name: 切片计划
+name: slice-plan
 description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每个 slice 包含目标行为、受影响文件、风险、验证方式和回滚边界，产出 slice-plan.md。
 ---
 

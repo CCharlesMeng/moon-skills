@@ -1,5 +1,5 @@
 ---
-name: 初始化仓库上下文
+name: initialize
 description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最小可用上下文底座，包括仓库地图、共享参考模式、关键特性索引和人类摘要。
 ---
 

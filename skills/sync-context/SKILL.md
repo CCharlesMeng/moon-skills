@@ -1,5 +1,5 @@
 ---
-name: 同步仓库上下文
+name: sync-context
 description: 用于在 `.project-context` 已存在时，根据代码变更、共享模式变化、结构变化或交付后 reflect 结论，增量同步仓库上下文资产。
 ---
 

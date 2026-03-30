@@ -1,5 +1,5 @@
 ---
-name: 免疫调试
+name: immune-debug
 description: 用于调试 bug、回归、重复事故、测试失败或异常行为，并在修复后判断是否应沉淀为可复用工程防护资产。
 ---
 

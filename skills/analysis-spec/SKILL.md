@@ -1,5 +1,5 @@
 ---
-name: 分析规格
+name: analysis-spec
 description: 用于把模糊需求压成可执行分析包。内含五步认知链：准备（需求分级 + 上下文预热）→ 摸底 → 自学习 → 多轮澄清 → 目标规格，产出 analysis-spec.md。
 ---
 

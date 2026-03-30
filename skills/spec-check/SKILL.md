@@ -1,5 +1,5 @@
 ---
-name: 规格对账
+name: spec-check
 description: 在交付结束时，逐条对账 analysis-spec.md 中的 TargetBehaviors 与最终交付结果，产出 spec-check.md。这是每次标准交付的必经步骤，不是治理审计。
 ---
 
