@@ -1,6 +1,6 @@
 ---
 name: slice-plan
-description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每个 slice 包含目标行为、受影响文件、风险、验证方式和回滚边界，产出 slice-plan.md。
+description: 基于 analysis-spec.md（和可选的 design-pack.md）把需求切成最小可交付 slices，每个 slice 包含目标行为、引用 AC/TC、受影响文件、风险、测试先行清单和回滚边界，产出 slice-plan.md。
 ---
 
 # 切片计划
@@ -24,6 +24,7 @@ description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每
 3. **每个 slice 必须引用 TargetBehavior 编号。** 无法追溯到分析包的切片是孤立任务。
 4. **不要把"全部做完才能验证"写成一个 slice。** 如果切不开，说明分析包不够细，应回到 `analysis-spec`。
 5. **不要在切片中做技术选型决策。** 切片只划定边界和验证方式，实现细节在开发阶段决定。
+6. **如果存在 design-pack，每个 slice 必须有测试先行清单。** 先 TC 后代码是门禁，不是建议。patch-lite 可用人工验证替代，但必须写明理由。
 
 ## 何时使用
 
@@ -43,6 +44,7 @@ description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每
 
 - `analysis-spec.md` 已产出
 - TargetBehaviors、RiskInventory、EvidencePlan 已定义
+- 如果当前需求触发了 `design-pack`，则 `design-pack.md` 已产出（AC、TC、ADR 已定义）
 
 ## 工作流
 
@@ -55,6 +57,13 @@ description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每
 - EvidencePlan 中的验证方式约束
 - NonGoals（确保切片不越界）
 - 🟡 Accepted 项（切片时需要为这些假设预留验证或回滚空间）
+
+如果存在 `design-pack.md`，额外读取：
+
+- Acceptance Pack（AC 列表及编号）
+- Test Pack（TC 列表及编号）
+- Architecture Decisions（ADR，影响切片边界的设计约束）
+- Compatibility / Rollback Notes
 
 ### Phase 1：划定切片
 
@@ -72,6 +81,8 @@ description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每
 | slice id | 唯一标识，如 S-1、S-2 |
 | 目标行为 | 这个 slice 完成后用户能看到什么 |
 | 引用 TB | 对应 analysis-spec 的 TargetBehavior 编号 |
+| 引用 AC | 对应 design-pack 的 Acceptance Criteria 编号（如存在） |
+| 测试先行清单 | 本 slice 实现前必须先写的 TC 编号（如存在 design-pack） |
 | 受影响文件 / 模块 | 预期改动范围 |
 | 风险 | 这个 slice 最可能出问题的地方 |
 | 验证方式 | 怎么证明这个 slice 做对了 |
@@ -139,9 +150,10 @@ description: 基于 analysis-spec.md 把需求切成最小可交付 slices，每
 
 ### 下一步
 
-- 按 slice 顺序进入开发和验证
-- 每个 slice 完成实现与验证后，产出 `verify.md` 作为 `spec-check` 的输入
-- 如果切片过程中发现 analysis-spec 有缺口，建议先补分析再继续
+- 按 slice 顺序进入开发：如果存在测试先行清单，先实现 TC，再写代码
+- 每个 slice 实现完成后，用 `domain-verify` 收集证据，产出 `verify.md`
+- `verify.md` 是 `spec-check` 的前置输入
+- 如果切片过程中发现 analysis-spec 或 design-pack 有缺口，建议先补再继续
 
 ---
 

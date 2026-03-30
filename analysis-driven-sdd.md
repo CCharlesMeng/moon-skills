@@ -262,28 +262,46 @@ flowchart TD
 
 ## Skill 架构
 
-### 稳定基座（已实现）
+### 上下文层
 
 | skill | 作用 |
 | --- | --- |
 | `initialize` | 仓库首次建立 `.project-context` |
 | `sync-context` | 开发前预热、增量同步、reflect 后写回 |
-| `immune-debug` | 事故型问题闭环与免疫决策 |
-| `audit` | 交付后 reflect、治理与持久化路由 |
 
-### 中段核心
+### 分析交付层
+
+| skill | 作用 | 核心对象 |
+| --- | --- | --- |
+| `analysis-spec` | 4-phase 分析：observe → retrieve → clarify → specify | TB |
+| `design-pack` | 设计方案、验收标准、测试规格、架构决策 | AC / TC / ADR |
+| `slice-plan` | 产出切片、验证边界、回滚边界、测试先行清单 | slice → TB / AC / TC |
+| `domain-verify` | 按 verify pack 逐项收集证据、检测 spec 偏差 | TC → EV |
+| `spec-check` | 对账 analysis-spec 承诺与最终交付（pre-reflect gate） | TB 对账 |
+
+### 学习闭环层
 
 | skill | 作用 |
 | --- | --- |
-| `analysis-spec` | 4-phase 分析：observe → retrieve → clarify → specify |
-| `slice-plan` | 产出切片、验证边界、回滚边界 |
-| `spec-check` | 对账 analysis-spec 承诺与最终交付（pre-reflect gate） |
+| `immune-debug` | 事故型问题闭环与免疫决策 |
+| `audit` | 交付后 reflect、治理与持久化路由 |
 
-### 保留为流程约束
+### 可追溯合同
 
-- request-intake / request-classification
-- lens 激活 / verify pack 选择
-- reflect routing
+```
+TB → AC → TC → EV
+ \→ ADR
+```
+
+每个对象只有一个归属 skill，不允许双写。
+
+### 内化为 skill 行为的流程约束
+
+- request-classification → `analysis-spec` Phase 0
+- lens 激活 → `analysis-spec` Phase 0 + Phase D
+- verify pack 选择 → `domain-verify` Phase 0
+- design-pack 触发矩阵 → `analysis-spec` 下一步路由
+- reflect routing → `audit` + `sync-context`
 
 ---
 
@@ -349,6 +367,8 @@ Lens 是一组注入到 `analysis-spec` Phase D 的领域检查项。不是 skil
 ---
 
 ## Verify Pack 定义
+
+> **权威来源已迁移到 `skills/domain-verify/references/`。** 以下内容仅作方法论参考，实际执行时以 skill 目录下的 verify pack 文件为准。
 
 Verify pack 是 `domain-verify` 阶段使用的领域检查清单。每项标记 `pass` / `n/a` / `deferred`（deferred 必须附原因和风险）。
 
