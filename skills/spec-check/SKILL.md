@@ -31,14 +31,14 @@ description: 在交付结束时，逐条对账 analysis-spec.md 中的 TargetBeh
 不适用场景：
 
 - 还没有 analysis-spec（先用 `analysis-spec`）
-- 还没有通过 `domain-verify`（先用 `domain-verify` 收集证据）
+- 还没有通过 `verify`（先用 `verify` 收集证据）
 - 需要做整轮交付的 reflect 和治理（用 `audit`）
 - 正在处理事故（用 `immune-debug`）
 
 ## 前置条件
 
 - `analysis-spec.md` 已产出，TargetBehaviors 已编号
-- 对应 slice 的 `verify.md` 已产出（由 `domain-verify` 生成）
+- 对应 slice 的 `verify.md` 已产出（由 `verify` 生成）
 - `verify.md` 中无未处理的 `blocking` 级别 spec deviation
 
 ## 工作流

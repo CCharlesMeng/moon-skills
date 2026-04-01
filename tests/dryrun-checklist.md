@@ -36,7 +36,11 @@
 - [ ] 无测试先行清单（或标注人工验证替代理由）
 - [ ] 回滚方式：还原 statusColorMap 中的映射值
 
-### domain-verify
+### code-review
+- [ ] 压缩模式：仅仓库级 base rules 快速检查
+- [ ] 无 blocking issue
+
+### verify
 - [ ] 使用 frontend-verify-pack
 - [ ] 最小证据：前后截图 + 控制台无新增报错
 - [ ] 无 spec deviation
@@ -87,7 +91,13 @@
 - [ ] 每个 slice 有测试先行清单（TC 编号）
 - [ ] 每个 slice 有回滚方式
 
-### domain-verify
+### code-review
+- [ ] 收集 rules：base.md（仓库级）+ 需求级 rules
+- [ ] 检视领域命名一致性
+- [ ] 检视架构约束遵守
+- [ ] 无 blocking issue
+
+### verify
 - [ ] 使用 frontend-verify-pack
 - [ ] 每个 TC 有 EV
 - [ ] 检查状态覆盖（loading / empty / error / success）
@@ -144,7 +154,13 @@
 - [ ] 每个 slice 有测试先行清单
 - [ ] staged rollout 计划
 
-### domain-verify
+### code-review
+- [ ] 收集 rules：base.md + 需求级 rules + defensive.md（如有）
+- [ ] 重点检视兼容层代码、双写逻辑、feature flag 实现
+- [ ] 检视领域命名和架构约束
+- [ ] 无 blocking issue
+
+### verify
 - [ ] 使用 frontend-verify-pack + integration-verify-pack
 - [ ] 回滚/兼容证据：feature flag 可切回旧路径
 - [ ] 性能对比：迁移前后关键路径无明显退化

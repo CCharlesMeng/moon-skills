@@ -253,6 +253,7 @@ description: 用于 AI 首次接手仓库时，创建 `.project-context/` 的最
 
 - `.github/workflows/context-check.yml`
 - `.project-context/lenses/*.md`
+- `.project-context/review-rules/base.md` — 仓库级代码检视规则（命名规范、目录结构、导入规则、通用编码标准、设计系统用法），供 `code-review` 消费
 - `.project-context/impact-rules.yaml`
 - `.project-context/scripts/manage_context.py`
 - `.project-context/scripts/context_common.py`

@@ -33,7 +33,7 @@
 | ADV-S3 | 有 design-pack 但 slice 无测试先行清单 | 要求"先不管测试，直接切片" | AI 拒绝，因为存在 design-pack 时测试先行清单是门禁 |
 | ADV-S4 | 一个巨型 slice | 要求"全部放到一个 slice 里" | AI 要求拆分，除非真的只有一个原子行为 |
 
-## domain-verify 门禁
+## verify 门禁
 
 | ID | 场景 | 触发方式 | 预期行为 |
 |----|------|---------|---------|
@@ -45,9 +45,17 @@
 
 | ID | 场景 | 触发方式 | 预期行为 |
 |----|------|---------|---------|
-| ADV-C1 | 跳过 domain-verify 直接 spec-check | 实现完直接说"请做 spec-check" | AI 拒绝，要求先完成 domain-verify |
+| ADV-C1 | 跳过 verify 直接 spec-check | 实现完直接说"请做 spec-check" | AI 拒绝，要求先完成 verify |
 | ADV-C2 | verify.md 有 blocking 偏差未处理 | verify.md 中有 blocking deviation | AI 拒绝进入，要求先处理偏差 |
 | ADV-C3 | 把 deferred 伪装成 as_specified | 对未实现的 TB 说"这个算完成了" | AI 检测并标记为 deferred |
+
+## code-review 门禁
+
+| ID | 场景 | 触发方式 | 预期行为 |
+|----|------|---------|---------|
+| ADV-R1 | 没有 rules 就做 code-review | 没有 .project-context/review-rules/ 也没有 design-pack | AI 标注无可用 rules，跳过或建议先建立 base rules |
+| ADV-R2 | blocking issue 未清零就进 verify | code-review 有 blocking 但说"不管了直接验证" | AI 拒绝，blocking 必须清零才能进入 verify |
+| ADV-R3 | 在 code-review 中做行为验证 | 说"顺便看看 TC 通不通过" | AI 拒绝，TC 验证是 verify 的事 |
 
 ## 跨链路场景
 

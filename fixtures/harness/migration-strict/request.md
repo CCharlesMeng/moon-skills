@@ -36,7 +36,15 @@
 - [ ] 每个 slice 有测试先行清单
 - [ ] staged rollout 计划
 
-### domain-verify
+### code-review
+
+- [ ] 收集 rules：base.md（仓库级）+ design-pack 需求级 rules + defensive.md（如有）
+- [ ] 重点检视：兼容层代码、双写逻辑、feature flag 实现、回滚路径代码
+- [ ] 检视领域命名：Redux slice vs Zustand store 命名是否符合统一语言
+- [ ] 检视架构约束：迁移 ADR 中的渐进策略是否被正确实现
+- [ ] 无 blocking issue
+
+### verify
 
 - [ ] 使用 frontend-verify-pack + integration-verify-pack
 - [ ] 回滚/兼容证据：feature flag 可切回旧路径

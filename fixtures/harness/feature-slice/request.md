@@ -33,7 +33,14 @@
 - [ ] 每个 slice 有测试先行清单（TC 编号）
 - [ ] 每个 slice 有回滚方式
 
-### domain-verify
+### code-review
+
+- [ ] 收集 rules：base.md（仓库级）+ design-pack 产出的需求级 rules
+- [ ] 检视领域命名一致性（统一语言表对照）
+- [ ] 检视架构约束遵守（ADR 决策是否被正确实现）
+- [ ] 无 blocking issue
+
+### verify
 
 - [ ] 使用 frontend-verify-pack
 - [ ] 每个 TC 有 EV

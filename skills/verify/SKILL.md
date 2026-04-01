@@ -1,5 +1,5 @@
 ---
-name: domain-verify
+name: verify
 description: 在实现完成后，按领域 verify pack 逐项收集证据、标记状态、检测 spec 偏差，产出 verify.md。这是 spec-check 的前置门禁。
 ---
 
@@ -9,7 +9,7 @@ description: 在实现完成后，按领域 verify pack 逐项收集证据、标
 
 这个 skill 在实现完成后做一件事：按领域检查清单（verify pack）逐项收集证据，判定每个测试规格是否通过。
 
-它是实现阶段和 `spec-check` 之间的证据收口器。没有通过 `domain-verify`，不允许进入 `spec-check`。
+它是实现阶段和 `spec-check` 之间的证据收口器。没有通过 `verify`，不允许进入 `spec-check`。
 
 它不做规格对账（那是 `spec-check` 的事），也不做 reflect（那是 `audit` 的事）。它只回答一个问题：**证据够不够，质量过不过线**。
 
@@ -18,7 +18,7 @@ description: 在实现完成后，按领域 verify pack 逐项收集证据、标
 1. **没有证据不能标 pass。** 每个必做 TC 必须挂到一条 EV（测试结果、截图、日志、录屏、请求记录），没有 EV 的 TC 只能标 `deferred` 或 `failed`。
 2. **不能在 verify 阶段静默吸收 spec 偏差。** 如果实现偏离了 TB 或 AC，必须显式输出 spec deviation，交回上游修正。
 3. **deferred 必须附原因和风险。** 不允许空白 defer。
-4. **没有通过 domain-verify，不能进入 spec-check。** 这是退出门禁，不是建议。
+4. **没有通过 verify，不能进入 spec-check。** 这是退出门禁，不是建议。
 
 ## 何时使用
 
@@ -178,10 +178,10 @@ Replan 方向：
 
 ## 与 spec-check 的边界
 
-- `domain-verify` 看"证据是否足够、领域质量是否过线"
+- `verify` 看"证据是否足够、领域质量是否过线"
 - `spec-check` 看"承诺是否兑现、有没有偏离 spec"
 
-domain-verify 的 spec deviation 检测是辅助发现，不是最终裁定。最终的承诺对账由 spec-check 完成。
+verify 的 spec deviation 检测是辅助发现，不是最终裁定。最终的承诺对账由 spec-check 完成。
 
 ## 最终输出
 

@@ -107,6 +107,18 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 
 参考 [references/immune-decision-matrix.md](references/immune-decision-matrix.md)。
 
+### Review Rules 追加
+
+如果根因涉及代码规范问题（命名混乱、架构违反、已知反模式未防护），在免疫决策的同时将教训转化为防御级 review rule，追加到 `.project-context/review-rules/defensive.md`。
+
+追加条件：
+
+- 根因可以通过代码检视发现（不是纯运行时问题）
+- 规则可复用（不是一次性的特定修复）
+- 规则足够具体（不是"注意代码质量"这类空泛表述）
+
+这些 rules 供 `code-review` 在后续开发中消费，防止同类问题复发。
+
 ## 与交付后 reflect 的边界
 
 - 本 skill 的结构化复盘属于 incident reflect：围绕一次具体故障、修复和免疫决策收束

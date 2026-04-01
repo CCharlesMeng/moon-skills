@@ -24,7 +24,12 @@
 - [ ] 无测试先行清单（或标注人工验证替代理由）
 - [ ] 回滚方式：还原 statusColorMap 中的映射值
 
-### domain-verify
+### code-review
+
+- [ ] 压缩模式：仅仓库级 base rules 快速检查
+- [ ] 无 blocking issue
+
+### verify
 
 - [ ] 使用 frontend-verify-pack
 - [ ] 最小证据：前后截图 + 控制台无新增报错

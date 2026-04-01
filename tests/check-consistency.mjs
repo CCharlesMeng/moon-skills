@@ -57,15 +57,20 @@ const ARTIFACT_CHAIN = [
   {
     producer: "design-pack",
     artifact: "design-pack.md",
-    consumers: ["slice-plan", "domain-verify"],
+    consumers: ["slice-plan", "verify"],
   },
   {
     producer: "slice-plan",
     artifact: "slice-plan.md",
-    consumers: ["domain-verify"],
+    consumers: ["code-review", "verify"],
   },
   {
-    producer: "domain-verify",
+    producer: "code-review",
+    artifact: "code-review.md",
+    consumers: [],
+  },
+  {
+    producer: "verify",
     artifact: "verify.md",
     consumers: ["spec-check"],
   },
@@ -157,7 +162,7 @@ function checkRouteTargets() {
           "analysis-spec",
           "design-pack",
           "slice-plan",
-          "domain-verify",
+          "verify",
           "spec-check",
           "audit",
           "sync-context",
@@ -183,7 +188,7 @@ const OWNERSHIP = {
   TB: { owner: "analysis-spec", label: "Target Behavior" },
   AC: { owner: "design-pack", label: "Acceptance Criteria" },
   TC: { owner: "design-pack", label: "Test Case" },
-  EV: { owner: "domain-verify", label: "Evidence" },
+  EV: { owner: "verify", label: "Evidence" },
   ADR: { owner: "design-pack", label: "Architecture Decision Record" },
 };
 
@@ -229,7 +234,8 @@ const SDD_CHAIN_SKILLS = [
   "analysis-spec",
   "design-pack",
   "slice-plan",
-  "domain-verify",
+  "code-review",
+  "verify",
   "spec-check",
   "audit",
 ];
@@ -276,7 +282,7 @@ const REFERENCE_CHECKS = [
     ],
   },
   {
-    skill: "domain-verify",
+    skill: "verify",
     files: [
       "references/frontend-verify-pack.md",
       "references/backend-verify-pack.md",
@@ -286,6 +292,10 @@ const REFERENCE_CHECKS = [
   {
     skill: "design-pack",
     files: ["references/design-pack-template.md"],
+  },
+  {
+    skill: "code-review",
+    files: ["references/review-rules-template.md"],
   },
 ];
 
