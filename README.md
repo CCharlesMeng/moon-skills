@@ -98,16 +98,43 @@ AI (analysis-spec — 规格):
   TB-4 loading 骨架屏 / TB-5 空态提示 / TB-6 失败重试
   → 触发矩阵：涉及共享 hook，进入 design-pack
 
-AI (design-pack):
+AI (design-pack — Phase 1 业务验收):
   AC-1.1 (← TB-1)
   Given 用户进入订单列表页
   When 页面首次加载完成
   Then 默认显示第一页 20 条数据，分页器显示总页数
 
+  不做的事：不支持自定义每页条数、不支持跳页输入
+  验收方式：TB-1~3 demo 演示 + 截图，TB-4~6 自动测试
+  → 等待确认
+
+你：确认。
+
+AI (design-pack — Phase 2 领域建模):
+  已压缩（不涉及多实体关系），统一语言：
+  "分页" = 服务端分页，非前端虚拟滚动
+  → 等待确认
+
+你：确认。
+
+AI (design-pack — Phase 3 技术方案):
+  技术栈：沿用 React + SWR，复用 usePagination hook
+  ADR-1: 页码写入 URL（支持分享和刷新恢复），而非仅本地状态
+  API 契约：GET /api/orders?page=1&pageSize=20 → { data, total }
+  → 等待确认
+
+你：确认。
+
+AI (design-pack — Phase 4 测试规格):
   TC-1.1.1 (← AC-1.1) [e2e / happy-path]
   访问 /orders，断言列表项数量为 20，分页器可见
 
-  ADR-1: 页码写入 URL（支持分享和刷新恢复），而非仅本地状态
+AI (design-pack — Phase 5 工作量评估):
+  整体规模: M（3-5 人天）
+  后端分页接口 S 0.5d / 前端分页+URL M 1.5-2d / 状态覆盖 S 1d / 测试 S 0.5-1d
+  → 等待确认
+
+你：确认。
 
 AI (slice-plan):
   切出 3 个 slice，每个附测试先行清单和回滚边界：
@@ -141,7 +168,7 @@ AI (spec-check):
 | `initialize` | **仓库知识库初始化** | **手动**：`请用 initialize 为这个仓库建立首版上下文`<br>`请用 initialize 为 <模块> 建立首版上下文` | `.project-context/` 底座（profile + references + features index + PROFILE.md + 可选 lenses） |
 | `sync-context` | **上下文预热 / 增量同步** | **手动（预热）**：`请用 sync-context 为 <模块> 做开发前预热`<br>**自动（写回）**：由 `audit` / `immune-debug` 路由触发 | context 资产增量更新（按影响面刷新 profile / references / features index） |
 | `analysis-spec` | **需求分析 → 行为规格** | **手动**：`请完成 analysis-spec：摸底 → 自学习 → 澄清 → 规格` | `analysis-spec.md`（TB + RiskInventory + EvidencePlan） |
-| `design-pack` | **设计方案 + 验收标准 + 测试规格** | **手动**：`请基于 analysis-spec 产出 design-pack`<br>按触发矩阵决定是否进入（见下方工作模式） | `design-pack.md`（AC + TC + ADR + 兼容策略） |
+| `design-pack` | **渐进式设计契约（5 Phase）** | **手动**：`请基于 analysis-spec 产出 design-pack`<br>按触发矩阵决定是否进入（见下方工作模式） | `design-pack.md`（业务验收 → 领域建模 → 技术方案 → 测试规格 → 工作量评估，每步确认门） |
 | `slice-plan` | **交付切片 / 任务分解** | **手动**：`请基于 analysis-spec 产出 slice-plan` | `slice-plan.md`（每个 slice：目标 / TB / AC / TC / 风险 / 回滚） |
 | `domain-verify` | **领域验证 / 证据收口** | **手动**：`请用 domain-verify 验证当前 slice` | `verify.md`（TC 证据台账 + verify pack 结果 + spec 偏差检测） |
 | `spec-check` | **规格对账 / 交付验收** | **手动**：`请做 spec-check，逐条对账 analysis-spec 和最终交付` | `spec-check.md`（每条 TB：as_specified / intentionally_changed / deferred / abandoned） |
@@ -151,10 +178,12 @@ AI (spec-check):
 ## 工件链
 
 ```
-analysis-spec.md → design-pack.md → slice-plan.md → verify.md → spec-check.md → reflect.md
-       TB              AC/TC/ADR        slice→TB/AC/TC    TC→EV       TB对账          沉淀
-                                                              ↓
-                                                  .project-context/（sync-context 写回）
+analysis-spec.md → design-pack.md ────────────────→ slice-plan.md → verify.md → spec-check.md → reflect.md
+       TB          Phase1: AC（业务验收）              slice→TB/AC/TC    TC→EV       TB对账          沉淀
+                   Phase2: 领域模型                                        ↓
+                   Phase3: ADR/契约（技术方案）                .project-context/（sync-context 写回）
+                   Phase4: TC（测试规格）
+                   Phase5: 工作量评估
 ```
 
 `patch-lite` 需求可以跳过 `design-pack`，把 analysis-spec、slice-plan、verify 合并成一份精简记录，但 spec-check 和 audit 的语义不可跳过。
@@ -175,6 +204,7 @@ analysis-spec.md → design-pack.md → slice-plan.md → verify.md → spec-che
 
 | 门禁 | 规则 |
 |---|---|
+| **渐进确认** | `design-pack` 每个 Phase 有确认门，未确认不进入下一 Phase |
 | **测试先行** | 如果存在 design-pack，每个 slice 必须有测试先行清单（TC 编号），先 TC 后代码 |
 | **验证前置** | 没有通过 `domain-verify`，不能进入 `spec-check` |
 | **偏差回路** | `domain-verify` 发现实现偏离 TB/AC 时，必须回到上游修正，不能静默吸收 |

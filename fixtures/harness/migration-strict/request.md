@@ -17,11 +17,16 @@
 
 ### design-pack
 
-- [ ] 已进入，全部 Phase 必做
-- [ ] ADR：为什么选 Zustand、迁移策略（渐进 vs 一次性）、兼容层设计
-- [ ] AC 覆盖兼容期行为：旧 Redux 路径仍可工作
-- [ ] TC 覆盖回归：迁移前后行为一致性测试
-- [ ] Compatibility / Rollback Notes 已填写
+- [ ] 已进入，全部 Phase 必做，全部确认门必过
+- [ ] Phase 1（业务验收）：AC 覆盖兼容期行为（旧 Redux 路径仍可工作），"不做的事"明确
+- [ ] Phase 1 确认门通过
+- [ ] Phase 2（领域建模）：实体与状态机（三个模块的 store 结构），统一语言（Redux slice vs Zustand store）
+- [ ] Phase 2 确认门通过
+- [ ] Phase 3（技术方案）：ADR（为什么选 Zustand、渐进 vs 一次性、兼容层设计），兼容/回滚策略已填写
+- [ ] Phase 3 确认门通过
+- [ ] Phase 4（测试规格）：TC 覆盖回归（迁移前后行为一致性测试）
+- [ ] Phase 4 确认门通过（migration-strict 必做）
+- [ ] Phase 5（工作量评估）：整体 L/XL 规模评估，高风险项标注
 
 ### slice-plan
 

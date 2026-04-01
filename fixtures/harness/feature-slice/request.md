@@ -18,9 +18,14 @@
 ### design-pack
 
 - [ ] 已进入
-- [ ] AC 数量 >= TB 数量
-- [ ] TC 覆盖 happy-path 和 failure-path
-- [ ] ADR：页码写入 URL vs 本地状态的决策记录
+- [ ] Phase 1（业务验收）：AC 数量 >= TB 数量，语言非技术人员可读，有"不做的事"和验收确认方式
+- [ ] Phase 1 确认门：等待用户确认后才进入 Phase 2
+- [ ] Phase 2（领域建模）：根据复杂度决定完整展开或压缩为术语表
+- [ ] Phase 2 确认门：等待用户确认后才进入 Phase 3
+- [ ] Phase 3（技术方案）：ADR（页码写入 URL vs 本地状态），API 契约定义
+- [ ] Phase 3 确认门：等待用户确认后才进入 Phase 4
+- [ ] Phase 4（测试规格）：TC 覆盖 happy-path 和 failure-path
+- [ ] Phase 5（工作量评估）：有整体规模评估和工作块拆分
 
 ### slice-plan
 
