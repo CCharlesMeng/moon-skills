@@ -19,6 +19,18 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 | 需求级 | `design-pack` Phase 3 | 领域命名（统一语言）、架构约束（ADR 派生）、API 契约规范、组件边界 | 随需求存在，实现期有效 |
 | 防御级 | `immune-debug` | 踩过的坑 → 反模式规则、已知陷阱 → 检查项 | 长期累积，每次事故后追加 |
 
+## 交互规范
+
+遵守 [Skill-User 交互黄金原则](../../PRINCIPLES.md)。
+
+| Phase | 用户可见内容 | 结束方式 |
+| --- | --- | --- |
+| 0 — 收集 Rules | 内联进 Phase 1，不单独输出（P6） | — |
+| 1 — 逐文件检视 | Issue 汇总表（blocking / suggestion） + 按文件明细 | 无确认门 |
+| 最终 | 三行索引（P5） | — |
+
+---
+
 ## 硬门禁
 
 1. **没有 rules 不准检视。** 至少要有仓库级 base rules 或 design-pack 产出的需求级 rules。没有标准的检视是主观评价，不是结构化检视。
@@ -180,23 +192,11 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 
 ## 最终输出
 
-结束时必须包含：
-
-### 检视摘要
-
-- 检视了哪些文件
-- blocking / suggestion 数量
-- 是否可以进入 verify
-
-### 产出文件
-
-- `code-review.md` 路径
-
-### 下一步
-
-- 无 blocking → 进入 `verify`
-- 有 blocking → 修正后重新检视
-- 发现 rules 缺口 → 建议补全 `.project-context/review-rules/`
+```
+✓ code-review 完成
+产出：docs/specs/<topic>/slices/<slice-id>/code-review.md
+下一步：[无 blocking → 进入 verify / 有 N 个 blocking → 修正后重新检视]
+```
 
 ---
 

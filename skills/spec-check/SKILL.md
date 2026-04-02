@@ -13,6 +13,19 @@ description: 在交付结束时，逐条对账 analysis-spec.md 中的 TargetBeh
 
 它不是 `audit` 的变体。`spec-check` 回答"承诺了什么，交付了什么"；`audit` 回答"学到了什么，哪些值得长期保留"。前者是后者的输入。
 
+## 交互规范
+
+遵守 [Skill-User 交互黄金原则](../../PRINCIPLES.md)。
+
+| Phase | 用户可见内容 | 结束方式 |
+| --- | --- | --- |
+| 0 — 读取 | 内联进 Phase 1，不单独输出（P6） | — |
+| 1 — 逐条对账 | 对账结果表 | 无确认门 |
+| 2 — 隐性偏差 | 内联进对账结果表的 `unplanned` 行（P6） | — |
+| 3 — 产出文件 | 写入文件，输出三行索引（P5） | — |
+
+---
+
 ## 硬门禁
 
 1. **不要跳过对账。** 即使所有 verify 都 pass，也必须逐条确认 TargetBehavior 的归宿。
@@ -139,22 +152,11 @@ description: 在交付结束时，逐条对账 analysis-spec.md 中的 TargetBeh
 
 ## 最终输出
 
-结束时必须包含：
-
-### 对账摘要
-
-- 总目标行为数
-- 各状态的数量
-- 关键偏差项
-
-### 产出文件
-
-- `spec-check.md` 路径
-
-### 下一步
-
-- 进入 `audit` 做 post-ship reflect
-- 如果有大量 deferred 或 unplanned 项，建议在 audit 中重点 review
+```
+✓ spec-check 完成
+产出：docs/specs/<topic>/spec-check.md
+下一步：进入 audit 做 post-ship reflect
+```
 
 ---
 

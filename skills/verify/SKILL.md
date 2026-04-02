@@ -13,6 +13,20 @@ description: 在实现完成后，按领域 verify pack 逐项收集证据、标
 
 它不做规格对账（那是 `spec-check` 的事），也不做 reflect（那是 `audit` 的事）。它只回答一个问题：**证据够不够，质量过不过线**。
 
+## 交互规范
+
+遵守 [Skill-User 交互黄金原则](../../PRINCIPLES.md)。
+
+| Phase | 用户可见内容 | 结束方式 |
+| --- | --- | --- |
+| 0 — 读取 | 内联进 Phase 1，不单独输出（P6） | — |
+| 1 — 收集证据 | Evidence Ledger 表 + Verify Pack 结果表 | 无确认门 |
+| 2 — 偏差检测 | Spec Deviations 表（无偏差则内联"无"） | 无确认门 |
+| 3 — Replan | 仅在有 blocking 偏差或连续失败时输出（P6） | — |
+| 最终 | 三行索引（P5） | — |
+
+---
+
 ## 硬门禁
 
 1. **没有证据不能标 pass。** 每个必做 TC 必须挂到一条 EV（测试结果、截图、日志、录屏、请求记录），没有 EV 的 TC 只能标 `deferred` 或 `failed`。
@@ -185,24 +199,11 @@ verify 的 spec deviation 检测是辅助发现，不是最终裁定。最终的
 
 ## 最终输出
 
-结束时必须包含：
-
-### 验证摘要
-
-- 验证了哪些 slice
-- TC 通过率
-- spec deviation 数量和严重度
-- 是否需要 replan
-
-### 产出文件
-
-- `verify.md` 路径
-
-### 下一步
-
-- 无 blocking 偏差 → 进入 `spec-check`
-- 有 blocking 偏差 → 根据 replan recommendation 回到对应上游 skill
-- 有大量 deferred → 建议在 spec-check 中重点标注
+```
+✓ verify 完成
+产出：docs/specs/<topic>/slices/<slice-id>/verify.md
+下一步：[进入 spec-check / 回到 <上游 skill>（blocking 偏差原因一句话）]
+```
 
 ---
 

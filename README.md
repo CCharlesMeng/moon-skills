@@ -292,6 +292,7 @@ npx skills add obra/superpowers --skill systematic-debugging
 ## Repository Layout
 
 - `skills/` — first-party workflow skills
+- `PRINCIPLES.md` — Skill-User 交互黄金原则（所有 skill 的输出规范基准）
 - `analysis-driven-sdd.md` — 方法论文档（分析驱动 SDD 的完整设计哲学、示例与 skill 架构说明）
 
 ## Notes
