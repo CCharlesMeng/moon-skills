@@ -117,7 +117,13 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 - 规则可复用（不是一次性的特定修复）
 - 规则足够具体（不是"注意代码质量"这类空泛表述）
 
-这些 rules 供 `code-review` 在后续开发中消费，防止同类问题复发。
+追加规则时：
+
+- 使用 `DEF-R-N` 编号格式（N 在整个 `defensive.md` 内递增），确保跨层级唯一
+- 填写 `immune_ref` 列，引用本次写入 `immune-registry.yaml` 的资产 `id`
+- 将同一个 `DEF-R-N` 编号记录到 `immune-registry.yaml` 对应条目的 `defensive_rule_id` 字段
+
+这些 rules 供 `code-review` 在后续开发中消费，防止同类问题复发。`code-review` 通过 `immune_ref` 和 `defensive_rule_id` 的双向关联，实现检视触发记录的自动反写。
 
 ## 与交付后 reflect 的边界
 
@@ -195,6 +201,14 @@ description: 用于调试 bug、回归、重复事故、测试失败或异常行
 
 置信度:
 - 低 | 中 | 高
+
+## 资产记录
+
+added_at: <当前 ISO datetime>
+last_checked_at: <同 added_at>
+last_triggered_at: <同 added_at>
+defensive_rule_id: <DEF-R-N | null>
+governance_tags: []
 
 ## 后续动作
 - 仓库上下文: initialize | sync-context | 无

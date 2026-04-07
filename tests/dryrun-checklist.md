@@ -39,6 +39,7 @@
 ### code-review
 - [ ] 压缩模式：仅仓库级 base rules 快速检查
 - [ ] 无 blocking issue
+- [ ] 如有 defensive rules：last_checked_at 已反写
 
 ### verify
 - [ ] 使用 frontend-verify-pack
@@ -96,6 +97,8 @@
 - [ ] 检视领域命名一致性
 - [ ] 检视架构约束遵守
 - [ ] 无 blocking issue
+- [ ] 如有 defensive rules：Phase 3 反写 last_checked_at（如有 blocking 则同时更新 last_triggered_at）
+- [ ] 最终输出包含免疫触发记录行
 
 ### verify
 - [ ] 使用 frontend-verify-pack
@@ -108,9 +111,13 @@
 - [ ] 无隐性偏差
 
 ### audit
+- [ ] Phase 0.5 执行 Periodic Freshness Check（检查 immune 资产新鲜度）
+- [ ] 超 90 天未 checked 的 high confidence 资产已降级为 medium + needs-review
 - [ ] 产出 reflect.md
+- [ ] reflect.md 的"长期防护机会"章节列出 needs-review 条目
 - [ ] 如有可复用模式，路由 sync-context 写回 references
 - [ ] 如有风险教训，评估是否生成 immune-candidates
+- [ ] 如有 [possibly-resolved] uncertainty 条目，确认或恢复
 
 ## 偏差记录
 
@@ -159,6 +166,8 @@
 - [ ] 重点检视兼容层代码、双写逻辑、feature flag 实现
 - [ ] 检视领域命名和架构约束
 - [ ] 无 blocking issue
+- [ ] 如有 defensive rules：Phase 3 反写 last_checked_at / last_triggered_at
+- [ ] 最终输出包含免疫触发记录行
 
 ### verify
 - [ ] 使用 frontend-verify-pack + integration-verify-pack
@@ -172,10 +181,13 @@
 - [ ] deferred 项（如有）有后续计划
 
 ### audit
+- [ ] Phase 0.5 执行 Periodic Freshness Check
 - [ ] 产出 reflect.md
+- [ ] reflect.md 列出 needs-review 的免疫条目（如有）
 - [ ] 路由 sync-context 写回：迁移模式、共享层变更、兼容期策略
 - [ ] 评估是否将关键教训写入 immune 资产
 - [ ] deferred TB 有后续跟进计划
+- [ ] 如有 [possibly-resolved] uncertainty 条目，确认或恢复
 
 ## 偏差记录
 

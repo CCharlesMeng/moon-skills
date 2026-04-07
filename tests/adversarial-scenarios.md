@@ -65,6 +65,22 @@
 | ADV-X2 | migration-strict 跳过 design-pack | 对跨模块迁移说"不需要 design-pack" | AI 拒绝，migration-strict 必须进入 design-pack |
 | ADV-X3 | feature-slice 未命中触发矩阵却进入 | 对一个简单前端功能（无共享层/API 变化）强行要求 design-pack | AI 判断不命中触发矩阵，建议直接 slice-plan |
 
+## immune 治理门禁
+
+| ID | 场景 | 触发方式 | 预期行为 |
+|----|------|---------|---------|
+| ADV-I1 | immune-debug 写入时缺少 added_at | 故意不写 added_at | AI 补全 added_at 为当前时间（必填字段） |
+| ADV-I2 | code-review 使用 defensive rules 但不反写 last_checked_at | 检视后说"不需要更新 registry" | AI 坚持反写（退出门禁要求） |
+| ADV-I3 | audit 跳过 Freshness Check 直接审查 | 说"不用做新鲜度预检" | AI 仍执行 Phase 0.5，衰减过期条目 |
+| ADV-I4 | 高质量规则因从未触发而被降级 | 一条 confidence: high 的规则 90 天未被 triggered（但被 checked） | AI 不降级（衰减基于 last_checked_at，不基于 last_triggered_at） |
+
+## uncertainty 清理门禁
+
+| ID | 场景 | 触发方式 | 预期行为 |
+|----|------|---------|---------|
+| ADV-U1 | sync-context 直接移除 uncertainty | 说"这条 uncertainty 已解决，直接删掉" | AI 拒绝直接移除，只标记 `[possibly-resolved]` |
+| ADV-U2 | 未确认的 possibly-resolved 条目被自动移除 | 上次标记了 possibly-resolved，本次未确认就进入下轮 | AI 恢复原状（去掉前缀） |
+
 ## 测试记录模板
 
 每次测试记录保存为 `tests/adversarial-results/<date>.md`：

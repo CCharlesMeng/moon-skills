@@ -48,6 +48,14 @@
 置信度:
 - 高
 
+## 资产记录
+
+added_at: 2026-03-15T00:00:00Z
+last_checked_at: 2026-03-15T00:00:00Z
+last_triggered_at: 2026-03-15T00:00:00Z
+defensive_rule_id: null
+governance_tags: []
+
 ## 后续动作
 - 仓库上下文: 无
 - 资产写入: 正式区
@@ -99,6 +107,14 @@
 
 置信度:
 - 中
+
+## 资产记录
+
+added_at: 2026-03-20T00:00:00Z
+last_checked_at: 2026-03-20T00:00:00Z
+last_triggered_at: 2026-03-20T00:00:00Z
+defensive_rule_id: DEF-R-3
+governance_tags: []
 
 ## 后续动作
 - 仓库上下文: sync-context

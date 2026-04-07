@@ -9,6 +9,9 @@
  * 3. Single ownership — TB/AC/TC/EV/ADR each owned by exactly one skill
  * 4. Work mode coverage — SDD-chain skills mention all three modes
  * 5. Reference files — all referenced files exist on disk
+ * 6. Immune governance cycle — schema, write-back, decay fields consistent
+ * 7. Uncertainty protocol — two-stage cleanup referenced in sync-context and audit
+ * 8. Prompt files — prompts/ directory contains expected scenario files
  */
 
 import { readFileSync, readdirSync, existsSync } from "fs";
@@ -297,6 +300,14 @@ const REFERENCE_CHECKS = [
     skill: "code-review",
     files: ["references/review-rules-template.md"],
   },
+  {
+    skill: "immune-debug",
+    files: [
+      "references/immune-decision-matrix.md",
+      "references/immune-registry-schema.md",
+      "references/examples.md",
+    ],
+  },
 ];
 
 function checkReferenceFiles() {
@@ -313,6 +324,150 @@ function checkReferenceFiles() {
   }
 }
 
+// ── 6. Immune governance cycle ─────────────────────────────────────
+
+const IMMUNE_FIELDS = [
+  "added_at",
+  "last_checked_at",
+  "last_triggered_at",
+  "defensive_rule_id",
+  "governance_tags",
+];
+
+const IMMUNE_CYCLE = [
+  {
+    skill: "immune-debug",
+    role: "writer",
+    requiredFields: ["added_at", "last_checked_at", "last_triggered_at", "defensive_rule_id", "governance_tags"],
+    requiredTerms: ["immune-registry.yaml"],
+  },
+  {
+    skill: "code-review",
+    role: "write-back",
+    requiredFields: ["last_checked_at", "last_triggered_at", "defensive_rule_id"],
+    requiredTerms: ["immune-registry.yaml", "defensive"],
+  },
+  {
+    skill: "audit",
+    role: "decay",
+    requiredFields: ["last_checked_at", "governance_tags", "needs-review"],
+    requiredTerms: ["immune-registry.yaml", "Freshness Check"],
+  },
+];
+
+function checkImmuneGovernance() {
+  console.log("\n── 6. Immune Governance Cycle ──");
+
+  const schemaPath = join(SKILLS_DIR, "immune-debug", "references", "immune-registry-schema.md");
+  if (existsSync(schemaPath)) {
+    const schema = readFileSync(schemaPath, "utf-8");
+    for (const field of IMMUNE_FIELDS) {
+      if (schema.includes(field)) {
+        report("pass", "immune-schema", `Schema defines "${field}"`);
+      } else {
+        report("fail", "immune-schema", `Schema missing field "${field}"`);
+      }
+    }
+  } else {
+    report("fail", "immune-schema", "immune-registry-schema.md NOT FOUND");
+  }
+
+  for (const { skill, role, requiredFields, requiredTerms } of IMMUNE_CYCLE) {
+    const content = readSkill(skill);
+    if (!content) {
+      report("fail", "immune-cycle", `${skill}/SKILL.md not found`);
+      continue;
+    }
+    for (const field of requiredFields) {
+      if (content.includes(field)) {
+        report("pass", "immune-cycle", `${skill} (${role}) mentions "${field}"`);
+      } else {
+        report("fail", "immune-cycle", `${skill} (${role}) missing "${field}"`);
+      }
+    }
+    for (const term of requiredTerms) {
+      if (content.includes(term)) {
+        report("pass", "immune-cycle", `${skill} (${role}) mentions "${term}"`);
+      } else {
+        report("fail", "immune-cycle", `${skill} (${role}) missing "${term}"`);
+      }
+    }
+  }
+
+  const reviewTemplate = readFileSync(
+    join(SKILLS_DIR, "code-review", "references", "review-rules-template.md"),
+    "utf-8"
+  );
+  if (reviewTemplate.includes("immune_ref") && reviewTemplate.includes("DEF-R-")) {
+    report("pass", "immune-cycle", "review-rules-template has immune_ref + DEF-R-N format");
+  } else {
+    report("fail", "immune-cycle", "review-rules-template missing immune_ref or DEF-R-N format");
+  }
+
+  const decisionMatrix = readFileSync(
+    join(SKILLS_DIR, "immune-debug", "references", "immune-decision-matrix.md"),
+    "utf-8"
+  );
+  if (decisionMatrix.includes("immune-registry-schema.md")) {
+    report("pass", "immune-cycle", "decision-matrix references schema doc");
+  } else {
+    report("fail", "immune-cycle", "decision-matrix does NOT reference schema doc");
+  }
+}
+
+// ── 7. Uncertainty protocol ───────────────────────────────────────
+
+function checkUncertaintyProtocol() {
+  console.log("\n── 7. Uncertainty Protocol ──");
+  const REQUIRED = [
+    { skill: "sync-context", terms: ["possibly-resolved", "uncertainty"] },
+    { skill: "audit", terms: ["possibly-resolved"] },
+  ];
+
+  for (const { skill, terms } of REQUIRED) {
+    const content = readSkill(skill);
+    if (!content) {
+      report("fail", "uncertainty", `${skill}/SKILL.md not found`);
+      continue;
+    }
+    for (const term of terms) {
+      if (content.includes(term)) {
+        report("pass", "uncertainty", `${skill} mentions "${term}"`);
+      } else {
+        report("fail", "uncertainty", `${skill} missing "${term}"`);
+      }
+    }
+  }
+
+  const syncContent = readSkill("sync-context");
+  if (syncContent && syncContent.includes("不要直接移除 uncertainty")) {
+    report("pass", "uncertainty", "sync-context has hard gate against direct removal");
+  } else {
+    report("fail", "uncertainty", "sync-context missing hard gate against direct removal");
+  }
+}
+
+// ── 8. Prompt files ───────────────────────────────────────────────
+
+const EXPECTED_PROMPTS = ["troubleshoot.md", "onboarding.md", "review-immune.md"];
+
+function checkPromptFiles() {
+  console.log("\n── 8. Prompt Files ──");
+  const promptsDir = join(ROOT, "prompts");
+  if (!existsSync(promptsDir)) {
+    report("fail", "prompts", "prompts/ directory NOT FOUND");
+    return;
+  }
+  for (const file of EXPECTED_PROMPTS) {
+    const fullPath = join(promptsDir, file);
+    if (existsSync(fullPath)) {
+      report("pass", "prompts", `prompts/${file} exists`);
+    } else {
+      report("fail", "prompts", `prompts/${file} NOT FOUND`);
+    }
+  }
+}
+
 // ── Run all checks ─────────────────────────────────────────────────
 
 console.log("moon-skills Static Consistency Check");
@@ -323,6 +478,9 @@ checkRouteTargets();
 checkSingleOwnership();
 checkWorkModeCoverage();
 checkReferenceFiles();
+checkImmuneGovernance();
+checkUncertaintyProtocol();
+checkPromptFiles();
 
 console.log("\n====================================");
 console.log(

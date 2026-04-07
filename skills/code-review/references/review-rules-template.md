@@ -29,7 +29,11 @@
 
 ### 反模式（防御级 defensive.md 示例）
 
-| # | 规则 | 检查方式 | 严重度 |
-| --- | --- | --- | --- |
-| R-1 | 禁止在 useEffect 中直接调用未包装的 fetch（历史 race condition 根因） | hook 代码审查 | blocking |
-| R-2 | 分页请求必须处理 stale response（上次事故根因：快速翻页导致旧页数据覆盖新页） | 请求逻辑审查 | blocking |
+防御级规则额外增加 `immune_ref` 列，引用 `immune-registry.yaml` 中对应资产的 `id`，用于 `code-review` 反写触发记录。
+
+| # | 规则 | 检查方式 | 严重度 | immune_ref |
+| --- | --- | --- | --- | --- |
+| DEF-R-1 | 禁止在 useEffect 中直接调用未包装的 fetch（历史 race condition 根因） | hook 代码审查 | blocking | no-bare-fetch-in-effect |
+| DEF-R-2 | 分页请求必须处理 stale response（上次事故根因：快速翻页导致旧页数据覆盖新页） | 请求逻辑审查 | blocking | guard-stale-pagination |
+
+**防御级规则编号约定**：使用 `DEF-R-N` 格式（区别于仓库级和需求级的 `R-N`），确保跨层级唯一。`immune_ref` 填写 `immune-registry.yaml` 中对应条目的 `id`，若暂无对应条目可留空。

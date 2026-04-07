@@ -54,6 +54,11 @@
 - `source_case`
 - `confidence`
 - `status`
+- `added_at` — 资产创建时间（ISO datetime），必填
+- `last_checked_at` — 初始等于 `added_at`
+- `last_triggered_at` — 初始等于 `added_at`
+- `defensive_rule_id` — 若同时追加了 defensive rule 到 `defensive.md`，记录对应的规则编号（如 `DEF-R-3`）；否则为 `null`
+- `governance_tags` — 初始为 `[]`
 
 路径约定：
 
@@ -62,4 +67,5 @@
 - 候选索引：`.project-context/immune-candidates.yaml`
 - 候选资产：`.project-context/candidates/...`
 
+完整字段说明和向后兼容策略见 [immune-registry-schema.md](immune-registry-schema.md)。
 完整黄金输出见 [examples.md](examples.md)。

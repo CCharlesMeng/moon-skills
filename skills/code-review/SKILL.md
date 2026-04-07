@@ -27,6 +27,7 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 | --- | --- | --- |
 | 0 — 收集 Rules | 内联进 Phase 1，不单独输出（P6） | — |
 | 1 — 逐文件检视 | Issue 汇总表（blocking / suggestion） + 按文件明细 | 无确认门 |
+| 3 — 反写触发记录 | 内联进最终输出（P6），仅在使用了 defensive rules 时标注 | — |
 | 最终 | 三行索引（P5） | — |
 
 ---
@@ -74,6 +75,8 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 3. `slice-plan.md` 中当前 slice 的受影响文件/模块范围
 
 将 rules 合并为一份检视清单。如果同一条规则在多个来源中重复，去重。
+
+如果存在 `.project-context/immune-registry.yaml`，同时读取并建立 `defensive_rule_id` 到 registry 条目的映射表。后续 Phase 3 依赖此映射反写触发记录。
 
 确认检视范围：哪些文件是当前 slice 改动的。
 
@@ -155,11 +158,20 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 - suggestion: N
 ```
 
+### Phase 3 — 反写免疫触发记录
+
+如果 Phase 0 建立了 `defensive_rule_id` 映射，且本轮使用了 defensive rules：
+
+1. 对所有本轮检视中**被纳入检查范围**的 defensive rules：将 `immune-registry.yaml` 中对应条目的 `last_checked_at` 更新为当前日期
+2. 对所有本轮**产生 blocking issue** 的 defensive rules：将对应条目的 `last_triggered_at` 也更新为当前日期
+3. 如果 defensive rule 的 `immune_ref` 无法匹配到 registry 条目（registry 中不存在该 `id`），跳过反写并在报告中标注
+
 退出门禁：
 
 - 所有改动文件已检视
 - blocking issue 数量已确认
 - 如果有 blocking issue，标注为"需要修正后重新检视"
+- 如存在 `immune-registry.yaml` 且本轮使用了 defensive rules，确认 `last_checked_at` 已更新
 
 ## 工作模式适配
 
@@ -195,6 +207,7 @@ description: 在实现完成后、行为验证之前，基于累积的 review ru
 ```
 ✓ code-review 完成
 产出：docs/specs/<topic>/slices/<slice-id>/code-review.md
+免疫触发记录：N 条 checked, M 条 triggered（仅在使用了 defensive rules 时输出此行）
 下一步：[无 blocking → 进入 verify / 有 N 个 blocking → 修正后重新检视]
 ```
 
