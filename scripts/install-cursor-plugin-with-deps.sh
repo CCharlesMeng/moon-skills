@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-REPO_URL="${MOON_SKILLS_REPO_URL:-https://github.com/ccharlesmeng/moon-skills.git}"
+REPO_URL="${MOON_SKILLS_REPO_URL:-https://github.com/CCharlesMeng/moon-skills.git}"
 DEFAULT_CHECKOUT="${XDG_DATA_HOME:-$HOME/.local/share}/moon-skills/checkout"
 CHECKOUT_DIR="${MOON_SKILLS_CHECKOUT:-$DEFAULT_CHECKOUT}"
 PLUGIN_NAME="${MOON_SKILLS_PLUGIN_NAME:-moon-skills}"
