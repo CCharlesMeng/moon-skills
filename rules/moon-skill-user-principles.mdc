@@ -1,0 +1,37 @@
+---
+description: Skill-User interaction principles for moon-skills workflow (single decision per turn, structured output, confirmation gates, three-line completion index). Apply when running initialize, sync-context, analysis-spec, design-pack, slice-plan, code-review, verify, spec-check, audit, or immune-debug.
+alwaysApply: false
+---
+
+# Moon skills — user interaction
+
+When executing interactive skills from the moon-skills plugin:
+
+1. **Single decision per turn (P1)** — Each reply is exactly one of: ask for confirmation, ask clarifying questions (batched per skill rules), or finish with the completion index (P5). Never mix confirmation gate + questions + routing in one turn.
+
+2. **Structure over prose (P2)** — Use tables or lists for multi-item content. No vague closings; use explicit actions like: `→ 请确认继续 / 或指出需要修改的地方。`
+
+3. **No process narration (P3)** — Do not open with "I will now…". Present results directly.
+
+4. **Confirmation gate format (P4)** — For phased work, end each phase with:
+
+```
+---
+**[Phase N 确认门]** <one-line summary of this phase output>
+→ 请确认继续 / 或指出需要修改的地方。
+---
+```
+
+5. **Completion index only (P5)** — When a skill finishes, output only:
+
+```
+✓ <skill> 完成
+产出：<path>
+下一步：<one concrete instruction>（附触发条件，如适用）
+```
+
+6. **Inline zero-decision phases (P6)** — Merge phases that need no user decision into the next decision-bearing phase.
+
+7. **Batch questions (P7)** — When clarifying, batch questions in one table; separate 🔴/🟡/🟢 per skill conventions.
+
+Full reference: `PRINCIPLES.md` at the repository root (same content as this rule’s source of truth).

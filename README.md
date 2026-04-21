@@ -278,9 +278,81 @@ npx skills add ccharlesmeng/moon-skills --skill analysis-spec
 npx skills add ccharlesmeng/moon-skills --list
 ```
 
+## Cursor 插件
+
+本仓库同时是一个 **[Cursor 插件](https://cursor.com/cn/docs/plugins)**：清单文件为 [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json)。捆绑内容如下：
+
+| 组件 | 路径 |
+| --- | --- |
+| 技能（Skills） | [`skills/`](skills/) |
+| 规则（Rules） | [`rules/`](rules/)（`.mdc`） |
+| 命令（Commands） | [`commands/`](commands/)（仪表盘 Deep Link 伴随场景，与 [`prompts/`](prompts/) 意图一致） |
+
+### 一键安装（插件 + Superpowers 排障 skill）
+
+以下方式会：**把本仓库注册为 Cursor 本地插件**（`~/.cursor/plugins/local/` 符号链接），并 **`npx skills add` 安装 `obra/superpowers` 中的 `systematic-debugging`**（`immune-debug` 依赖）。需要已安装 **Git** 与 **Node.js（含 npx）**。
+
+**方式 A：远程一键（推荐）**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ccharlesmeng/moon-skills/main/scripts/install-cursor-plugin-with-deps.sh | bash
+```
+
+若你的默认分支不是 `main`，把 URL 中的 `main` 改成实际分支名。
+
+**方式 B：已克隆本仓库时，在仓库根目录执行**
+
+```bash
+bash scripts/install-cursor-plugin-with-deps.sh
+```
+
+**方式 C：使用本地已有副本（不重新克隆）**
+
+```bash
+export MOON_SKILLS_CHECKOUT=/你的/绝对路径/moon-skills
+bash /你的/绝对路径/moon-skills/scripts/install-cursor-plugin-with-deps.sh
+```
+
+环境变量（可选）：
+
+| 变量 | 含义 | 默认 |
+| --- | --- | --- |
+| `MOON_SKILLS_REPO_URL` | Git 克隆地址 | `https://github.com/ccharlesmeng/moon-skills.git` |
+| `MOON_SKILLS_CHECKOUT` | 插件根目录（含 `.cursor-plugin/`）；若设置则**不会**自动克隆，仅校验并链接 | `${XDG_DATA_HOME:-~/.local/share}/moon-skills/checkout` |
+| `MOON_SKILLS_PLUGIN_NAME` | `~/.cursor/plugins/local/` 下目录名 | `moon-skills` |
+
+安装结束后在 Cursor 中执行 **Developer: Reload Window**，并在 **Settings → Rules** 中确认插件与技能已加载。
+
+### 本地安装（发布前自测）
+
+1. 克隆本仓库，或直接使用本仓库所在路径。
+2. 将**插件根目录**（包含 `.cursor-plugin/` 的那一层目录）**符号链接或复制**到：
+
+   `~/.cursor/plugins/local/moon-skills`
+
+   示例：
+
+   ```bash
+   mkdir -p ~/.cursor/plugins/local
+   ln -sf /path/to/moon-skills ~/.cursor/plugins/local/moon-skills
+   ```
+
+3. 在 Cursor 中执行 **Developer: Reload Window**（重新加载窗口）。
+4. 打开 **Settings → Rules**，确认插件带来的规则与技能已出现；在对话中可按 Cursor 文档使用 `/skill-name` 等形式手动触发技能。
+
+### 分发方式
+
+- **公开市场**：在 [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish) 提交本 Git 仓库（需开源并接受审核）。提交清单见 [插件参考 — Submitting](https://cursor.com/docs/reference/plugins.md)。
+- **团队 / 企业版**：在 Dashboard → **Settings → Plugins** 将本 GitHub 仓库导入为**团队插件市场**；可为分发组配置**必装**或**可选**插件（[说明](https://cursor.com/cn/docs/plugins)）。
+- **单仓多插件**：若日后拆成多个插件根目录，可在仓库根增加 `.cursor-plugin/marketplace.json`（[参考](https://cursor.com/docs/reference/plugins.md)）。
+
+### 可选：随自有 VS Code 扩展分发
+
+若你在自有扩展中打包资源，可通过 `vscode.cursor.plugins.registerPath()` 以编程方式注册本插件目录（[插件文档 — 扩展 API](https://cursor.com/cn/docs/plugins)）。
+
 ## Superpowers Dependency
 
-`immune-debug` 依赖 `superpowers:systematic-debugging` 处理根因调查阶段。建议额外安装：
+`immune-debug` 依赖 `superpowers:systematic-debugging` 处理根因调查阶段。**使用上文「一键安装」时会自动安装**；若只用手动方式安装插件，可单独执行：
 
 ```bash
 npx skills add obra/superpowers --skill systematic-debugging
@@ -322,7 +394,11 @@ npx skills add obra/superpowers --skill systematic-debugging
 
 ## Repository Layout
 
-- `skills/` — first-party workflow skills
+- `.cursor-plugin/` — Cursor 插件清单（`plugin.json`）
+- `skills/` — 工作流 skill（本仓库主链）
+- `rules/` — Cursor 插件规则（`.mdc`），工作流级 AI 指引
+- `commands/` — Cursor 插件命令（仪表盘 Deep Link 伴随场景）
+- `scripts/` — 维护脚本（如 [`install-cursor-plugin-with-deps.sh`](scripts/install-cursor-plugin-with-deps.sh) 一键安装插件与 Superpowers 依赖）
 - `prompts/` — 可视化仪表盘 Deep Link 唤起时注入的伴随式提示词（按场景组织）
 - `dashboard/` — 可视化仪表盘前端项目
 - `docs/` — 产品设计与产物规格文档
