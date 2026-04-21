@@ -16,24 +16,6 @@ curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/scrip
 
 装完后在 Cursor 里 **`⌘⇧P` → `Developer: Reload Window`**，再到 **Settings → Rules** 里确认插件已出现。
 
-**若 `curl` 返回 404**：远程可能尚未包含该脚本，请先 `git pull` / 确认仓库已推送；或克隆后执行：
-
-```bash
-git clone --depth 1 https://github.com/CCharlesMeng/moon-skills.git "${TMPDIR:-/tmp}/moon-skills-install" \
-  && MOON_SKILLS_CHECKOUT="${TMPDIR:-/tmp}/moon-skills-install" \
-     bash "${TMPDIR:-/tmp}/moon-skills-install/scripts/install-cursor-plugin-with-deps.sh"
-```
-
-已克隆本仓库时，也可在仓库根目录执行：`bash scripts/install-cursor-plugin-with-deps.sh`。
-
-可选环境变量：
-
-| 变量 | 作用 | 默认 |
-| --- | --- | --- |
-| `MOON_SKILLS_REPO_URL` | 克隆地址 | `https://github.com/CCharlesMeng/moon-skills.git` |
-| `MOON_SKILLS_CHECKOUT` | 插件根目录（已有时不再克隆） | `~/.local/share/moon-skills/checkout`（或 `XDG_DATA_HOME` 下等价路径） |
-| `MOON_SKILLS_PLUGIN_NAME` | `~/.cursor/plugins/local/` 下的目录名 | `moon-skills` |
-
 ### 用 `npx skills`（不走 Cursor 插件时）
 
 ```bash
