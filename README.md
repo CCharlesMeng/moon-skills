@@ -278,15 +278,6 @@ npx skills add ccharlesmeng/moon-skills --skill analysis-spec
 npx skills add ccharlesmeng/moon-skills --list
 ```
 
-### IOC 设计流水线（独立仓库）
-
-从设计稿解码到规格、数据方案与前端方案的 IOC skill（`ioc-sketch-decode`、`ioc-spec`、`ioc-data-plan`、`ioc-frontend-plan`）在独立仓库 **ioc-skills** 维护（与本仓库并列；GitHub 远程地址确定后，将下方命令中的 `<owner>/ioc-skills` 换成实际 `组织名/仓库名`）。
-
-```bash
-npx skills add <owner>/ioc-skills
-npx skills add <owner>/ioc-skills --list
-```
-
 ## Superpowers Dependency
 
 `immune-debug` 依赖 `superpowers:systematic-debugging` 处理根因调查阶段。建议额外安装：
@@ -343,4 +334,4 @@ npx skills add obra/superpowers --skill systematic-debugging
 - `reflect` 不单独建立 skill 目录，通过 `audit`、`sync-context`、`immune-debug` 的路由协作实现。
 - `sync-context` 是唯一被其他 skill 路由触发的 skill——`audit` 和 `immune-debug` 在产出决策后会指示运行 `sync-context` 写回。
 - 免疫治理闭环：`immune-debug` 写入 → `code-review` 反写触发时间 → `audit` 周期性衰减 → 技术负责人决策保留/更新/移除。完整 schema 见 `skills/immune-debug/references/immune-registry-schema.md`。
-- 独立的集成类或正交能力 skill 已迁移到其他仓库维护（含 IOC 流水线，见上方「IOC 设计流水线」），这里只保留 workflow 主链。
+- 独立的集成类或正交能力 skill 已迁移到其他仓库维护，这里只保留 workflow 主链。
