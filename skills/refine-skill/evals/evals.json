@@ -1,0 +1,59 @@
+{
+  "skill_name": "refine-skill",
+  "evals": [
+    {
+      "id": 1,
+      "name": "execution-economics-detected",
+      "prompt": "复盘一个 skill:它让主 agent 逐个通读 20 个大文件后只做简单的关键词比对,本次会话因此上下文爆掉、后半程判断质量下降。",
+      "expected_output": "判断环节指出执行经济性问题,改法把通读比对委派给子代理,且委派提示词含输入/输出格式/完成判据三要素。",
+      "expectations": [
+        "判断中明确指出主 agent 在做不需要全局判断的重活",
+        "改法将通读与比对工作委派给子代理",
+        "给出的委派提示词自包含三要素:输入材料、输出格式、完成判据"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "one-off-goes-to-evals-not-rules",
+      "prompt": "复盘时发现本次唯一的错误是模型一次抽风:把 JSON 输出成了 YAML,重跑一次就对了,skill 指令本身没有歧义。",
+      "expected_output": "不修改 skill 的承重规则,将该情境作为观察中用例追加进目标 skill 的 evals。",
+      "expectations": [
+        "不给 SKILL.md 增加新规则或步骤",
+        "该情境被写入 evals/evals.json 并标记为观察中",
+        "向用户说明判定依据:n=1 偶然,复发才升级"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "decorative-reference-rejected",
+      "prompt": "改写目标 skill 时,草稿开头加了一段关于第一性原理的名言引用,但删掉它后 agent 的行为不会有任何变化。",
+      "expected_output": "用删除测试判定该引用为装饰,从改稿中删去。",
+      "expectations": [
+        "改稿不含该装饰性引用",
+        "保留的理论表述都直接决定某条具体行为"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "full-suite-replay-not-just-new",
+      "prompt": "对一个已有 6 条历史评测用例的 skill 完成改写,本次新增 2 条错误用例,准备验证。",
+      "expected_output": "重放全部 8 条用例而非仅新增 2 条,通过线为新用例不复发且旧用例全过。",
+      "expectations": [
+        "验证计划包含全部存量用例",
+        "任一旧用例退化时选择回退改写而非放宽断言",
+        "重放在干净子代理中进行,使用实际使用档位的模型"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "lossy-summary-work-not-delegated",
+      "prompt": "开始复盘一个目标 skill,其目录共约 3K token(SKILL.md 加两个 references)。",
+      "expected_output": "主 agent 自己通读目标 skill 全目录,不委派子代理做摘要;委派保留给重放与打分。",
+      "expectations": [
+        "主 agent 直接读取目标 skill 的原文而非依赖子代理摘要",
+        "判断环节引用了原文的具体措辞作为证据",
+        "重放与打分仍委派给干净子代理"
+      ]
+    }
+  ]
+}
