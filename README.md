@@ -63,6 +63,9 @@ npx skills add obra/superpowers --skill systematic-debugging
 # 本轮复盘
 请用 audit 做本轮交付的 post-ship reflect。
 
+# 会话结束诊断与优化
+请用 session-optimize 复盘本次会话，提出项目内可验证的修改方案，获批后再执行，并移交其余事项。
+
 # Bug / 回归
 请用 immune-debug 处理这个 <问题>，并给出免疫决策。
 ```
@@ -82,9 +85,10 @@ npx skills add obra/superpowers --skill systematic-debugging
 | 用证据核对是否做对 | `verify` | TC 与证据（EV） |
 | 和最初规格对齐吗 | `spec-check` | TB 对账 |
 | 复盘与上下文治理 | `audit` | 沉淀与治理 |
+| 会话问题诊断与优化 | `session-optimize` | 提议项目内改进，获批后执行，移交跨边界事项 |
 | 事故与防护 | `immune-debug` | 根因 + 免疫决策 |
 
-整体顺序大致是：**initialize → sync-context → analysis-spec →（需要时 design-pack）→ slice-plan → 实现 → code-review → verify → spec-check → audit**；出事走 **immune-debug**。
+整体顺序大致是：**initialize → sync-context → analysis-spec →（需要时 design-pack）→ slice-plan → 实现 → code-review → verify → spec-check → audit**；会话结束时可运行 **session-optimize**，出事走 **immune-debug**。
 
 ---
 

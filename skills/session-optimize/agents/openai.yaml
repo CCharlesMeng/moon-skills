@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Optimize"
+  short_description: "复盘会话问题，所有修改经用户批准后执行并移交其余事项"
+  default_prompt: "Use $session-optimize to review this session, propose exact improvements for my approval, and hand off the rest."

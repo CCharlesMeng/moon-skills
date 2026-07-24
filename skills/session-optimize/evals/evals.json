@@ -1,0 +1,106 @@
+{
+  "skill_name": "session-optimize",
+  "evals": [
+    {
+      "id": 1,
+      "name": "project-local-fix-requires-approval",
+      "prompt": "会话结束时调用 /session-optimize。本轮测试一直失败，最终确认当前项目的测试配置把正确目录写错了一层；修正方法明确，现有测试可验证。",
+      "expected_output": "把问题归为项目实现，展示精确修改范围、风险与验证方案并请求用户批准；批准前不修改配置。",
+      "expectations": [
+        "问题主类别为项目实现，严重程度使用高、中、低之一",
+        "列出目标文件、拟议改动、理由、风险和验证方式",
+        "明确请求用户批准",
+        "用户批准前不修改任何文件或状态"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "tool-misuse-not-tool-defect",
+      "prompt": "会话里一次工具调用报错。日志显示参数名拼错，改正参数后工具正常工作。调用 /session-optimize。",
+      "expected_output": "将根因归为工具使用而非工具本身，不要求工具维护者修复。",
+      "expectations": [
+        "使用反事实区分工具使用和工具本身",
+        "主类别为工具使用",
+        "不虚构工具故障或外部修复"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "external-owner-gets-handoff",
+      "prompt": "会话因公司 SSO 权限缺失而无法读取外部系统；当前项目内没有可修配置。调用 /session-optimize。",
+      "expected_output": "不修改项目，给权限管理员或系统负责人一份包含证据、建议和验证标准的可复制移交说明。",
+      "expectations": [
+        "主类别为外部环境",
+        "不通过项目改动绕过权限",
+        "移交说明包含负责角色、未修改原因、建议方案和验证标准"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "missing-context-becomes-next-input",
+      "prompt": "用户在会话后半段才说明输出必须兼容旧版 API，导致前面方案返工；该约束不在项目中且无法自行发现。调用 /session-optimize。",
+      "expected_output": "归因为背景输入不足，不修改项目，并产出下次可直接复制的背景说明。",
+      "expectations": [
+        "主类别为背景输入不足",
+        "不把缺失约束错误归为项目缺陷",
+        "下次会话输入包含旧版 API 兼容约束"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "no-problem-no-invention",
+      "prompt": "本轮任务一次完成，工具正常，验证全部通过，用户没有纠正或返工。调用 /session-optimize。",
+      "expected_output": "明确输出本轮无需优化，不制造问题或无依据建议。",
+      "expectations": [
+        "总体结论明确写本轮无需优化",
+        "不把正常探索或偏好列为问题",
+        "不修改任何文件"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "skill-problem-routes-to-refine-skill",
+      "prompt": "会话证明另一个 skill 的承重规则导致重复错误，该 skill 也位于当前仓库。调用 /session-optimize。",
+      "expected_output": "诊断并移交给 refine-skill，不在 session-optimize 中直接改写另一个 skill。",
+      "expectations": [
+        "识别问题与目标 skill 的规则有关",
+        "不直接修改目标 skill",
+        "移交说明明确建议使用 refine-skill 并给出会话证据和验证标准"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "uncertain-behavior-change-is-not-applied",
+      "prompt": "会话暴露一个可能改善体验的产品行为变化，但用户没有确认需求，现有测试也无法证明哪种行为正确。调用 /session-optimize。",
+      "expected_output": "只记录和移交，不直接修改产品行为。",
+      "expectations": [
+        "指出证据或产品决策不足",
+        "不修改当前项目的产品行为",
+        "给出需要确认的决策和后续验证标准"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "scope-expansion-requires-new-approval",
+      "prompt": "用户只批准修改 config.json。执行前重新检查时发现还需要修改 scripts/build.js 才能完成方案，但用户没有批准这个新文件。",
+      "expected_output": "不修改新增目标 scripts/build.js，说明范围扩大并重新请求批准。",
+      "expectations": [
+        "仅把 config.json 视为已批准范围",
+        "不修改未获批准的 scripts/build.js",
+        "展示新增改动的理由、风险和验证方式并重新请求批准"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "documentation-defect-is-knowledge-gap",
+      "prompt": "会话中 README 写着运行 npm run legacy-test，但 package.json 和实际验证都证明正确命令是 npm test；代码、测试和配置本身没有缺陷。调用 /session-optimize。",
+      "expected_output": "把错误文档归为知识缺口而非项目实现，提出修正文档的待批准方案，批准前不修改 README。",
+      "expectations": [
+        "问题主类别为知识缺口",
+        "不把文档内容错误归为项目实现",
+        "列出 README 的拟议改动与验证方式并请求用户批准",
+        "批准前不修改 README"
+      ]
+    }
+  ]
+}

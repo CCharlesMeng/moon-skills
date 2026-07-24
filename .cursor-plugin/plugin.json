@@ -1,7 +1,7 @@
 {
   "name": "moon-skills",
   "version": "1.0.0",
-  "description": "Analysis-driven AI workflow: initialize, sync-context, analysis-spec, design-pack, slice-plan, code-review, verify, spec-check, audit, immune-debug. Traceability chain TB → AC → TC → EV and .project-context memory.",
+  "description": "Analysis-driven AI workflow: initialize, sync-context, analysis-spec, design-pack, slice-plan, code-review, verify, spec-check, audit, session-optimize, immune-debug. Traceability chain TB → AC → TC → EV and .project-context memory.",
   "author": {
     "name": "moon-skills"
   },
