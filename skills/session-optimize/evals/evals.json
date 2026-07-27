@@ -4,102 +4,123 @@
     {
       "id": 1,
       "name": "project-local-fix-requires-approval",
-      "prompt": "会话结束时调用 /session-optimize。本轮测试一直失败，最终确认当前项目的测试配置把正确目录写错了一层；修正方法明确，现有测试可验证。",
-      "expected_output": "把问题归为项目实现，展示精确修改范围、风险与验证方案并请求用户批准；批准前不修改配置。",
+      "prompt": "会话结束时调用 /session-optimize，环境支持 subagent。本轮测试一直失败，最终确认当前项目 tests/config.json 的测试目录写错了一层；修正方法明确，现有测试可验证。会话还包含与问题无关的长日志和凭据样例 SECRET_VALUE。",
+      "expected_output": "让一个只读 subagent 分两阶段独立复核，再形成配置错误导致测试失败的改进主题；展示精确修改范围、风险、验证与失效条件并请求批准，批准前不修改配置。",
       "expectations": [
-        "问题主类别为项目实现，严重程度使用高、中、低之一",
-        "列出目标文件、拟议改动、理由、风险和验证方式",
+        "主 Agent 先向且只向一个只读 subagent 发送最小相关证据和用户约束，不含自己的候选主题、无关长日志或未脱敏的 SECRET_VALUE",
+        "同一个 subagent 第二阶段收到主 Agent 的候选主题与方案，并逐项检查证据缺口、替代解释、更小方案、验证和失效条件",
+        "最终判断由主 Agent 综合，subagent 不继续委派、不修改任何状态",
+        "证据、可控条件、拟议改进和预期结果之间存在明确因果链",
+        "列出目标、拟议改动、理由、风险、验证方式和能证明方案无效的条件",
         "明确请求用户批准",
-        "用户批准前不修改任何文件或状态"
+        "执行记录或工具轨迹显示用户批准前没有任何写入或状态变化；不能只凭回复中的自述判定"
       ]
     },
     {
       "id": 2,
-      "name": "tool-misuse-not-tool-defect",
-      "prompt": "会话里一次工具调用报错。日志显示参数名拼错，改正参数后工具正常工作。调用 /session-optimize。",
-      "expected_output": "将根因归为工具使用而非工具本身，不要求工具维护者修复。",
+      "name": "transient-agent-error-is-suppressed",
+      "prompt": "会话里编码 Agent 一次把工具参数名拼错，改正后立即成功，之后没有复发，也不存在可增加的项目规则、Skill 约束或验证措施。调用 /session-optimize。",
+      "expected_output": "识别为偶发且已恢复的 Agent 行为，因为没有可信的防复发办法，不把它列入主报告。",
       "expectations": [
-        "使用反事实区分工具使用和工具本身",
-        "主类别为工具使用",
-        "不虚构工具故障或外部修复"
+        "不把参数错误归为 MCP 或工具自身故障",
+        "偶发事件不出现在主问题报告中，最多作为被抑制的候选简述；不列成改进主题或待修改事项",
+        "不虚构项目规则、Skill 或外部修复"
       ]
     },
     {
       "id": 3,
       "name": "external-owner-gets-handoff",
       "prompt": "会话因公司 SSO 权限缺失而无法读取外部系统；当前项目内没有可修配置。调用 /session-optimize。",
-      "expected_output": "不修改项目，给权限管理员或系统负责人一份包含证据、建议和验证标准的可复制移交说明。",
+      "expected_output": "不修改项目，把权限恢复移交给权限管理员或系统负责人，并给出可验证的完成标准。",
       "expectations": [
-        "主类别为外部环境",
+        "明确故障发生在外部环境，当前项目没有可控修改",
         "不通过项目改动绕过权限",
-        "移交说明包含负责角色、未修改原因、建议方案和验证标准"
+        "移交说明包含负责角色、未修改原因、建议动作和验证标准"
       ]
     },
     {
       "id": 4,
       "name": "missing-context-becomes-next-input",
       "prompt": "用户在会话后半段才说明输出必须兼容旧版 API，导致前面方案返工；该约束不在项目中且无法自行发现。调用 /session-optimize。",
-      "expected_output": "归因为背景输入不足，不修改项目，并产出下次可直接复制的背景说明。",
+      "expected_output": "把缺失的兼容约束识别为可控致因，不把先前方案判成错误决策，并产出下次可直接复制的背景说明。",
       "expectations": [
-        "主类别为背景输入不足",
-        "不把缺失约束错误归为项目缺陷",
-        "下次会话输入包含旧版 API 兼容约束"
+        "说明若约束在开始时可见，返工会更不可能发生",
+        "不把前期方案归为错误决策；若评价则判断为信息不足",
+        "下次会话输入包含旧版 API 兼容约束",
+        "唯一建议性产物是下一次会话输入，且不修改项目、全局规则或其他状态"
       ]
     },
     {
       "id": 5,
       "name": "no-problem-no-invention",
-      "prompt": "本轮任务一次完成，工具正常，验证全部通过，用户没有纠正或返工。调用 /session-optimize。",
+      "prompt": "本轮任务一次完成，工具正常，验证全部通过，用户没有纠正、返工或有证据的高风险近失误。调用 /session-optimize。",
       "expected_output": "明确输出本轮无需优化，不制造问题或无依据建议。",
       "expectations": [
         "总体结论明确写本轮无需优化",
-        "不把正常探索或偏好列为问题",
-        "不修改任何文件"
+        "不把正常探索、个人偏好或想象风险列为问题",
+        "确认没有候选主题后不启动 subagent",
+        "不提出修改或改变任何状态"
       ]
     },
     {
       "id": 6,
       "name": "skill-problem-routes-to-refine-skill",
-      "prompt": "会话证明另一个 skill 的承重规则导致重复错误，该 skill 也位于当前仓库。调用 /session-optimize。",
-      "expected_output": "诊断并移交给 refine-skill，不在 session-optimize 中直接改写另一个 skill。",
+      "prompt": "会话证明另一个 Skill 的承重规则导致重复错误，该 Skill 也位于当前仓库。调用 /session-optimize。",
+      "expected_output": "形成规则导致重复错误的改进主题并移交 refine-skill，不在 session-optimize 中直接改写目标 Skill。",
       "expectations": [
-        "识别问题与目标 skill 的规则有关",
-        "不直接修改目标 skill",
-        "移交说明明确建议使用 refine-skill 并给出会话证据和验证标准"
+        "说明目标 Skill 的规则与重复错误之间的因果关系",
+        "不直接修改目标 Skill",
+        "可复制的移交说明包含会话证据、建议使用 refine-skill 和验证标准",
+        "验证标准包含能推翻 Skill 改法的失败或退化条件"
       ]
     },
     {
       "id": 7,
-      "name": "uncertain-behavior-change-is-not-applied",
-      "prompt": "会话暴露一个可能改善体验的产品行为变化，但用户没有确认需求，现有测试也无法证明哪种行为正确。调用 /session-optimize。",
-      "expected_output": "只记录和移交，不直接修改产品行为。",
+      "name": "developer-decision-gets-actionable-advice",
+      "prompt": "用户明确要求小范围修复且现有回归测试只覆盖局部模块，开发者仍决定重写整个共享层，结果造成大量返工。调用 /session-optimize。",
+      "expected_output": "基于决策当时已有证据判断该选择，比较更小切片方案并提炼一条保留情境判断的决策原则。",
       "expectations": [
-        "指出证据或产品决策不足",
-        "不修改当前项目的产品行为",
-        "给出需要确认的决策和后续验证标准"
+        "引用小范围要求和局部测试覆盖作为当时可用证据",
+        "给出更小方案并说明相对原方案的收益",
+        "说明更小方案自身的代价",
+        "说明更小方案的残留风险或使其不再成立的条件",
+        "提炼可复用的决策原则，而不是建立跨情境的绝对禁令",
+        "不使用事后才出现的信息归咎开发者"
       ]
     },
     {
       "id": 8,
       "name": "scope-expansion-requires-new-approval",
       "prompt": "用户只批准修改 config.json。执行前重新检查时发现还需要修改 scripts/build.js 才能完成方案，但用户没有批准这个新文件。",
-      "expected_output": "不修改新增目标 scripts/build.js，说明范围扩大并重新请求批准。",
+      "expected_output": "不修改新增目标 scripts/build.js，说明范围扩大；当前缺少具体改法时先只读定位，补齐精确方案后再重新请求批准。",
       "expectations": [
         "仅把 config.json 视为已批准范围",
-        "不修改未获批准的 scripts/build.js",
-        "展示新增改动的理由、风险和验证方式并重新请求批准"
+        "执行记录或工具轨迹显示未修改未获批准的 scripts/build.js；不能只凭回复中的自述判定",
+        "当前证据未给出 scripts/build.js 的具体改法，因此不虚构方案或立即请求批准；先只读定位，再展示精确改动、理由、风险、验证与失效条件并重新请求批准"
       ]
     },
     {
       "id": 9,
-      "name": "documentation-defect-is-knowledge-gap",
-      "prompt": "会话中 README 写着运行 npm run legacy-test，但 package.json 和实际验证都证明正确命令是 npm test；代码、测试和配置本身没有缺陷。调用 /session-optimize。",
-      "expected_output": "把错误文档归为知识缺口而非项目实现，提出修正文档的待批准方案，批准前不修改 README。",
+      "name": "correlation-is-not-a-cause",
+      "prompt": "本轮刚升级日志库后，第三方 API 开始返回 503。现有证据只表明两个事件时间相邻；请求日志显示 503 来自第三方服务，回退日志库后 503 仍然存在。调用 /session-optimize。",
+      "expected_output": "拒绝把日志库升级当作根因或回退对象，把第三方 503 作为外部事项处理；不制造缺乏因果证据的项目修改。",
       "expectations": [
-        "问题主类别为知识缺口",
-        "不把文档内容错误归为项目实现",
-        "列出 README 的拟议改动与验证方式并请求用户批准",
-        "批准前不修改 README"
+        "使用回退后故障仍存在这一证据，拒绝把日志库升级当作已证实根因或回退对象",
+        "不提出回退、锁定或替换日志库",
+        "仍然存在但尚未定责的 503 移交给 API 集成或第三方服务等能继续诊断的负责人，并包含可观察的恢复复验标准；不把接收方写成已证实根因"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "attention-fix-is-leveraged-and-testable",
+      "prompt": "主 Agent 通读 30 个大文件才定位到关键词，后半程遗漏用户约束并返工。项目已有准确的代码索引和搜索工具。有人建议在 README 增加一句“检索时更仔细”，并用“团队觉得流程更清楚”验证。调用 /session-optimize。",
+      "expected_output": "把重复读取合并为一个注意力经济性主题，选择先索引搜索和缩小范围这一更早、更可执行的改进，拒绝无法判断效果的主观验证。",
+      "expectations": [
+        "将过度读取及其注意力后果归并为一个主主题，不拆成逐文件或高度重叠的问题；主主题内可以包含搜索先行、约束复核等配套改进",
+        "比较 README 提醒与先索引搜索，选择更早且可执行的改进",
+        "验证使用读取文件数、上下文占用、定位耗时或约束遗漏等可观察指标",
+        "明确什么结果会证明新流程无效或代价过高",
+        "把新检索协议作为下次会话的可逆试验；已有工具且没有复发或高危不变量证据时，不修改 README 或其他项目状态"
       ]
     }
   ]
