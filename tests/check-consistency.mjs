@@ -12,6 +12,7 @@
  * 6. Immune governance cycle — schema, write-back, decay fields consistent
  * 7. Uncertainty protocol — two-stage cleanup referenced in sync-context and audit
  * 8. Prompt files — prompts/ directory contains expected scenario files
+ * 9. Frontend SDD chain — seams that break silently when several people edit in parallel
  */
 
 import { readFileSync, readdirSync, existsSync } from "fs";
@@ -468,6 +469,339 @@ function checkPromptFiles() {
   }
 }
 
+// ── 9. Frontend SDD chain ─────────────────────────────────────────
+//
+// Seams listed in docs/skills/frontend-sdd/接缝契约.md. Each check here
+// catches a drift that is invisible at review time but breaks the agent
+// at run time.
+
+const FRONTEND_ROOTS = [
+  join(SKILLS_DIR, "sdd-dev-frontend"),
+  join(SKILLS_DIR, "sdd-init-frontend"),
+  join(ROOT, "docs", "skills", "frontend-sdd"),
+];
+
+// Namespaces registered in docs/skills/frontend-sdd/接缝契约.md §2. The registry
+// itself is skipped when scanning, since it necessarily names every prefix.
+const ID_PREFIX_WHITELIST = [
+  "REPO", "PATTERN", "REQ", "DEC", "DEMAND", "IC", "EX", "REG",
+  "SHA", "AC", "TB", "TC", "EV", "ADR", "DEF",
+];
+const ID_REGISTRY = join("frontend-sdd", "接缝契约.md");
+
+const AGENT_SECTIONS = ["前置", "只读", "输出格式"];
+
+const OWNED_SCRIPTS = [
+  "extract_design_spec.py",
+  "verify_restore_contract.py",
+  "collect_restore_facts.js",
+  "manage_repo_baseline.py",
+];
+
+function walkMarkdown(dir) {
+  if (!existsSync(dir)) return [];
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "__pycache__" || entry.name === "node_modules") continue;
+      out.push(...walkMarkdown(full));
+    } else if (entry.name.endsWith(".md")) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+function slugify(heading) {
+  return heading
+    .replace(/[`*]/g, "")
+    .replace(/[^A-Za-z0-9_\u4e00-\u9fff -]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/ /g, "-");
+}
+
+function headingSlugs(content) {
+  const slugs = new Set();
+  for (const line of content.split("\n")) {
+    const m = line.match(/^#{1,6}\s+(.*)$/);
+    if (m) slugs.add(slugify(m[1].trim()));
+  }
+  return slugs;
+}
+
+function rel(path) {
+  return path.slice(ROOT.length + 1);
+}
+
+function checkFrontendLinks(files) {
+  const slugCache = new Map();
+  let checked = 0;
+  let failed = 0;
+
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    const dir = resolve(file, "..");
+    for (const match of content.matchAll(/\]\(([^)\s]+)\)/g)) {
+      const link = match[1];
+      if (/^(https?:|mailto:)/.test(link)) continue;
+      const [pathPart, anchor] = link.split("#");
+      const target = pathPart ? resolve(dir, pathPart) : file;
+      checked++;
+      if (!existsSync(target)) {
+        report("fail", "fe-link", `${rel(file)} → ${link} (target not found)`);
+        failed++;
+        continue;
+      }
+      if (!anchor || !target.endsWith(".md")) continue;
+      if (!slugCache.has(target)) {
+        slugCache.set(target, headingSlugs(readFileSync(target, "utf-8")));
+      }
+      if (!slugCache.get(target).has(slugify(anchor))) {
+        report("fail", "fe-link", `${rel(file)} → ${link} (anchor not found)`);
+        failed++;
+      }
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-link", `${checked} links and anchors all resolve`);
+  }
+}
+
+function checkFrontendPathVariables(files) {
+  const skillPath = join(SKILLS_DIR, "sdd-dev-frontend", "SKILL.md");
+  const skill = readFileSync(skillPath, "utf-8");
+  const defined = new Set(
+    [...skill.matchAll(/\|\s*`(<[a-z0-9-]+>)`/g)].map((m) => m[1])
+  );
+  const used = new Map();
+
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(/<[a-z][a-z0-9-]*-(?:dir|ref|root|driver|id)>/g)) {
+      if (!used.has(m[0])) used.set(m[0], new Set());
+      used.get(m[0]).add(rel(file));
+    }
+  }
+
+  let failed = 0;
+  for (const [variable, where] of used) {
+    if (!defined.has(variable)) {
+      report(
+        "fail",
+        "fe-path-var",
+        `${variable} used in ${[...where].join(", ")} but not defined in SKILL.md 路径变量`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-path-var", `${used.size} path variables all defined`);
+  }
+}
+
+function checkFrontendGateNumbers(files) {
+  const skill = readFileSync(join(SKILLS_DIR, "sdd-dev-frontend", "SKILL.md"), "utf-8");
+
+  const hardSection = skill.split("## 硬门禁")[1]?.split("\n## ")[0] ?? "";
+  const hardGates = new Set(
+    [...hardSection.matchAll(/^(\d+)\.\s+\*\*/gm)].map((m) => Number(m[1]))
+  );
+  const exitSection = skill.split("## 退出门禁")[1]?.split("\n## ")[0] ?? "";
+  const exitGates = new Set(
+    [...exitSection.matchAll(/^\|\s*(\d+)\s*\|/gm)].map((m) => Number(m[1]))
+  );
+
+  if (hardGates.size === 0 || exitGates.size === 0) {
+    report("fail", "fe-gate", "cannot parse 硬门禁 / 退出门禁 numbering from SKILL.md");
+    return;
+  }
+
+  let failed = 0;
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(/硬门禁(?:第)?\s*(\d+)/g)) {
+      if (!hardGates.has(Number(m[1]))) {
+        report("fail", "fe-gate", `${rel(file)} references 硬门禁 ${m[1]}, which is not defined`);
+        failed++;
+      }
+    }
+    for (const m of content.matchAll(/退出门禁(?:的)?第\s*(\d+)\s*条/g)) {
+      if (!exitGates.has(Number(m[1]))) {
+        report("fail", "fe-gate", `${rel(file)} references 退出门禁第 ${m[1]} 条, which is not defined`);
+        failed++;
+      }
+    }
+  }
+  if (failed === 0) {
+    report(
+      "pass",
+      "fe-gate",
+      `all gate references resolve (硬门禁 ${hardGates.size} 条, 退出门禁 ${exitGates.size} 条)`
+    );
+  }
+}
+
+const ID_COLUMN_HEADERS = ["#", "ID", "编号"];
+
+// A row names a dimension only when its table declares an id column and a
+// 「维度」column. Tables like stack-antipatterns' `| 维度 | 具体表现 |` put the
+// id itself under 「维度」and must not be read as name declarations.
+function dimensionNamesInTables(content) {
+  const found = [];
+  const lines = content.split("\n");
+  let idCol = -1;
+  let nameCol = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line.startsWith("|")) {
+      idCol = -1;
+      nameCol = -1;
+      continue;
+    }
+    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+    if (/^\|[\s|:-]+\|$/.test((lines[i + 1] ?? "").trim())) {
+      idCol = cells.findIndex((c) => ID_COLUMN_HEADERS.includes(c));
+      nameCol = cells.indexOf("维度");
+      continue;
+    }
+    if (idCol < 0 || nameCol < 0) continue;
+    const id = cells[idCol];
+    const name = (cells[nameCol] ?? "").replace(/[`*]/g, "").trim();
+    if (/^[CQLRF]\d$/.test(id) && name) found.push([id, name]);
+  }
+  return found;
+}
+
+function checkFrontendDimensionNames(files) {
+  const names = new Map();
+
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    const found = dimensionNamesInTables(content);
+    for (const m of content.matchAll(/^#{3,4}\s+([CQLRF]\d)\s+—\s+(.+)$/gm)) {
+      found.push([m[1], m[2].replace(/[`*]/g, "").trim()]);
+    }
+    for (const [id, name] of found) {
+      if (!names.has(id)) names.set(id, new Map());
+      if (!names.get(id).has(name)) names.get(id).set(name, new Set());
+      names.get(id).get(name).add(rel(file));
+    }
+  }
+
+  let failed = 0;
+  for (const [id, variants] of names) {
+    if (variants.size > 1) {
+      const detail = [...variants]
+        .map(([name, where]) => `"${name}" (${[...where].join(", ")})`)
+        .join(" vs ");
+      report("fail", "fe-dimension", `${id} named inconsistently: ${detail}`);
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-dimension", `${names.size} dimension ids named consistently`);
+  }
+}
+
+function checkFrontendIdPrefixes(files) {
+  const seen = new Map();
+  // Only the leading segment is the namespace: PATTERN-CARD-1 registers PATTERN.
+  const idPattern = /(?<![A-Za-z0-9-])([A-Z]{2,10})(?:-[A-Z0-9]{1,12})*-(?:<[nmi]d?>|\d+|\*)/g;
+  for (const file of files) {
+    if (file.endsWith(ID_REGISTRY)) continue;
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(idPattern)) {
+      if (!seen.has(m[1])) seen.set(m[1], new Set());
+      seen.get(m[1]).add(rel(file));
+    }
+  }
+
+  let failed = 0;
+  for (const [prefix, where] of seen) {
+    if (!ID_PREFIX_WHITELIST.includes(prefix)) {
+      report(
+        "fail",
+        "fe-id-prefix",
+        `${prefix}-* used in ${[...where].join(", ")} but not registered in 接缝契约 §2`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-id-prefix", `${seen.size} id prefixes all registered`);
+  }
+}
+
+function checkFrontendAgentStructure() {
+  let failed = 0;
+  let count = 0;
+  for (const skill of ["sdd-dev-frontend", "sdd-init-frontend"]) {
+    const dir = join(SKILLS_DIR, skill, "agents");
+    if (!existsSync(dir)) continue;
+    for (const file of walkMarkdown(dir)) {
+      count++;
+      const headings = readFileSync(file, "utf-8")
+        .split("\n")
+        .filter((line) => /^#{2,3}\s/.test(line))
+        .join("\n");
+      const missing = AGENT_SECTIONS.filter((section) => !headings.includes(section));
+      if (missing.length > 0) {
+        report("fail", "fe-agent-shape", `${rel(file)} missing section(s): ${missing.join(", ")}`);
+        failed++;
+      }
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-agent-shape", `${count} agent prompts have 前置 / 只读 / 输出格式`);
+  }
+}
+
+function checkFrontendScriptPaths(files) {
+  let failed = 0;
+  const pattern = new RegExp(`(\\S{0,60})scripts/(${OWNED_SCRIPTS.join("|")})`, "g");
+  for (const file of files) {
+    // Governance docs list script filenames as inventory, not as commands.
+    if (!file.startsWith(SKILLS_DIR)) continue;
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(pattern)) {
+      if (m[1].includes("-dir>/")) continue;
+      report(
+        "fail",
+        "fe-script-path",
+        `${rel(file)} has bare "scripts/${m[2]}" — must be prefixed with <skill-dir>/`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-script-path", "all script paths qualified with <skill-dir>/");
+  }
+}
+
+function checkFrontendChain() {
+  console.log("\n── 9. Frontend SDD Chain ──");
+
+  const missing = FRONTEND_ROOTS.filter((dir) => !existsSync(dir));
+  if (missing.length > 0) {
+    for (const dir of missing) {
+      report("fail", "fe-chain", `${rel(dir)} NOT FOUND`);
+    }
+    return;
+  }
+
+  const files = FRONTEND_ROOTS.flatMap(walkMarkdown);
+  checkFrontendLinks(files);
+  checkFrontendPathVariables(files);
+  checkFrontendGateNumbers(files);
+  checkFrontendDimensionNames(files);
+  checkFrontendIdPrefixes(files);
+  checkFrontendAgentStructure();
+  checkFrontendScriptPaths(files);
+}
+
 // ── Run all checks ─────────────────────────────────────────────────
 
 console.log("moon-skills Static Consistency Check");
@@ -481,6 +815,7 @@ checkReferenceFiles();
 checkImmuneGovernance();
 checkUncertaintyProtocol();
 checkPromptFiles();
+checkFrontendChain();
 
 console.log("\n====================================");
 console.log(
