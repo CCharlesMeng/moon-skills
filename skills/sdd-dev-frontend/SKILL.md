@@ -140,6 +140,8 @@ disable-model-invocation: true
 
 本阶段对上游 `tasks.md` 的两份要求由使用者带到 `sdd-task` 落地（[amendments](./references/sdd-task-amendments.md)：Step ① 两种失败证据形态、一个 Task 内多轮 6 步；[frontend-split](./references/sdd-task-frontend-split.md)：前端 Task 的切分方式）。本 skill 只执行、**不改 `tasks.md` 的内容**；不符合这两份要求时照常执行，按各自文档里的兜底走，不回头改上游产物。
 
+对上游 `sdd-design` 的要求（设计稿盘点前移到设计阶段、产出能力映射表）同样只落成文档：[sdd-design-amendments](./references/sdd-design-amendments.md)。**本 skill 不依赖它已落地**——`<design-spec-dir>` 已存在且原型指纹一致时 Phase A1 自动复用，否则照常全量跑。
+
 ## 路径变量
 
 全文引用变量，**不硬编码路径**。
