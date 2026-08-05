@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Frontend Development"
+  short_description: "执行前端 Story 的规格抽取、实现、检视与验收收口"
+  default_prompt: "Use $sdd-dev-frontend to execute this frontend Story from tasks.md through implementation, review, and acceptance evidence."

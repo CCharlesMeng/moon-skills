@@ -2,7 +2,7 @@
 
 还原轮 Step ① / ② 的**机器报告人类摘要**。机器事实的单一来源是同轮 `restore-report-red.json` / `restore-report-green.json`；本清单不重新判定、不复制完整报告、不另开证据账。
 
-外部基线原则见 [ADR-0001](../docs/adr/0001-restore-uses-diff-list-as-red-evidence.md)，机器报告与选择性截图决策见 [ADR-0005](../docs/adr/0005-external-contract-is-primary-restore-evidence.md)，JSON 格式见 [restore-contract.md](./restore-contract.md)。
+差异清单以冻结外部契约的机器报告为准，截图只补机器盲区；JSON 格式见 [restore-contract.md](./restore-contract.md)。
 
 ## 一、状态语义
 
@@ -25,7 +25,7 @@
 | 实现 adapter | `<story-dir>/restore-adapter.json` |
 | 原型事实 | `<design-spec-dir>/design-facts.json` · `<prototype_fingerprint>` |
 
-区块名逐字沿用切分表。锚点主体仍是 class 结构；格式化档可附 `L起–L止` 引用坐标，单行档写 `无行号`，不得编 `L1–L1`。理由见 [ADR-0004](../docs/adr/0004-locate-blocks-by-class-structure.md)。
+区块名逐字沿用切分表。锚点主体仍是 class 结构；格式化档可附 `L起–L止` 引用坐标，单行档写 `无行号`，不得编 `L1–L1`。
 
 ## 三、报告摘要
 

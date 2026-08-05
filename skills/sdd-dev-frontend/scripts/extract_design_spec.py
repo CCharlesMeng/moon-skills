@@ -20,6 +20,18 @@ from urllib.parse import unquote, urlsplit
 
 EXIT_OK = 0
 EXIT_ERROR = 1
+# 抽取器读不到的样式来源存在，且调用方未登记。产物照常落盘，退出码阻断流程。
+EXIT_COVERAGE_GAPS = 4
+
+# 不影响还原取值的 at 规则，不计入覆盖缺口。
+IGNORABLE_AT_RULES = frozenset({"charset", "font-face", "keyframes", "page"})
+
+# 承载状态样式的伪类。`:root` 只放 token 声明，不算状态。
+PSEUDO_STATE_RE = re.compile(
+    r":(?:hover|focus(?:-visible|-within)?|active|disabled|checked|"
+    r"invalid|required|placeholder|first-child|last-child|nth-child|"
+    r"not|empty|target|visited)\b"
+)
 
 # html.parser 不维护 void 元素的栈平衡，需自行跳过。这些元素不参与结构签名与节点计数。
 VOID_TAGS = {
@@ -289,6 +301,108 @@ def full_dom_css_sha256(source: str) -> str:
             separators=(",", ":"),
         ).encode("utf-8")
     ).hexdigest()
+
+
+class CoverageParser(html.parser.HTMLParser):
+    """只收「抽取器看不见的样式来源」，供覆盖缺口判定。"""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.stylesheet_hrefs: list[str] = []
+        self.script_srcs: list[str] = []
+        self.inline_style_elements = 0
+        self.style_blocks = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        lowered = tag.lower()
+        values = {name.lower(): (value or "") for name, value in attrs}
+        if lowered == "style":
+            self.style_blocks += 1
+        elif lowered == "link":
+            rel = values.get("rel", "").lower()
+            href = values.get("href", "").strip()
+            if href and ("stylesheet" in rel or href.split("?")[0].lower().endswith(".css")):
+                self.stylesheet_hrefs.append(href)
+        elif lowered == "script":
+            src = values.get("src", "").strip()
+            if src:
+                self.script_srcs.append(src)
+        if values.get("style", "").strip():
+            self.inline_style_elements += 1
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(tag, attrs)
+
+
+def detect_coverage_gaps(source: str, other_rules: list["Rule"]) -> list[dict]:
+    """列出本抽取器读不到、但会影响还原期望值的样式来源。
+
+    抽取器的能力边界是「内联 <style> 里的单类选择器」。边界之外的样式来源一律
+    在这里显式登记：不登记就会变成区块规格里的 `未见`，进而让冻结基线静默漏项。
+    """
+    parser = CoverageParser()
+    parser.feed(source)
+    parser.close()
+
+    style_bodies = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", source, re.S | re.I))
+    style_bodies = re.sub(r"/\*.*?\*/", "", style_bodies, flags=re.S)
+    at_rules: dict[str, int] = {}
+    for name in re.findall(r"@([a-zA-Z-]+)", style_bodies):
+        lowered = name.lower()
+        if lowered in IGNORABLE_AT_RULES:
+            continue
+        at_rules[lowered] = at_rules.get(lowered, 0) + 1
+
+    gaps: list[dict] = []
+    if parser.stylesheet_hrefs:
+        gaps.append({
+            "kind": "外链样式表",
+            "count": len(parser.stylesheet_hrefs),
+            "detail": sorted(set(parser.stylesheet_hrefs)),
+            "impact": "其中的声明不进 design_tokens / layout_declarations，R3 / R4 会退化为 `未见`",
+        })
+    if at_rules:
+        gaps.append({
+            "kind": "at 规则",
+            "count": sum(at_rules.values()),
+            "detail": [f"@{name} ×{count}" for name, count in sorted(at_rules.items())],
+            "impact": "整块跳过；@media 内的响应式取值与 @layer / @container 内的声明全部不可见",
+        })
+    if parser.inline_style_elements:
+        gaps.append({
+            "kind": "行内 style 属性",
+            "count": parser.inline_style_elements,
+            "detail": [f"{parser.inline_style_elements} 个元素带非空 style 属性"],
+            "impact": "行内声明不参与类 → 声明映射，这些元素的尺寸与间距不可见",
+        })
+    # 纯元素与通配选择器（`*`、`body`、`:root`）只承载 reset，不持有区块级期望值，
+    # 计入缺口只会制造噪声，让调用方习惯性忽略真缺口。
+    scoped = sorted({
+        rule.selector for rule in other_rules
+        if "." in rule.selector or PSEUDO_STATE_RE.search(rule.selector)
+    })
+    if scoped:
+        gaps.append({
+            "kind": "非单类选择器",
+            "count": len(scoped),
+            "detail": scoped[:20] + ([f"…另 {len(scoped) - 20} 条"] if len(scoped) > 20 else []),
+            "impact": "伪类、后代与组合选择器只登记不解析，R4 状态样式取不到期望值",
+        })
+    if parser.script_srcs:
+        gaps.append({
+            "kind": "外部脚本",
+            "count": len(parser.script_srcs),
+            "detail": sorted(set(parser.script_srcs)),
+            "impact": "运行时生成的 CSS 或 DOM（CDN 版原子化 CSS、组件运行时）在静态抽取中不存在",
+        })
+    if not parser.style_blocks and not parser.stylesheet_hrefs:
+        gaps.append({
+            "kind": "无样式来源",
+            "count": 0,
+            "detail": ["原型里既没有 <style> 块也没有外链样式表"],
+            "impact": "还原侧没有任何可抽取的视觉取值",
+        })
+    return gaps
 
 
 class Rule:
@@ -1071,6 +1185,7 @@ def extract(path: Path, token_mode: str, max_nodes: int, min_pattern_nodes: int,
         "prototype_fingerprint": prototype_fingerprint(document, assets),
         "content": collect_texts(document, block_map),
         "inventory": find_repeated_patterns(document, min_pattern_nodes, min_instances),
+        "coverage_gaps": detect_coverage_gaps(document.source, document.other_rules),
     }
 
 
@@ -1111,6 +1226,7 @@ def stats(result: dict) -> dict:
         "patterns": len(inventory["patterns"]),
         "pattern_covered_nodes": inventory["covered_nodes"],
         "pattern_coverage_pct": round(100 * inventory["coverage"], 1),
+        "coverage_gaps": result["coverage_gaps"],
     }
 
 
@@ -1233,6 +1349,7 @@ def design_facts_payload(result: dict) -> dict:
             ]
             for name in sorted(tokens.layout_classes)
         },
+        "coverage_gaps": result["coverage_gaps"],
         "blocks": blocks,
     }
     payload["facts_sha256"] = hashlib.sha256(
@@ -1295,11 +1412,32 @@ def render_design_tokens(result: dict) -> str:
         )
     )
     lines.append("")
+    lines.append("## 抽取覆盖")
+    lines.append("")
+    gaps = result["coverage_gaps"]
+    if gaps:
+        lines.append(
+            "**本表不完整。** 下列样式来源在本抽取器的能力边界之外（边界是「内联 `<style>` 里的单类选择器」）。"
+            "每条都必须登记进 `dev-baseline.md / 已知缺口` 并在 Phase A 确认门里说明，"
+            "否则受影响的维度会以 `未见` 的形式从冻结基线里消失。"
+        )
+        lines.append("")
+        lines.append("| 缺口 | 数量 | 影响 | 明细 |")
+        lines.append("| --- | --- | --- | --- |")
+        for gap in gaps:
+            lines.append(
+                f"| {gap['kind']} | {gap['count']} | {gap['impact']} | "
+                + "；".join(f"`{item}`" for item in gap["detail"])
+                + " |"
+            )
+    else:
+        lines.append("无缺口：原型的全部样式来源都在抽取范围内，本表可作为 R3 期望值的完整出处。")
+    lines.append("")
     lines.append("## 二分判据")
     lines.append("")
     lines.append("- **共享类 → design tokens**：单属性且被 ≥2 个元素引用。本表就是它们，可直接对照仓内 token。")
     lines.append("- **具名类 → 逐元素布局值**：属性以 margin/width/height/padding 为主，一次性尺寸与位置，**不进本表**，逐区块写在区块规格里。")
-    lines.append("- 命名与仓内 `S-n` token 的映射**不在本层做**（本产物 requirement 级复用，不绑定某个仓的快照）。")
+    lines.append("- 命名与仓内样式/token `PATTERN-*` 的映射**不在本层做**（本产物 requirement 级复用，不绑定某个仓的快照）。")
     lines.append("")
     lines.append(
         f"- 类规则合计 {len(document.class_rules)} 条 = **{len(tokens.tokens)} 个 token 类** "
@@ -1996,10 +2134,19 @@ def command_extract(args: argparse.Namespace) -> int:
     summary["written"] = written
     summary["out_dir"] = str(Path(args.out_dir).expanduser()) if args.out_dir else None
 
+    gaps = result["coverage_gaps"]
     if args.format == "json":
         print(json.dumps(summary, ensure_ascii=False, indent=2))
-        return EXIT_OK
-    print_summary(summary, result)
+    else:
+        print_summary(summary, result)
+    if gaps and not args.acknowledge_coverage_gaps:
+        print(
+            "\n抽取覆盖不完整：上列缺口中的样式来源本抽取器读不到，直接开工会让 R3 / R4 / R6 "
+            "在区块规格里退化为 `未见`，冻结基线随之漏项。\n"
+            "先把每条缺口登记进「已知缺口」并在确认门里说明，再带 --acknowledge-coverage-gaps 重跑。",
+            file=sys.stderr,
+        )
+        return EXIT_COVERAGE_GAPS
     return EXIT_OK
 
 
@@ -2031,6 +2178,15 @@ def print_summary(summary: dict, result: dict) -> None:
         f"inventory: {summary['patterns']} 种顶层重复模式，覆盖 "
         f"{summary['pattern_covered_nodes']}/{summary['element_nodes']} 节点 = {summary['pattern_coverage_pct']}%"
     )
+    gaps = summary.get("coverage_gaps") or []
+    if gaps:
+        print(f"coverage: {len(gaps)} 类缺口，抽取值不完整")
+        for gap in gaps:
+            print(f"  ! {gap['kind']}（{gap['count']}）：{gap['impact']}")
+            for item in gap["detail"]:
+                print(f"      {item}")
+    else:
+        print("coverage: 无缺口，全部样式来源均在抽取范围内")
     print(f"blocks: {summary['blocks']} 个，最大 {summary['block_max_nodes']} 节点")
     for record in result["blocks"]:
         print(
@@ -2146,6 +2302,11 @@ def main(argv: list[str] | None = None) -> int:
     add_common_arguments(extract_parser)
     extract_parser.add_argument("--out-dir", help="落盘目录，实际运行时取 <requirement-dir>/design-spec/")
     extract_parser.add_argument("--format", choices=["text", "json"], default="text")
+    extract_parser.add_argument(
+        "--acknowledge-coverage-gaps",
+        action="store_true",
+        help="已把覆盖缺口登记进「已知缺口」，不再以退出码 4 阻断",
+    )
 
     block_parser = subparsers.add_parser("block", help="按任意可复算元素锚点吐出单个语义区块切片")
     add_common_arguments(block_parser)

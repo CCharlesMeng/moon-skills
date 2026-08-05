@@ -4,7 +4,7 @@ status: accepted
 
 # 区块靠 class 结构定位，行号只作引用坐标
 
-原设计贯穿全文用「原型文件 + 行号范围」定位区块，本决策推翻它。两份样本（[`evals/`](../../evals/)）实测下来，行号在其中一档上完全失效，而语义标签这条替代路线根本不存在。
+原设计贯穿全文用「原型文件 + 行号范围」定位区块，本决策推翻它。两份样本（[`evals/`](../../../../skills/sdd-dev-frontend/evals/)）实测下来，行号在其中一档上完全失效，而语义标签这条替代路线根本不存在。
 
 ## Considered Options
 
@@ -18,6 +18,6 @@ status: accepted
 
 - 全仓「行号范围」表述迁移为「锚点」并说明取值形态：`SKILL.md`、`diff-list-template.md`、`alpha-tests-restore.md`、`qa-baseline-template.md`、`sdd-task-frontend-split.md`、`方案设计.md`（后者 5 处：L119、L152、L186、L301、L319；L260 的「基线行号」指 QA 基线表格行编号，与原型定位无关，不在内）。
 - 脚本的锚点方案必须为「根元素无具名 class」的区块提供兜底，不得假设具名 class 恒存在。
-- [`sdd-task-frontend-split.md`](../../references/sdd-task-frontend-split.md) L99 的「行号跨度 200 行」经验值在单行档上无意义，改为按组件实例数提示；「一屏可截」仍是唯一判据。
+- [`sdd-task-frontend-split.md`](../../../../skills/sdd-dev-frontend/references/sdd-task-frontend-split.md) L99 的「行号跨度 200 行」经验值在单行档上无意义，改为按组件实例数提示；「一屏可截」仍是唯一判据。
 - Phase 0 需探测原型形态，用来决定锚点是否附带行号。
 - 无脚本能力时的降级分两档：格式化档还能用 `rg` 按 class 名逐个定位、勉强凑出区块边界；单行档没有退路，直接判基线源不可用并按 P7 上报。

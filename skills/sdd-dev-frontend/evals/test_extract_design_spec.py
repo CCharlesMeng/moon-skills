@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import json
 import tempfile
 import unittest
@@ -194,6 +196,91 @@ class FallbackRegressionTests(unittest.TestCase):
         self.assertEqual(result["tokens"].mode, "literal-frequency")
         self.assertEqual(len(result["tokens"].tokens), 1)
         self.assertEqual(result["tokens"].tokens[0]["value"], "#111")
+
+
+class CoverageGapTests(unittest.TestCase):
+    """抽取器读不到的样式来源必须显式出现，不能静默退化成区块规格里的 `未见`。"""
+
+    DIRTY = """<!doctype html><html><head>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.card { padding: 16px; }
+@media (max-width: 768px) { .card { padding: 8px; } }
+.list > .item:hover { color: red; }
+</style></head>
+<body><div class="page"><section class="card">
+<ul class="list"><li class="item" style="margin:4px">A</li></ul>
+</section></div></body></html>
+"""
+
+    def extract_source(self, source: str) -> dict:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "prototype.html"
+            path.write_text(source, encoding="utf-8")
+            return EXTRACTOR.extract(path, "auto", 80, 2, 2)
+
+    @staticmethod
+    def run_cli(argv: list[str]) -> int:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return EXTRACTOR.main(argv)
+
+    def test_every_unreadable_style_source_is_reported(self) -> None:
+        gaps = {gap["kind"]: gap for gap in self.extract_source(self.DIRTY)["coverage_gaps"]}
+        self.assertEqual(
+            set(gaps),
+            {"外链样式表", "at 规则", "行内 style 属性", "非单类选择器", "外部脚本"},
+        )
+        self.assertEqual(gaps["外链样式表"]["detail"], ["style.css"])
+        self.assertEqual(gaps["非单类选择器"]["detail"], [".list > .item:hover"])
+        self.assertEqual(gaps["行内 style 属性"]["count"], 1)
+
+    def test_real_prototypes_report_no_gap(self) -> None:
+        # 误报会让调用方习惯性忽略缺口，所以 reset 型选择器与无害 at 规则不得计入。
+        for name in ("设计稿原型-标准版.html", "设计稿导出件.html"):
+            with self.subTest(name=name):
+                result = EXTRACTOR.extract(EVAL_DIR / name, "auto", 80, 2, 2)
+                self.assertEqual(result["coverage_gaps"], [])
+
+    def test_reset_selectors_and_harmless_at_rules_are_not_gaps(self) -> None:
+        source = """<!doctype html>
+<style>
+@charset "utf-8";
+@font-face { font-family: X; src: url(x.woff2); }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.card { padding: 16px; }
+</style>
+<body><div class="card">内容</div></body>
+"""
+        self.assertEqual(self.extract_source(source)["coverage_gaps"], [])
+
+    def test_gaps_reach_design_facts_and_the_human_artifact(self) -> None:
+        result = self.extract_source(self.DIRTY)
+        facts = json.loads(EXTRACTOR.render_design_facts(result))
+        self.assertEqual(facts["coverage_gaps"], result["coverage_gaps"])
+        tokens_markdown = EXTRACTOR.render_design_tokens(result)
+        self.assertIn("## 抽取覆盖", tokens_markdown)
+        self.assertIn("**本表不完整。**", tokens_markdown)
+        self.assertIn("style.css", tokens_markdown)
+
+    def test_unacknowledged_gaps_block_with_a_nonzero_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "prototype.html"
+            path.write_text(self.DIRTY, encoding="utf-8")
+            out_dir = Path(directory) / "design-spec"
+            argv = ["extract", str(path), "--out-dir", str(out_dir)]
+            self.assertEqual(self.run_cli(argv), EXTRACTOR.EXIT_COVERAGE_GAPS)
+            # 阻断的是流程，不是落盘：产物照常写出，供登记「已知缺口」时引用。
+            self.assertTrue((out_dir / "design-facts.json").exists())
+            self.assertEqual(
+                self.run_cli(argv + ["--acknowledge-coverage-gaps"]),
+                EXTRACTOR.EXIT_OK,
+            )
+
+    def test_clean_prototype_exits_zero_without_acknowledgement(self) -> None:
+        argv = ["extract", str(EVAL_DIR / "设计稿原型-标准版.html")]
+        self.assertEqual(self.run_cli(argv), EXTRACTOR.EXIT_OK)
 
 
 class ArtifactPersistenceTests(unittest.TestCase):

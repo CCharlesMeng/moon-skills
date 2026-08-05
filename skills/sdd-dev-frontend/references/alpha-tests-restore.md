@@ -4,7 +4,7 @@
 
 **这是扩容既有账本，不是新开一本账。** `alpha-tests.md` 继续是唯一证据账本；冻结契约、机器报告和视觉文件是账本引用的证据工件。账本只记录它们的指纹、路径与摘要，不复制第二份规则表或报告。
 
-还原失败证据的历史原则见 [ADR-0001](../docs/adr/0001-restore-uses-diff-list-as-red-evidence.md)，V2 机器契约与选择性截图决策见 [ADR-0005](../docs/adr/0005-external-contract-is-primary-restore-evidence.md)，工件格式见 [restore-contract.md](./restore-contract.md)。
+V2 还原证据使用冻结机器契约与选择性截图；工件格式见 [restore-contract.md](./restore-contract.md)。
 
 ## 一、新增「还原证据记录」
 
@@ -32,7 +32,7 @@
 | 实现适配 | `<story-dir>/restore-adapter.json` |
 | 目标视口 | `<宽 × 高 / DPR>` |
 
-`区块`、原型文件与锚点来自 Requirement 级 `block-index.md` / `block-specs.md`。锚点主体是 class 结构；行号只允许作为格式化文档的附带坐标。单行导出件不得写 `L1–L1` 冒充范围。
+`区块`、原型文件与锚点来自抽取层产物 `<design-spec-dir>/block-index.md` 与 `<design-spec-dir>/blocks/<区块名>.md`。锚点主体是 class 结构；行号只允许作为格式化文档的附带坐标。单行导出件不得写 `L1–L1` 冒充范围。
 
 #### RED 报告引用
 

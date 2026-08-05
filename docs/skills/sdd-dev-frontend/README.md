@@ -1,5 +1,7 @@
 # sdd-dev-frontend 使用说明
 
+> 本文是项目级维护与使用说明，不属于 Skill 运行时上下文。运行时行为以 [`SKILL.md`](../../../skills/sdd-dev-frontend/SKILL.md) 为准。
+
 `sdd-dev-frontend` 用于把上游已经拆好的**一个前端 Story**，从 `tasks.md` 执行成可验收的前端代码、测试结果、机器还原报告、按需视觉证据和检视结论。
 
 从使用者的角度，可以把它理解成一条带验收门禁的开发流水线：
@@ -520,12 +522,15 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 ## 进一步阅读
 
-- [SKILL.md](./SKILL.md)：完整编排规则、硬门禁和失败处理
-- [CONTEXT.md](./CONTEXT.md)：术语定义
+- [背景介绍.md](./背景介绍.md)：框架形成时的项目与流程背景
+- [SKILL.md](../../../skills/sdd-dev-frontend/SKILL.md)：完整编排规则、硬门禁和失败处理
+- [CONTEXT.md](../../../skills/sdd-dev-frontend/CONTEXT.md)：术语定义
 - [方案设计.md](./方案设计.md)：设计取舍与流程蓝图
-- [QA 基线模板](./references/qa-baseline-template.md)：十个固定维度
-- [前端 Task 样式还原切分要求](./references/sdd-task-frontend-split.md)：还原 Task、样式文件归属与上游自查
-- [还原契约与机器报告](./references/restore-contract.md)：V2 JSON 工件、命令和三色语义
-- [差异清单模板](./references/diff-list-template.md)：机器报告的人类摘要格式
-- [`alpha-tests.md` 还原证据扩容](./references/alpha-tests-restore.md)：还原证据和 AC 映射
-- [检视维度与分级](./references/review-dimensions.md)：四份检视的统一判级口径
+- [样式还原验证改造计划.md](./样式还原验证改造计划.md)：V2 契约化还原的已实施计划
+- [ADR](./adr/)：关键架构决策记录
+- [QA 基线模板](../../../skills/sdd-dev-frontend/references/qa-baseline-template.md)：十个固定维度
+- [前端 Task 样式还原切分要求](../../../skills/sdd-dev-frontend/references/sdd-task-frontend-split.md)：还原 Task、样式文件归属与上游自查
+- [还原契约与机器报告](../../../skills/sdd-dev-frontend/references/restore-contract.md)：V2 JSON 工件、命令和三色语义
+- [差异清单模板](../../../skills/sdd-dev-frontend/references/diff-list-template.md)：机器报告的人类摘要格式
+- [`alpha-tests.md` 还原证据扩容](../../../skills/sdd-dev-frontend/references/alpha-tests-restore.md)：还原证据和 AC 映射
+- [检视维度与分级](../../../skills/sdd-dev-frontend/references/review-dimensions.md)：四份检视的统一判级口径

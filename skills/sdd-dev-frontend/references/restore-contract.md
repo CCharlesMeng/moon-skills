@@ -111,13 +111,13 @@
 ### 1. 编译与校验
 
 ```bash
-python3 scripts/verify_restore_contract.py contract \
+python3 "<skill-dir>/scripts/verify_restore_contract.py" contract \
   --baseline <story-dir>/dev-baseline.md \
   --baseline-ref dev-baseline.md \
   --rules <临时规则草稿.json> \
   --out <story-dir>/restore-contract.json
 
-python3 scripts/verify_restore_contract.py validate \
+python3 "<skill-dir>/scripts/verify_restore_contract.py" validate \
   --baseline <story-dir>/dev-baseline.md \
   --contract <story-dir>/restore-contract.json \
   --adapter <story-dir>/restore-adapter.json
@@ -128,7 +128,7 @@ python3 scripts/verify_restore_contract.py validate \
 ### 2. 静态预检
 
 ```bash
-python3 scripts/verify_restore_contract.py static \
+python3 "<skill-dir>/scripts/verify_restore_contract.py" static \
   --baseline <story-dir>/dev-baseline.md \
   --contract <story-dir>/restore-contract.json \
   --adapter <story-dir>/restore-adapter.json \
@@ -148,7 +148,7 @@ window.__SDD_RESTORE_INPUT__ = {
 };
 ```
 
-然后注入 `scripts/collect_restore_facts.js`，把返回 JSON 保存为 `render-results.json`。页面无法启动时如实写：
+然后注入 `<skill-dir>/scripts/collect_restore_facts.js`，把返回 JSON 保存为 `render-results.json`。页面无法启动时如实写：
 
 ```json
 {
@@ -162,7 +162,7 @@ window.__SDD_RESTORE_INPUT__ = {
 ### 4. 报告
 
 ```bash
-python3 scripts/verify_restore_contract.py report \
+python3 "<skill-dir>/scripts/verify_restore_contract.py" report \
   --phase red \
   --baseline <story-dir>/dev-baseline.md \
   --contract <story-dir>/restore-contract.json \
@@ -188,7 +188,7 @@ GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集�
 
 ## 六、视觉缓存
 
-只有 visual-required 规则仍为 YELLOW 时调用 `extract_design_spec.py visual-cache --report <restore-report-red.json>`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
+只有 visual-required 规则仍为 YELLOW 时调用 `python3 "<skill-dir>/scripts/extract_design_spec.py" visual-cache --report <restore-report-red.json>`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
 
 1. 原型指纹；
 2. 区块锚点；
@@ -204,7 +204,7 @@ GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集�
 已有 Story 没有 `restore-contract.json` 时，用：
 
 ```bash
-python3 scripts/verify_restore_contract.py evidence-format \
+python3 "<skill-dir>/scripts/verify_restore_contract.py" evidence-format \
   --alpha-tests <story-dir>/alpha-tests.md
 ```
 
