@@ -1,0 +1,137 @@
+{
+  "skill_name": "sdd-dev-frontend",
+  "evals": [
+    {
+      "id": 1,
+      "name": "machine-checkable-rules-do-not-take-screenshots",
+      "prompt": "页面可启动，浏览器结构化采集可用。当前还原契约只有 R1 元素数量/顺序、R2 文案、R3 间距与颜色、R6 横向溢出规则，没有 visual 检查项。请执行还原轮 Step ①、②，并说明本轮最终到 Step ⑥时如何落账。",
+      "expected_output": "使用 static/render 生成机器报告，不为机器可检项截图；到 Step ⑥时 alpha-tests 只引用报告。",
+      "expectations": [
+        "先校验 dev-baseline.md 与 restore-contract.json 的哈希一致性，再运行同一冻结契约",
+        "使用静态预检和无图片结构化渲染采集完成 R1/R2/R3/R6 判定",
+        "明确说明没有 visual YELLOW，因此不生成原型截图或实现截图",
+        "alpha-tests.md 只记录契约哈希、报告路径/指纹、三色摘要和回归摘要，不复制逐规则报告"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "yellow-never-masquerades-as-green",
+      "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和阴影观感无法结构化判断。页面可用且截图可用。请继续执行。",
+      "expected_output": "先补结构化证据，再为剩余视觉盲区按需取证；未解决 YELLOW 时不能实现或 GREEN。",
+      "expectations": [
+        "初次只有 YELLOW 时不进入 Step ③ 实现，也不把报告判为 GREEN",
+        "先补 R5 状态 fixture 并重跑结构化采集",
+        "只有阴影视觉项仍为 YELLOW 时才生成或复用原型视觉缓存并截实现侧",
+        "视觉观察必须写成明确 red/green 结果后重跑报告；最终仍有 YELLOW 就不能完成还原轮"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "asset-change-invalidates-visual-cache",
+      "prompt": "同一 HTML 的 DOM/CSS、区块锚点、视口、DPR、浏览器与字体都未变，但原型引用的 assets/icon.svg 文件内容改变。已有旧 visual-baseline 缓存，且当前仍有一条该区块的 visual-required YELLOW。请说明本轮如何处理设计事实与缓存。",
+      "expected_output": "资源内容变化改变原型指纹和缓存键，创建新缓存版本且不覆盖旧版本。",
+      "expectations": [
+        "资源指纹按文件内容哈希而不是路径或 mtime 计算",
+        "资源内容变化必须改变 prototype_fingerprint",
+        "旧 visual-baseline 不能命中；新缓存写到新的 fingerprint 目录",
+        "旧缓存只读保留，不被覆盖或删除"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "cache-key-is-stable-and-complete",
+      "prompt": "原型只做空白与缩进重排，随后分别改变视口、DPR、浏览器版本和字体。当前存在一条 visual YELLOW。请说明设计指纹和视觉缓存命中规则。",
+      "expected_output": "格式化不改变原型指纹；任一环境键变化都让视觉缓存失配。",
+      "expectations": [
+        "仅空白格式变化不改变规范化 DOM/CSS 的 prototype_fingerprint",
+        "缓存键同时包含原型指纹、区块锚点、视口、DPR、浏览器引擎/版本和字体指纹",
+        "视口、DPR、浏览器版本或字体任一变化都创建新缓存版本",
+        "只有存在 visual YELLOW 时才尝试生成或命中视觉缓存"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "baseline-contract-drift-hard-fails",
+      "prompt": "restore-contract.json 已存在，但有人在确认后直接修改了 dev-baseline.md 的 R3 间距，没有重新确认或编译契约。请执行还原轮。",
+      "expected_output": "在任何检查或实现之前因基线哈希不一致硬失败，回到确认门。",
+      "expectations": [
+        "先比较 restore-contract.json 保存的 baseline_sha256 与当前 dev-baseline.md 内容哈希",
+        "哈希不一致时拒绝生成 RED/GREEN 报告，也不进入实现",
+        "不能静默更新契约、放宽容差或按当前实现重写期望",
+        "要求记录基线变更、重新人工确认并重新编译契约"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "static-pass-does-not-hide-render-failure",
+      "prompt": "R3 规则的仓内 token 静态预检通过，但浏览器页面打开后结构化采集脚本执行报错，未取得 computed style 和几何值。请汇总报告。",
+      "expected_output": "采集已尝试但失败，render-required 规则最终为 RED，而不是被 static GREEN 覆盖。",
+      "expectations": [
+        "静态预检通过只验证 static 层，不能替代 required render 层",
+        "页面可用且采集已尝试但执行失败时把对应规则判为 RED",
+        "RED 项包含期望值、实际错误、契约出处和实现定位",
+        "整体报告因存在 RED 汇总为 RED"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "page-unavailable-keeps-render-rules-yellow",
+      "prompt": "当前环境不能启动页面，也没有截图能力；源码可读。契约包含可静态扫描且本次会通过的 token 规则，以及 R4 实际 hover 状态和 R6 溢出规则。请执行并给最终状态。",
+      "expected_output": "只执行静态支持项，R4/R6 保持 YELLOW，不能用源码对照冒充 GREEN。",
+      "expectations": [
+        "照常执行静态支持项并保存其结果",
+        "依赖实际状态、computed style 或几何的 R4/R6 规则保持 YELLOW",
+        "明确列出无法判定原因与 required_evidence",
+        "不截图、不声称视觉或结构化验证已完成，最终汇总为 YELLOW"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "frozen-baseline-cannot-be-relaxed-to-pass",
+      "prompt": "冻结契约要求卡片间距 16px，结构化采集得到 20px。实现者认为 20px 看起来也可以，想把容差从 ±1px 改成 ±5px 后继续。请处理。",
+      "expected_output": "保持原规则为 RED，只修实现；任何放宽都必须重新确认基线。",
+      "expectations": [
+        "16px 对 20px 在默认 ±1 CSS px 容差下判为 RED",
+        "Step ③ 只允许修复实现中的这个 RED，不允许自行扩大容差",
+        "如果业务确实要改变标准，必须记录理由并回到人工确认门",
+        "在不改变冻结标准、只修实现的本轮中，重跑 GREEN 必须使用与 RED 相同的 contract_sha256"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "external-baseline-is-not-derived-from-implementation",
+      "prompt": "需要为一个 R2 标题文案和一个 R3 圆角生成 restore-contract.json。实现页面当前显示“订单中心”和 12px 圆角，且有可用的稳定 role/testid locator；design-facts.json 与冻结 dev-baseline.md 分别要求“订单列表”和 8px。请生成规则并执行。",
+      "expected_output": "契约期望取自冻结基线和设计事实，实现值只作为 actual 与 locator。",
+      "expectations": [
+        "R2 expected 使用“订单列表”，R3 expected 使用 8px，并记录 design_fact_source",
+        "实现的“订单中心”和 12px 只进入 actual，不反向修改设计事实或契约",
+        "实现定位单独保存在 adapter，不能混入外部设计期望",
+        "两条规则都生成包含外部出处与实现定位的 RED"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "legacy-story-evidence-remains-readable",
+      "prompt": "一个已完成的旧 Story 没有 restore-contract.json；其 alpha-tests.md 明确包含标题“还原证据记录”“RED 双方截图”“GREEN 复核”，并有记录头、旧版 RED 差异清单、双方截图路径和 GREEN 实现截图。现在只需要读取历史证据并汇报状态，不修改实现。",
+      "expected_output": "识别为旧截图证据格式并按原流程读取，不强制迁移或伪造新契约。",
+      "expectations": [
+        "先确认该 Story 确实没有 restore-contract.json",
+        "把证据识别为 legacy-screenshot-v1 并读取既有四块记录",
+        "不要求迁移历史 alpha-tests.md，也不生成虚假的 V2 报告或契约",
+        "明确说明只有新 Story 才必须使用 V2 冻结契约流程"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "story-references-repository-patterns-without-copying",
+      "prompt": "当前 Story 需要状态持久化与样式 token。repo-baseline.md 的 REPO-3 已有 PATTERN-STATE-1 和 PATTERN-TOKEN-1，Requirement 没有偏离仓库默认范式。请完成代码侧勘察并说明落盘内容。",
+      "expected_output": "复核仓库范式证据后，只把两个 PATTERN ID 和 REPO-3 指纹写入 dev-baseline.md 的工程依据，不创建 codebase-brief.md 或 Story 范式卡片。",
+      "expectations": [
+        "Requirement 完全沿用仓库默认范式时不制造 Requirement 工程决策",
+        "逐个复核被选 PATTERN 的声明证据，但不把源码片段或范式正文复制进 Story",
+        "dev-baseline.md 只保存 Story 需要到 PATTERN ID 的映射和完整 REPO-3 指纹",
+        "实现与检视通过 ID 回读 repo-baseline.md 的唯一范式正文"
+      ]
+    }
+  ]
+}

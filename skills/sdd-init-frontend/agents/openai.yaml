@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Frontend Init"
+  short_description: "初始化前端仓环境并生成可复用的仓库级 baseline"
+  default_prompt: "Use $sdd-init-frontend to prepare this frontend repository and generate its reusable baseline."

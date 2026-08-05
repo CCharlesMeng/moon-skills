@@ -4,6 +4,8 @@ status: accepted
 
 # 还原类工作用「与原型的差异清单」充当 Step ① 的失败证据
 
+> 后续演进见 [ADR-0005](0005-external-contract-is-primary-restore-evidence.md)：本 ADR 的外部基线原则与六步 RED/GREEN 语义保留，差异清单升级为冻结契约的机器报告人类摘要，截图退为 YELLOW 机器盲区的选择性补证。
+
 `tasks.md` 的 6 步 checkbox 要求每个 Task 从「写一个失败的测试」开始，但前端的还原类工作写不出有意义的失败测试——对着 HTML 原型断言 DOM 结构，测试内容就是实现内容的照抄，红绿是走过场，而且这类测试会流进 `alpha-tests.md`，稀释它作为验收唯一证据源的分量。我们决定保留 6 步的编号、顺序与 RED/GREEN 语义完全不变，只把 Step ① 的失败证据扩展为两种形态：逻辑补全用失败的单测或接口集成测试，还原用「与 HTML 原型的差异清单」（非空即 RED，清零即 GREEN）。
 
 ## Considered Options
@@ -17,5 +19,5 @@ status: accepted
 ## Consequences
 
 - 上游 `sdd-task` 的前端任务模板必须回改，支持 Step ① 的两种形态，并允许一个 Task 内出现多轮 6 步。
-- `alpha-tests.md` 需要扩容一节收还原证据（差异清单前后对照 + 截图），以维持它作为唯一证据源的地位。
+- `alpha-tests.md` 需要扩容一节收还原证据，以维持它作为唯一证据源的地位；ADR-0005 生效后只登记机器报告引用与可选视觉补证。
 - 差异清单的可信度依赖「Agent 能真跑真截图」。环境探测失败时必须显式降级并告知，不得假装做过对比。

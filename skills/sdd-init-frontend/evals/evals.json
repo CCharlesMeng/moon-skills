@@ -1,0 +1,60 @@
+{
+  "skill_name": "sdd-init-frontend",
+  "evals": [
+    {
+      "id": 1,
+      "name": "omit-non-applicable-absence",
+      "prompt": "为一个只有 dev 脚本、没有 engines、env 模板、质量命令、UI/state/request 依赖的最小 Svelte 前端仓生成仓库 baseline。说明你会如何用 repo-baseline.md 和 onboarding-report.md 同时服务人和机器。",
+      "expected_output": "repo-baseline.md 是唯一仓库事实源；固定 Markdown 标题与表格供机器消费，同时省略不适用的空项。",
+      "expectations": [
+        "明确不生成 manifest.json、repo-baseline.json 或嵌入式 JSON/YAML sidecar",
+        "repo-baseline.md 不展示 Node 未声明、环境变量 0 个、空质量类别或空依赖类别，也不把这些可选缺失项改写成待处理动作",
+        "最终报告不生成内容为无的限制、阻断或进程交接章节"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "guide-required-missing-capability",
+      "prompt": "目标前端 app 有 build 脚本和框架依赖，但没有 dev/start/serve/preview，用户要求完成 baseline 初始化。说明产物和状态应该怎样处理。",
+      "expected_output": "把缺失启动能力当成需要处理的开发缺口，先尝试确认或准备，仍缺失时给具体补齐动作，而不是静态写未见。",
+      "expectations": [
+        "识别启动命令是当前开发必需能力而非可静默省略的可选项",
+        "先引导确认或补齐 package.json 中的启动方式，再根据结果定级",
+        "不使用启动命令未见或未声明作为最终结论"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "retain-positive-repository-facts",
+      "prompt": "仓库明确声明 Node >=20、pnpm lockfile、两个环境变量模板键、dev/test/check/build 命令，并使用 React、Zustand、Axios、Vitest。说明唯一 repo-baseline.md 应该保留什么。",
+      "expected_output": "repo-baseline.md 保留这些可复用的正向事实，同时不补写仓库没有的类别。",
+      "expectations": [
+        "保留已声明的 Node、包管理器与 lockfile、安装和启动命令",
+        "只记录环境变量键和 has_template_default 这类布尔标记，不记录真实值或模板默认值文本",
+        "只展示实际存在的质量命令和依赖类别"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "report-only-real-limits",
+      "prompt": "一次 baseline 验证全部通过，没有限制、阻断，也没有需要保留的进程；另一次验证只有一个不阻断开发的字体限制。分别说明最终报告结构。",
+      "expected_output": "全通过报告省略三个空章节；有限制的报告只增加真实限制及其影响和解除条件。",
+      "expectations": [
+        "READY 报告不生成空的限制、阻断或进程交接章节",
+        "READY_WITH_LIMITS 只生成实际限制，不生成空阻断章节",
+        "限制同时写明影响范围与解除条件"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "repository-patterns-have-one-owner",
+      "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的状态管理与请求封装。说明 REPO-3、Requirement 和 Story 分别保存什么。",
+      "expected_output": "范式正文只在仓库 REPO-3；Requirement 仅在有跨 Story 决策时引用范式 ID；Story 只记录采用的 ID 和 REPO-3 指纹。",
+      "expectations": [
+        "不为每个 Story 生成范式卡片或 codebase-brief.md",
+        "Requirement 不复制仓库范式正文，完全沿用默认范式时连决策章节也省略",
+        "跨 Requirement 可复用的新惯例直接提升到仓库 REPO-3，不长期维护候选清单"
+      ]
+    }
+  ]
+}

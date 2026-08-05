@@ -1,0 +1,2519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>sdd-dev-frontend 使用说明</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef3f9;
+      --ink: #16202d;
+      --muted: #5b6b7d;
+      --line: #ccd6e2;
+      --line-strong: #93a4b8;
+      --accent: #1967d2;
+      --accent-soft: #e7f0fd;
+      --green: #147d64;
+      --green-soft: #e4f5ef;
+      --amber: #9b6100;
+      --amber-soft: #fff1d2;
+      --red: #b33a3a;
+      --red-soft: #fdeaea;
+      --purple: #7758c7;
+      --purple-soft: #eee9fb;
+      --shadow: 0 18px 55px rgba(31, 48, 70, 0.12);
+      --radius: 18px;
+      --max: 1180px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #10151c;
+        --surface: #171e27;
+        --surface-2: #202a35;
+        --ink: #edf3fb;
+        --muted: #aebdcd;
+        --line: #334354;
+        --line-strong: #60758b;
+        --accent: #75adff;
+        --accent-soft: #182e4c;
+        --green: #65d7b9;
+        --green-soft: #17372f;
+        --amber: #f6bd5e;
+        --amber-soft: #3b2b13;
+        --red: #ff9797;
+        --red-soft: #402124;
+        --purple: #c2a9ff;
+        --purple-soft: #30264a;
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 2%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 28rem),
+        radial-gradient(circle at 94% 18%, color-mix(in srgb, var(--green) 9%, transparent), transparent 30rem),
+        var(--bg);
+      font-family:
+        Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 72%, transparent);
+      outline-offset: 3px;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code {
+      padding: 0.12em 0.4em;
+      border-radius: 0.4em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .page-shell {
+      width: min(100% - 32px, var(--max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar-inner {
+      display: flex;
+      min-height: 64px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      color: var(--accent);
+      background: var(--surface);
+      box-shadow: 0 7px 20px color-mix(in srgb, var(--accent) 14%, transparent);
+      font-size: 0.8rem;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      white-space: nowrap;
+    }
+
+    .topnav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .topnav a {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .topnav a:hover {
+      color: var(--accent);
+    }
+
+    .hero {
+      display: grid;
+      min-height: 76vh;
+      align-items: center;
+      padding: 88px 0 64px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 950px;
+      margin-bottom: 24px;
+      font-size: clamp(2.8rem, 7vw, 6.3rem);
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+    }
+
+    .hero-lead {
+      max-width: 780px;
+      margin-bottom: 42px;
+      color: var(--muted);
+      font-size: clamp(1.15rem, 2.1vw, 1.55rem);
+    }
+
+    .hero-equation {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 2px 2px 16px;
+    }
+
+    .equation-node {
+      min-width: max-content;
+      padding: 12px 16px;
+      border-bottom: 3px solid var(--line-strong);
+      font-weight: 750;
+    }
+
+    .equation-node.input {
+      border-color: var(--accent);
+    }
+
+    .equation-node.rule {
+      border-color: var(--amber);
+    }
+
+    .equation-node.output {
+      border-color: var(--green);
+    }
+
+    .equation-op {
+      color: var(--muted);
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 58px;
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+    }
+
+    .hero-stat strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: clamp(1.7rem, 3vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .hero-stat span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    main section {
+      scroll-margin-top: 86px;
+      border-top: 1px solid var(--line);
+      padding: 84px 0;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+      gap: 64px;
+      margin-bottom: 54px;
+      align-items: end;
+    }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(2rem, 4vw, 3.7rem);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+
+    .section-intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .flow-track {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0;
+      align-items: center;
+      margin: 18px 0 34px;
+    }
+
+    .phase-button {
+      position: relative;
+      min-height: 78px;
+      padding: 14px 10px;
+      border: 0;
+      border-top: 2px solid var(--line);
+      border-bottom: 2px solid var(--line);
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .phase-button:first-child {
+      border-left: 2px solid var(--line);
+      border-radius: 14px 0 0 14px;
+    }
+
+    .phase-button:last-child {
+      border-right: 2px solid var(--line);
+      border-radius: 0 14px 14px 0;
+    }
+
+    .phase-button + .phase-button {
+      border-left: 1px solid var(--line);
+    }
+
+    .phase-button::after {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      right: -6px;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid var(--line-strong);
+      border-right: 2px solid var(--line-strong);
+      content: "";
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .phase-button:last-child::after {
+      display: none;
+    }
+
+    .phase-button small {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .phase-button span {
+      display: block;
+      color: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .phase-button[aria-pressed="true"] {
+      z-index: 3;
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .phase-detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 44px;
+      min-height: 260px;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .phase-detail h3 {
+      margin-bottom: 10px;
+      font-size: 1.65rem;
+    }
+
+    .phase-purpose {
+      max-width: 650px;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .handoff {
+      border-left: 3px solid var(--green);
+      padding-left: 18px;
+    }
+
+    .handoff-label,
+    .user-action-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .handoff strong,
+    .user-action strong {
+      font-size: 1.02rem;
+    }
+
+    .phase-output-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .phase-output-list li {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      color: var(--muted);
+    }
+
+    .phase-output-list li::before {
+      flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      margin-top: 0.58em;
+      border-radius: 50%;
+      background: var(--accent);
+      content: "";
+    }
+
+    .user-action {
+      margin-top: 24px;
+      padding: 16px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .boundary-map {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .boundary-side {
+      padding: 24px 0;
+      border-top: 2px solid var(--line-strong);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .boundary-side h3 {
+      margin-bottom: 20px;
+    }
+
+    .plain-list {
+      display: grid;
+      gap: 13px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .plain-list li {
+      color: var(--muted);
+    }
+
+    .plain-list strong {
+      color: var(--ink);
+    }
+
+    .scope-core {
+      display: grid;
+      place-items: center;
+      min-height: 300px;
+      padding: 32px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--accent-soft);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .scope-core strong {
+      display: block;
+      max-width: 260px;
+      font-size: clamp(1.5rem, 3vw, 2.3rem);
+      line-height: 1.18;
+    }
+
+    .scope-core span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    .baseline-ladder {
+      display: grid;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .baseline-step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .baseline-step b {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--surface);
+      background: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .baseline-step:nth-child(2) b {
+      background: var(--amber);
+    }
+
+    .baseline-step:nth-child(3) b {
+      background: var(--purple);
+    }
+
+    .a-phase-diagram {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) 72px minmax(0, 1.1fr);
+      gap: 12px;
+      align-items: center;
+    }
+
+    .source-stack,
+    .output-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .source-row,
+    .output-row {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .source-row strong,
+    .output-row strong {
+      display: block;
+    }
+
+    .source-row span,
+    .output-row span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .diagram-arrow {
+      position: relative;
+      height: 2px;
+      background: var(--line-strong);
+    }
+
+    .diagram-arrow::after {
+      position: absolute;
+      top: -5px;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid var(--line-strong);
+      border-right: 2px solid var(--line-strong);
+      content: "";
+      transform: rotate(45deg);
+    }
+
+    .confirm-gate {
+      margin-top: 36px;
+      padding: 24px 26px;
+      border: 1px solid var(--amber);
+      border-left-width: 6px;
+      border-radius: 14px;
+      background: var(--amber-soft);
+    }
+
+    .confirm-gate strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--amber);
+      font-size: 1.15rem;
+    }
+
+    .dimension-bands {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 20px;
+      margin-top: 34px;
+    }
+
+    .dimension-band {
+      padding-top: 18px;
+      border-top: 2px solid var(--line-strong);
+    }
+
+    .dimension-band.restore {
+      border-color: var(--accent);
+    }
+
+    .dimension-band.function {
+      border-color: var(--green);
+    }
+
+    .dimension-band ul {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px 16px;
+      margin: 14px 0 0;
+      padding: 0;
+      color: var(--muted);
+      list-style: none;
+      font-size: 0.9rem;
+    }
+
+    .style-sequence {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) 44px minmax(0, 1.15fr) 44px minmax(0, 0.95fr);
+      gap: 0;
+      align-items: stretch;
+      margin-bottom: 30px;
+    }
+
+    .style-task {
+      display: flex;
+      min-height: 244px;
+      flex-direction: column;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--line-strong);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+    }
+
+    .style-task.shared {
+      border-top-color: var(--purple);
+    }
+
+    .style-task.restore {
+      border-top-color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .style-task.logic {
+      border-top-color: var(--green);
+    }
+
+    .task-badge {
+      align-self: flex-start;
+      margin-bottom: 15px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .style-task h3 {
+      margin: 0 0 8px;
+    }
+
+    .style-task p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .style-task dl {
+      margin: auto 0 0;
+    }
+
+    .style-task dt {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .style-task dd {
+      margin: 3px 0 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .style-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--line-strong);
+      font-size: 1.65rem;
+      font-weight: 900;
+    }
+
+    .ownership-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin: 30px 0;
+    }
+
+    .ownership-rule {
+      min-height: 176px;
+      padding: 17px;
+      border-top: 2px solid var(--line-strong);
+      background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+    }
+
+    .ownership-rule b {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 16px;
+      place-items: center;
+      border-radius: 9px;
+      color: var(--surface);
+      background: var(--accent);
+      font-size: 0.82rem;
+    }
+
+    .ownership-rule strong {
+      display: block;
+      margin-bottom: 7px;
+      line-height: 1.35;
+    }
+
+    .ownership-rule span {
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .style-boundaries {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .style-boundary {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .style-boundary.warning {
+      border-color: color-mix(in srgb, var(--amber) 42%, var(--line));
+      background: var(--amber-soft);
+    }
+
+    .style-boundary h3 {
+      margin: 0 0 8px;
+    }
+
+    .style-boundary p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .invalidation-flow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 18px;
+      color: var(--red);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .invalidation-flow span {
+      padding: 6px 8px;
+      border: 1px solid color-mix(in srgb, var(--red) 45%, var(--line));
+      border-radius: 8px;
+      background: var(--red-soft);
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      margin-bottom: 32px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .mode-switch button {
+      padding: 9px 16px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .mode-switch button[aria-pressed="true"] {
+      color: var(--surface);
+      background: var(--accent);
+    }
+
+    .step-track {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      margin-bottom: 30px;
+    }
+
+    .step-node {
+      position: relative;
+      padding: 0 12px;
+      text-align: center;
+    }
+
+    .step-node::before {
+      display: grid;
+      position: relative;
+      z-index: 2;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 13px;
+      place-items: center;
+      border: 2px solid var(--line-strong);
+      border-radius: 50%;
+      color: var(--muted);
+      background: var(--bg);
+      content: attr(data-step);
+      font-weight: 850;
+    }
+
+    .step-node::after {
+      position: absolute;
+      z-index: 1;
+      top: 21px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: var(--line);
+      content: "";
+    }
+
+    .step-node:last-child::after {
+      display: none;
+    }
+
+    .step-node[data-tone="red"]::before {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .step-node[data-tone="green"]::before {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .step-node strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.93rem;
+    }
+
+    .step-node span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .mode-detail {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 38px;
+      padding: 30px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mode-detail blockquote {
+      margin: 0;
+      padding-left: 22px;
+      border-left: 4px solid var(--accent);
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .mode-detail p {
+      color: var(--muted);
+    }
+
+    .evidence-chain {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .evidence-node {
+      position: relative;
+      min-height: 150px;
+      padding: 18px 10px;
+      border-top: 3px solid var(--line-strong);
+    }
+
+    .evidence-node + .evidence-node::before {
+      position: absolute;
+      top: 38px;
+      left: -12px;
+      color: var(--line-strong);
+      content: "→";
+      font-weight: 900;
+    }
+
+    .evidence-node.ac {
+      border-color: var(--accent);
+    }
+
+    .evidence-node.ledger {
+      border-color: var(--green);
+    }
+
+    .evidence-node.review {
+      border-color: var(--purple);
+    }
+
+    .evidence-node strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .evidence-node span {
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .review-fan {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .review-lane {
+      min-height: 190px;
+      padding: 22px 0;
+      border-top: 4px solid var(--accent);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .review-lane:nth-child(2) {
+      border-top-color: var(--green);
+    }
+
+    .review-lane:nth-child(3) {
+      border-top-color: var(--amber);
+    }
+
+    .review-lane:nth-child(4) {
+      border-top-color: var(--purple);
+    }
+
+    .review-lane small {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .review-lane h3 {
+      margin: 8px 0 10px;
+    }
+
+    .review-lane p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .merge-line {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 18px;
+      align-items: center;
+      margin: 10px 0 30px;
+    }
+
+    .merge-line::before,
+    .merge-line::after {
+      height: 1px;
+      background: var(--line-strong);
+      content: "";
+    }
+
+    .merge-line strong {
+      color: var(--purple);
+    }
+
+    .closure-loop {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr 80px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 34px;
+    }
+
+    .closure-node {
+      min-height: 140px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .closure-node strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .closure-node span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .loop-arrow {
+      color: var(--line-strong);
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .artifact-layers {
+      display: grid;
+      gap: 26px;
+    }
+
+    .artifact-layer {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 30px;
+      padding: 26px 0;
+      border-top: 2px solid var(--line-strong);
+    }
+
+    .artifact-layer.requirement {
+      border-color: var(--accent);
+    }
+
+    .artifact-layer.story {
+      border-color: var(--green);
+    }
+
+    .artifact-layer.repo {
+      border-color: var(--amber);
+    }
+
+    .layer-label strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.15rem;
+    }
+
+    .layer-label span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .artifact-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-content: flex-start;
+    }
+
+    .artifact {
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--line);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9rem;
+    }
+
+    .artifact-arrow {
+      color: var(--line-strong);
+      font-weight: 900;
+    }
+
+    .intervention-timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .intervention-timeline::before {
+      position: absolute;
+      top: 20px;
+      right: 3%;
+      left: 3%;
+      height: 2px;
+      background: var(--line);
+      content: "";
+    }
+
+    .intervention {
+      position: relative;
+      z-index: 2;
+      padding-top: 48px;
+    }
+
+    .intervention::before {
+      position: absolute;
+      top: 11px;
+      left: 0;
+      width: 18px;
+      height: 18px;
+      border: 4px solid var(--bg);
+      border-radius: 50%;
+      background: var(--line-strong);
+      box-shadow: 0 0 0 2px var(--line-strong);
+      content: "";
+    }
+
+    .intervention.critical::before {
+      background: var(--amber);
+      box-shadow: 0 0 0 2px var(--amber);
+    }
+
+    .intervention strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 0.94rem;
+    }
+
+    .intervention span {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .degrade-tree {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+    }
+
+    .degrade-branch {
+      padding-top: 18px;
+      border-top: 4px solid var(--amber);
+    }
+
+    .degrade-branch:nth-child(2) {
+      border-color: var(--red);
+    }
+
+    .degrade-branch:nth-child(3) {
+      border-color: var(--purple);
+    }
+
+    .degrade-branch h3 {
+      margin-bottom: 10px;
+    }
+
+    .degrade-branch p {
+      color: var(--muted);
+    }
+
+    .branch-flow {
+      display: grid;
+      gap: 9px;
+      margin-top: 20px;
+    }
+
+    .branch-step {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .branch-step::before {
+      color: var(--line-strong);
+      content: "↓";
+      font-weight: 900;
+    }
+
+    .resume-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 44px;
+      align-items: start;
+    }
+
+    .resume-rule {
+      margin-bottom: 18px;
+      padding-left: 18px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .resume-rule strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .resume-rule span {
+      color: var(--muted);
+    }
+
+    .prompt-block {
+      margin: 0;
+      padding: 24px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    .exit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 34px;
+      margin-bottom: 44px;
+    }
+
+    .exit-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .exit-item b {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--surface);
+      background: var(--green);
+      font-size: 0.78rem;
+    }
+
+    .exit-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .exit-item span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .final-index {
+      padding: 32px;
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      background: var(--green-soft);
+      box-shadow: var(--shadow);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      line-height: 1.9;
+    }
+
+    .final-index strong {
+      color: var(--green);
+    }
+
+    footer {
+      padding: 46px 0 70px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+    }
+
+    .footer-inner a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        min-height: auto;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .section-head,
+      .phase-detail,
+      .mode-detail,
+      .resume-grid,
+      .style-boundaries {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+
+      .flow-track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .phase-button,
+      .phase-button:first-child,
+      .phase-button:last-child {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+
+      .phase-button::after {
+        display: none;
+      }
+
+      .boundary-map {
+        grid-template-columns: 1fr;
+      }
+
+      .scope-core {
+        min-height: 260px;
+        border-radius: var(--radius);
+      }
+
+      .a-phase-diagram {
+        grid-template-columns: 1fr;
+      }
+
+      .diagram-arrow {
+        width: 2px;
+        height: 48px;
+        margin: 0 auto;
+      }
+
+      .diagram-arrow::after {
+        top: auto;
+        right: -4px;
+        bottom: 0;
+        transform: rotate(135deg);
+      }
+
+      .style-sequence {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .style-task {
+        min-height: auto;
+      }
+
+      .style-arrow {
+        min-height: 34px;
+        transform: rotate(90deg);
+      }
+
+      .ownership-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .step-track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px 0;
+      }
+
+      .step-node:nth-child(3)::after,
+      .step-node:nth-child(6)::after {
+        display: none;
+      }
+
+      .evidence-chain,
+      .intervention-timeline {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .evidence-node + .evidence-node::before,
+      .intervention-timeline::before {
+        display: none;
+      }
+
+      .review-fan {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .closure-loop {
+        grid-template-columns: 1fr;
+      }
+
+      .loop-arrow {
+        transform: rotate(90deg);
+      }
+
+      .artifact-layer {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page-shell {
+        width: min(100% - 24px, var(--max));
+      }
+
+      .topbar-inner {
+        min-height: 58px;
+      }
+
+      .topnav {
+        gap: 14px;
+      }
+
+      .hero {
+        padding-top: 64px;
+      }
+
+      h1 {
+        font-size: clamp(2.55rem, 16vw, 4.4rem);
+      }
+
+      .hero-stats,
+      .dimension-bands,
+      .review-fan,
+      .degrade-tree,
+      .exit-grid,
+      .ownership-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main section {
+        padding: 64px 0;
+      }
+
+      .flow-track {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .phase-detail {
+        padding: 24px;
+      }
+
+      .dimension-band ul {
+        grid-template-columns: 1fr;
+      }
+
+      .step-track,
+      .evidence-chain,
+      .intervention-timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .step-node {
+        display: grid;
+        grid-template-columns: 52px 1fr;
+        gap: 12px;
+        padding: 0;
+        text-align: left;
+      }
+
+      .step-node::before {
+        grid-row: span 2;
+        margin: 0;
+      }
+
+      .step-node::after {
+        top: 44px;
+        left: 21px;
+        width: 2px;
+        height: calc(100% + 22px);
+      }
+
+      .step-node:nth-child(3)::after {
+        display: block;
+      }
+
+      .step-node:nth-child(6)::after {
+        display: none;
+      }
+
+      .evidence-node,
+      .review-lane {
+        min-height: auto;
+      }
+
+      .intervention {
+        padding: 0 0 18px 34px;
+        border-left: 2px solid var(--line);
+      }
+
+      .intervention::before {
+        top: 1px;
+        left: -10px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="page-shell topbar-inner">
+      <a class="brand" href="#top" aria-label="返回页面顶部">
+        <span class="brand-mark">SDD</span>
+        <span>sdd-dev-frontend</span>
+      </a>
+      <nav class="topnav" aria-label="页面导航">
+        <a href="#workflow">流程</a>
+        <a href="#scope">输入</a>
+        <a href="#style-restoration">样式还原</a>
+        <a href="#implementation">实现</a>
+        <a href="#evidence">证据</a>
+        <a href="#review">检视</a>
+        <a href="#artifacts">产物</a>
+        <a href="#recovery">恢复</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="top" class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">User guide · Frontend delivery workflow</p>
+        <h1>从 <code>tasks.md</code><br>到可验收的前端交付</h1>
+        <p class="hero-lead">
+          <code>sdd-dev-frontend</code> 把一个前端仓中的一个 Story，执行成代码、RED → GREEN
+          证据、并行检视和可追溯的最终结论。
+        </p>
+
+        <div class="hero-equation" aria-label="流程核心关系">
+          <span class="equation-node input">上游任务与设计</span>
+          <span class="equation-op">+</span>
+          <span class="equation-node rule">冻结 QA 基线</span>
+          <span class="equation-op">+</span>
+          <span class="equation-node rule">逐 Task 证据</span>
+          <span class="equation-op">=</span>
+          <span class="equation-node output">可验收交付</span>
+        </div>
+
+        <div class="hero-stats" aria-label="流程关键数字">
+          <div class="hero-stat">
+            <strong>1 × 1</strong>
+            <span>一个前端仓 × 一个 Story</span>
+          </div>
+          <div class="hero-stat">
+            <strong>10</strong>
+            <span>冻结的 QA 基线维度</span>
+          </div>
+          <div class="hero-stat">
+            <strong>6</strong>
+            <span>每一轮固定执行步骤</span>
+          </div>
+          <div class="hero-stat">
+            <strong>4</strong>
+            <span>完成后的并行检视</span>
+          </div>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <main>
+    <section id="workflow">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">End-to-end workflow</p>
+            <h2>每个 Phase 都把明确产物交给下一步</h2>
+          </div>
+          <p class="section-intro">
+            点击任一阶段查看它的职责、交接物和你需要参与的动作。正常情况下，
+            唯一固定的人工作业点是 Phase A 的 QA 基线确认门。
+          </p>
+        </div>
+
+        <div class="flow-track" role="group" aria-label="Phase 选择">
+          <button class="phase-button" type="button" data-phase="p0" aria-pressed="true">
+            <small>PHASE 0</small><span>环境探测</span>
+          </button>
+          <button class="phase-button" type="button" data-phase="a1" aria-pressed="false">
+            <small>PHASE A1</small><span>规格抽取</span>
+          </button>
+          <button class="phase-button" type="button" data-phase="a2" aria-pressed="false">
+            <small>PHASE A2</small><span>并行勘察</span>
+          </button>
+          <button class="phase-button" type="button" data-phase="b" aria-pressed="false">
+            <small>PHASE B</small><span>逐 Task 实现</span>
+          </button>
+          <button class="phase-button" type="button" data-phase="c" aria-pressed="false">
+            <small>PHASE C</small><span>并行检视</span>
+          </button>
+          <button class="phase-button" type="button" data-phase="d" aria-pressed="false">
+            <small>PHASE D</small><span>修复与收口</span>
+          </button>
+        </div>
+
+        <div class="phase-detail" aria-live="polite">
+          <div>
+            <p class="section-kicker" id="phase-code">PHASE 0</p>
+            <h3 id="phase-title">先校验仓库接入，再冻结 Story 起点</h3>
+            <p id="phase-purpose" class="phase-purpose">
+              仓库 baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。
+            </p>
+            <div class="handoff">
+              <span class="handoff-label">交接给下一步</span>
+              <strong id="phase-handoff">dev-baseline.md 的“执行起点（环境）”</strong>
+            </div>
+          </div>
+          <div>
+            <span class="handoff-label">主要输出</span>
+            <ul id="phase-output-list" class="phase-output-list">
+              <li>REPO-1～REPO-3 readiness</li>
+              <li>Story 场景、base-ref 与目标路由</li>
+              <li>test / typecheck / lint / build 起点失败集合</li>
+              <li>截图、结构化采集与 Story 特有限制</li>
+            </ul>
+            <div class="user-action">
+              <span class="user-action-label">你需要做什么</span>
+              <strong id="phase-user-action">仅在路径无法唯一定位时确认一次</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Scope & inputs</p>
+            <h2>先收窄作用域，再选择外部基线</h2>
+          </div>
+          <p class="section-intro">
+            这条流程不会在一次运行里横跨多个仓或多个 Story。还原证据必须引用 Agent
+            之外的基线，因此 HTML 原型缺失时要明确降级来源。
+          </p>
+        </div>
+
+        <div class="boundary-map">
+          <div class="boundary-side">
+            <h3>必须具备</h3>
+            <ul class="plain-list">
+              <li><strong><code>tasks.md</code></strong><br>唯一执行清单与进度真相</li>
+              <li><strong><code>alpha-tests.md</code></strong><br>AC 的 RED / GREEN 证据账本</li>
+              <li><strong>Story 前端增量设计</strong><br><code>story-delta-frontend-design.md</code></li>
+              <li><strong>目标前端仓</strong><br>实际修改、启动和测试代码</li>
+            </ul>
+          </div>
+
+          <div class="scope-core">
+            <div>
+              <strong>一个前端仓<br>×<br>一个 Story</strong>
+              <span>跨仓与多 Story 交给外层调度</span>
+            </div>
+          </div>
+
+          <div class="boundary-side">
+            <h3>还原基线三档</h3>
+            <div class="baseline-ladder">
+              <div class="baseline-step">
+                <b>1</b>
+                <span><strong>HTML 原型</strong><br>完整视觉基线</span>
+              </div>
+              <div class="baseline-step">
+                <b>2</b>
+                <span><strong>仓内参照页</strong><br>类比基线，需你确认候选</span>
+              </div>
+              <div class="baseline-step">
+                <b>3</b>
+                <span><strong>文字规格 + token</strong><br>无视觉基线，可信度最低</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="baseline">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Phase A</p>
+            <h2>设计事实和代码事实在确认门前汇合</h2>
+          </div>
+          <p class="section-intro">
+            A1 把原型变成可复用的结构化规格；A2 同时回答“怎样算完成”和“这个仓应该怎么写”。
+            只有你确认 QA 基线后，流程才会进入实现。
+          </p>
+        </div>
+
+        <div class="a-phase-diagram" aria-label="Phase A 输入输出关系">
+          <div class="source-stack">
+            <div class="source-row">
+              <strong>HTML 原型</strong>
+              <span>设计稿侧的结构、文案、token 与布局值</span>
+            </div>
+            <div class="source-row">
+              <strong>Story 设计与 AC</strong>
+              <span>功能范围、接口契约和可观察结果</span>
+            </div>
+            <div class="source-row">
+              <strong>目标前端仓</strong>
+              <span>公共方法、样式体系、请求封装与编码范式</span>
+            </div>
+          </div>
+
+          <div class="diagram-arrow" aria-hidden="true"></div>
+
+          <div class="output-stack">
+            <div class="output-row">
+              <strong><code>design-spec/</code> · Requirement 级</strong>
+              <span>design tokens、界面清单、文案清单、切分表、区块规格</span>
+            </div>
+            <div class="output-row">
+              <strong><code>dev-baseline.md</code> · Story 级</strong>
+              <span>环境 + R1–R6 + F1–F4 + 豁免 + 已知缺口</span>
+            </div>
+            <div class="output-row">
+              <strong><code>dev-baseline.md / 工程依据</code> · Story 级引用</strong>
+              <span>PATTERN-* / REQ-DEC-* 与 REPO-3 指纹；范式正文只在仓库级</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="confirm-gate">
+          <strong>人工确认门：冻结“怎样才算做完”</strong>
+          你确认的是具体期望值、豁免和基线来源。冻结后如果要放宽任何标准，
+          必须在 <code>dev-baseline.md</code> 登记变更并再次确认。
+        </div>
+
+        <div class="dimension-bands" aria-label="QA 基线十个维度">
+          <div class="dimension-band restore">
+            <strong>还原侧 · R1–R6</strong>
+            <ul>
+              <li>R1 区块与层级</li>
+              <li>R2 文案</li>
+              <li>R3 间距与对齐</li>
+              <li>R4 状态样式</li>
+              <li>R5 空态与边界</li>
+              <li>R6 指定视口“不破”</li>
+            </ul>
+          </div>
+          <div class="dimension-band function">
+            <strong>功能侧 · F1–F4</strong>
+            <ul>
+              <li>F1 测试层级映射</li>
+              <li>F2 AC 可观察判定</li>
+              <li>F3 异常与边界</li>
+              <li>F4 数据与接口契约</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="style-restoration">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Task topology · 样式还原</p>
+            <h2>先集中落样式，再让逻辑接上来</h2>
+          </div>
+          <p class="section-intro">
+            “样式还原”首先决定 Task 怎样切、样式文件归谁，不只是 Task 内的一次还原轮。
+            目标是让冻结外部设计契约一次整体 GREEN，并让后续逻辑不再推翻已 GREEN 的机器证据。
+          </p>
+        </div>
+
+        <div class="style-sequence" aria-label="推荐的前端 Task 顺序">
+          <article class="style-task shared">
+            <span class="task-badge">条件 Task · 多页面共享时</span>
+            <h3>公共样式与骨架</h3>
+            <p>一次落完新增或修改的 token、公共布局组件和跨页复用的展示组件。</p>
+            <dl>
+              <dt>拥有</dt>
+              <dd>共享 token / 公共骨架 / 展示组件</dd>
+              <dt>交接</dt>
+              <dd>稳定的跨页视觉底座</dd>
+            </dl>
+          </article>
+
+          <div class="style-arrow" aria-hidden="true">→</div>
+
+          <article class="style-task restore">
+            <span class="task-badge">默认 Task · 每个页面一个</span>
+            <h3>页面还原</h3>
+            <p>一次落完全部区块的静态结构、样式、五态、空态与边界内容呈现。</p>
+            <dl>
+              <dt>拥有</dt>
+              <dd>页面样式文件 / 组件骨架</dd>
+              <dt>交接</dt>
+              <dd>RED / GREEN 报告 + 按需视觉证据 + R-记录</dd>
+            </dl>
+          </article>
+
+          <div class="style-arrow" aria-hidden="true">→</div>
+
+          <article class="style-task logic">
+            <span class="task-badge">重复 Task · 按 AC 分组</span>
+            <h3>逻辑 Task × N</h3>
+            <p>接入状态迁移、条件渲染、数据变换与接口交互，原则上不再碰样式文件。</p>
+            <dl>
+              <dt>拥有</dt>
+              <dd>行为代码 / API / hooks / 测试</dd>
+              <dt>交接</dt>
+              <dd>L4 / L3 逻辑证据</dd>
+            </dl>
+          </article>
+        </div>
+
+        <div class="ownership-grid" aria-label="样式还原的五条计划检查规则">
+          <div class="ownership-rule">
+            <b>01</b>
+            <strong>共享骨架在最前</strong>
+            <span>有跨页共享内容时，先于全部页面 Task 落地。</span>
+          </div>
+          <div class="ownership-rule">
+            <b>02</b>
+            <strong>一页一次还原</strong>
+            <span>默认每页一个还原 Task，不拆成“骨架 / 细化”两遍。</span>
+          </div>
+          <div class="ownership-rule">
+            <b>03</b>
+            <strong>还原独占样式</strong>
+            <span>逻辑 Task 的文件清单不应包含样式文件。</span>
+          </div>
+          <div class="ownership-rule">
+            <b>04</b>
+            <strong>区块可独立取证</strong>
+            <span>原型文件 + class 锚点；一屏可截、一个名词说清。</span>
+          </div>
+          <div class="ownership-rule">
+            <b>05</b>
+            <strong>没有收尾样式 Task</strong>
+            <span>“样式微调 / 统一优化”不能替代同一契约无 RED、无 YELLOW。</span>
+          </div>
+        </div>
+
+        <div class="style-boundaries">
+          <article class="style-boundary warning">
+            <h3>逻辑 Task 必须越界改样式时</h3>
+            <p>
+              在 Task 下显式登记 <code>越界改样式：文件 — 原因</code>，并注明受影响的还原
+              Task 或 R-记录。对应 GREEN 证据随即失效，相关区块必须重新对照和取证。
+            </p>
+            <div class="invalidation-flow" aria-label="越界改样式导致证据重新取证">
+              <span>既有 GREEN</span><b>→</b><span>失效</span><b>→</b><span>重新取证</span>
+            </div>
+          </article>
+
+          <article class="style-boundary">
+            <h3>拿到的 tasks.md 没有这样切</h3>
+            <p>
+              本 skill 不改写上游计划，而是退回“同一 Task 内多轮 6 步”：固定先还原、后逻辑。
+              流程仍可执行，但同一区块会重复运行契约，后续样式改动也会推翻早先结论。
+            </p>
+          </article>
+        </div>
+
+        <div class="confirm-gate">
+          <strong>不要和 Phase C 混淆</strong>
+          样式还原属于 Phase B，负责让逐区块冻结契约无 RED、无 YELLOW；布局与响应式检视属于 Phase C，
+          是完成后的只读复核，关注跨页一致性、真实数据、多视口与交互态，不能代替还原 Task。
+        </div>
+      </div>
+    </section>
+
+    <section id="implementation">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Phase B</p>
+            <h2>同一套 6 步，支持两种失败证据</h2>
+          </div>
+          <p class="section-intro">
+            上游已按形态切分时，还原 Task 只跑还原轮、逻辑 Task 只跑逻辑轮。
+            只有没有切开时才在同一 Task 内固定先还原、后逻辑；两类轮次沿用相同的 6 步编号。
+          </p>
+        </div>
+
+        <div class="mode-switch" role="group" aria-label="选择实现轮次">
+          <button type="button" data-mode="restore" aria-pressed="true">还原轮</button>
+          <button type="button" data-mode="logic" aria-pressed="false">逻辑轮</button>
+        </div>
+
+        <div class="step-track" aria-label="六步实现流程">
+          <div class="step-node" data-step="1" data-tone="red">
+            <strong>RED</strong>
+            <span id="step-1">运行冻结契约</span>
+          </div>
+          <div class="step-node" data-step="2" data-tone="red">
+            <strong>验证 RED</strong>
+            <span id="step-2">核出处 + 补 YELLOW</span>
+          </div>
+          <div class="step-node" data-step="3" data-tone="green">
+            <strong>GREEN</strong>
+            <span id="step-3">按清单最小改动</span>
+          </div>
+          <div class="step-node" data-step="4" data-tone="green">
+            <strong>验证 GREEN</strong>
+            <span id="step-4">同契约全绿 + 回归</span>
+          </div>
+          <div class="step-node" data-step="5">
+            <strong>REFACTOR</strong>
+            <span id="step-5">仅在 Task 边界内</span>
+          </div>
+          <div class="step-node" data-step="6">
+            <strong>记录并提交</strong>
+            <span id="step-6">落账到 alpha-tests.md</span>
+          </div>
+        </div>
+
+        <div class="mode-detail" aria-live="polite">
+          <blockquote id="mode-claim">
+            机器报告至少一项明确 RED 才进入实现；无 RED、无未解决 YELLOW 才是 GREEN。
+          </blockquote>
+          <div>
+            <span class="handoff-label">本轮证据归宿</span>
+            <h3 id="mode-ledger">还原证据记录</h3>
+            <p id="mode-evidence">
+              一区块一轮，只记录契约与报告指纹、三色摘要、可选视觉缓存和实现截图。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Traceability</p>
+            <h2>证据沿同一条链从 AC 追到最终验收</h2>
+          </div>
+          <p class="section-intro">
+            <code>tasks.md</code> 只管进度，<code>alpha-tests.md</code> 只管证据，
+            <code>dev-review.md</code> 只管最终检视；三者各自唯一，不另开第二本账。
+          </p>
+        </div>
+
+        <div class="evidence-chain" aria-label="AC 到验收的证据链">
+          <div class="evidence-node ac">
+            <strong>AC 锚点</strong>
+            <span>上游声明要交付什么</span>
+          </div>
+          <div class="evidence-node">
+            <strong><code>tasks.md</code></strong>
+            <span>AC 由哪些 Task 覆盖</span>
+          </div>
+          <div class="evidence-node">
+            <strong>RED → GREEN</strong>
+            <span>逻辑测试或冻结还原契约</span>
+          </div>
+          <div class="evidence-node ledger">
+            <strong><code>alpha-tests.md</code></strong>
+            <span>L4 / L3 / 还原记录与状态</span>
+          </div>
+          <div class="evidence-node review">
+            <strong><code>dev-review.md</code></strong>
+            <span>四路检视、阻断项与收口结论</span>
+          </div>
+          <div class="evidence-node ac">
+            <strong>验收状态</strong>
+            <span>GREEN 或 Deferred；没有模糊第三态</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="review">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Phase C → D</p>
+            <h2>四个独立视角汇总后，阻断级必须清零</h2>
+          </div>
+          <p class="section-intro">
+            检视全部只读、同轮并行。主 agent 汇总、去重并保留证据；
+            代码发生修复后旧结论作废，四份检视重新运行。
+          </p>
+        </div>
+
+        <div class="review-fan">
+          <article class="review-lane">
+            <small>L1–L6</small>
+            <h3>布局与响应式</h3>
+            <p>真实数据、多视口、跨页一致性、状态样式、滚动与固定元素。</p>
+          </article>
+          <article class="review-lane">
+            <small>C1–C7</small>
+            <h3>代码规范</h3>
+            <p>对照仓内 M / S / H / P 事实，检查命名、token、封装和类型逃逸。</p>
+          </article>
+          <article class="review-lane">
+            <small>Q1–Q8</small>
+            <h3>工程质量</h3>
+            <p>职责、重复、复杂度、状态、副作用、边界、遗留与性能。</p>
+          </article>
+          <article class="review-lane">
+            <small>F1–F4 + REG</small>
+            <h3>功能自测试</h3>
+            <p>逐行实跑冻结基线，并对比 Phase 0 的既有回归基线。</p>
+          </article>
+        </div>
+
+        <div class="merge-line"><strong>汇总进入 dev-review.md</strong></div>
+
+        <div class="closure-loop" aria-label="修复与复跑循环">
+          <div class="closure-node">
+            <strong>① 修复阻断级</strong>
+            <span>按编号逐条处理，不越出本 Story 的 diff 范围。</span>
+          </div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="closure-node">
+            <strong>② 四份检视全量重跑</strong>
+            <span>修复者不自行判断“只波及哪一份”，旧结论全部作废。</span>
+          </div>
+          <div class="loop-arrow" aria-hidden="true">→</div>
+          <div class="closure-node">
+            <strong>③ 清零或交回决定权</strong>
+            <span>最多两轮；仍有阻断、越界、Open Question 或 Deferred 时询问你。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="artifacts">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Artifact ownership</p>
+            <h2>产物按生命周期分层，不混进代码仓</h2>
+          </div>
+          <p class="section-intro">
+            Requirement 级工件只随设计稿内容哈希失效；Story 级工件随 Story 变更失效；
+            代码仓只承载实际实现和测试。
+          </p>
+        </div>
+
+        <div class="artifact-layers">
+          <div class="artifact-layer requirement">
+            <div class="layer-label">
+              <strong>Requirement 级</strong>
+              <span>设计稿事实，可跨 Story 复用</span>
+            </div>
+            <div class="artifact-list">
+              <span class="artifact">design-tokens.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">interface-inventory.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">content-inventory.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">block-index.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">blocks/*.md</span>
+            </div>
+          </div>
+
+          <div class="artifact-layer story">
+            <div class="layer-label">
+              <strong>Story 级</strong>
+              <span>判定、进度、证据与检视</span>
+            </div>
+            <div class="artifact-list">
+              <span class="artifact">dev-baseline.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">dev-baseline.md / 工程依据</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">tasks.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">alpha-tests.md</span>
+              <span class="artifact-arrow">→</span>
+              <span class="artifact">dev-review.md</span>
+              <span class="artifact">evidence/</span>
+            </div>
+          </div>
+
+          <div class="artifact-layer repo">
+            <div class="layer-label">
+              <strong>目标前端仓</strong>
+              <span>随 PR 交付的实际变更</span>
+            </div>
+            <div class="artifact-list">
+              <span class="artifact">组件代码</span>
+              <span class="artifact">样式与 token 使用</span>
+              <span class="artifact">单元 / 集成测试</span>
+              <span class="artifact">接口与类型改动</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="intervention">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Human checkpoints</p>
+            <h2>大部分时间自动推进，决策点才打断你</h2>
+          </div>
+          <p class="section-intro">
+            同类问题会批量合并，不逐条消耗注意力。没有决策的阶段直接内联到下一次有决策的输出。
+          </p>
+        </div>
+
+        <div class="intervention-timeline" aria-label="用户介入时间线">
+          <div class="intervention">
+            <strong>路径冲突</strong>
+            <span>四个关键路径无法唯一定位时一次问完。</span>
+          </div>
+          <div class="intervention critical">
+            <strong>Phase A 确认门</strong>
+            <span>确认 QA 基线、豁免与基线来源。</span>
+          </div>
+          <div class="intervention">
+            <strong>连续修 3 次失败</strong>
+            <span>同一报错不再盲目尝试。</span>
+          </div>
+          <div class="intervention">
+            <strong>需要越界改动</strong>
+            <span>Task 文件清单或 Story diff 范围之外要授权。</span>
+          </div>
+          <div class="intervention critical">
+            <strong>收口决策</strong>
+            <span>阻断项、Open Question、Deferred 候选合并询问。</span>
+          </div>
+          <div class="intervention">
+            <strong>最终三行索引</strong>
+            <span>给出产物路径和唯一下一步。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="degradation">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Visible degradation</p>
+            <h2>缺能力可以降级，缺失不会被伪装成通过</h2>
+          </div>
+          <p class="section-intro">
+            降级改变的是证据强度或可执行范围，不会静默放宽你已经确认的 QA 基线。
+          </p>
+        </div>
+
+        <div class="degrade-tree">
+          <article class="degrade-branch">
+            <h3>没有 HTML 原型</h3>
+            <p>基线来源按可用性逐级下降。</p>
+            <div class="branch-flow">
+              <div class="branch-step">优先找 2–3 个仓内参照页候选</div>
+              <div class="branch-step">由你确认具体参照路由与区块</div>
+              <div class="branch-step">仍不可用则改用文字规格 + token</div>
+              <div class="branch-step">最终状态标明“非原型对照”</div>
+            </div>
+          </article>
+
+          <article class="degrade-branch">
+            <h3>不能截图或起页面</h3>
+            <p>不允许用源码阅读冒充视觉与行为实测。</p>
+            <div class="branch-flow">
+              <div class="branch-step">不能截图：机器可检项照常；visual 保持 YELLOW</div>
+              <div class="branch-step">不能起页面：只跑 static；render-required 保持 YELLOW</div>
+              <div class="branch-step">布局检视记为未执行</div>
+              <div class="branch-step">起不了页面时功能自测试也未执行</div>
+              <div class="branch-step">最终结论显式限定可信度</div>
+            </div>
+          </article>
+
+          <article class="degrade-branch">
+            <h3>接口或外部依赖不可用</h3>
+            <p>跑不了的 AC 不能变成“基本通过”。</p>
+            <div class="branch-flow">
+              <div class="branch-step">功能项记录“未跑（具体原因）”</div>
+              <div class="branch-step">主 agent 判断是否满足 Deferred</div>
+              <div class="branch-step">写明外部依赖与解除条件</div>
+              <div class="branch-step">Deferred 不计为已验收</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="recovery">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Resume & re-entry</p>
+            <h2>中断后按事实恢复，不从头重来</h2>
+          </div>
+          <p class="section-intro">
+            进度、规格缓存、基线确认和检视结论有不同的复用规则。Story 变更时才重新勘察并再次确认。
+          </p>
+        </div>
+
+        <div class="resume-grid">
+          <div>
+            <div class="resume-rule">
+              <strong><code>tasks.md</code> checkbox 决定起点</strong>
+              <span>从第一个未完成 Task 继续，不另建第二本进度。</span>
+            </div>
+            <div class="resume-rule">
+              <strong>设计规格按区块内容哈希复用</strong>
+              <span>只重抽变化和新增区块，不按 mtime 让整份设计稿失效。</span>
+            </div>
+            <div class="resume-rule">
+              <strong>Story 未变时复用已冻结基线</strong>
+              <span>不要求你对同一份 QA 基线确认两次。</span>
+            </div>
+            <div class="resume-rule">
+              <strong>检视结论一律重跑</strong>
+              <span>代码已经变化，旧的 <code>dev-review.md</code> 结论不能复用。</span>
+            </div>
+          </div>
+
+          <pre class="prompt-block" aria-label="续跑与单步入口示例"><code>请继续运行 sdd-dev-frontend，
+从上次中断的位置接着做。
+
+也可以只说：
+· 重抽设计稿规格
+· 只做代码侧勘察
+· 重跑布局检视
+· 只跑功能自测试
+· 重跑全部检视并重新收口</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="done">
+      <div class="page-shell">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Exit gates</p>
+            <h2>“代码能编译”远远不是完成</h2>
+          </div>
+          <p class="section-intro">
+            只有进度、差异、回归、证据和检视全部闭环，才会输出最终三行索引。
+          </p>
+        </div>
+
+        <div class="exit-grid">
+          <div class="exit-item">
+            <b>1</b>
+            <div><strong>Task 全部完成</strong><span>6 步 checkbox 无遗漏、无批量补勾。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>2</b>
+            <div><strong>还原报告无 RED、无 YELLOW</strong><span>或未匹配项逐条命中已冻结豁免。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>3</b>
+            <div><strong>阻断级为 0</strong><span>修复后四份检视已经重跑。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>4</b>
+            <div><strong>没有门禁兜底项</strong><span>无占位、类型错误、硬编码、调试语句或无理由逃逸。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>5</b>
+            <div><strong>回归没有变差</strong><span>与 DEMAND-2 的 test / typecheck / lint / build 起点逐项对照。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>6</b>
+            <div><strong>AC 证据可追溯</strong><span>每条 AC 都能追到真实 RED / GREEN 或实测记录。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>7</b>
+            <div><strong>Deferred 没被洗成通过</strong><span>原因和解除条件齐全，且不计入已验收。</span></div>
+          </div>
+          <div class="exit-item">
+            <b>8</b>
+            <div><strong>未执行检视显式披露</strong><span>报告与最终状态都说明缺了什么、为什么。</span></div>
+          </div>
+        </div>
+
+        <div class="final-index" aria-label="最终输出示例">
+          <strong>✓ sdd-dev-frontend 完成</strong><br>
+          产出：&lt;story-dir&gt;/dev-review.md<br>
+          下一步：&lt;按当前状态给出的唯一动作&gt;
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="page-shell footer-inner">
+      <span>内容来源：同目录 <code>README.md</code> 与 <code>SKILL.md</code></span>
+      <a href="./README.md">阅读 Markdown 版本</a>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+
+      const phaseData = {
+        p0: {
+          code: "PHASE 0",
+          title: "先校验仓库接入，再冻结 Story 起点",
+          purpose: "仓库 baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。",
+          handoff: "dev-baseline.md 的“执行起点（环境）”",
+          outputs: [
+            "REPO-1～REPO-3 readiness",
+            "Story 场景、base-ref 与目标路由",
+            "test / typecheck / lint / build 起点失败集合",
+            "截图、结构化采集与 Story 特有限制"
+          ],
+          action: "仅在路径无法唯一定位时确认一次"
+        },
+        a1: {
+          code: "PHASE A1",
+          title: "把原型搬成可复用的设计事实",
+          purpose: "脚本抽取全局事实，再按“一屏可截”切区块；后续流程只读取区块规格，不反复通读 HTML 原型。",
+          handoff: "<requirement-dir>/design-spec/",
+          outputs: [
+            "design-tokens.md",
+            "interface-inventory.md",
+            "content-inventory.md",
+            "block-index.md 与 blocks/*.md"
+          ],
+          action: "无决策时不打断；哈希一致的区块自动复用"
+        },
+        a2: {
+          code: "PHASE A2",
+          title: "同时冻结完成标准与仓内写法",
+          purpose: "规格侧形成 R1–R6、F1–F4 和豁免；代码侧收集 M / S / H / P 事实，给实现与检视提供共同基准。",
+          handoff: "dev-baseline.md（含工程依据引用）",
+          outputs: [
+            "功能理解与 QA 基线",
+            "公共方法、token、请求封装",
+            "既有编码范式与证据",
+            "已知缺口和基线来源"
+          ],
+          action: "确认 QA 基线；未确认不能进入 Phase B"
+        },
+        b: {
+          code: "PHASE B",
+          title: "按 Task 原顺序完成 RED → GREEN",
+          purpose: "优先按“公共骨架 → 页面还原 → 逻辑”执行；上游未切开时才在同一 Task 内先还原、后逻辑。还原用冻结外部契约的明确 RED，逻辑用失败测试作为 RED。",
+          handoff: "代码 + tasks.md + restore-report-*.json + alpha-tests.md + 按需 evidence/",
+          outputs: [
+            "实现代码与测试",
+            "已勾选的唯一进度清单",
+            "L4 / L3 / 还原证据记录",
+            "AC ↔ 证据映射与按需视觉证据"
+          ],
+          action: "仅在连续修 3 次失败或需要越界改动时决定"
+        },
+        c: {
+          code: "PHASE C",
+          title: "四个独立视角并行检视",
+          purpose: "布局、代码规范、工程质量和功能自测试同轮进行；结论只分阻断级与建议级，Open Question 单列。",
+          handoff: "dev-review.md + evidence/review/",
+          outputs: [
+            "四份检视执行状态",
+            "阻断级与建议级结论",
+            "Open Question 与 Deferred 候选",
+            "可复现定位和归档截图"
+          ],
+          action: "已知环境降级不重复追问；其他前置缺失才询问"
+        },
+        d: {
+          code: "PHASE D",
+          title: "修复、全量复跑，再决定能否收口",
+          purpose: "逐条清零阻断级；代码变更后四份检视全部重跑。最多两轮，仍无法解决时把决定权交回给你。",
+          handoff: "最终 dev-review.md 与三行索引",
+          outputs: [
+            "阻断项修复状态",
+            "功能实测回填与 AC 状态",
+            "Deferred 原因和解除条件",
+            "未执行检视与可信度限定"
+          ],
+          action: "决定越界、Open Question、Deferred 或无法修复的阻断项"
+        }
+      };
+
+      const phaseButtons = Array.from(document.querySelectorAll("[data-phase]"));
+      const phaseCode = document.getElementById("phase-code");
+      const phaseTitle = document.getElementById("phase-title");
+      const phasePurpose = document.getElementById("phase-purpose");
+      const phaseHandoff = document.getElementById("phase-handoff");
+      const phaseOutputList = document.getElementById("phase-output-list");
+      const phaseUserAction = document.getElementById("phase-user-action");
+
+      function setPhase(phaseId) {
+        const data = phaseData[phaseId];
+        if (!data) return;
+
+        phaseButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.phase === phaseId));
+        });
+        phaseCode.textContent = data.code;
+        phaseTitle.textContent = data.title;
+        phasePurpose.textContent = data.purpose;
+        phaseHandoff.textContent = data.handoff;
+        phaseUserAction.textContent = data.action;
+        phaseOutputList.replaceChildren(
+          ...data.outputs.map((output) => {
+            const item = document.createElement("li");
+            item.textContent = output;
+            return item;
+          })
+        );
+      }
+
+      phaseButtons.forEach((button) => {
+        button.addEventListener("click", () => setPhase(button.dataset.phase));
+      });
+
+      const modeData = {
+        restore: {
+          steps: [
+            "运行冻结契约",
+            "核 RED 出处 + 补 YELLOW",
+            "只改报告 RED",
+            "同契约全绿 + 回归",
+            "仅在 Task 边界内",
+            "落账到 alpha-tests.md"
+          ],
+          claim: "机器报告至少一项明确 RED 才进入实现；无 RED、无未解决 YELLOW 才是 GREEN。",
+          ledger: "还原证据记录",
+          evidence: "一区块一轮，只记录契约与报告指纹、三色摘要、可选视觉缓存和实现截图。"
+        },
+        logic: {
+          steps: [
+            "写失败测试",
+            "运行并确认失败",
+            "最小实现转绿",
+            "测试转绿 + 回归",
+            "仅在 Task 边界内",
+            "落账到 alpha-tests.md"
+          ],
+          claim: "失败的单元测试或接口集成测试是 RED；测试转绿且全量回归未变差才是 GREEN。",
+          ledger: "L4 / L3 测试记录",
+          evidence: "记录测试名、RED 输出、GREEN 输出、回归结果，并把证据编号挂回对应 AC。"
+        }
+      };
+
+      const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+      const modeClaim = document.getElementById("mode-claim");
+      const modeLedger = document.getElementById("mode-ledger");
+      const modeEvidence = document.getElementById("mode-evidence");
+      const stepLabels = Array.from({ length: 6 }, (_, index) =>
+        document.getElementById(`step-${index + 1}`)
+      );
+
+      function setMode(modeId) {
+        const data = modeData[modeId];
+        if (!data) return;
+
+        modeButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.mode === modeId));
+        });
+        stepLabels.forEach((label, index) => {
+          label.textContent = data.steps[index];
+        });
+        modeClaim.textContent = data.claim;
+        modeLedger.textContent = data.ledger;
+        modeEvidence.textContent = data.evidence;
+      }
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => setMode(button.dataset.mode));
+      });
+
+      if (!root.dataset.sddReady) {
+        root.dataset.sddReady = "true";
+      }
+    })();
+  </script>
+</body>
+</html>
