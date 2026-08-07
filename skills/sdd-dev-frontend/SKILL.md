@@ -99,7 +99,7 @@ disable-model-invocation: true
 
 ## 硬门禁
 
-0. **仓库 baseline 先于 Story 执行。** `repo-baseline.md` 不存在、Section 失效、readiness 为 `DRAFT/BLOCKED`，或 `READY_WITH_LIMITS` 的限制影响当前 Story 时，先完整执行 `sdd-init-frontend`；不得把仓库未就绪写成 Story 降级项继续开工。
+0. **仓库 baseline 先于 Story 执行。** `repo-baseline.md` 不存在、Section 失效、readiness 为 `DRAFT/BLOCKED`，或 `READY_WITH_LIMITS` 的限制影响当前 Story 时，先完整执行 `sdd-init-frontend`；不得把仓库未就绪写成 Story 降级项继续开工。**例外只有一个**：失效由本 Story 自身改动引起，判据见 Phase -1 仓库接入门。
 1. **没有 `tasks.md` 不准开工。** 它是唯一执行清单，也是进度真相。
 2. **QA 基线未经用户确认不得进入 Phase B。**
 3. **QA 基线的十个维度不可增删。** 还原侧 6 维、功能侧 4 维，只能填期望值与豁免。
@@ -288,6 +288,13 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" status \
 4. 按 [浏览器驱动](#浏览器驱动) 三档确定 `<browser-driver>`，取到第 1 或第 2 档时实际打开一次目标路由验证，不只看 `REPO-1` 的声明（硬门禁 15）。
 
 路由返回后再次运行 `status` 与 `validate`。未通过不得进入 Phase 0，也不得把仓库未就绪登记成 Story 降级。
+
+**Section 失效的判定以 Story 起点的树为准。** 开工之后再跑 `status`（重跑、Phase C 检视、收口复核），本 Story 自己新增或修改的源码文件同样会让 `REPO-3` 失效——那是本 Story 的产物，不是仓库事实过期，**不回本门**。认定为「自身改动引起」要两条同时成立：
+
+1. `git status --porcelain --untracked-files=all` 列出的文件全部落在本 Story 的改动范围内；
+2. `dev-baseline.md / 工程依据` 记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表一致。
+
+有一条不成立就是真失效，回本门。**不得为了让 `status` 变绿去刷新 REPO-3**——那会把本 Story 尚未通过检视的代码直接写成仓库范式，检视也就失去了对照物。本 Story 确实产生了值得沉淀的仓库级范式时，走 Phase D 收口后由 `sdd-init-frontend` 刷新。
 
 ### Phase 0 — 需求执行起点
 

@@ -46,6 +46,19 @@
 
 每条规则必含：`id`、`baseline_id`、`dimension`、`block`、`subject`、`expected`、`check_mode`、`tolerance`、`state_scenario`、`design_fact_source`、`required_layers`。
 
+`expected` 可以是字面值，也可以按层给（键取 `static` / `render` / `visual`，如上例）。**编译器与 `validate` 都会拒绝下列写法**，它们的共同点是会让规则在报告里自动变绿或恒为红，却看不出原因：
+
+| 写法 | 为什么拒绝 |
+| --- | --- |
+| `baseline_id` 在基线的还原侧表格里找不到 | 基线哈希只锁住文档本身；引用一条不存在的基线行，规则就没有判据来源 |
+| 基线里某条 R 没有任何规则引用 | 契约全绿不再等于基线全部满足。确实不涉及的维度在基线里写「不适用」，那样的行不要求覆盖 |
+| 规则 `id` 重复 | 报告里会出现两条同 `rule_id` 的条目，落账时分不清哪条是哪条 |
+| `required_layers` 含 `render`，但该层取到的 `expected` 为空（`{}` / `[]` / `""` / 缺键） | `numeric` 产生不出差异项、`overflow` 家族对空容器取 0，两种都无条件判绿。注意 `0` 与 `false` 是合法期望值 |
+| `check_mode: visual` 同时要求 `render` 层 | visual 只能由视觉补证判定，render 层对它恒判不通过，这条规则永远 GREEN 不了 |
+| adapter 里有契约中不存在的规则条目 | 多半是契约改了 adapter 没跟着改；静默丢弃会让人以为旧定位还在生效 |
+
+字面值恰好长得像分层键时（例如 `expected` 就是 `{"visual": "hidden"}`）会命中第二条被拒——改写成 `{"render": {"visual": "hidden"}}` 明确层归属。
+
 ### 检查模式
 
 | `check_mode` | 判定 |
@@ -123,7 +136,7 @@ python3 "<skill-dir>/scripts/verify_restore_contract.py" validate \
   --adapter <story-dir>/restore-adapter.json
 ```
 
-`dev-baseline.md` 任一字节变化都会使校验硬失败。确需修改时，先走基线变更记录与重新确认，再重新编译。
+`dev-baseline.md` 任一字节变化都会使校验硬失败。确需修改时，先走基线变更记录与重新确认，再带 `--after-reconfirmation` 重新编译——没有这个开关时，`contract` 拒绝覆盖一份记录了不同基线哈希的既有契约（基线正文里的「已冻结 ✅」不会因为内容被改就消失，拦不住就等于冻结名存实亡）。基线没变时重复编译是幂等的，不需要开关。
 
 ### 2. 静态预检
 

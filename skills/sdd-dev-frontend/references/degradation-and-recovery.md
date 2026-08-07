@@ -44,7 +44,7 @@
 
 | 产物 | 重跑时 | 理由 |
 | --- | --- | --- |
-| 仓库 `repo-baseline.md` | 最先运行 `status` / `validate`；失效即回 Phase -1 | 不能在过期仓库事实上续跑 Story |
+| 仓库 `repo-baseline.md` | 最先运行 `status` / `validate`；失效即回 Phase -1，**但本 Story 自身改动引起的失效除外**（判据见 SKILL.md 的 Phase -1 仓库接入门） | 不能在过期仓库事实上续跑 Story；反过来，也不能把本 Story 未过检视的代码刷成仓库范式 |
 | `tasks.md` checkbox + `alpha-tests.md` | 先读，从**第一个未完成 Task** 继续 | 已勾的步骤有证据可查，重做只会覆盖掉证据 |
 | `<design-spec-dir>` 的 `design-facts.json`、三份 Markdown、切分表与区块规格 | 重跑脚本算原型指纹与区块哈希；指纹一致全量只读复用，指纹变化后只重抽失配 / 新增区块 | 原型指纹覆盖 DOM/CSS、资源内容与缺失状态；区块增量仍按内容哈希，不用 mtime |
 | `<design-spec-dir>/visual-baseline/` | 缓存键全量一致只读命中；任一环境维度变化创建新指纹目录 | 不覆盖旧版本；没有 visual YELLOW 不查询、不截图 |

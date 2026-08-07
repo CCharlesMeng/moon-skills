@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,8 @@ GENERATED_CLASS_RE = re.compile(
     r"(?:\.[A-Za-z_-]*[0-9a-fA-F]{8,}\b|\.[A-Za-z][\w-]*_[A-Za-z0-9]{6,}\b)"
 )
 CSS_NUMBER_RE = re.compile(r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))(?:px)?\s*$")
+# 只匹配表格行的第一格，避免把「取证方式」列里提到的编号当成一行基线。
+BASELINE_RULE_ID_RE = re.compile(r"^\|\s*`?(R[1-6]-\d+)`?\s*\|")
 
 
 class ContractError(ValueError):
@@ -98,6 +101,13 @@ def default_tolerance(check_mode: str) -> dict[str, float]:
     return {"css_px": 0.0}
 
 
+def is_empty_expectation(payload: Any) -> bool:
+    """`0` / `False` 是合法期望值，空容器与缺省不是。"""
+    if payload is None:
+        return True
+    return isinstance(payload, (dict, list, tuple, str)) and len(payload) == 0
+
+
 def validate_rule(raw: Any, index: int) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ContractError(f"第 {index} 条规则必须是对象")
@@ -134,8 +144,22 @@ def validate_rule(raw: Any, index: int) -> dict[str, Any]:
         raise ContractError(f"规则 {rule_id} 含未知检查层：{unknown_layers}")
     if check_mode == "visual" and "visual" not in layers:
         raise ContractError(f"规则 {rule_id} 的 visual 模式必须要求 visual 层")
+    if check_mode == "visual" and "render" in layers:
+        # visual 模式的判定只能来自 visual-results；render 层对它恒判不通过，
+        # 两者同时要求会让这条规则永远 RED，且报告里的原因指向渲染值，极难排查。
+        raise ContractError(
+            f"规则 {rule_id} 的 visual 模式不能同时要求 render 层：render 层无法判定 visual 模式"
+        )
     if "static" in layers and not isinstance(rule.get("static_check"), dict):
         raise ContractError(f"规则 {rule_id} 要求 static 层但没有 static_check")
+
+    # render 层是唯一拿 expected 做比对的层（static 走 static_check，visual 走 visual-results）。
+    # 空期望值会让 numeric 产生不出差异项、overflow 家族取到 0，两种写法都无条件判绿——
+    # 没有期望值就没有判据，必须在编译期挡住，不能等它在报告里自动染绿。
+    if "render" in layers and is_empty_expectation(expected_for_layer(rule, "render")):
+        raise ContractError(
+            f"规则 {rule_id} 的 render 层 expected 为空：没有期望值就没有判据"
+        )
 
     tolerance = rule.get("tolerance", default_tolerance(check_mode))
     if not isinstance(tolerance, dict):
@@ -159,6 +183,58 @@ def validate_rule(raw: Any, index: int) -> dict[str, Any]:
     return rule
 
 
+def baseline_rule_ids(baseline_path: Path) -> tuple[set[str], set[str]]:
+    """从基线的还原侧表格里读出 R 编号。
+
+    只认表格行的第一格，避免把「取证方式」列里提到的编号当成一行基线。
+    返回 (基线里出现过的全部编号, 其中需要被规则覆盖的)——标了「不适用」的维度
+    不要求覆盖，但仍是合法的引用目标。
+    """
+    known: set[str] = set()
+    required: set[str] = set()
+    for line in baseline_path.read_text(encoding="utf-8").splitlines():
+        match = BASELINE_RULE_ID_RE.match(line.strip())
+        if not match:
+            continue
+        known.add(match.group(1))
+        if "不适用" not in line:
+            required.add(match.group(1))
+    return known, required
+
+
+def require_baseline_mapping(rules: list[dict[str, Any]], baseline_path: Path) -> None:
+    """规则与基线必须一一映射。
+
+    基线哈希只锁住文档本身；没有这一步，写一个基线里不存在的 `baseline_id`、
+    或者漏掉基线里的某一条 R，契约照样算合法，而这两种情况都会让
+    「全部规则 GREEN」不再等于「基线全部满足」。
+    """
+    known, required = baseline_rule_ids(baseline_path)
+    if not known:
+        raise ContractError(
+            f"{baseline_path} 的还原侧表格里找不到任何 R1–R6 编号，无法校验规则与基线的映射"
+        )
+
+    referenced = {str(rule["baseline_id"]) for rule in rules}
+    unknown = sorted(referenced - known)
+    if unknown:
+        raise ContractError(f"契约引用了基线里不存在的 baseline_id：{'、'.join(unknown)}")
+
+    uncovered = sorted(required - referenced)
+    if uncovered:
+        raise ContractError(
+            f"基线里这些条目没有对应的契约规则：{'、'.join(uncovered)}"
+            "（确实不涉及的维度在基线里写「不适用」）"
+        )
+
+
+def require_unique_rule_ids(rules: list[dict[str, Any]]) -> None:
+    counts = Counter(rule["id"] for rule in rules)
+    duplicates = sorted(rule_id for rule_id, count in counts.items() if count > 1)
+    if duplicates:
+        raise ContractError(f"规则 id 必须唯一，重复：{'、'.join(duplicates)}")
+
+
 def compile_contract(baseline_path: Path, rules_path: Path, baseline_ref: str | None = None) -> dict:
     require_frozen_baseline(baseline_path)
     rules_payload = load_json(rules_path)
@@ -167,9 +243,8 @@ def compile_contract(baseline_path: Path, rules_path: Path, baseline_ref: str | 
         raise ContractError("规则输入必须是非空数组，或含非空 rules 数组的对象")
 
     rules = [validate_rule(raw, index) for index, raw in enumerate(raw_rules, start=1)]
-    ids = [rule["id"] for rule in rules]
-    if len(ids) != len(set(ids)):
-        raise ContractError("规则 id 必须唯一")
+    require_unique_rule_ids(rules)
+    require_baseline_mapping(rules, baseline_path)
 
     baseline_sha256 = sha256_file(baseline_path)
     core = {
@@ -209,6 +284,9 @@ def validate_contract(contract: Any, baseline_path: Path) -> dict:
     rules = [validate_rule(raw, index) for index, raw in enumerate(raw_rules, start=1)]
     if rules != raw_rules:
         raise ContractError("契约规则未规范化；请重新运行 contract 命令生成")
+    # 编译期查过一次不等于此后成立：契约是落盘文件，自哈希连同重算就绕过去了。
+    require_unique_rule_ids(rules)
+    require_baseline_mapping(rules, baseline_path)
 
     core = {
         "schema_version": contract["schema_version"],
@@ -289,6 +367,11 @@ def validate_adapter(adapter: Any, contract: dict) -> dict:
             "locators": checked,
             "source_files": source_files,
         }
+
+    # 多出来的条目多半是契约改了而 adapter 没跟着改，静默丢弃会让人以为它还在生效。
+    extra = sorted(set(entries) - {rule["id"] for rule in contract["rules"]})
+    if extra:
+        raise ContractError(f"adapter 含契约中不存在的规则：{'、'.join(extra)}")
 
     return {
         "schema_version": ADAPTER_SCHEMA_VERSION,
@@ -774,18 +857,46 @@ def optional_json(path: str | None) -> dict | None:
     return load_json(Path(path).expanduser()) if path else None
 
 
+def require_recompile_is_allowed(out_path: Path, baseline_path: Path, acknowledged: bool) -> None:
+    """基线改过之后重新编译，必须先经过重新确认。
+
+    「已冻结 ✅」是写在基线正文里的，改基线内容不会把它去掉，所以这一步拦不住的话
+    一条命令就能把旧契约连同它记录的基线哈希一起换掉——冻结也就名存实亡。
+    """
+    if acknowledged or not out_path.exists():
+        return
+    try:
+        existing = load_json(out_path)
+    except ContractError:
+        return
+    if not isinstance(existing, dict):
+        return
+    previous = (existing.get("baseline") or {}).get("sha256")
+    if not previous or previous == sha256_file(baseline_path):
+        return
+    raise ContractError(
+        f"{out_path} 已存在，且它记录的基线哈希与当前 dev-baseline.md 不同："
+        f" contract={previous} actual={sha256_file(baseline_path)}。"
+        "基线冻结后每一次放宽都要先在「变更记录」登记并重新请用户确认；"
+        "确认过了再加 --after-reconfirmation 重新编译。"
+    )
+
+
 def command_contract(args: argparse.Namespace) -> int:
+    baseline_path = Path(args.baseline).expanduser()
+    out_path = Path(args.out).expanduser()
+    require_recompile_is_allowed(out_path, baseline_path, args.after_reconfirmation)
     contract = compile_contract(
-        Path(args.baseline).expanduser(),
+        baseline_path,
         Path(args.rules).expanduser(),
         args.baseline_ref,
     )
-    write_json(Path(args.out).expanduser(), contract)
+    write_json(out_path, contract)
     print(
         json.dumps(
             {
                 "status": "written",
-                "out": str(Path(args.out).expanduser()),
+                "out": str(out_path),
                 "contract_sha256": contract["contract_sha256"],
                 "rules": len(contract["rules"]),
             },
@@ -911,6 +1022,11 @@ def main(argv: list[str] | None = None) -> int:
     contract_parser.add_argument(
         "--baseline-ref",
         help="写进契约的可移植基线路径；缺省使用 --baseline 原值",
+    )
+    contract_parser.add_argument(
+        "--after-reconfirmation",
+        action="store_true",
+        help="基线变更已在「变更记录」登记并重新经用户确认，允许覆盖已有契约",
     )
 
     validate_parser = subparsers.add_parser(

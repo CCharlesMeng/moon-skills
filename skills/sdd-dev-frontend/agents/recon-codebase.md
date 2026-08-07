@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | 目标前端仓 | `<repo-root>` | 终止 |
 | 仓库 baseline | `<repo-baseline-dir>/repo-baseline.md` | 终止 |
-| baseline 状态 | `manage_repo_baseline.py status` 与 `validate` | 任一不通过即终止 |
+| baseline 状态 | `manage_repo_baseline.py status` 与 `validate` | 任一不通过即终止；**例外**：失效仅由本 Story 已有的未提交改动引起（重跑场景），按 Phase -1 仓库接入门的两条判据确认后继续 |
 | REPO-3 | `repo-baseline.md / REPO-3` | 终止 |
 | `tasks.md` | `<story-dir>/tasks.md` | 终止；没有 Story 需要就不能选择工程依据 |
 | `requirement-frontend-design.md` | `<requirement-dir>/requirement-frontend-design.md` | 不终止；没有跨 Story 决策时可直接使用仓库默认范式 |

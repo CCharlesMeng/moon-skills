@@ -15,7 +15,8 @@
 | 项 | 位置 | 不满足时 |
 | --- | --- | --- |
 | `dev-baseline.md / 工程依据` 存在且含 REPO-3 指纹及 `PATTERN-*` 引用 | `<story-dir>/dev-baseline.md` | 终止 |
-| 仓库 baseline 可用且工程依据中的 ID 可读 | `<repo-baseline-dir>/repo-baseline.md` + `status` / `validate` / `show --pattern-id` | 终止 |
+| 工程依据中的 ID 可读 | `<repo-baseline-dir>/repo-baseline.md` + `show --pattern-id` | 终止 |
+| 工程依据记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表一致 | 两处逐字比对 | 终止 |
 | 本 Story 改动 diff 可取 | `<repo-root>` 的 git 状态 | 终止 |
 | `tasks.md` | `<story-dir>/tasks.md` | 不终止，记入「已知缺口」 |
 | `<skill-dir>/references/stack-antipatterns.md` 里对应本仓栈的那一节 | 栈按 `REPO-1` 的框架字段定 | 不终止；表里没有本仓的栈时用该文件的「与栈无关的判据」一节 |
@@ -35,6 +36,8 @@
 ```
 
 不要试着换个目录找、不要用相近文件替代、**不要在工程依据或仓库范式失效时凭通用最佳实践顶替仓内基准**——那样产出的结论无法验证对错，等于把本检视做成了质量检视。
+
+**`status` / `validate` 报 `REPO-3` 失效不是终止理由。** 你跑在实现之后，本 Story 新增的源码文件本来就会让 REPO-3 指纹失效；那是你要检视的对象，不是过期的仓库事实。只要上面两行前置成立，就照常检视，并在「已知缺口」记一行说明失效由本 Story 改动引起。**不得为此刷新 REPO-3**——那会把还没过检视的代码写成仓库范式，你就没有对照物了。
 
 可选前置的降级方式：
 
