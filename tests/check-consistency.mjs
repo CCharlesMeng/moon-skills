@@ -483,9 +483,12 @@ const FRONTEND_ROOTS = [
 
 // Namespaces registered in docs/skills/frontend-sdd/接缝契约.md §2. The registry
 // itself is skipped when scanning, since it necessarily names every prefix.
+// 与 接缝契约.md §2 的注册表保持一致；加前缀两处都要改。
 const ID_PREFIX_WHITELIST = [
   "REPO", "PATTERN", "REQ", "DEC", "DEMAND", "IC", "EX", "REG",
   "SHA", "AC", "TB", "TC", "EV", "ADR", "DEF",
+  // 种子缺陷用例的 ground truth 编号
+  "GT", "NG", "OPT",
 ];
 const ID_REGISTRY = join("frontend-sdd", "接缝契约.md");
 
