@@ -63,7 +63,7 @@
       "expected_output": "明确输出本轮无需优化，不制造问题或无依据建议，也不写台账。",
       "expectations": [
         "总体结论明确写本轮无需优化",
-        "不把正常探索、个人偏好或想象风险列为问题",
+        "不把正常探索或想象风险列为问题",
         "确认没有候选主题后不启动 subagent",
         "不创建或追加 .learnings/LEARNINGS.md，不提出修改或改变任何状态"
       ]
@@ -76,7 +76,7 @@
       "expectations": [
         "说明目标 Skill 的规则与重复错误之间的因果关系",
         "不直接修改目标 Skill，即使它就在当前仓库内",
-        "可复制的移交说明包含会话证据、建议使用 refine-skill 和验证标准",
+        "可复制的移交说明建议使用 refine-skill 并给出验证标准;有会话证据则写入,证据不足时明确写出缺口而非虚构",
         "验证标准包含能推翻 Skill 改法的失败或退化条件"
       ]
     },
@@ -220,6 +220,62 @@
         "不使用可控条件、失效条件之类的内部术语，或使用时改写成使用者能直接读懂的说法",
         "不复述本轮成功的步骤，不解释即将执行的流程，不把提案写成已完成",
         "报告末尾只有一个决策点：请求批准，不同时追问其他问题"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "one-off-fact-with-upstream-is-not-dismissed",
+      "prompt": "会话中途用户纠正“不是 main，本次要改的是 release/2026-08 分支”，此时 Agent 已在错误分支上改了两个文件，只能返工重来。分支名只对本次运行成立；但 Agent 从开工到那一刻从未问过目标分支，它遵循的那个 Skill 里也没有任何开工前确认工作分支的输入契约。调用 /session-optimize。",
+      "expected_output": "不因为分支名是一次性事实就判不成题；走分流后的四追问并停在第一问，判成 Skill 该声明的输入没声明，按 decision.undeclared-input 移交 refine-skill 补输入契约。",
+      "expectations": [
+        "识别这条纠正的表层是一次性上下文（分支名只对本次运行成立），但不停在这里判不成题",
+        "走四追问并停在第一个成立的：Skill 本该在开工前索要目标分支，它没有索要",
+        "主类别为 L2 流程/决策，使用 decision.undeclared-input 一类的标准 Pattern-Key；键里不含 release/2026-08 这类只对本次成立的字面值",
+        "不判成 L1 背景输入不足，理由是这条信息属于 Skill 该主动索要的输入，用户从未被问到",
+        "改进是给该 Skill 补开工前确认工作分支的输入契约并移交 refine-skill，不在 session-optimize 内直接改写它",
+        "不把改进写成提醒 Agent 下次更小心，也不写成只给这个用户的使用引导"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "pure-one-off-fact-is-not-a-topic",
+      "prompt": "本轮任务按预期完成，工具正常，验证全部通过。开工前 Agent 主动索要了目标分支和本地数据库端口，用户当场给出 release/2026-08 和 5433，两项都只对本次运行成立；之后没有纠正、返工或验证失败。调用 /session-optimize。",
+      "expected_output": "把分支与端口判为一次性上下文，四追问逐条不成立后判不成题：不进主报告、不写台账、不编 Pattern-Key。",
+      "expectations": [
+        "把分支名和端口判为一次性上下文——只在本次运行成立的事实",
+        "确认四追问都不成立：Skill 已在开工前索要过，不是未声明输入；不涉及默认做法；用户按要求提供，使用方式无偏差；不是该给却没给的背景",
+        "不编任何 Pattern-Key，尤其不把 release/2026-08 或 5433 写进键、台账或长期资产",
+        "不追加 .learnings/LEARNINGS.md，不启动 subagent，总体结论写本轮无需优化",
+        "不为了凑出主题而虚构改进，例如把 Agent 已经做过的开工前索要再固化一遍"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "preference-tracing-to-skill-default-routes-to-refine-skill",
+      "prompt": "用户本轮三次要求先给结论再给推理过程。这个倒序来自某个 Skill 输出模板固定的章节顺序，任何人用它拿到的都是同一个顺序；该用户已经在常驻上下文里写过一次同样的要求，仍然没有改变输出。调用 /session-optimize。",
+      "expected_output": "先判成偏好但不停在这里：模板对所有使用者产生同一顺序，因此是 Skill 的默认错了，按 decision.wrong-default 移交 refine-skill 改模板，而不是再写一遍常驻上下文。",
+      "expectations": [
+        "先按分流判成偏好（它改的是默认怎么做，不是怎么判断），但不把偏好当终点",
+        "应用判据：换个用户在同样场景下也会提同样的纠正，因此是 Skill 的默认错了，不是这个用户的个人风格",
+        "走四追问停在第二问，主类别为 L2 流程/决策，使用 decision.wrong-default 一类的标准 Pattern-Key",
+        "改法是移交 refine-skill 修改该 Skill 输出模板的章节顺序，不在 session-optimize 内直接改写目标 Skill",
+        "不把它写进常驻上下文、AGENTS.md 或项目文档当成个人偏好条目——已有证据表明那样只让当前用户绕过，别的用户照踩",
+        "主 Pattern-Key 不是 usage.*；主改法不是给用户的使用引导"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "genuine-usage-deviation-gets-guidance-not-rules",
+      "prompt": "会话开始时 Skill 检测到缺少基线并明确提示“未检测到基线，建议先运行 sdd-init-frontend”，用户回复“跳过，直接做”。实现到一半因为没有基线无法比对，回头补跑基线并返工三轮。该 Skill 的适用场景和前置步骤都已写明，本轮也确实提示过。调用 /session-optimize。",
+      "expected_output": "层地图停在 L1 使用方式（Skill 已声明前置并已提示，Skill 侧不成立），产出可直接复制的使用引导，不给 Agent 加规则也不移交 refine-skill。",
+      "expectations": [
+        "明确排除第一问：前置步骤已写明且本轮已提示，不是 Skill 该声明的输入没声明",
+        "明确排除第二问：Skill 的默认做法是先要基线且它主动提示了，默认没有错",
+        "主类别为 L1 使用方式，使用 usage.skipped-prerequisite 一类的标准 Pattern-Key",
+        "不因为先问 skill 再问人的顺序就把它硬塞回 Skill 缺陷，也不移交 refine-skill",
+        "改进是给用户可直接复制的使用引导（下次先跑基线，或在明知无基线时说明接受的后果），不是给 Agent 加规则或加提醒",
+        "陈述事实与后果，不用个人风格或事后信息归咎用户",
+        "首次出现且非高危，只记台账，不申请写入任何长期资产"
       ]
     }
   ]
