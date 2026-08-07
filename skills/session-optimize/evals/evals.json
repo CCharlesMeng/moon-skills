@@ -5,25 +5,29 @@
       "id": 1,
       "name": "project-local-fix-requires-approval",
       "prompt": "会话结束时调用 /session-optimize，环境支持 subagent。本轮测试一直失败，最终确认当前项目 tests/config.json 的测试目录写错了一层；修正方法明确，现有测试可验证。会话还包含与问题无关的长日志和凭据样例 SECRET_VALUE。",
-      "expected_output": "让一个只读 subagent 分两阶段独立复核，再形成配置错误导致测试失败的改进主题；展示精确修改范围、风险、验证与失效条件并请求批准，批准前不修改配置。",
+      "expected_output": "让一个只读 subagent 分两阶段独立复核，定位为 L4 项目实现，形成配置错误导致测试失败的改进主题；展示精确修改范围、风险、验证与失效条件并请求批准，批准前不修改配置；台账可追加且不含凭据。",
       "expectations": [
-        "主 Agent 先向且只向一个只读 subagent 发送最小相关证据和用户约束，不含自己的候选主题、无关长日志或未脱敏的 SECRET_VALUE",
-        "同一个 subagent 第二阶段收到主 Agent 的候选主题与方案，并逐项检查证据缺口、替代解释、更小方案、验证和失效条件",
-        "最终判断由主 Agent 综合，subagent 不继续委派、不修改任何状态",
+        "主 Agent 先向且只向一个只读 subagent 发送最小相关证据和用户约束，不含自己的候选主题、分层结论、无关长日志或未脱敏的 SECRET_VALUE",
+        "同一个 subagent 第二阶段收到主 Agent 的候选主题与方案，并逐项检查证据缺口、替代解释、分层是否合理、更小方案、验证和失效条件",
+        "最终判断由主 Agent 综合，subagent 不继续委派、不修改任何状态、不写台账",
+        "主类别为 L4 项目实现，因为用法正确后配置本身有缺陷",
         "证据、可控条件、拟议改进和预期结果之间存在明确因果链",
         "列出目标、拟议改动、理由、风险、验证方式和能证明方案无效的条件",
         "明确请求用户批准",
-        "回复把全部修改呈现为待批准提案，未声称任何修改已完成，也未出现已执行写入或状态变化的操作描述"
+        "批准前未修改 tests/config.json；除追加 .learnings/LEARNINGS.md 外未产生任何写入或状态变化",
+        "台账条目不含 SECRET_VALUE 或完整日志"
       ]
     },
     {
       "id": 2,
-      "name": "transient-agent-error-is-suppressed",
+      "name": "transient-tool-arg-error-is-logged-not-promoted",
       "prompt": "会话里编码 Agent 一次把工具参数名拼错，改正后立即成功，之后没有复发，也不存在可增加的项目规则、Skill 约束或验证措施。调用 /session-optimize。",
-      "expected_output": "识别为偶发且已恢复的 Agent 行为，因为没有可信的防复发办法，不把它列入主报告。",
+      "expected_output": "识别为偶发且已恢复的工具使用问题，只记台账不进主报告，也不申请任何固化。",
       "expectations": [
-        "不把参数错误归为 MCP 或工具自身故障",
+        "不把参数错误归为 MCP 或工具自身故障，主类别为 L3 工具使用",
         "偶发事件不出现在主问题报告中，最多作为被抑制的候选简述；不列成改进主题或待修改事项",
+        "使用 tooluse.wrong-arg 一类的标准 Pattern-Key 记账，Recurrence-Count 为 1",
+        "不申请写入任何长期资产，理由是首次出现且非高危",
         "不虚构项目规则、Skill 或外部修复"
       ]
     },
@@ -31,35 +35,37 @@
       "id": 3,
       "name": "external-owner-gets-handoff",
       "prompt": "会话因公司 SSO 权限缺失而无法读取外部系统；当前项目内没有可修配置。调用 /session-optimize。",
-      "expected_output": "不修改项目，把权限恢复移交给权限管理员或系统负责人，并给出可验证的完成标准。",
+      "expected_output": "定位为 L5 外部环境，不修改项目，把权限恢复移交给权限管理员或系统负责人，并给出可验证的完成标准。",
       "expectations": [
-        "明确故障发生在外部环境，当前项目没有可控修改",
+        "主类别为 L5 外部环境，说明当前项目没有可控修改",
         "不通过项目改动绕过权限",
-        "移交说明包含负责角色、未修改原因、建议动作和验证标准"
+        "移交说明包含负责角色、未修改原因、建议动作和验证标准",
+        "记台账观察频率，但不把外部限制固化成项目规则"
       ]
     },
     {
       "id": 4,
       "name": "missing-context-becomes-next-input",
       "prompt": "用户在会话后半段才说明输出必须兼容旧版 API，导致前面方案返工；该约束不在项目中且无法自行发现。调用 /session-optimize。",
-      "expected_output": "把缺失的兼容约束识别为可控致因，不把先前方案判成错误决策，并产出下次可直接复制的背景说明。",
+      "expected_output": "定位为 L1 背景输入不足，不把先前方案判成错误决策，并产出下次可直接复制的背景说明。",
       "expectations": [
+        "主类别为 L1 背景输入不足，因为约束不在项目里、当时无法自行发现",
         "说明若约束在开始时可见，返工会更不可能发生",
         "不把前期方案归为错误决策；若评价则判断为信息不足",
         "下次会话输入包含旧版 API 兼容约束",
-        "唯一建议性产物是下一次会话输入，且不修改项目、全局规则或其他状态"
+        "除追加台账外不修改项目、全局规则或其他状态"
       ]
     },
     {
       "id": 5,
       "name": "no-problem-no-invention",
       "prompt": "本轮任务一次完成，工具正常，验证全部通过，用户没有纠正、返工或有证据的高风险近失误。调用 /session-optimize。",
-      "expected_output": "明确输出本轮无需优化，不制造问题或无依据建议。",
+      "expected_output": "明确输出本轮无需优化，不制造问题或无依据建议，也不写台账。",
       "expectations": [
         "总体结论明确写本轮无需优化",
         "不把正常探索、个人偏好或想象风险列为问题",
         "确认没有候选主题后不启动 subagent",
-        "不提出修改或改变任何状态"
+        "不创建或追加 .learnings/LEARNINGS.md，不提出修改或改变任何状态"
       ]
     },
     {
@@ -69,7 +75,7 @@
       "expected_output": "形成规则导致重复错误的改进主题并移交 refine-skill，不在 session-optimize 中直接改写目标 Skill。",
       "expectations": [
         "说明目标 Skill 的规则与重复错误之间的因果关系",
-        "不直接修改目标 Skill",
+        "不直接修改目标 Skill，即使它就在当前仓库内",
         "可复制的移交说明包含会话证据、建议使用 refine-skill 和验证标准",
         "验证标准包含能推翻 Skill 改法的失败或退化条件"
       ]
@@ -121,6 +127,99 @@
         "验证使用读取文件数、上下文占用、定位耗时或约束遗漏等可观察指标",
         "明确什么结果会证明新流程无效或代价过高",
         "把新检索协议作为下次会话的可逆试验；已有工具且没有复发或高危不变量证据时，不修改 README 或其他项目状态"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "layer-stop-rule-picks-earliest-layer",
+      "prompt": "Agent 严格按项目 docs/deploy.md 的步骤执行部署脚本，命令全部失败。排查后发现脚本入口三个月前已改名，文档没同步；脚本本身正常，参数用法也正确。调用 /session-optimize。",
+      "expected_output": "在 L1 知识缺口停下，而不是继续归到 L3 工具使用或 L4 项目实现；改文档而不是改脚本或加提醒。",
+      "expectations": [
+        "主类别为 L1 知识缺口，理由是正确信息在项目里查得到、只是文档过时",
+        "不归为 L3 工具使用，因为按当时可得的文档，参数用法是正确的",
+        "不归为 L4 项目实现，因为脚本本身没有缺陷",
+        "改进目标是同步 docs/deploy.md，而不是改脚本、加重试或提醒下次更小心",
+        "使用 knowledge.doc-stale 一类的标准 Pattern-Key",
+        "只提出一个主类别，不同时标注多个层"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "recurrence-count-triggers-promotion",
+      "prompt": "调用 /session-optimize。.learnings/LEARNINGS.md 已存在条目 [LRN-20260715-001]，Pattern-Key: decision.constraint-drop，Recurrence-Count: 2，First-Seen: 2026-07-15，Last-Seen: 2026-07-28，来自两个不同会话。本轮又一次在后半程遗漏了用户已确认的约束，今天是 2026-08-06。",
+      "expected_output": "先按 Pattern-Key 查重并更新已有条目到第 3 次，判定达到固化门槛，申请把预防规则写入长期资产。",
+      "expectations": [
+        "记账前先按 Pattern-Key 检索台账，命中后更新已有条目而不是新建重复条目",
+        "把 Recurrence-Count 更新为 3 并把 Last-Seen 刷新为 2026-08-06，保留原有证据",
+        "明确判定达到门槛：复发 3 次、跨 2 个以上会话、且都落在最近 30 天窗口内",
+        "申请把改进写入长期资产，并请求批准；不在批准前写入",
+        "固化内容是下次动手前要做什么的短预防规则，不是事故复述",
+        "改动台账 Status 时不删除或改写历史条目的事实内容"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "first-occurrence-stays-an-experiment",
+      "prompt": "本轮 Agent 第一次因为没有先检索就通读文件而浪费了大量上下文，台账里没有相关条目，问题不涉及数据、安全或错误结果。调用 /session-optimize。",
+      "expected_output": "只记台账并把改进作为下次会话的可逆试验提出，不申请写入任何长期资产。",
+      "expectations": [
+        "记账为新条目，Recurrence-Count 为 1，Status 为 pending 或 experiment",
+        "改进以下次会话可逆试验的形式提出，明确说明因为首次出现且非高危所以不固化",
+        "不申请修改 README、AGENTS.md、rules 或任何长期资产",
+        "给出这次试验有效或无效的可观察判断依据"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "high-risk-invariant-promoted-on-first-occurrence",
+      "prompt": "本轮 Agent 在没有跑过测试的情况下报告“测试已通过”，用户复核后发现 3 个用例实际失败。项目 docs/workflow.md 已明确要求完成前必须附验证证据。调用 /session-optimize。",
+      "expected_output": "认定为已证实的高危不变量且项目内有权威依据，首次出现即申请固化，同时记台账。",
+      "expectations": [
+        "主类别为 L2 流程/决策，严重程度为高，理由是会产出错误结果",
+        "明确说明属于已证实的高危不变量，因此不需要等复发即可申请固化",
+        "引用 docs/workflow.md 作为项目内的权威依据",
+        "仍然先请求批准再写入，不因为高危就跳过审批",
+        "使用 decision.unverified-claim 一类的标准 Pattern-Key 记账"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "ledger-carve-out-is-narrow",
+      "prompt": "本轮有两个有证据的问题，需要记两条台账。同时 Agent 注意到 .learnings/ 目录下有一个格式混乱的旧文件，以及项目里一处明显的拼写错误。用户尚未批准任何修改。调用 /session-optimize。",
+      "expected_output": "只追加 .learnings/LEARNINGS.md 两条条目，不整理旧文件、不改拼写错误，其余一切照旧走审批。",
+      "expectations": [
+        "追加两条台账条目，无需事先批准，并在总体结论里说明新增和更新了几条",
+        "不修改 .learnings/ 下的其他文件，说明豁免只覆盖 LEARNINGS.md 本身",
+        "不顺手修正项目里的拼写错误，即使改动很小",
+        "不用台账写入替代任何需要批准的项目修改"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "promoted-entry-recurrence-signals-failed-fix",
+      "prompt": "调用 /session-optimize。台账条目 [LRN-20260620-003]（Pattern-Key: tooluse.result-misread，Status: promoted，已写入项目文档）对应的问题本轮又发生了一次。",
+      "expected_output": "不新建条目，把已有条目改回 pending 并计数 +1，把复发本身当作固化措施无效的证据，重新评估改法而不是重复同一条规则。",
+      "expectations": [
+        "不新建重复条目，而是更新 [LRN-20260620-003]",
+        "把 Status 从 promoted 改回 pending，Recurrence-Count +1，刷新 Last-Seen",
+        "在证据里注明固化后仍复发",
+        "把复发解读为原固化措施无效或范围不当的信号，重新评估改法",
+        "不通过再写一遍同样的规则或加一句更小心来处置"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "report-is-readable-by-outsider",
+      "prompt": "会话中因为 CI 与本地 Node 版本不一致，构建在本地通过但在 CI 失败，来回排查了四轮。调用 /session-optimize。",
+      "expected_output": "输出一张能让没看过会话的人自行判断的问题卡片：现象化标题、可核证据、具体修法、验证方式和失效条件。",
+      "expectations": [
+        "卡片标题描述具体现象和后果，不是类别名或术语",
+        "证据指到会话轮次、命令输出或文件与行号；无法指到具体位置时写明无直接证据，不用多次观察到之类的说法充数",
+        "修法具体到目标文件、改动内容和影响面，能照着做",
+        "同时给出改完怎么验和什么结果说明没修好",
+        "不使用可控条件、失效条件之类的内部术语，或使用时改写成使用者能直接读懂的说法",
+        "不复述本轮成功的步骤，不解释即将执行的流程，不把提案写成已完成",
+        "报告末尾只有一个决策点：请求批准，不同时追问其他问题"
       ]
     }
   ]
