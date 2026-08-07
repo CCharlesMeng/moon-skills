@@ -43,7 +43,7 @@ flowchart LR
 
 | 当前情况 | 应先做什么 |
 | --- | --- |
-| 还没有 `tasks.md` | 先运行 `sdd-task` |
+| 还没有 `tasks.md` | 有 `sdd-task` 就先运行它；团队还没有这套上游工具时，见 [团队起步套件.md](./团队起步套件.md) 手写最小合规版本 |
 | 需要修改设计方案，而不是执行现有设计 | 回到 `sdd-design` |
 | 是纯后端 Story | 使用对应的后端开发流程 |
 | 想在一次运行里覆盖多个仓或多个 Story | 拆成多个独立运行 |
@@ -522,6 +522,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 ## 进一步阅读
 
+- [团队起步套件.md](./团队起步套件.md)：没有 `sdd-task` / `sdd-design` 时，如何手写最小合规产物快速试跑
 - [背景介绍.md](./背景介绍.md)：框架形成时的项目与流程背景
 - [SKILL.md](../../../skills/sdd-dev-frontend/SKILL.md)：完整编排规则、硬门禁和失败处理
 - [CONTEXT.md](../../../skills/sdd-dev-frontend/CONTEXT.md)：术语定义
