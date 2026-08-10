@@ -25,7 +25,7 @@ flowchart LR
 
 以下条件同时成立时，适合使用本 skill：
 
-- `sdd-task` 已为当前 Story 产出 `tasks.md`；
+- `sdd-task` 已为当前 Story 产出 `tasks.md`（没有时，只要已在当前会话中把 Story 范围、AC、还原基线和对接模式聊清楚，Phase 0 也会自动起草一份，见 [团队起步套件.md](./团队起步套件.md)）；
 - `tasks.md` 标明目标仓是 frontend；
 - 目标前端仓可以访问；
 - 至少有一种还原基线：
@@ -43,7 +43,7 @@ flowchart LR
 
 | 当前情况 | 应先做什么 |
 | --- | --- |
-| 还没有 `tasks.md` | 有 `sdd-task` 就先运行它；团队还没有这套上游工具时，见 [团队起步套件.md](./团队起步套件.md) 手写或让主 agent 按会话内容自动起草最小合规版本 |
+| 还没有 `tasks.md` | 有 `sdd-task` 就先运行它；没有时，若已在会话中把需求聊清楚可直接调用（Phase 0 会自动判断能否起草），否则见 [团队起步套件.md](./团队起步套件.md) 先手写最小合规版本 |
 | 需要修改设计方案，而不是执行现有设计 | 回到 `sdd-design` |
 | 是纯后端 Story | 使用对应的后端开发流程 |
 | 想在一次运行里覆盖多个仓或多个 Story | 拆成多个独立运行 |
@@ -54,7 +54,7 @@ flowchart LR
 
 | 文件或目录 | 典型位置 | 作用 |
 | --- | --- | --- |
-| `tasks.md` | `<story-dir>/tasks.md` | 唯一执行清单，也是唯一进度真相 |
+| `tasks.md` | `<story-dir>/tasks.md` | 唯一执行清单，也是唯一进度真相；缺失且会话内容足够时由 Phase 0 自动起草 |
 | `alpha-tests.md` | `<story-dir>/alpha-tests.md` | RED / GREEN 与 AC 证据账本 |
 | `story-delta-frontend-design.md` | `<story-dir>/story-delta-frontend-design.md` | 当前 Story 的前端增量设计 |
 | 目标前端仓 | `<repo-root>` | 实际修改代码、运行测试和启动页面的工程 |
@@ -148,6 +148,8 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 ### Phase 0：需求执行起点
 
 这一阶段回答“这个 Story 从什么提交、什么场景和什么失败集合开始”。
+
+`<story-dir>` 下没有 `tasks.md` 时，本阶段第一件事是判断能不能自动起草：当前会话已经把 Story 范围、AC、还原基线和对接模式聊清楚就直接起草并请你确认（模板见 [团队起步套件.md](./团队起步套件.md)）；聊得不够就先问缺口，不替你编。
 
 主要检查：
 

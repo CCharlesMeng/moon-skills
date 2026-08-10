@@ -24,14 +24,14 @@ disable-model-invocation: true
 | # | 做什么 | 到什么算过 |
 | --- | --- | --- |
 | 1 | 跑 `manage_repo_baseline.py status`，不 `READY` 就先跑完 `sdd-init-frontend`；定 `<browser-driver>` | Phase -1 出 `READY` |
-| 2 | 定四个需求路径，跑一次 `REPO-2` 的质量命令记起点失败集合，写 `dev-baseline.md` | 执行起点表写完 |
+| 2 | 定四个需求路径；`tasks.md` 缺失且会话已聊清楚时先自动起草并经确认；跑一次 `REPO-2` 的质量命令记起点失败集合，写 `dev-baseline.md` | 执行起点表写完 |
 | 3 | 跑 `extract_design_spec.py extract`；有覆盖缺口先登记再确认；派 `extract-prototype`，再按区块并行派 `extract-block-spec` | `<design-spec-dir>` 里区块规格齐了 |
 | 4 | 并行派 `recon-spec` + `recon-codebase`，出 QA 基线与工程依据 | **确认门 → 用户确认 → 冻结 → 编译契约** |
 | 5 | 按 `tasks.md` 逐 Task 走 6 步，还原轮用契约报告当 RED/GREEN 证据，每步勾 checkbox | checkbox 全勾完 |
 | 6 | 四份检视同一轮并行，汇总进 `dev-review.md` | 四份都回传或已记「未执行」 |
 | 7 | 阻断级清零（最多修—重跑两轮），核 [退出门禁](#退出门禁) | 出三行索引 |
 
-三条最容易踩空的：**没有 `tasks.md` 不准开工**；**基线没冻结不准进 Phase B**；**报告有 YELLOW 不算完成**。
+三条最容易踩空的：**没有 `tasks.md` 且会话没聊清楚就不准开工**；**基线没冻结不准进 Phase B**；**报告有 YELLOW 不算完成**。
 
 ## 输出规范
 
@@ -74,7 +74,7 @@ disable-model-invocation: true
 | Phase | 做什么 | 谁做 | 出口 |
 | --- | --- | --- | --- |
 | -1 仓库接入门 | 校验仓库 baseline；缺失或失效时路由 `sdd-init-frontend` | 主 agent | `READY`，或当前 Story 不受 limits 影响的 `READY_WITH_LIMITS` |
-| 0 执行起点 | 定位需求路径、选择本次场景、记录 `base-ref` 与质量失败集合 | 主 agent | 写 `dev-baseline.md` 执行起点，直接进 A1（P6） |
+| 0 执行起点 | 定位需求路径；`tasks.md` 缺失时判断能否自动起草；选择本次场景、记录 `base-ref` 与质量失败集合 | 主 agent | 写 `dev-baseline.md` 执行起点，直接进 A1（P6） |
 | A1 规格抽取 | 脚本产出 `design-facts.json` + 三份人类可读清单，再划区块、逐区块出规格 | 主 agent（跑脚本）+ 子代理 ×(1+N) | 设计事实与区块规格齐备 → 进 A2。基线源不是 `原型` 时整段跳过 |
 | A2 并行勘察 | 产出 QA 基线、还原契约规则草稿、代码事实清单 | 子代理 ×2 | **确认门**：用户确认后冻结基线并编译 `restore-contract.json`，才能进 B |
 | B 实现 | 逐 Task 走 6 步 | 主 agent | `tasks.md` checkbox 全勾完 → 进 C |
@@ -100,7 +100,7 @@ disable-model-invocation: true
 ## 硬门禁
 
 0. **仓库 baseline 先于 Story 执行。** `repo-baseline.md` 不存在、Section 失效、readiness 为 `DRAFT/BLOCKED`，或 `READY_WITH_LIMITS` 的限制影响当前 Story 时，先完整执行 `sdd-init-frontend`；不得把仓库未就绪写成 Story 降级项继续开工。**例外只有一个**：失效由本 Story 自身改动引起，判据见 Phase -1 仓库接入门。
-1. **没有 `tasks.md` 不准开工。** 它是唯一执行清单，也是进度真相。
+1. **没有 `tasks.md` 不准开工。** 它是唯一执行清单，也是进度真相。缺失时先判断是否满足 Phase 0 第 2 步「`tasks.md` 缺失时的自动起草分支」的条件，都不满足才路由 `sdd-task`；不得跳过起草与确认直接臆造 Task List 开工。
 2. **QA 基线未经用户确认不得进入 Phase B。**
 3. **QA 基线的十个维度不可增删。** 还原侧 6 维、功能侧 4 维，只能填期望值与豁免。
 4. **需求执行限制必须显式。** 仅 Story 特有且仓库初始化无法预先消除的限制可写入 `dev-baseline.md` 执行起点。页面或 `<browser-driver>` 等仓库必需能力失效时回 Phase -1；可继续的限制仍按影响让 render/visual 规则保持 YELLOW。**不得用源码检查把渲染规则写成 GREEN，不得假装做过截图。**
@@ -120,9 +120,9 @@ disable-model-invocation: true
 
 | 前置 | 位置 | 必需 |
 | --- | --- | --- |
-| `tasks.md`（由 `sdd-task` 产出，标注本仓为 frontend） | `<story-dir>` | 是 |
-| `story-delta-frontend-design.md` | `<story-dir>` | 是 |
-| `alpha-tests.md` | `<story-dir>` | 是（不存在则由 `sdd-task` 补齐后再来） |
+| `tasks.md`（由 `sdd-task` 产出，标注本仓为 frontend；缺失且会话内容足够时，可由 Phase 0 第 2 步自动起草替代） | `<story-dir>` | 是 |
+| `story-delta-frontend-design.md` | `<story-dir>` | 是（同上，可随 `tasks.md` 一并自动起草） |
+| `alpha-tests.md` | `<story-dir>` | 是（不存在则由 `sdd-task` 补齐，或随 `tasks.md` 一并自动起草空骨架） |
 | 目标前端仓可访问 | `<repo-root>` | 是 |
 | [基线源](#基线源没有-html-原型时) 三档至少第 3 档成立 | — | 是 |
 | HTML 原型 | `<prototype-dir>` | 否，缺失时降到第 2 或第 3 档 |
@@ -133,7 +133,7 @@ disable-model-invocation: true
 
 | 不适用场景 | 改用 |
 | --- | --- |
-| `tasks.md` 还没产出 | `sdd-task` |
+| `tasks.md` 还没产出，且当前会话还没把 Story 范围、AC、还原基线聊清楚 | `sdd-task`；已经聊清楚时改用 Phase 0 第 2 步的自动起草分支，不必先跑 `sdd-task` |
 | 需要改设计而不是执行设计 | `sdd-design` |
 | 一次要覆盖多个 Story 或多个仓 | 外层调度，逐个 Story 分别运行本 skill |
 | 纯后端仓 | 本 skill 不适用 |
@@ -311,7 +311,41 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" status \
 
 `<prototype-dir>` 定位不到时，同一个问题带上参照页或文字规格降级选项。`<design-spec-dir>` 恒为 `<requirement-dir>/design-spec/`，不单独提问。
 
-#### 2. 按需读取仓库 baseline
+#### 2. `tasks.md` 缺失时的自动起草分支
+
+`<story-dir>` 里已经有 `tasks.md` 时跳过本步，直接进第 3 步。
+
+没有时，先判断当前会话是否已经把下面四项聊清楚——判据是「读得出来」，不是「大致有印象」：
+
+| 需要的信息 | 对应 `tasks.md` 章节 |
+| --- | --- |
+| Story 范围、目标页面 / 组件 | 计划头、项目边界 |
+| AC 列表，或能从会话原文反推出的验收点 | Story / AC 追溯表 |
+| 每个页面 / 区块的还原基线（HTML 原型 / 参照页 / 文字规格三档之一） | Task List 的区块来源 |
+| 对接模式（完整对接 / 静态实现） | 计划头 Architecture |
+
+| 判断结果 | 动作 |
+| --- | --- |
+| 四项都聊清楚了 | 照 [story-artifact-templates.md](./references/story-artifact-templates.md) 第三节的模板，从会话内容起草 `tasks.md`；同时缺 `alpha-tests.md` / `story-delta-frontend-design.md` 时一并起草。会话没提到的字段一律写「未定义 / 待确认」，**不得替用户做设计决策，不得编造响应式规格或状态样式**（同硬门禁 7） |
+| 缺某一项，但只是没问过 | 按 P7 一轮问完缺的那几项，答完再起草，不拿会话之外的内容替用户填 |
+| 需求横跨多个 Story 或多个仓 | **不自动起草**：这类拆分工作量本身就需要 `sdd-task` / `sdd-design`，提示改用正式上游 |
+| 会话里的信息本来就模糊（状态样式、异常分支从没讨论过） | **不自动起草**：先澄清缺口或改用 `sdd-task` 走正式设计评审，起草不能替代还没做过的设计思考 |
+
+起草稿写好后过一轮独立确认门，不与其他决策同轮：
+
+```
+---
+**[Phase 0 确认门]** 已按本次会话内容起草 `tasks.md`（<N> 个 Task、<M> 条 AC）<、alpha-tests.md 骨架><、story-delta-frontend-design.md>，全文如下：
+<起草文件全文，不摘要>
+→ 请确认可以落盘继续 / 或指出需要修改的地方。
+---
+```
+
+用户确认后落盘到 `<story-dir>`，视为满足硬门禁 1，继续第 3 步；指出要改的地方则改完重新走这道确认门，不落盘、不带着分歧继续。
+
+**这条分支只解决「文件从哪来」，不降低标准。** 起草稿一样要经过 Phase A2 的 QA 基线确认门；「未定义」字段照常按硬门禁 14 类规则登记进「已知缺口」，不因为是起草出来的就被放行。
+
+#### 3. 按需读取仓库 baseline
 
 此时只读两个 section，**`--baseline-dir` 是必填参数**：
 
@@ -326,7 +360,7 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 不要在 Phase 0 读取 `REPO-3`；代码侧勘察再按当前需求选读。
 
-#### 3. 固定本次执行上下文
+#### 4. 固定本次执行上下文
 
 从 `tasks.md`、AC、仓库 baseline 与 onboarding report 得到：
 
@@ -337,13 +371,13 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 事实能从仓库或上游读出就直接记录；多个场景都合理且会改变验收结果时才按 P7 请用户决定。
 
-#### 4. 提取开工失败集合
+#### 5. 提取开工失败集合
 
 按 `REPO-2` 实跑其中实际存在且适用于当前 app 的规范命令。记录命令、范围、退出码、耗时和**具体失败集合**；不存在的类别不生成表格行。若上游明确要求但 REPO-2 没有对应能力，回 Phase -1 补齐，不在 Story 中写“未提供”。
 
 这组结果属于 `DEMAND-2`，与当前起点提交绑定。`REPO-2` 只说明命令怎么跑，不保存这组失败。
 
-#### 5. 设计事实预检
+#### 6. 设计事实预检
 
 原型存在时只取统计与路径事实：
 
@@ -351,7 +385,7 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 - A1 的抽取脚本负责资源完整性和原型指纹；
 - 格式化档锚点可附行号，单行档只用 class 结构。
 
-#### 6. 写执行起点
+#### 7. 写执行起点
 
 新建 `<story-dir>/dev-baseline.md`，先写 `DEMAND-2`；Phase A2 再追加 `DEMAND-3`。**模板与两条约束在 [story-artifact-templates.md](./references/story-artifact-templates.md) 第一节。**
 
@@ -884,8 +918,9 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | `design-tokens.md` / `interface-inventory.md` / `content-inventory.md` | `<design-spec-dir>/` | Phase A1 脚本输出 | 新建；已存在时按下方并发写规则 |
 | 原型切分表 | `<design-spec-dir>/block-index.md` | Phase A1 `extract-prototype` | 新建，按哈希增量补行 |
 | 区块规格 | `<design-spec-dir>/blocks/<区块名>.md` | Phase A1 `extract-block-spec` | 新建，一区块一文件；哈希失配才重写 |
-| `alpha-tests.md` | `<story-dir>/alpha-tests.md` | Phase B Step ⑥、Phase D 回填 | **扩容上游文件**，结构见 [references/alpha-tests-restore.md](./references/alpha-tests-restore.md) |
-| `tasks.md` | `<story-dir>/tasks.md` | Phase B | **只勾 checkbox**，不改内容 |
+| `alpha-tests.md` | `<story-dir>/alpha-tests.md` | 缺失时 Phase 0 第 2 步起草空骨架；否则视为上游产出，Phase B Step ⑥、Phase D 回填 | 缺失则新建（起草）；存在则**扩容上游文件**，结构见 [references/alpha-tests-restore.md](./references/alpha-tests-restore.md) |
+| `tasks.md` | `<story-dir>/tasks.md` | 缺失且会话内容足够时 Phase 0 第 2 步起草；否则视为上游产出 | 缺失则新建（起草，经确认门）；存在则**只勾 checkbox**，不改内容 |
+| `story-delta-frontend-design.md` | `<story-dir>/story-delta-frontend-design.md` | 缺失时随 `tasks.md` 一并由 Phase 0 第 2 步起草；否则视为上游产出 | 缺失则新建（起草）；存在则本 skill 不改 |
 | 原型视觉缓存 | `<design-spec-dir>/visual-baseline/<缓存指纹>/` | Phase B Step ② | 仅 visual YELLOW 懒生成；`prototype.png` + `manifest.json`，不可变 |
 | 实现侧视觉补证 | `<story-dir>/evidence/<Task 编号>-r<轮次>/` | Phase B Step ② / ④ | 仅 visual YELLOW 新建，命名按报告规则编号 |
 | 检视截图 | `<story-dir>/evidence/review/` | Phase C 归档 | 新建，命名 `layout-<结论编号>.png` / `self-test-<基线编号>.png` |
@@ -914,6 +949,7 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 
 | 用户意图（示例说法） | 派发目标 |
 | --- | --- |
+| 「没有 tasks.md，按我们聊的内容起草」「这个需求没走 sdd-task，直接开始」 | Phase 0 第 2 步的自动起草分支：主 agent 判断会话内容是否够起草，够就起草并过确认门，不够按 P7 先问缺口 |
 | 「初始化前端仓」「刷新仓库 baseline」「项目第一次接入」 | 路由 `sdd-init-frontend`；完成后若当前有 Story 则回 Phase -1，否则结束 |
 | 「重抽设计稿规格」「重新解析设计稿」 | 走完 Phase A1：跑脚本 → `extract-prototype` → `extract-block-spec` ×N。**哈希一致的区块照常复用**，说「重抽」不等于强制全量重来 |
 | 「`<区块名>` 的规格重来一份」「这个区块的规格不对」 | `extract-block-spec` 单实例，只覆写该区块那一份，切分表与其余区块不动 |
