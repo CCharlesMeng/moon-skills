@@ -322,6 +322,30 @@ def validate_locator(locator: Any, rule_id: str) -> dict[str, Any]:
     return dict(locator)
 
 
+ADAPTER_FORBIDDEN_JUDGMENT_FIELDS = (
+    "expected",
+    "tolerance",
+    "design_fact_source",
+    "baseline_id",
+)
+
+
+def find_forbidden_adapter_fields(value: Any, path: str = "") -> list[str]:
+    """Recursively find judgment-field keys hidden anywhere in an adapter entry."""
+    hits: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            if key in ADAPTER_FORBIDDEN_JUDGMENT_FIELDS:
+                hits.append(child_path)
+            hits.extend(find_forbidden_adapter_fields(child, child_path))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            child_path = f"{path}[{index}]" if path else f"[{index}]"
+            hits.extend(find_forbidden_adapter_fields(child, child_path))
+    return hits
+
+
 def validate_adapter(adapter: Any, contract: dict) -> dict:
     if not isinstance(adapter, dict):
         raise ContractError("restore-adapter.json 顶层必须是对象")
@@ -339,11 +363,7 @@ def validate_adapter(adapter: Any, contract: dict) -> dict:
         entry = entries.get(rule_id)
         if not isinstance(entry, dict):
             raise ContractError(f"adapter 缺规则 {rule_id} 的实现定位")
-        forbidden_fields = [
-            field
-            for field in ("expected", "tolerance", "design_fact_source", "baseline_id")
-            if field in entry
-        ]
+        forbidden_fields = find_forbidden_adapter_fields(entry)
         if forbidden_fields:
             raise ContractError(
                 f"规则 {rule_id} 的 adapter 混入外部判定字段：{forbidden_fields}"

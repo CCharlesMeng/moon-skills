@@ -180,16 +180,19 @@ disable-model-invocation: true
 
 注入协议只有一份，在 [restore-contract.md](./references/restore-contract.md)：先把契约与 adapter 放进 `window.__SDD_RESTORE_INPUT__`，再注入 `<skill-dir>/scripts/collect_restore_facts.js`，取返回值存 `render-results.json`。**采集脚本只读，不代替状态触发**——hover / focus / loading / fixture 必须由 `<browser-driver>` 先真正做出来。
 
+**派给 `review-layout` / `self-test` 时，`<browser-driver>` 不是档位名，而是可执行启动说明。** 路径变量取值表必须写明：Phase -1 取到的**具体档位**，以及该档下第 4 步实际验证过的启动方式（命令、端口、目标 URL、健康探针怎么做）。子代理**必须直接使用这份记录启动页面**，**不得自行只探测某一个连接器、发现它为空就判定环境缺失**；只有记录的那一档驱动本身、按记录的方式实际尝试后仍然失败，才能判环境缺失。
+
 ## subagent 派发约定
 
 - **只把 `<skill-dir>/agents/<name>.md` 的路径给子代理，让它自己读全文并执行**，不摘要、不改写、不复述要点，也不把全文抄进派发消息——抄一遍等于让主 agent 白付一份提示词的上下文。
-- **在路径之后追加一段「路径变量取值」表**，给出 `<repo-root>` / `<repo-baseline-dir>` / `<story-dir>` / `<requirement-dir>` / `<design-spec-dir>` / `<skill-dir>` 的实际值，实跑类再加 `<browser-driver>`。提示词文件本身不含硬编码路径。
+- **在路径之后追加一段「路径变量取值」表**，给出 `<repo-root>` / `<repo-baseline-dir>` / `<story-dir>` / `<requirement-dir>` / `<design-spec-dir>` / `<skill-dir>` 的实际值；派 `review-layout` / `self-test` 时再加 `<browser-driver>`，取值必须是**具体档位 + Phase -1 第 4 步实际验证过的启动方式**（命令、端口、目标 URL、健康探针），不能只写「会话内工具」这类笼统描述。提示词文件本身不含硬编码路径。
 - **`<prototype-dir>` 只传给 `extract-prototype` 与 `extract-block-spec`。** 其余六份被硬门禁 9 禁止读原型，传给它们等于邀请违规。
 - 派 `extract-block-spec` 时，在路径变量表后再追加四行实例输入：`区块名`、`页面 / 路由`、`区块切片路径`、`目标视口`。切片路径必须指向主 agent 用 `block --anchor` 刚生成的那一个临时文件，不得给整份原型。
 - **子代理不再委派，不修改项目文件或正式工件。** 布局检视与功能自测试只允许把截图写入临时目录；其他产物以正文回传并由主 agent 落盘——并行子代理写同一个正式工件必然互相覆盖。
 - **同一 Phase 内的多个子代理在同一轮并行派发**，不串行。
 - 子代理返回 `前置缺失：<清单>` 时**不重跑、不自行补足、不猜测**，按 P7 把清单交给用户（Phase C 有一条细则，见 Phase C 第 4 节）。
 - 回传后按该提示词的「输出格式」逐项校验。不合格退回重跑一次；仍不合格按 P7 上报，不带着缺口往下走。
+- **`review-layout` / `self-test` 必须按路径变量表里记录的 `<browser-driver>` 启动页面**，不得自行只探测某一个连接器、发现为空就判环境缺失；只有该档驱动按记录方式实际尝试后仍失败，才能判环境缺失。
 
 | 提示词 | 职责 | Phase | 回传落盘 |
 | --- | --- | --- | --- |
@@ -235,6 +238,8 @@ disable-model-invocation: true
 | **事实** — 项目里客观存在，只是还没读 | 说得出它在哪类文件里，读一遍就有确定答案 | **起子代理去读，不打断用户**（P6）。需求事实落进 `dev-baseline.md`；仓库范式只引用 `PATTERN-*`，不复制正文 |
 | **决策** — 有多个候选，选哪个要人拍板 | 读完之后仍有两个以上都说得通的答案 | **按 P7 问用户**，或并进最近的确认门。不自己选一个往下走 |
 | **真缺** — 项目里确实没有 | 穷尽检索后写得出「检索方式 + 未见」 | **分层处理**：仓库必需能力回 Phase -1；需求规格缺口进「已知缺口」；Story 特有限制进执行起点。最终输出带状态限定。不发明，不拿通用最佳实践顶替 |
+
+**进入 P7 提问前，必须先判定该问题在 repo（仓库代码）与 prototype（`<design-spec-dir>` 产物）两侧是否已有直接证据；只有判定为 `user-only` 或 `conflict` 的问题才能进入 P7，能从 repo 或 prototype 直接读出答案的不得提问，必须直接把证据写入基线。** 分类判据见 [qa-baseline-template.md](./references/qa-baseline-template.md)。
 
 两条容易踩的：
 
@@ -438,6 +443,8 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 「已知缺口」中有**必须回答才能冻结基线**的项（典型：上游未定义的响应式诉求、对接模式未声明、区块规格里 R4 / R5 写 `未见` 而 AC 又要求状态反馈），先单独走一轮 P7 提问，答完再进确认门（P1）。
 
+**进入 P7 前先做证据来源判定**：该问题在 repo 与 prototype 两侧是否已有直接证据；**只有 `user-only` 或 `conflict` 才能进 P7**，能从 repo 或 prototype 直接读出的不得提问，必须把证据写入基线。分类判据见 [qa-baseline-template.md](./references/qa-baseline-template.md)。
+
 #### 5. 展示与确认门
 
 用户可见内容：
@@ -518,11 +525,25 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 | ① RED | 写失败的单测或接口集成测试，给出完整代码 | 运行冻结契约，生成 `restore-report-red.json`；至少一项 RED |
 | ② 验 RED | 跑测试，确认按预期失败 | 核对 RED 的外部出处与实现定位；YELLOW 先结构化补证，仍无法判定才截图 |
 | ③ GREEN | 最小实现让测试转绿 | 只修报告里的 RED |
-| ④ 验 GREEN | 测试转绿 + 全量回归对齐 DEMAND-2 起点失败集合 | 重跑同一契约，生成 `restore-report-green.json`；无 RED、无 YELLOW |
+| ④ 验 GREEN | 测试转绿 + 全量回归对齐 DEMAND-2 起点失败集合；**已知约束核销**（见下） | 重跑同一契约，生成 `restore-report-green.json`；无 RED、无 YELLOW；**已知约束核销**（见下） |
 | ⑤ REFACTOR | 按需 | 按需；重构后再跑同一契约 |
 | ⑥ 记录证据并提交 | 落 `alpha-tests.md` 的 L4 / L3 记录节 | 账本只记契约/报告/缓存指纹与路径、摘要及可选截图 |
 
 还原轮必须以冻结外部契约为失败证据；机器报告负责可确定判定，截图只用于机器盲区的选择性补证。
+
+**④ 已知约束核销（还原轮与逻辑轮共通）**
+
+Step ④ 不只证明「主要实现完成」。主 agent 必须读 `tasks.md` 中本 Task 的文字描述与 `dev-baseline.md` 已冻结的 QA 基线，列出与本 Task **直接相关、但尚未被契约规则（`restore-contract.json` 的 R 编号）或单测覆盖**的已知约束（典型：四档响应式宽度、状态语义、边界值、类型断言、样式 token 去重）。每条写出：
+
+| 必填 | 内容 |
+| --- | --- |
+| 约束 | 约束是什么 |
+| 检查方式 | 对应契约规则 id / 单测 id / 当场执行的检查动作（布局类当场跑一次冻结视口） |
+| 结果 | 通过；或未通过并留下失败证据 |
+
+- **无法在本 Task 内验证的，必须显式写明「推迟到 Phase C 的哪一份检视核实」以及理由**；**禁止用批量 `N/A` 打包清零**。
+- 这道检查**不替代**契约与检视，只防止「计划里已经写明的约束」被静默带到收口才第一次发现。
+- 未核销完不得勾本轮 GREEN、不得进 Step ⑥。
 
 #### 4. 还原轮 6 步的动作
 
@@ -570,6 +591,8 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 基线之内的既有失败项**不去修**——那是本 Story 之外的代码，动它就出了本 Task 的文件清单。
 
+- **已知约束核销**：按 #### 3 的共通子项，对本 Task 相关、尚未被本轮契约规则覆盖的已知约束逐条写出「约束 → 检查方式 → 结果」；无法当场验证的写明推迟到 Phase C 哪一份检视及理由，**禁止批量 `N/A`**。
+
 **⑤ REFACTOR — 按需**
 
 - 只在本 Task 的文件清单内。重构后重跑 ④ 的同一契约与回归判定。
@@ -595,7 +618,7 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 | # | 约束 | 违反时 |
 | --- | --- | --- |
 | 1 | 修复动作**不出本 Task 的文件清单** | 停下上报，不自行扩大范围 |
-| 2 | 禁止用**检查抑制手段**绕过（按仓库栈取值：`any` / `@ts-ignore` / `eslint-disable` / `# type: ignore` / `@SuppressWarnings` / `// @ts-nocheck` 等一切让类型检查或 lint 闭嘴的写法） | 仓内既有范式就是如此才可用，且必须在代码旁写明理由；无理由绕过是 Phase C 的阻断级 |
+| 2 | 禁止用**检查抑制手段**或**没有理由的类型断言**绕过（按仓库栈取值：`any` / `@ts-ignore` / `eslint-disable` / `# type: ignore` / `@SuppressWarnings` / `// @ts-nocheck` 等一切让类型检查或 lint 闭嘴的写法；以及 TypeScript 的 `as` 类型转换、非空断言 `!`） | 仓内既有范式就是如此才可用，且必须在代码旁写明理由；断言须有结构守卫（先做 `typeof` / `in` 等判断再断言）或旁注理由，否则与检查抑制同类，是 Phase C 的阻断级 |
 | 3 | **同一个报错连续修 3 次不成就停止** | 停下上报 |
 
 第 3 条以「同一个报错」计数：改了写法但报错文本不变，算同一次链条的延续，不重新计数。

@@ -901,6 +901,30 @@ class ToleranceTests(unittest.TestCase):
         self.assertFalse(self.compare(16, 16.5, check_mode="exact", tolerance=0.0)[0])
         self.assertFalse(self.compare("16px", 16, check_mode="exact", tolerance=0.0)[0])
 
+    def test_color_mode_treats_equivalent_css_syntaxes_as_equal(self) -> None:
+        # 同一红色的多种写法必须归一化后判 GREEN；否则采集端输出 rgb()、契约写 hex
+        # 就会假红。
+        equivalents = ("#ff0000", "#FF0000", "rgb(255, 0, 0)", "rgba(255,0,0,1)", "#f00")
+        for expected in equivalents:
+            for actual in equivalents:
+                with self.subTest(expected=expected, actual=actual):
+                    passed, detail = self.compare(expected, actual, check_mode="color", tolerance=0.0)
+                    self.assertTrue(passed)
+                    self.assertEqual(detail["expected"], detail["actual"])
+
+    def test_color_mode_rejects_real_channel_or_alpha_differences(self) -> None:
+        self.assertFalse(self.compare("#ff0000", "#ff0001", check_mode="color", tolerance=0.0)[0])
+        self.assertFalse(
+            self.compare("#ff0000", "rgba(255,0,0,0.9)", check_mode="color", tolerance=0.0)[0]
+        )
+
+    def test_unrecognized_color_strings_fail_deterministically(self) -> None:
+        # 无法识别时回退到去空白后的原文比较：拼写错误名与合法色值必然不相等，且不得崩溃。
+        passed, detail = self.compare("#ff0000", "reed", check_mode="color", tolerance=0.0)
+        self.assertFalse(passed)
+        self.assertEqual(detail["actual"], "reed")
+        self.assertNotEqual(detail["expected"], detail["actual"])
+
     def test_boundary_decides_the_report_color(self) -> None:
         rules = [
             make_rule("R3-1", "R3", expected="16px", check_mode="numeric"),
@@ -1179,6 +1203,92 @@ class ContractRuleMappingTests(unittest.TestCase):
             empty["rules"]["R1-1"]["locators"] = []
             with self.assertRaisesRegex(VERIFIER.ContractError, "locators 必须是非空数组"):
                 VERIFIER.validate_adapter(empty, contract)
+
+    def test_nested_judgment_fields_inside_adapter_are_rejected(self) -> None:
+        # 判定字段藏在 collect / locators 嵌套对象里时，浅层检查会漏掉——那正是实现方
+        # 绕过冻结契约期望值的路径。
+        rules = [make_rule("R3-1", "R3", expected="16px", check_mode="numeric")]
+        cases = {
+            "collect.expected": {
+                "kind": "style",
+                "properties": ["gap"],
+                "expected": "16px",
+            },
+            "collect.tolerance": {
+                "kind": "style",
+                "properties": ["gap"],
+                "tolerance": {"css_px": 0},
+            },
+            "locator.baseline_id": None,
+            "locator.design_fact_source": None,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "dev-baseline.md"
+            baseline.write_text(frozen_baseline(["R3-1"]), encoding="utf-8")
+            draft = root / "rules-draft.json"
+            draft.write_text(json.dumps({"rules": rules}), encoding="utf-8")
+            contract = VERIFIER.compile_contract(baseline, draft, "dev-baseline.md")
+
+            for name, collect in cases.items():
+                with self.subTest(case=name):
+                    adapter = default_adapter(rules)
+                    if name.startswith("collect."):
+                        adapter["rules"]["R3-1"]["collect"] = collect
+                    elif name == "locator.baseline_id":
+                        adapter["rules"]["R3-1"]["locators"][0]["baseline_id"] = "R3-1"
+                    else:
+                        adapter["rules"]["R3-1"]["locators"][0]["design_fact_source"] = {
+                            "path": "design-facts.json"
+                        }
+                    with self.assertRaisesRegex(
+                        VERIFIER.ContractError,
+                        r"adapter 混入外部判定字段：.*(?:expected|tolerance|baseline_id|design_fact_source)",
+                    ):
+                        VERIFIER.validate_adapter(adapter, contract)
+
+    def test_legal_adapter_fields_are_not_treated_as_judgment_keys(self) -> None:
+        # 递归检查只认字典 key，不能误杀 properties 数组里碰巧含 "expected" 的字符串。
+        rules = [make_rule("R3-1", "R3", expected="16px", check_mode="numeric")]
+        adapter = default_adapter(rules)
+        adapter["rules"]["R3-1"] = {
+            "locators": [
+                {
+                    "strategy": "role",
+                    "role": "button",
+                    "name": "R3-1",
+                },
+                {
+                    "strategy": "testid",
+                    "testid": "filters-expected",
+                },
+                {
+                    "strategy": "css",
+                    "selector": ".filters",
+                },
+            ],
+            "source_files": ["src/view.tsx"],
+            "collect": {
+                "kind": "style",
+                "properties": ["gap", "expected-size", "tolerance-hint"],
+                "attributes": ["data-state", "aria-expected"],
+                "single": True,
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "dev-baseline.md"
+            baseline.write_text(frozen_baseline(["R3-1"]), encoding="utf-8")
+            draft = root / "rules-draft.json"
+            draft.write_text(json.dumps({"rules": rules}), encoding="utf-8")
+            contract = VERIFIER.compile_contract(baseline, draft, "dev-baseline.md")
+
+            normalized = VERIFIER.validate_adapter(adapter, contract)
+
+        self.assertEqual(
+            normalized["rules"]["R3-1"]["collect"]["properties"],
+            ["gap", "expected-size", "tolerance-hint"],
+        )
 
     def test_dimension_check_mode_and_layer_vocabulary_are_closed(self) -> None:
         cases = {
