@@ -143,6 +143,32 @@
         "dev-baseline.md 只保存 Story 需要到 PATTERN ID 的映射和完整 REPO-3 指纹",
         "实现与检视通过 ID 回读 repo-baseline.md 的唯一范式正文"
       ]
+    },
+    {
+      "id": 12,
+      "name": "self-inflicted-repo3-staleness-does-not-reset-to-phase-minus-1",
+      "target": "SKILL.md",
+      "prompt": "进入 Phase C 前重跑 `manage_repo_baseline.py status`，返回 REPO-3 section 失效。核对后发现：`git status --porcelain --untracked-files=all` 列出的改动文件全部落在本 Story 的改动范围内；`dev-baseline.md / 工程依据` 记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表逐字一致。请给出接下来的路由。",
+      "expected_output": "两条判据都成立，判定为本 Story 自身改动引起，不回 Phase -1、不刷新 REPO-3，照常进入 Phase C，把失效记入已知缺口。",
+      "expectations": [
+        "逐条核对两条判据：改动文件是否全部落在本 Story 改动范围内、REPO-3 指纹两处是否逐字一致",
+        "两条都成立时不触发硬门禁 0 的仓库回置，也不把它写成 Story 降级项",
+        "不为了让 status 变绿去跑 sdd-init-frontend 刷新 REPO-3",
+        "继续 Phase C，并在检视结论或已知缺口里显式记录失效由本 Story 自身改动引起"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "unexplained-file-outside-task-list-still-resets-to-phase-minus-1",
+      "target": "SKILL.md",
+      "prompt": "同样在进入 Phase C 前重跑 `status`，同样返回 REPO-3 section 失效。核对 `git status --porcelain --untracked-files=all`：改动文件里除了本 Story 改动范围内的全部文件，还多了一个不属于本 Story 改动范围的 `src/lib/format.ts`，没有任何记录说明这处改动是谁、为什么做的。请给出接下来的路由。",
+      "expected_output": "「改动文件全部落在本 Story 改动范围内」这一条不成立，判定为真失效，回 Phase -1 完整执行 sdd-init-frontend 刷新 REPO-3，不当作本 Story 自身改动放行。",
+      "expectations": [
+        "明确指出 `src/lib/format.ts` 不属于本 Story 改动范围，据此判定第一条判据不成立",
+        "不因为其余改动都在改动范围内、只多了一个文件，就整体判成自身改动引起",
+        "回 Phase -1，按硬门禁 0 完整执行 sdd-init-frontend，不满足 status/validate 之前不进 Phase 0",
+        "不把这处未解释的改动当作可以继续开工的 Story 降级项，也不静默忽略它"
+      ]
     }
   ]
 }
