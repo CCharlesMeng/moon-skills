@@ -70,13 +70,15 @@
     },
     {
       "id": 6,
-      "name": "skill-problem-routes-to-refine-skill",
-      "prompt": "会话证明另一个 Skill 的承重规则导致重复错误，该 Skill 也位于当前仓库。调用 /session-optimize。",
-      "expected_output": "形成规则导致重复错误的改进主题并移交 refine-skill，不在 session-optimize 中直接改写目标 Skill。",
+      "name": "skill-problem-routes-to-maintainer-not-this-session",
+      "prompt": "会话证明另一个 Skill 的承重规则导致重复错误，该 Skill 的源码也位于当前仓库且可写；但本轮只是在用它做任务，不是在开发或调试它本身。调用 /session-optimize。",
+      "expected_output": "形成规则导致重复错误的改进主题，移交给该 Skill 的维护者并给出自带证据的移交说明；既不在 session-optimize 中直接改写目标 Skill，也不因为源码在仓库里就在本会话接 refine-skill。",
       "expectations": [
         "说明目标 Skill 的规则与重复错误之间的因果关系",
         "不直接修改目标 Skill，即使它就在当前仓库内",
-        "可复制的移交说明建议使用 refine-skill 并给出验证标准;有会话证据则写入,证据不足时明确写出缺口而非虚构",
+        "识别本会话的执行者是该 Skill 的使用者而不是维护者，因此判为移交，不在本会话接 refine-skill；不把源码在仓库里当成可以直接改的理由",
+        "移交对象写成人或角色（该 Skill 的维护者），不把 refine-skill 本身写成移交对象",
+        "可复制的移交说明自带证据：逐条触发情境 → 错误行为 → 期望行为，附会话轮次或输出引用，并注明由维护者用 refine-skill 处理;证据不足时明确写出缺口而非虚构",
         "验证标准包含能推翻 Skill 改法的失败或退化条件"
       ]
     },
@@ -226,13 +228,13 @@
       "id": 18,
       "name": "one-off-fact-with-upstream-is-not-dismissed",
       "prompt": "会话中途用户纠正“不是 main，本次要改的是 release/2026-08 分支”，此时 Agent 已在错误分支上改了两个文件，只能返工重来。分支名只对本次运行成立；但 Agent 从开工到那一刻从未问过目标分支，它遵循的那个 Skill 里也没有任何开工前确认工作分支的输入契约。调用 /session-optimize。",
-      "expected_output": "不因为分支名是一次性事实就判不成题；走分流后的四追问并停在第一问，判成 Skill 该声明的输入没声明，按 decision.undeclared-input 移交 refine-skill 补输入契约。",
+      "expected_output": "不因为分支名是一次性事实就判不成题；走分流后的四追问并停在第一问，判成 Skill 该声明的输入没声明，按 decision.undeclared-input 移交该 Skill 的维护者补输入契约。",
       "expectations": [
         "识别这条纠正的表层是一次性上下文（分支名只对本次运行成立），但不停在这里判不成题",
         "走四追问并停在第一个成立的：Skill 本该在开工前索要目标分支，它没有索要",
         "主类别为 L2 流程/决策，使用 decision.undeclared-input 一类的标准 Pattern-Key；键里不含 release/2026-08 这类只对本次成立的字面值",
         "不判成 L1 背景输入不足，理由是这条信息属于 Skill 该主动索要的输入，用户从未被问到",
-        "改进是给该 Skill 补开工前确认工作分支的输入契约并移交 refine-skill，不在 session-optimize 内直接改写它",
+        "改进是给该 Skill 补开工前确认工作分支的输入契约，移交它的维护者处理，不在 session-optimize 内直接改写它",
         "不把改进写成提醒 Agent 下次更小心，也不写成只给这个用户的使用引导"
       ]
     },
@@ -251,14 +253,14 @@
     },
     {
       "id": 20,
-      "name": "preference-tracing-to-skill-default-routes-to-refine-skill",
+      "name": "preference-tracing-to-skill-default-routes-to-maintainer",
       "prompt": "用户本轮三次要求先给结论再给推理过程。这个倒序来自某个 Skill 输出模板固定的章节顺序，任何人用它拿到的都是同一个顺序；该用户已经在常驻上下文里写过一次同样的要求，仍然没有改变输出。调用 /session-optimize。",
-      "expected_output": "先判成偏好但不停在这里：模板对所有使用者产生同一顺序，因此是 Skill 的默认错了，按 decision.wrong-default 移交 refine-skill 改模板，而不是再写一遍常驻上下文。",
+      "expected_output": "先判成偏好但不停在这里：模板对所有使用者产生同一顺序，因此是 Skill 的默认错了，按 decision.wrong-default 移交该 Skill 的维护者改模板，而不是再写一遍常驻上下文。",
       "expectations": [
         "先按分流判成偏好（它改的是默认怎么做，不是怎么判断），但不把偏好当终点",
         "应用判据：换个用户在同样场景下也会提同样的纠正，因此是 Skill 的默认错了，不是这个用户的个人风格",
         "走四追问停在第二问，主类别为 L2 流程/决策，使用 decision.wrong-default 一类的标准 Pattern-Key",
-        "改法是移交 refine-skill 修改该 Skill 输出模板的章节顺序，不在 session-optimize 内直接改写目标 Skill",
+        "改法是移交该 Skill 的维护者修改输出模板的章节顺序（由他用 refine-skill 处理），不在 session-optimize 内直接改写目标 Skill",
         "不把它写进常驻上下文、AGENTS.md 或项目文档当成个人偏好条目——已有证据表明那样只让当前用户绕过，别的用户照踩",
         "主 Pattern-Key 不是 usage.*；主改法不是给用户的使用引导"
       ]
@@ -267,15 +269,28 @@
       "id": 21,
       "name": "genuine-usage-deviation-gets-guidance-not-rules",
       "prompt": "会话开始时 Skill 检测到缺少基线并明确提示“未检测到基线，建议先运行 sdd-init-frontend”，用户回复“跳过，直接做”。实现到一半因为没有基线无法比对，回头补跑基线并返工三轮。该 Skill 的适用场景和前置步骤都已写明，本轮也确实提示过。调用 /session-optimize。",
-      "expected_output": "层地图停在 L1 使用方式（Skill 已声明前置并已提示，Skill 侧不成立），产出可直接复制的使用引导，不给 Agent 加规则也不移交 refine-skill。",
+      "expected_output": "层地图停在 L1 使用方式（Skill 已声明前置并已提示，Skill 侧不成立），产出可直接复制的使用引导，不给 Agent 加规则也不移交该 Skill 的维护者。",
       "expectations": [
         "明确排除第一问：前置步骤已写明且本轮已提示，不是 Skill 该声明的输入没声明",
         "明确排除第二问：Skill 的默认做法是先要基线且它主动提示了，默认没有错",
         "主类别为 L1 使用方式，使用 usage.skipped-prerequisite 一类的标准 Pattern-Key",
-        "不因为先问 skill 再问人的顺序就把它硬塞回 Skill 缺陷，也不移交 refine-skill",
+        "不因为先问 skill 再问人的顺序就把它硬塞回 Skill 缺陷，也不移交该 Skill 的维护者",
         "改进是给用户可直接复制的使用引导（下次先跑基线，或在明知无基线时说明接受的后果），不是给 Agent 加规则或加提醒",
         "陈述事实与后果，不用个人风格或事后信息归咎用户",
         "首次出现且非高危，只记台账，不申请写入任何长期资产"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "dev-session-of-target-skill-chains-refine-skill",
+      "prompt": "本轮任务就是在开发调试 sdd-dev-frontend 这个 Skill 本身：反复改它的 SKILL.md 再重跑，过程中确认它的一条承重规则会让 Agent 跳过基线比对。源码在当前工作区且可写，用户就是它的维护者。调用 /session-optimize。",
+      "expected_output": "识别本会话就是目标 Skill 的开发场景，在下一步里建议本会话末尾接 /refine-skill sdd-dev-frontend，而不是产出一份写给别人的跨边界移交；session-optimize 自身仍不改写该 Skill。",
+      "expectations": [
+        "识别本会话在开发目标 Skill 而不是使用它，执行者本身就是它的维护者",
+        "下一步建议在本会话末尾接 /refine-skill <skill-name>，理由是证据还在当前上下文里，符合它要求的前提",
+        "不把它写成给他人的跨边界移交，也不要求另外准备一份写给维护者的自带证据说明",
+        "session-optimize 自身仍不改写目标 Skill 的任何文件",
+        "主类别仍按层地图定位并照常记账，不因为可以接 refine-skill 就跳过分层与固化门槛"
       ]
     }
   ]

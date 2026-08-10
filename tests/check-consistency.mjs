@@ -309,6 +309,10 @@ const REFERENCE_CHECKS = [
       "references/examples.md",
     ],
   },
+  {
+    skill: "session-optimize",
+    files: ["references/failure-map.md", "references/learnings-ledger.md"],
+  },
 ];
 
 function checkReferenceFiles() {
