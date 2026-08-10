@@ -1,0 +1,44 @@
+# sdd-init-frontend
+
+让一个前端仓从「不知道能不能开发」变成 `READY`：生成或刷新仓库级 baseline（环境、质量命令、工程范式），并且真的装依赖、真的起服务、真的跑通命令——不是扫一遍代码就下结论。
+
+## 适用场景
+
+- 团队第一次把这套 SDD 流程接到某个前端仓；
+- 仓库 baseline 缺失，或依赖 / 命令 / 范式已经变了；
+- 只是想知道「这个仓现在能不能直接开发」；
+- **不需要手动调用**：`sdd-dev-frontend` 开工前发现 baseline 缺失或失效会自动路由过来，完成后自动回到原 Story。
+
+## 怎么用
+
+### 简化版本——单 app 仓，第一次接入
+
+```text
+请用 sdd-init-frontend 初始化这个前端仓。
+仓库路径：<repo-root>
+```
+
+路径和目标 app 会自动探测，不确定的地方才会一次性问你。
+
+### 复杂版本——monorepo，或只刷新失效的一部分
+
+```text
+请用 sdd-init-frontend 刷新 <repo-root> 的仓库 baseline。
+目标 app：<target-app>（monorepo 中的具体子应用）
+只需要重新扫描工程质量部分（REPO-2），其余部分保留。
+```
+
+## 会发生什么
+
+真的装依赖、起服务、开页面、跑质量命令，而不是读读代码就下结论；涉及下载、登录这类有副作用的动作会先请求你授权。完成后给出三档结论之一：
+
+| 结论 | 含义 |
+| --- | --- |
+| `READY` | 当前开发需要的一切都已验证可用 |
+| `READY_WITH_LIMITS` | 能开发，但有已知限制，会写明影响范围 |
+| `BLOCKED` | 缺东西，会给出唯一的解除动作 |
+
+## 了解更多
+
+- 完整规则、10 条硬门禁、五个 Phase：[SKILL.md](./SKILL.md)
+- baseline 字段、目录结构与失效契约：[references/baseline-contract.md](references/baseline-contract.md)
