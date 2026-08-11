@@ -292,6 +292,46 @@
         "session-optimize 自身仍不改写目标 Skill 的任何文件",
         "主类别仍按层地图定位并照常记账，不因为可以接 refine-skill 就跳过分层与固化门槛"
       ]
+    },
+    {
+      "id": 23,
+      "name": "skill-scoped-defect-not-patched-into-project-context",
+      "prompt": "本轮用某个设计类 Skill 产出设计文档。需求 Wiki 明确定义了 3 个筛选字段，Agent 只写了 1 个，并自行补了一句理由“初始版本仅支持状态筛选，任务类型筛选后续迭代”——Wiki 里没有这个说法。用户纠正后返工更新了 5 份以上文档。该 Skill 的流程里没有任何“引用源头文档、拿不准就提问”的步骤。本轮是使用这个 Skill，不是开发它；严重程度判为中，台账里是首次出现。调用 /session-optimize。",
+      "expected_output": "主类别 L2 流程/决策（decision.silent-assumption 一类），去向是移交该 Skill 的维护者给它补源头引用与提问步骤；不申请把这条约束写进 AGENTS.md、rules/ 或任何项目文档；首次且非高危，只记台账。",
+      "expectations": [
+        "主类别为 L2 流程/决策，不判成 L1 知识缺口——Wiki 里写着 3 个字段，信息是充分的，不是文档缺失或过时",
+        "识别缺陷只在该 Skill 运行时出现，去向是移交它的维护者补输入/流程契约",
+        "不申请把规则写进 AGENTS.md、rules/、项目流程文档或任何项目级常驻上下文——那样只让当前项目绕过，该 Skill 换个用户照样编造理由",
+        "不因为移交在本会话里不可执行、而改项目文档当场可执行，就选后者",
+        "首次出现且严重程度为中，按固化门槛只记台账，改进以下次会话的可逆试验形式提出，不申请写入任何长期资产",
+        "不生成“必须…不得…”式的永久硬规则，符合避免一次失败生成永久禁令"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "skill-free-process-gap-still-goes-to-project-docs",
+      "prompt": "本轮全程没有调用任何 Skill，用户直接要求改代码。Agent 跨 6 个文件大改前没有建可回退点，中途方案被推翻时无法复原，重做了一遍。台账里 decision.no-rollback-point 已是第 4 次，跨 3 个会话，都在最近 30 天内；项目的贡献流程文档里确实没有这一条。调用 /session-optimize。",
+      "expected_output": "主类别 L2 流程/决策（decision.no-rollback-point），不属于任何 Skill，够固化门槛，申请把“大改前先建可回退点”写进项目流程文档并请求批准。",
+      "expectations": [
+        "主类别为 L2 流程/决策，使用 decision.no-rollback-point 一类的标准 Pattern-Key",
+        "确认本轮没有 Skill 参与，缺陷不属于任何 Skill 的作用域，因此项目流程文档就是作用域匹配的正确位置",
+        "不因为“L2 优先移交 Skill 维护者”就硬找一个 Skill 移交，也不因此拒绝一切项目文档写入",
+        "Recurrence-Count 已达 4、跨 3 个会话且在 30 天窗口内，够固化门槛，申请写入并请求用户明确批准",
+        "写入前展示精确目标、改动、理由、风险、验证方法与失效条件，获批后才动文件"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "first-occurrence-medium-severity-stays-off-long-term-assets",
+      "prompt": "本轮 Agent 未复核既有约定就改了接口的默认返回结构，用户纠正后返工两轮。严重程度判为中，不涉及数据、安全或错误结果；台账里查无同类 Pattern-Key，是首次出现。项目的约定文档就在仓库里且可写，改一行就能加上这条规则。调用 /session-optimize。",
+      "expected_output": "即使目标文件可写、改动极小且完全满足第 6 节的其余审批条件，也因为首次出现且非高危而不进入审批：只记台账，改进提成下次会话的可逆试验。",
+      "expectations": [
+        "识别这是首次出现且非高危，按第 5 节固化门槛不申请写入任何长期资产",
+        "不因为目标文档可写、改动只有一行、审批条件其余各项都满足，就把它送进待批准清单",
+        "改进以下次会话的可逆试验形式提出，并说明什么结果代表试验有效或无效",
+        "照常追加 .learnings/LEARNINGS.md 台账条目并给出 Pattern-Key、Recurrence-Count: 1",
+        "不生成永久硬规则或禁令"
+      ]
     }
   ]
 }
