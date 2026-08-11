@@ -40,5 +40,4 @@
 
 ## 了解更多
 
-- 完整规则、10 条硬门禁、五个 Phase：[SKILL.md](./SKILL.md)
-- baseline 字段、目录结构与失效契约：[references/baseline-contract.md](references/baseline-contract.md)
+完整规则、10 条硬门禁、五个 Phase：[SKILL.md](./SKILL.md)。

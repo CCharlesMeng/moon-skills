@@ -27,7 +27,7 @@ Story 目录：<story-dir>
 还没有 tasks.md，请按我们刚才聊的内容自动起草，起草完先给我确认。
 ```
 
-路径给得越全，首次定位时来回确认越少；没有 HTML 原型时可以直接说明改用参照页还是文字规格。没有上游 `sdd-task` / `sdd-design` 时怎么起步，见[团队起步套件](../../docs/skills/sdd-dev-frontend/团队起步套件.md)。
+路径给得越全，首次定位时来回确认越少；没有 HTML 原型时可以直接说明改用参照页还是文字规格。
 
 ## 会发生什么
 
@@ -35,5 +35,4 @@ Story 目录：<story-dir>
 
 ## 了解更多
 
-- 完整规则、16 条硬门禁、6 步 TDD 与 6 个 Phase：[SKILL.md](./SKILL.md)
-- 逐 Phase 详细走查、产物交接、常见降级场景：[项目级使用说明](../../docs/skills/sdd-dev-frontend/README.md)
+完整规则、16 条硬门禁、6 步 TDD 与 6 个 Phase：[SKILL.md](./SKILL.md)。
