@@ -64,10 +64,20 @@
 | `check_mode` | 判定 |
 | --- | --- |
 | `exact` / `structure` / `state` | JSON 精确相等 |
-| `numeric` | 数字或 CSS px，默认 ±1 CSS px |
+| `numeric` | 数字或 CSS px，默认 ±1 CSS px；非数值叶子先做 CSS 序列化等价比对（见下） |
 | `color` | 颜色规范化后精确匹配 |
 | `overflow` / `overlap` / `clip` | 最大值不超过 1 CSS px |
 | `visual` | 只能由视觉补证结果决定；缺补证为 YELLOW |
+
+### CSS 序列化等价（`numeric` 非数值叶子与 `token` / `state_selector` 针）
+
+**序列化差异不是还原偏差。** 比对器在这两处自动拉平：大小写与空白、`#fff`↔`#ffffff`↔`rgb()/rgba()`、`0px`↔`0`、box-shadow / text-shadow 的颜色分量位置（浏览器序列化把颜色放最前）、简写键 `background`→`background-color`、`flex`→`flex-grow`（采集脚本按同一映射取值）。语义不同的值不会被拉平。
+
+三条写作约定，**不要依赖归一化去救写错的规则**：
+
+- `expected` 的 CSS 键一律写计算样式 longhand（`background-color` 而不是 `background`）；
+- **R1 的期望值写实现中立的结构事实**：元素的存在与数量、层级、角色（heading / img 等）、可访问名。**不得把原型 class 名写进 `expected`**——类名是设计稿侧工件，实现没有复刻义务；类名只出现在 `design_fact_source` 锚点与（适用时的）CSS locator 里；
+- `exact` / `structure` / `state` 保持精确相等，**R2 文案逐字比对不经过任何归一化**。
 
 ### 静态预检
 
@@ -79,7 +89,7 @@
 | `regex` | `pattern` | 至少一份源码匹配 |
 | `absent` / `forbidden_literals` | `values` | 所列字面量必须全部不出现 |
 
-静态通过只证明 static 层；规则还要求 render 时，缺结构化渲染不能 GREEN。
+`token` / `state_selector` 的针按上节 CSS 序列化等价匹配（命中方式回写在 `matched_via`：`exact` / `css-normalized`）；`text` / `i18n_key` 是逐字文案针，不归一化。静态通过只证明 static 层；规则还要求 render 时，缺结构化渲染不能 GREEN。
 
 ### 冻结豁免
 

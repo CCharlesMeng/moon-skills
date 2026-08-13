@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | `dev-baseline.md / 工程依据` 存在且含 REPO-3 指纹及 `PATTERN-*` 引用 | `<story-dir>/dev-baseline.md` | 终止 |
 | 工程依据中的 ID 可读 | `<repo-baseline-dir>/repo-baseline.md` + `show --pattern-id` | 终止 |
-| 工程依据记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表一致 | 两处逐字比对 | 终止 |
+| `dev-baseline.md` 记录的 REPO-3 指纹（指纹附录，旧产物在工程依据行）与 `repo-baseline.md` 的 `## Section` 表一致 | 两处逐字比对 | 终止 |
 | 本 Story 改动 diff 可取 | `<repo-root>` 的 git 状态 | 终止 |
 | `tasks.md` | `<story-dir>/tasks.md` | 不终止，记入「已知缺口」 |
 | `<skill-dir>/references/stack-antipatterns.md` 里对应本仓栈的那一节 | 栈按 `REPO-1` 的框架字段定 | 不终止；表里没有本仓的栈时用该文件的「与栈无关的判据」一节 |

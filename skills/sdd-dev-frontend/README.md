@@ -35,4 +35,4 @@ Story 目录：<story-dir>
 
 ## 了解更多
 
-完整规则、16 条硬门禁、6 步 TDD 与 6 个 Phase：[SKILL.md](./SKILL.md)。
+完整规则、16 条硬门禁、6 步 TDD 与 7 个 Phase：[SKILL.md](./SKILL.md)（各 Phase 细则在 `references/phase-*.md`，进入对应阶段时才读取）。

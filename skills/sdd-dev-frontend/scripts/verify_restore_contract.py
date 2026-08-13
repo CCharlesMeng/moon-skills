@@ -437,9 +437,29 @@ def run_static_check(rule: dict, entry: dict, repo_root: Path) -> dict:
             for path, body in bodies
             if needle in body
         ]
+        matched_via = "exact" if matches else None
+        # token / state_selector 是 CSS 声明针：原样未命中时按 CSS 序列化等价重试
+        # （空白、大小写、hex↔rgb、0px↔0、background↔background-color 等简写别名）。
+        # text / i18n_key 是逐字文案，不做归一化。
+        if not matches and kind in {"token", "state_selector"}:
+            normalized_bodies = [
+                (path, normalize_css_text(body)) for path, body in bodies
+            ]
+            for variant in css_needle_variants(needle):
+                matches = [
+                    str(path.relative_to(resolved_root))
+                    for path, body in normalized_bodies
+                    if variant in body
+                ]
+                if matches:
+                    matched_via = "css-normalized"
+                    break
+        actual: dict[str, Any] = {"needle": needle, "matching_files": matches}
+        if matched_via:
+            actual["matched_via"] = matched_via
         return {
             "status": "pass" if matches else "fail",
-            "actual": {"needle": needle, "matching_files": matches},
+            "actual": actual,
         }
 
     if kind == "regex":
@@ -519,10 +539,14 @@ def numeric_differences(expected: Any, actual: Any, path: str = "$") -> list[dic
     differences: list[dict[str, Any]] = []
     if isinstance(expected, dict) and isinstance(actual, dict):
         for key in expected:
-            if key not in actual:
+            # 简写键（background / flex）按 longhand 别名回落，与采集端映射一致。
+            actual_key = key if key in actual else CSS_PROPERTY_ALIASES.get(key)
+            if actual_key is None or actual_key not in actual:
                 differences.append({"path": f"{path}.{key}", "reason": "missing"})
             else:
-                differences.extend(numeric_differences(expected[key], actual[key], f"{path}.{key}"))
+                differences.extend(
+                    numeric_differences(expected[key], actual[actual_key], f"{path}.{key}")
+                )
         return differences
     if isinstance(expected, list) and isinstance(actual, list):
         if len(expected) != len(actual):
@@ -534,6 +558,23 @@ def numeric_differences(expected: Any, actual: Any, path: str = "$") -> list[dic
         expected_number = parse_css_number(expected)
         actual_number = parse_css_number(actual)
     except ValueError:
+        # 非数值叶子先做 CSS 序列化等价比对：#fff↔rgb(255,255,255)、box-shadow
+        # 分量顺序、空白与大小写差异不是还原偏差；语义不同的值仍按差异上报。
+        if (
+            isinstance(expected, str)
+            and isinstance(actual, str)
+            and css_values_equivalent(expected, actual)
+        ):
+            differences.append(
+                {
+                    "path": path,
+                    "expected": expected,
+                    "actual": actual,
+                    "delta": 0.0,
+                    "reason": "css-equivalent",
+                }
+            )
+            return differences
         return [{"path": path, "reason": "not-numeric", "expected": expected, "actual": actual}]
     differences.append(
         {
@@ -599,6 +640,75 @@ def normalize_color(value: Any) -> str:
                     f"{format_decimal(alpha)})"
                 )
     return re.sub(r"\s+", "", text)
+
+
+CSS_COLOR_TOKEN_RE = re.compile(r"#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)")
+CSS_ZERO_LENGTH_RE = re.compile(r"(?<![\d.])0px\b")
+# 简写属性 → 计算样式 longhand。只收「值形态兼容、误配不改变语义」的极小集合；
+# collect_restore_facts.js 里有同一份映射，两端必须一致。
+CSS_PROPERTY_ALIASES = {"background": "background-color", "flex": "flex-grow"}
+
+
+def split_top_level(text: str, separator: str) -> list[str]:
+    parts: list[str] = []
+    depth = 0
+    current: list[str] = []
+    for character in text:
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+        if character == separator and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(character)
+    parts.append("".join(current))
+    return [part.strip() for part in parts if part.strip()]
+
+
+def normalize_css_text(value: Any) -> str:
+    """Canonicalize CSS value/declaration text for equivalence comparison.
+
+    只拉平**序列化差异**：大小写、空白、hex/rgb 颜色写法、`0px`/`0`。
+    语义不同的值不会被拉平。仅用于 CSS 值与 CSS 声明比对——R2 文案的
+    exact 比对不得经过本函数（大小写与空白在文案里是语义）。
+    """
+    text = str(value).strip().lower()
+    text = CSS_COLOR_TOKEN_RE.sub(lambda match: normalize_color(match.group(0)), text)
+    text = re.sub(r"\s*([,:;/])\s*", r"\1", text)
+    text = re.sub(r"\s+", " ", text)
+    text = CSS_ZERO_LENGTH_RE.sub("0", text)
+    return text
+
+
+def canonicalize_css_value(value: Any) -> str:
+    """归一化之上，再把每个逗号段里的颜色 token 移到段尾。
+
+    浏览器把 box-shadow / text-shadow 的颜色序列化在最前，而设计稿声明习惯把
+    颜色写在最后；分量顺序不携带语义，比对前统一到同一顺序。
+    """
+    segments: list[str] = []
+    for segment in split_top_level(normalize_css_text(value), ","):
+        tokens = segment.split(" ")
+        colors = [token for token in tokens if token.startswith("rgba(")]
+        rest = [token for token in tokens if not token.startswith("rgba(")]
+        segments.append(" ".join(rest + colors))
+    return ",".join(segments)
+
+
+def css_values_equivalent(expected: Any, actual: Any) -> bool:
+    return canonicalize_css_value(expected) == canonicalize_css_value(actual)
+
+
+def css_needle_variants(needle: str) -> list[str]:
+    """static 针的归一化变体：原样之外，补 CSS 归一形态与简写别名互换形态。"""
+    base = normalize_css_text(needle)
+    variants = [base]
+    for shorthand, longhand in CSS_PROPERTY_ALIASES.items():
+        variants.append(base.replace(f"{shorthand}:", f"{longhand}:"))
+        variants.append(base.replace(f"{longhand}:", f"{shorthand}:"))
+    return list(dict.fromkeys(variants))
 
 
 def max_metric(value: Any) -> float:

@@ -1798,5 +1798,117 @@ class MalformedInputTests(unittest.TestCase):
                 self.assertEqual(payload["format"], name)
 
 
+class CssEquivalenceTests(unittest.TestCase):
+    """CSS 序列化差异不是还原偏差；语义差异照样红；R2 文案逐字比对不受归一化影响。
+
+    实证来源：区域流水地图 Story 的 7 条 RED 里有 4 条是 `#fff`↔`#ffffff`、
+    `background`↔`background-color`、box-shadow 分量顺序、`min-height:0`↔
+    `min-height: 0` 这类假阳性，每一类钉一条用例。
+    """
+
+    def numeric_report(self, expected: dict, actual: dict) -> dict:
+        rule = make_rule(
+            "R3-1",
+            "R3",
+            check_mode="numeric",
+            layers=["render"],
+            expected=expected,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            space = Workspace(Path(directory), [rule])
+            render = space.render({"R3-1": {"status": "ok", "actual": actual}})
+            return space.report("green", render=render)
+
+    def test_serialization_differences_are_equivalent_in_numeric_mode(self) -> None:
+        report = self.numeric_report(
+            expected={
+                "background": "#ffffff",
+                "border": "1px solid rgba(91, 114, 234, 0.12)",
+                "box-shadow": "0 8px 22px rgba(53, 65, 130, 0.06)",
+                "flex": "1",
+                "min-height": "320px",
+            },
+            actual={
+                "background-color": "rgb(255, 255, 255)",
+                "border": "1px solid rgba(91,114,234,0.12)",
+                "box-shadow": "rgba(53, 65, 130, 0.06) 0px 8px 22px",
+                "flex-grow": "1",
+                "min-height": "320px",
+            },
+        )
+        self.assertEqual(report["overall"], "green")
+        comparison = report["entries"][0]["actual"]["render"]["comparison"]
+        equivalent_paths = {
+            item["path"] for item in comparison["differences"] if item.get("reason") == "css-equivalent"
+        }
+        self.assertIn("$.background", equivalent_paths)
+        self.assertIn("$.box-shadow", equivalent_paths)
+
+    def test_semantically_different_css_values_stay_red(self) -> None:
+        report = self.numeric_report(
+            expected={"box-shadow": "0 8px 30px rgba(53, 65, 130, 0.06)"},
+            actual={"box-shadow": "rgba(53, 65, 130, 0.06) 0px 8px 22px"},
+        )
+        self.assertEqual(report["overall"], "red")
+
+        colored = self.numeric_report(
+            expected={"background": "#ffffff"},
+            actual={"background-color": "rgb(241, 244, 255)"},
+        )
+        self.assertEqual(colored["overall"], "red")
+
+    def test_exact_text_comparison_is_not_css_normalized(self) -> None:
+        rule = make_rule("R2-1", "R2", expected="Total 合计", check_mode="exact")
+        with tempfile.TemporaryDirectory() as directory:
+            space = Workspace(Path(directory), [rule])
+            report = space.report(
+                "red",
+                render=space.render({"R2-1": {"status": "ok", "actual": "total 合计"}}),
+            )
+        self.assertEqual(report["overall"], "red")
+
+    def static_result(self, needle_kind: str, needle: str, source: str) -> dict:
+        rule = make_rule(
+            "R3-1",
+            "R3",
+            layers=["static"],
+            check_mode="numeric",
+            expected={"static": needle},
+            static_check={"kind": needle_kind, "value": needle},
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "src" / "view.tsx").write_text(source, encoding="utf-8")
+            space = Workspace(root, [rule])
+            static = VERIFIER.run_static_preflight(space.contract, space.adapter, root)
+        return static["rules"]["R3-1"]
+
+    def test_token_needle_matches_css_equivalent_source(self) -> None:
+        cases = {
+            "whitespace-and-zero": ("min-height: 0", ".cell { min-height:0; }"),
+            "hex-shorthand": ("background-color: #ffffff", ".cell { background-color: #fff; }"),
+            "property-alias": ("background-color: #ffffff", ".cell { background: #fff; }"),
+        }
+        for name, (needle, source) in cases.items():
+            with self.subTest(case=name):
+                item = self.static_result("token", needle, source)
+                self.assertEqual(item["status"], "pass")
+                self.assertEqual(item["actual"]["matched_via"], "css-normalized")
+
+    def test_exact_token_match_is_still_preferred_and_labelled(self) -> None:
+        item = self.static_result("token", "min-height: 0", ".cell { min-height: 0; }")
+        self.assertEqual(item["status"], "pass")
+        self.assertEqual(item["actual"]["matched_via"], "exact")
+
+    def test_text_needle_is_never_normalized(self) -> None:
+        item = self.static_result("text", "Total 合计", 'const label = "total 合计";')
+        self.assertEqual(item["status"], "fail")
+
+    def test_genuinely_missing_token_still_fails(self) -> None:
+        item = self.static_result("token", "gap: 6px", ".cell { gap: 12px; }")
+        self.assertEqual(item["status"], "fail")
+
+
 if __name__ == "__main__":
     unittest.main()

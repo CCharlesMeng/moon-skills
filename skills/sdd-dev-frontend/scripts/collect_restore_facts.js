@@ -127,11 +127,17 @@
     children: Array.from(element.children).map(structure)
   });
 
+  // 简写属性 → 计算样式 longhand。getComputedStyle 对简写返回整段序列化
+  // （background 会带 none repeat scroll…），与期望值必然不等；输出键保留
+  // 请求名，与契约 expected 的键对齐。verify_restore_contract.py 有同一份映射。
+  const PROPERTY_ALIASES = { background: "background-color", flex: "flex-grow" };
+
   const styleFacts = (element, properties) => {
     const computed = window.getComputedStyle(element);
     const output = {};
     for (const property of properties || []) {
-      output[property] = computed.getPropertyValue(property).trim();
+      const resolved = PROPERTY_ALIASES[property] || property;
+      output[property] = computed.getPropertyValue(resolved).trim();
     }
     return output;
   };
