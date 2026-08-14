@@ -11,7 +11,7 @@
         "先校验 dev-baseline.md 与 restore-contract.json 的哈希一致性，再运行同一冻结契约",
         "使用静态预检和无图片结构化渲染采集完成 R1/R2/R3/R6 判定",
         "明确说明没有 visual YELLOW，因此不生成原型截图或实现截图",
-        "alpha-tests.md 只记录契约哈希、报告路径/指纹、三色摘要和回归摘要，不复制逐规则报告"
+        "alpha-tests.md 对机器报告至少记录契约哈希、报告路径/指纹、三色摘要和回归摘要；记录头等既有字段照常保留，但不复制逐规则报告"
       ]
     },
     {
@@ -60,7 +60,7 @@
       "prompt": "restore-contract.json 已存在，但有人在确认后直接修改了 dev-baseline.md 的 R3 间距，没有重新确认或编译契约。请执行还原轮。",
       "expected_output": "在任何检查或实现之前因基线哈希不一致硬失败，回到确认门。",
       "expectations": [
-        "先比较 restore-contract.json 保存的 baseline_sha256 与当前 dev-baseline.md 内容哈希",
+        "先比较 restore-contract.json 保存的 baseline.sha256 与当前 dev-baseline.md 内容哈希",
         "哈希不一致时拒绝生成 RED/GREEN 报告，也不进入实现",
         "不能静默更新契约、放宽容差或按当前实现重写期望",
         "要求记录基线变更、重新人工确认并重新编译契约"
@@ -169,6 +169,98 @@
         "回 Phase -1，按硬门禁 0 完整执行 sdd-init-frontend，不满足 status/validate 之前不进 Phase 0",
         "不把这处未解释的改动当作可以继续开工的 Story 降级项，也不静默忽略它"
       ]
+    },
+    {
+      "id": 14,
+      "name": "impact-s-suggestions-do-not-trigger-code-changes",
+      "target": "references/phase-review-closeout.md",
+      "prompt": "一个 Impact S Story 的四份检视均为 0 阻断级，候选全量门已通过。Q1-1 指出 Drawer.tsx 为 354 行，建议后续拆小，但 AC、空态/复制/实时同步/关闭、键盘主流程与数据展示均通过；C5-1 指出本 Story 新写的 formatLabel 与公共 helper 有 6 行重复，但两者语义相同且当前输出正确。两项都没有冻结基线失败或错误复现。修改它们很容易。请完成 Phase D 与收口。",
+      "expected_output": "先按冻结标准与核心可用性重新分级；仍属建议级时不再改代码、不增加修复轮，只写入 dev-review.md 的 Handoff 清单并在最终会话交付。",
+      "expectations": [
+        "逐条对照冻结 AC/QA、核心流程、核心可访问性和数据正确性重新判断级别",
+        "如果两项仍为建议级，即使修改容易也不得为它们改产品代码",
+        "不因建议级额外触发全量门、浏览器复验或四份检视重跑",
+        "把建议级写入 dev-review.md 的结构化 Handoff 清单，并在三行索引后用人话交付"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "fresh-browser-evidence-is-not-reexecuted",
+      "target": "references/review-evidence.md",
+      "prompt": "当前 diff 算得 code_fingerprint=code-a；review-evidence.json 也是 code-a。BE-1 的 fixture.sha256=fixture-a，viewport 分别为 1200x800 与 720x900，runtime 是 Chromium 130 / DPR 1 / font-a，步骤与观察覆盖空态、临时页面、复制、实时同步、关闭和焦点返回；布局检视与功能自测试要求的 fixture、viewport、runtime 和步骤逐项相同。截图 artifact 已存在。请派发并完成两份判断。",
+      "expected_output": "两份检视共享新鲜 BE-1 原始事实但各自独立下结论；不得为了证明独立性重复执行相同浏览器场景，只补采证据缺口。",
+      "expectations": [
+        "派发前核验代码指纹、fixture、viewport、步骤和运行时均与需求匹配",
+        "布局检视与功能自测试都引用 BE-1，但分别按自己的维度独立判断",
+        "不重新打开并执行已经新鲜覆盖的相同场景，也不重复截图只为留痕",
+        "只有缺失、失效或粒度不足的事实才建立补充场景，并记录补采原因"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "code-change-invalidates-only-dependent-browser-evidence",
+      "target": "references/review-evidence.md",
+      "prompt": "review-evidence.json 的全局 code_fingerprint=code-a。BE-1.depends_on=[Drawer.tsx,drawer.css]，捕获时两文件哈希为 d1/css1；BE-2.depends_on=[Dashboard.tsx]，捕获时哈希为 dash1。两者 fixture、viewport 与 runtime 均未变。随后 diff 只有 drawer.css: css1→css2，重新计算的全局指纹为 code-b。请更新证据状态并安排复验。",
+      "expected_output": "只失效依赖 drawer.css 的 BE-1，保留 BE-2；更新代码指纹后只补跑受影响场景，不把整个证据包一律作废。",
+      "expectations": [
+        "根据 scenarios.depends_on 与实际变更判定 BE-1 失效",
+        "BE-2 的依赖、fixture、viewport 和运行时未变，因此仍可复用",
+        "把证据包全局 code_fingerprint 更新为 code-b，并只补采 BE-1 所需事实；BE-1 更新 captured_at_code_fingerprint，BE-2 保留原始采集指纹与有效状态",
+        "若改动命中共享依赖才扩大失效范围，不能默认让全部浏览器证据失效"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "four-reviews-complete-with-three-child-slots",
+      "target": "references/phase-review-closeout.md",
+      "prompt": "运行环境总共四个 agent 槽位，主 agent 占一个，因此同一时刻只能启动三个检视子代理；Phase C 仍要求规范、质量、布局、功能自测试四份独立判断。请安排派发。",
+      "expected_output": "在同一证据纪元内按容量分波：首波最多三份，下一波完成剩余一份；这属于合法完成，不合并规范与质量角色，也不把无法四份同时运行判为失败。",
+      "expectations": [
+        "先固定共同的 review-evidence 路径、evidence_epoch 与代码指纹",
+        "第一波不超过三个子代理，完成或释放槽位后再派剩余角色",
+        "四个角色仍各自产出独立结果，尤其不得合并规范检视和质量检视",
+        "不同波次只共享原始事实，不把前一角色的判断交给后一角色"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "repair-loop-targets-checks-before-one-final-full-gate",
+      "target": "references/phase-review-closeout.md",
+      "prompt": "候选代码在 Phase C 已跑过一次全量质量门；之后发现一个阻断级逻辑错误，连续两次小修才稳定，另有建议级仍未处理。请给出 Phase D 的验证顺序和全量门次数。",
+      "expected_output": "修复未稳定时只跑与改动对应的定向检查和受影响检视；阻断清零、代码稳定后，如果指纹相对候选门发生变化，只补一次最终全量门，并在它之后补采受影响浏览器证据。本情境全流程全量门共 2 次：Phase C 候选门 1 次、Phase D 最终门 1 次。",
+      "expectations": [
+        "两次小修期间使用定向测试、类型检查或受影响场景，不为每次小修跑全量门",
+        "只失效和复验受改动影响的证据与检视维度",
+        "阻断级清零且源码稳定后，因代码指纹变化只执行一次最终全量 test/check/build；连同既有候选门，全流程全量门总数明确为 2",
+        "最终质量命令先于浏览器证据采集；建议级不触发额外修改或验证轮"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "three-line-only-closeout-fails-when-handoff-is-nonempty",
+      "target": "SKILL.md",
+      "prompt": "dev-review.md 的 Handoff 清单有四行：H-1 建议级 Q1-1『抽屉组件 354 行，当前功能正确；是否另开 Story 拆分由用户决定』；H-2 建议级 C5-1『标签格式 helper 与公共实现重复，当前输出正确；是否统一由用户决定』；H-3 Open Question L3-OQ-1『720px 下若未来需要改为上下布局须补上游规格；用户已在 P7 选择本 Story 不改、后续再定』；H-4 Deferred AC-7『缺测试账号未验收；账号开通后只跑功能自测试』。主 agent 最终只准备输出 tasks.md、alpha-tests.md、dev-review.md 三行索引。请执行退出门禁。",
+      "expected_output": "退出门禁失败；必须从 dev-review.md 的 Handoff 清单生成四条会话交付，逐类计数一致后才能完成。",
+      "expectations": [
+        "识别 Handoff 清单非空，判定只有三行索引不能退出",
+        "最终输出在三行后交付 2 条建议、1 个 Open Question 和 1 个 Deferred",
+        "每条用人话说明影响或需要的决定，Deferred 还说明恢复条件或后续动作",
+        "会话交付计数必须与 dev-review.md 三类计数逐项一致，不能只给总数或笼统提示"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "impact-s-compression-preserves-correctness-contracts",
+      "target": "SKILL.md",
+      "prompt": "一个 Impact S Story 希望降低文档、检视和验证成本。请说明哪些内容可以压缩，哪些正确性门禁仍不得缩减；同时区分『Phase C 候选门的代码指纹与最终指纹相同』和『Phase D 修复后指纹变化』两种情况。",
+      "expected_output": "压缩无发现项的人类呈现并引用完整机器工件，同时保持 QA 基线冻结、RED/GREEN/YELLOW、AC 可追溯、阻断清零、稳定源码的最终全量门，以及规范与质量判断独立。",
+      "expectations": [
+        "允许用覆盖矩阵和机器工件引用压缩 Impact S 的无发现项，不复制原始步骤和空表",
+        "仍冻结 QA 基线并保留 RED/GREEN/YELLOW 语义与 AC 到证据的追溯",
+        "退出前仍要求阻断级清零和稳定最终代码指纹上的全量质量门；指纹未变可复用候选门，指纹变化才补一次最终门",
+        "规范检视与质量检视仍由不同角色独立判断；共享原始证据不能变成共享结论"
+      ],
+      "note": "这是经济性改写的正向护栏；原有 1–13 仍需作为完整回归套件继续通过。"
     }
   ]
 }

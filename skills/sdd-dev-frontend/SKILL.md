@@ -1,6 +1,6 @@
 ---
 name: sdd-dev-frontend
-description: 执行 SDD 前端 Story：把上游 tasks.md 与 HTML 设计稿变成前端代码和可追溯到 AC 的证据。流程为仓库接入门 → 设计规格抽取 → QA 基线冻结（需用户确认）→ 逐 Task 六步实现 → 四份并行检视 → 收口。用于执行前端 Story、按设计稿还原页面，或续跑其中的抽取、勘察、实现、检视、收口任一步。作用域是一个前端仓 × 一个 Story；仓库 baseline 缺失时自动路由 sdd-init-frontend。
+description: 执行 SDD 前端 Story：把上游 tasks.md 与 HTML 设计稿变成前端代码和可追溯到 AC 的证据。流程为仓库接入门 → 设计规格抽取 → QA 基线冻结（需用户确认）→ 逐 Task 六步实现 → 四份独立检视（容量感知波次）→ 收口。用于执行前端 Story、按设计稿还原页面，或续跑其中的抽取、勘察、实现、检视、收口任一步。作用域是一个前端仓 × 一个 Story；仓库 baseline 缺失时自动路由 sdd-init-frontend。
 disable-model-invocation: true
 ---
 
@@ -28,8 +28,8 @@ disable-model-invocation: true
 | 3 | 跑 `extract_design_spec.py extract`；有覆盖缺口先登记再确认；按候选段数取切分（≤ 3 直通道零子代理、4–10 主 agent 自切、> 10 派 `extract-prototype`），再按区块并行派 `extract-block-spec`；**同轮提前派 `recon-codebase`** | `<design-spec-dir>` 里区块规格齐了 |
 | 4 | 派 `recon-spec`（`recon-codebase` 通常已提前派出），出 QA 基线与工程依据 | **确认门 → 用户确认 → 冻结 → 编译契约** |
 | 5 | 按 `tasks.md` 逐 Task 走 6 步，还原轮用契约报告当 RED/GREEN 证据，每步勾 checkbox | checkbox 全勾完 |
-| 6 | 四份检视同一轮并行，汇总进 `dev-review.md` | 四份都回传或已记「未执行」 |
-| 7 | 阻断级清零（最多修—重跑两轮），核 [退出门禁](#退出门禁) | 出三行索引 |
+| 6 | 候选代码稳定后跑一次全量门并采共享证据包；四份检视在同一证据纪元内按可用槽位分波、各自独立判断 | 四份都回传或已记「未执行」 |
+| 7 | 只修阻断级（最多修—重跑两轮），修复期跑定向检查；代码指纹变化时阻断清零后只补一次最终全量门 | 出交付索引与结构化 handoff |
 
 三条最容易踩空的：**没有 `tasks.md` 且会话没聊清楚就不准开工**；**基线没冻结不准进 Phase B**；**报告有 YELLOW 不算完成**。
 
@@ -43,10 +43,10 @@ disable-model-invocation: true
 | P2 | **结构优于散文。** 多项内容一律用表格或列表；散文只用于单行摘要，不超过 2 句；不用「有问题现在提」这类模糊邀请语，换成明确行动指令 |
 | P3 | **不解释过程。** 不写「现在我将开始…」「接下来进入 Phase X」，直接给结果 |
 | P4 | **确认门用固定格式**（见下） |
-| P5 | **最终输出是三行索引，不是报告。** 不重新摘要交互过的内容，不分「产出文件」「下一步」多个子章节；未经交互的新发现按 P8 附人话清单 |
+| P5 | **最终输出以三行索引开头，不是重写报告。** 没有遗留项时到三行结束；存在建议级、Open Question 或 Deferred 时，三行后必须追加 P8 的结构化 handoff，**只输出三行属于门禁失败** |
 | P6 | **零决策阶段内联**进下一个有决策的阶段，不单独占一轮。例外：结论出乎意料时单独一行告知 |
 | P7 | **批量提问。** 同类问题合并一轮，用固定格式（见下），不逐条打散、不在每题后附段落解释 |
-| P8 | **新发现必须人话进会话。** 检视与收口产生的、用户尚未在会话中见过的发现（建议级、Open Question、Deferred 判定），逐条用一句人话说清「现象 + 影响 + 要不要用户管」，编号只作句尾括号引用；**不得只给文件路径让用户自己去翻**——需要用户拍板或知悉的内容，会话是唯一界面，文件只是留档 |
+| P8 | **handoff 从结构化清单生成。** 检视与收口产生的、用户尚未在会话中见过的建议级、Open Question、Deferred 判定，先逐条进入 `dev-review.md / Handoff 清单`，再按清单生成会话中的人话条目：「现象 + 影响 + 要不要用户管」，编号只作句尾括号引用；清单条数与最终条数必须一致，**不得只给文件路径让用户自己去翻** |
 
 确认门格式：
 
@@ -79,8 +79,8 @@ disable-model-invocation: true
 | A1 规格抽取 | 脚本产出 `design-facts.json` + 三份人类可读清单，再划区块、逐区块出规格 | 主 agent（跑脚本）+ 子代理 ×0–(1+N)，按候选段数；`recon-codebase` 同轮提前派出 | 设计事实与区块规格齐备 → 进 A2。基线源不是 `原型` 时整段跳过 |
 | A2 并行勘察 | 产出 QA 基线、还原契约规则草稿、代码事实清单 | 子代理 ×1–2（`recon-codebase` 常已提前派出） | **确认门**：用户确认后冻结基线并编译 `restore-contract.json`，才能进 B |
 | B 实现 | 逐 Task 走 6 步 | 主 agent | `tasks.md` checkbox 全勾完 → 进 C |
-| C 并行检视 | 布局 / 代码规范 / 质量 / 功能自测试 | 子代理 ×4 | 四份汇总进 `dev-review.md` → 进 D |
-| D 收口 | 阻断级清零、落账、核退出门禁 | 主 agent | 退出门禁全过 → 三行索引 |
+| C 独立检视 | 布局 / 代码规范 / 质量 / 功能自测试；共享原始证据、判断独立 | 子代理 ×4，按可用槽位分波 | 四份汇总进 `dev-review.md` → 进 D |
+| D 收口 | 只修阻断级、落账、最终门与 handoff 对账 | 主 agent | 退出门禁全过 → 交付索引 |
 
 **只有下面这些时刻打断用户**，其余全程静默（P6）：
 
@@ -94,7 +94,7 @@ disable-model-invocation: true
 | Phase B：同一报错连修 3 次不成，或需改 Task 文件清单外的文件 | 一轮批量提问，同时攒到的合并一轮 |
 | Phase C：某份检视未执行 | 单独一行告知 |
 | Phase D：阻断级修不掉 / 需越界改动 / Open Question 待决 / `Deferred` 待判 | 一轮批量提问，四类攒在同一轮；上报后停在 Phase D 等回答 |
-| 全部通过 | 三行索引（P5） |
+| 全部通过 | 三行索引；存在遗留项时追加 handoff（P5 / P8） |
 
 ---
 
@@ -161,13 +161,14 @@ disable-model-invocation: true
 | `<init-skill-dir>` | `sdd-init-frontend` 目录 | 默认 `<skill-dir>/../sdd-init-frontend/` |
 | `<base-ref>` | **可选**。本 Story 起点的 git 引用，供代码规范检视与质量检视取改动 diff | 开工前记录的起点提交，或与基线分支的分叉点；取法见 [Phase C 细则](./references/phase-review-closeout.md) 第 2 节 |
 | `<browser-driver>` | 打开页面、触发状态、注入采集脚本、截图的那一套工具。**还原轮 render / visual 层与两份实跑检视全靠它** | 见 [浏览器驱动](#浏览器驱动) |
+| `<review-evidence>` | Phase C 共享原始证据包 | 恒为 `<story-dir>/review-evidence.json`，不向用户提问 |
 
 - 仓库接入门先定位 `<repo-root>`、`<project-sdd-dir>` 与 `<repo-baseline-dir>`；Phase 0 再定位需求侧四个目录。**全部唯一命中则静默继续**，不为此占一轮。
 - **任何一个缺失或有多个候选，走一轮 P7 批量提问**，一次问完。
 - **`<design-spec-dir>` 随 `<requirement-dir>` 一并确定**，不占一个提问位——多问一个可推导的值只是多耗用户注意力。
 - **`<base-ref>` 不进这一轮提问。** 取不到时两份检视能自己从 git 状态推改动范围：能定位就传，不确定就不传。
 - 确认结果记入 `<story-dir>/dev-baseline.md` 的“执行起点（环境）”，后续全部引用变量。
-- 新产物 `dev-baseline.md` / `restore-contract.json` / `restore-adapter.json` / `restore-report-red.json` / `restore-report-green.json` / `dev-review.md` **一律写入 `<story-dir>`**，`design-spec/` 下的设计事实与视觉缓存**一律写入 `<design-spec-dir>`**；实现侧可选视觉截图挂 `<story-dir>` 下。两者的分界见 [工件管理](#工件管理)。
+- 新产物 `dev-baseline.md` / `restore-contract.json` / `restore-adapter.json` / `restore-report-red.json` / `restore-report-green.json` / `review-evidence.json` / `dev-review.md` **一律写入 `<story-dir>`**，`design-spec/` 下的设计事实与视觉缓存**一律写入 `<design-spec-dir>`**；实现侧可选视觉截图挂 `<story-dir>` 下。两者的分界见 [工件管理](#工件管理)。
 
 ## 浏览器驱动
 
@@ -186,11 +187,11 @@ disable-model-invocation: true
 ## subagent 派发约定
 
 - **只把 `<skill-dir>/agents/<name>.md` 的路径给子代理，让它自己读全文并执行**，不摘要、不改写、不复述要点，也不把全文抄进派发消息——抄一遍等于让主 agent 白付一份提示词的上下文。
-- **在路径之后追加一段「路径变量取值」表**，给出 `<repo-root>` / `<repo-baseline-dir>` / `<story-dir>` / `<requirement-dir>` / `<design-spec-dir>` / `<skill-dir>` 的实际值；派 `review-layout` / `self-test` 时再加 `<browser-driver>`，取值必须是**具体档位 + Phase -1 第 4 步实际验证过的启动方式**（命令、端口、目标 URL、健康探针），不能只写「会话内工具」这类笼统描述。提示词文件本身不含硬编码路径。
+- **在路径之后追加一段「路径变量取值」表**，给出 `<repo-root>` / `<repo-baseline-dir>` / `<story-dir>` / `<requirement-dir>` / `<design-spec-dir>` / `<skill-dir>` 的实际值；Phase C 四份再加 `<review-evidence>` 与 `evidence_epoch`；派 `review-layout` / `self-test` 时还要加 `<browser-driver>`，取值必须是**具体档位 + Phase -1 第 4 步实际验证过的启动方式**（命令、端口、目标 URL、健康探针），不能只写「会话内工具」这类笼统描述。提示词文件本身不含硬编码路径。
 - **`<prototype-dir>` 只传给 `extract-prototype` 与 `extract-block-spec`。** 其余六份被硬门禁 9 禁止读原型，传给它们等于邀请违规。
 - 派 `extract-block-spec` 时，在路径变量表后再追加四行实例输入：`区块名`、`页面 / 路由`、`区块切片路径`、`目标视口`。切片路径必须指向主 agent 用 `block --anchor` 刚生成的那一个临时文件，不得给整份原型。
 - **子代理不再委派，不修改项目文件或正式工件。** 布局检视与功能自测试只允许把截图写入临时目录；其他产物以正文回传并由主 agent 落盘——并行子代理写同一个正式工件必然互相覆盖。
-- **同一 Phase 内的多个子代理在同一轮并行派发**，不串行。
+- **同一 Phase 内优先并行，但不得假设槽位无限。** A1 / A2 在可用槽位内尽量同波；Phase C 按 [共享证据契约](./references/review-evidence.md) 在同一 `evidence_epoch` 下容量感知分波，四份角色不因无法墙钟同轮而判执行失败。
 - 子代理返回 `前置缺失：<清单>` 时**不重跑、不自行补足、不猜测**，按 P7 把清单交给用户（Phase C 有一条细则，见 [Phase C 细则](./references/phase-review-closeout.md) 第 4 节）。
 - 回传后按该提示词的「输出格式」逐项校验。不合格退回重跑一次；仍不合格按 P7 上报，不带着缺口往下走。
 - `review-layout` / `self-test` 对 `<browser-driver>` 的使用约束见 [浏览器驱动](#浏览器驱动) 末段，此处不重复。
@@ -280,7 +281,7 @@ disable-model-invocation: true
 
 ## 退出门禁
 
-十一条逐条核对，全部满足才出三行索引。**不满足就不是完成**，不得以「大部分都过了」收口。
+十一条逐条核对，全部满足才出交付索引。**不满足就不是完成**，不得以「大部分都过了」收口。
 
 | # | 门禁项 | 判据 |
 | --- | --- | --- |
@@ -290,11 +291,11 @@ disable-model-invocation: true
 | 4 | 门禁兜底九项无命中 | 判据在 [review-dimensions.md](./references/review-dimensions.md) 规则 1，逐条核对 |
 | 5 | 确证的功能缺陷为 0 | 能给出**具体触发操作序列**且会产生错误结果的发现，一条不剩（规则 2） |
 | 6 | 冻结基线无一行不成立 | 未命中 `EX-n` 却证明某条 `R<n>-<m>` / `F<n>-<m>` 不成立的发现，一条不剩（规则 3） |
-| 7 | 回归未变差 | test / typecheck / lint / build 的失败项集合与 DEMAND-2 起点逐条相同或更好；`REG-n` 无「变差」；缺起点记录时为 `无基线可比`，**不得判定为通过** |
-| 8 | 证据可追溯 | `alpha-tests.md` 每条 AC 都有证据链与状态；还原记录能追到契约/报告指纹与路径及适用的视觉缓存；`dev-review.md` 的截图全部指向 `<story-dir>/evidence/review/` |
+| 7 | 回归未变差且最终门新鲜 | `review-evidence.json / quality_gate` 的代码指纹等于最终代码指纹，test / typecheck / lint / build 的失败项集合与 DEMAND-2 起点逐条相同或更好；`REG-n` 无「变差」；缺起点记录时为 `无基线可比`，**不得判定为通过** |
+| 8 | 证据可追溯 | `alpha-tests.md` 每条 AC 都有证据链与状态；还原记录能追到契约/报告指纹与路径及适用的视觉缓存；`review-evidence.json` 的场景能追到代码指纹、fixture、viewport 与运行时；`dev-review.md` 的截图全部指向 `<story-dir>/evidence/review/` |
 | 9 | `Deferred` 未混进已验收 | 不进覆盖率、不拿豁免顶替，原因与解除条件已写明 |
 | 10 | 未执行的检视已显式披露 | `dev-review.md` 检视基准表与收口结论都写明了哪份未执行、为什么；最终输出第一行带状态限定 |
-| 11 | 待用户输入项已在会话交代 | 每条 Open Question 已按 P7 问出答案，或已在会话中明确告知并记「用户已知悉」；建议级与 Deferred 判定已按 P8 人话摘要进会话。**落在文件里不算交代** |
+| 11 | handoff 已结构化对账 | 每条 Open Question 已按 P7 问出答案，或进入 `Handoff 清单` 并记「需用户知悉/决定」；建议级与 Deferred 判定也逐条在清单中。清单非空时，最终只输出三行必判失败；最终 handoff 条数与清单逐类型计数一致，**落在文件里但没进会话不算交代** |
 
 第 4 条的九项**不是穷举**，第 5 与第 6 条补足其余情形。
 
@@ -332,11 +333,11 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 
 - **任何需求级降级都必须可见**：在 `dev-baseline.md` 的「降级项」登记、在受影响证据中标注、在最终输出里带出来（硬门禁 4）。
 - **仓库级能力失效回 Phase -1**，不得写成 Story 降级项继续开工（硬门禁 0）。
-- **重跑时 `tasks.md` 的 checkbox 是唯一进度真相**，从第一个未完成 Task 继续；中断后重跑的场景 `dev-review.md` 的四份检视一律重跑、不复用旧结论（Phase D 修复后的重跑不在此列，按其冻结映射表取）。
+- **重跑时 `tasks.md` 的 checkbox 是唯一进度真相**，从第一个未完成 Task 继续；中断后先按 [共享证据契约](./references/review-evidence.md) 核代码指纹与逐场景依赖，未失效的原始证据可复用，但旧检视判断不直接继承，仍由本次四个角色独立作出。
 
 ## 最终输出
 
-三行索引（P5）：
+三行索引（P5 的固定开头）：
 
 ```
 ✓ sdd-dev-frontend 完成
@@ -369,7 +370,7 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 
 产出行只给 `dev-review.md` 一条路径——它的检视基准表指得到其余全部产物。
 
-**三行之后按 P8 附「新发现清单」**（没有就不附）：建议级与 Open Question 逐条一句人话——现象、影响、要不要处理，编号放句尾括号；有 `Deferred` 判定的写明判了哪几条、为什么。清单不替代 `dev-review.md` 的完整证据，但**用户不开任何文件就能知道有什么事等着拍板**。
+**`dev-review.md / Handoff 清单` 非空时，三行之后必须按 P8 逐条输出**：建议级与 Open Question 各一句人话——现象、影响、要不要处理，编号放句尾括号；`Deferred` 写明哪条 AC、为什么未验收、解除条件。输出前机械核对三类条数；只给三行、漏任一类或让用户自己开文件查，均不得完成。
 
 ## 工件管理
 
@@ -380,6 +381,7 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | `restore-contract.json` | `<story-dir>/restore-contract.json` | Phase A2 确认后由脚本编译 | 新建；基线哈希不一致时拒绝执行 |
 | `restore-adapter.json` | `<story-dir>/restore-adapter.json` | Phase A2 确认后 | 新建；只存实现 locator、源码范围与采集模式 |
 | `restore-report-red.json` / `restore-report-green.json` | `<story-dir>/` | Phase B Step ① / ④ | 同一契约生成的机器报告 |
+| `review-evidence.json` | `<story-dir>/review-evidence.json` | Phase C 候选稳定后；Phase D 按精确失效规则更新 | 全量质量门与浏览器原始事实的唯一共享包；不含通过/不通过判断 |
 | `dev-review.md` | `<story-dir>/dev-review.md` | Phase C 汇总，Phase D 写收口结论 | 新建 |
 | `design-facts.json` | `<design-spec-dir>/design-facts.json` | Phase A1 脚本输出 | 确定性重生成；相同内容不重写 |
 | `design-tokens.md` / `interface-inventory.md` / `content-inventory.md` | `<design-spec-dir>/` | Phase A1 脚本输出 | 新建；已存在时按下方并发写规则 |
@@ -424,7 +426,7 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | 「重跑还原验证」「重新生成 GREEN 报告」 | 校验冻结契约 → 静态预检 → 结构化渲染 → 按需视觉补证 → 更新对应报告；不改契约与基线 |
 | 「只补 YELLOW」「补视觉证据」 | 只处理报告中 YELLOW 的 `required_evidence`；机器可检项不截图，补证后重跑同一契约 |
 | 「重跑布局检视 / 代码规范检视 / 质量检视 / 功能自测试」 | 对应的那一份：`review-layout` / `review-convention` / `review-quality` / `self-test` |
-| 「重跑全部检视」「重新收口」 | 四份并行，走完 Phase C → Phase D |
+| 「重跑全部检视」「重新收口」 | 建共享证据包，四份按可用槽位分波，走完 Phase C → Phase D |
 | 「继续跑」「从上次断的地方接着来」 | 完整流程，按 [失败恢复](./references/degradation-and-recovery.md#四失败恢复) 定起点 |
 
 六条规则：

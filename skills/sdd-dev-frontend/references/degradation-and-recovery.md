@@ -51,6 +51,6 @@
 | `restore-contract.json` | `dev-baseline.md` 未变则复用；基线哈希不一致硬失败 | 只有重新确认基线后才能重新编译 |
 | `dev-baseline.md / 工程依据` | Story 未变且记录的 REPO-3 指纹仍一致时**跳过重跑** | 选择引用仍指向同一版仓库范式；指纹变化只重选引用，不复制正文 |
 | `dev-baseline.md` 的确认门 | 已冻结时**不重新走** | 重走一次等于让用户对同一份基线确认两次（P1） |
-| `dev-review.md` | **四份检视一律重跑，不复用旧结论** | 代码已经变了，旧结论作废 |
+| `review-evidence.json` / `dev-review.md` | 先按代码指纹与逐场景 `depends_on` 判失效；未失效的原始证据继续复用，受影响角色重新作判断 | 判断不继承，但相同 fixture / viewport / 运行时的事实无需重复采集；角色集合按 Phase D 冻结映射取，不无条件四份全跑 |
 
 Story 变更了（上游改了 `tasks.md` 或设计文档）时，勘察与基线都要重来，并重新走 Phase A 确认门——冻结的是那一版 Story 的判定标准。
