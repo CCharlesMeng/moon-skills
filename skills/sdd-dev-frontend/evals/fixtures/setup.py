@@ -14,6 +14,8 @@ design-spec 都由本脚本从仓内源料确定性重建。源料只有四样�
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -151,6 +153,32 @@ def apply_case(case_dir: Path, repo: Path) -> list[str]:
     return changed
 
 
+def build_review_evidence(repo: Path, story_dir: Path, base_ref: str, changed: list[str]) -> Path:
+    """Build the minimal current-code evidence package required by static review fixtures."""
+    files = []
+    for relative in sorted(changed):
+        digest = hashlib.sha256((repo / relative).read_bytes()).hexdigest()
+        files.append({"path": relative, "sha256": digest})
+    code = {
+        "base_ref": base_ref,
+        "head": base_ref,
+        "files": files,
+    }
+    code["code_fingerprint"] = hashlib.sha256(
+        json.dumps(code, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    path = story_dir / "review-evidence.json"
+    path.write_text(json.dumps({
+        "schema_version": 1,
+        "evidence_epoch": "fixture-review-1",
+        "code": code,
+        "quality_gate": {"code_fingerprint": code["code_fingerprint"], "commands": []},
+        "runtime": {"driver": "fixture-static-only", "browser": "unavailable"},
+        "scenarios": [],
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def build_design_spec(work_dir: Path) -> Path:
     out_root = work_dir / "design-spec"
     extractor = SKILL_DIR / "scripts" / "extract_design_spec.py"
@@ -190,6 +218,7 @@ def main() -> int:
         "REPO3_FINGERPRINT": fingerprint,
     })
     changed = apply_case(case_dir, repo)
+    review_evidence = build_review_evidence(repo, story_dir, base_ref, changed)
     design_spec = build_design_spec(work_dir) if args.with_design_spec else None
 
     dirty = run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=repo).strip().splitlines()
@@ -204,6 +233,8 @@ def main() -> int:
     print(f"| `<story-dir>` | `{story_dir}` |")
     print(f"| `<skill-dir>` | `{SKILL_DIR}` |")
     print(f"| `<base-ref>` | `{base_ref}` |")
+    print(f"| `<review-evidence>` | `{review_evidence}` |")
+    print("| `evidence_epoch` | `fixture-review-1` |")
     if design_spec is not None:
         print(f"| `<design-spec-dir>` | `{design_spec}/risk-brief` |")
     print(f"\nREPO-3 指纹：{fingerprint}")

@@ -1,6 +1,6 @@
 # Story 产物模板
 
-主 agent 在三个时刻读本文件：**Phase 0 第 2 步起草缺失的 `tasks.md` 等三份产物**时、**Phase 0 新建 `dev-baseline.md`** 时、**Phase C 第 7 节汇总 `dev-review.md`** 时。除起草的三份产物落在 `<story-dir>` 且各自独立成文外，`dev-baseline.md` / `dev-review.md` 也都写在 `<story-dir>`。
+主 agent 在三个时刻读本文件：**Phase 0 第 2 步起草缺失的 `tasks.md` 等三份产物**时、**Phase 0 新建 `dev-baseline.md`** 时、**Phase C 生成并在 Phase D 收口 `dev-review.md`** 时。Phase C 的正文由 `manage_review_pipeline.py aggregate` 从四份 JSON 确定性生成，主 agent 不手抄长报告；Phase D 只补收口与执行量账本。
 
 `dev-baseline.md` 的「工程依据」「功能理解」「QA 基线」「已知缺口」四节由 Phase A2 追加，字段以 [qa-baseline-template.md](./qa-baseline-template.md) 为准，本文件不重复。
 
@@ -40,6 +40,8 @@
 
 ## 起点质量
 
+获取方式：`实跑 / 复用`；状态指纹：`<sha256>`；缓存来源：`<phase-0 / phase-c / phase-d / 不适用>`；记录时间：`<ISO-8601>`；缓存：`<preflight-cache>`；MISS 原因：`<原因 / 不适用>`。
+
 | 类别 | 命令 | 结果 | 证据 |
 | --- | --- | --- | --- |
 | `<仅列 REPO-2 中实际存在且本次适用的类别>` | `<命令>` | 通过 / 失败集合 | 退出码、耗时、失败项 |
@@ -60,7 +62,7 @@
 - **完整哈希只出现在「指纹附录」一处。** 正文任何行需要引用指纹时写「见指纹附录」；把 64 位哈希铺进正文表格是把人读的文件变成机器转储。检视子代理与仓库接入门做指纹比对时，以本附录为准。
 
 - **只有 Story 特有、且初始化阶段无法预先消除的限制才能进入「降级项」。** 页面或 `<browser-driver>` 等仓库必需能力失效时回 Phase -1，不得直接降级。
-- **「起点质量」不生成 `REPO-2` 里不存在的类别的表格行。** 上游明确要求但 `REPO-2` 没有对应能力时回 Phase -1 补齐，不在 Story 中写「未提供」。
+- **「起点质量」不生成 `REPO-2` 里不存在的类别的表格行。** 上游明确要求但 `REPO-2` 没有对应能力时回 Phase -1 补齐，不在 Story 中写「未提供」。复用时仍逐命令保留失败集合；获取方式、状态指纹与缓存来源不得省略。
 
 ## 二、`dev-review.md`
 
@@ -82,7 +84,7 @@
 | 检视时间 | `<YYYY-MM-DD>` |
 | diff 范围 | `<取法与提交区间，改动文件数>` |
 | 共享证据 | `<story-dir>/review-evidence.json` · `<evidence_epoch>` · `<code_fingerprint>` |
-| 影响面 / 呈现模式 | S · 覆盖矩阵 + 仅展开发现 / M-L · 完整逐维度 |
+| 结构化聚合 | `<story-dir>/review-results.json` · 四份结果 schema v1 |
 | 布局与响应式检视 | 已执行 / **未执行（原因）** |
 | 代码规范检视 | 已执行 / **未执行（原因）** |
 | 质量检视 | 已执行 / **未执行（原因）** |
@@ -125,14 +127,24 @@
 
 ## 执行量账本
 
-| Phase | 墙钟时间 | 全量门 | 定向检查 | 浏览器场景执行 / 复用 | 子代理波次 / 重试 |
-| --- | --- | ---: | ---: | --- | --- |
-| 0 / A / B / C / D | `<实测；拿不到写“未记录”，不估算>` | | | | |
+数据源：`execution-telemetry.json`。只列真实记录；拿不到写“未记录”，不估算。
+
+| 子步骤 / Phase | agent 主动时间 | 人工等待 | 结果 | 动作计数 / 证据 |
+| --- | ---: | ---: | --- | --- |
+| `<按 telemetry 的稳定 ID 机械生成；前半程至少拆到 -1 status/browser、0 context/quality、A1 extract/blocks/code recon、A2 spec/merge、QA confirmation>` | | | run / reuse / skip / blocked | |
+
+| 汇总项 | 数量 |
+| --- | ---: |
+| 全量门（run / reuse 分列） | |
+| 定向检查（run / reuse 分列） | |
+| Phase B 验证批次 / 覆盖 Task | |
+| 浏览器场景（promote / run / reuse / stale 分列） | |
+| 子代理启动 / 动态补位 / 重试 | |
 ```
 
 **建议级不等于可以不写。** 它的定义是「不阻断收口」，不是「不进报告」。
 
-Impact S 的 human-facing 压缩只发生在呈现层：检视基准、覆盖矩阵、实际发现、Handoff、收口与执行量账本保留；无发现维度的空表、浏览器步骤、命令输出、逐规则机器报告不复制，统一引用 `review-evidence.json` / `restore-report-*.json`。QA 基线确认对象与 AC 映射不受此条影响。
+所有影响面档位都用结构化聚合减少文书重复：检视基准、覆盖矩阵、实际发现、Handoff、收口与执行量账本保留；无发现维度的空表、浏览器步骤、命令输出、逐规则机器报告不复制，统一引用 `review-results.json` / `review-evidence.json` / `restore-report-*.json` / `execution-telemetry.json`。Impact S 另外收窄场景范围；QA 基线确认对象与 AC 映射不受此条影响。
 
 ## 三、`tasks.md` 等三份产物的最小起草模板
 
@@ -192,7 +204,7 @@ Impact S 的 human-facing 压缩只发生在呈现层：检视基准、覆盖矩
 
 **No Placeholders 铁规**：禁止 TBD / TODO / "类似任务 N" / 无代码步骤。
 
-每步 2-5 分钟一个动作，「写失败证据」和「运行确认失败」是两步，不可合并。**一个 Task 内允许出现多轮 6 步**：还原与逻辑各走一轮，顺序固定为先还原轮、后逻辑轮，每轮独立编号并标注形态。
+每步 2-5 分钟一个动作，「写失败证据」和「运行确认失败」是两步，不可合并。**一个 Task 内允许出现多轮 6 步**：还原与逻辑各走一轮，默认先还原、后逻辑，每轮独立编号并标注形态。只有两边能在产品实现前得到原因独立的 RED、由同一组产品改动共同满足且无 YELLOW / fixture 冲突时，才标注「双通道候选」；执行侧可锁步推进，但不得合并两套 RED/GREEN、checkbox 或 AC 证据链。
 
 ## Task List
 
@@ -212,7 +224,7 @@ Impact S 的 human-facing 压缩只发生在呈现层：检视基准、覆盖矩
 - [ ] ① RED（还原）—— 运行冻结契约，生成 RED / YELLOW / GREEN 报告；至少一项明确 RED 才进入实现
 - [ ] ② 验 RED —— 核对 RED 的外部出处与实现定位
 - [ ] ③ GREEN —— 只修报告里的 RED
-- [ ] ④ 验 GREEN —— 重跑同一契约，无 RED、无 YELLOW
+- [ ] ④ 验 GREEN —— 重跑同一契约，无 RED、无 YELLOW；执行或登记适用的 Phase B 定向质量检查
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -227,7 +239,7 @@ Impact S 的 human-facing 压缩只发生在呈现层：检视基准、覆盖矩
 - [ ] ① RED（逻辑）—— 写失败的单元测试或接口集成测试，给出完整代码
 - [ ] ② 验 RED —— 运行测试，确认按预期失败
 - [ ] ③ GREEN —— 最小实现让测试转绿
-- [ ] ④ 验 GREEN —— 测试转绿 + 作用域回归（全量对账在 Phase C 派发前自检）
+- [ ] ④ 验 GREEN —— 本 Task 行为测试转绿；执行或登记适用的 `VAL-B-*` 非行为定向检查（全量对账仍在 Phase C）
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -271,6 +283,14 @@ Impact S 的 human-facing 压缩只发生在呈现层：检视基准、覆盖矩
 ## 还原证据记录
 
 <sdd-dev-frontend 执行还原轮时按 `R-<Task 编号>-<轮次>` 自动追加，此处留空>
+
+## Phase B 定向质量检查收据
+
+<只在实际执行非行为定向检查时追加 `VAL-B-<序号>`；相同结果只写一条，多个 Task / 轮次按消费者引用。Impact S 跳过时写「不适用，Phase C 最终全量门兜底」>
+
+| 收据 | 消费者 | 代码指纹 / scope | 命令与环境 | 结果 |
+| --- | --- | --- | --- | --- |
+| VAL-B-1 | T1-r1, T2-r1 | `<scope fingerprint>` / `<package or paths>` | `<完整命令顺序>`；`<toolchain/runtime>` | `<退出码、失败集合、与 DEMAND-2 对照>` |
 
 ## AC ↔ 证据映射
 

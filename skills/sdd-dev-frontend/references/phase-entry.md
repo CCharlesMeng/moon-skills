@@ -1,6 +1,6 @@
 # Phase -1 / Phase 0 细则 — 仓库接入门与需求执行起点
 
-本文件是 [SKILL.md](../SKILL.md) 工作流的组成部分，进入 Phase -1 时完整读取。硬门禁、输出规范 P1–P8、路径变量、浏览器驱动与 subagent 派发约定以 SKILL.md 为准，本文件不重复。
+本文件是 [SKILL.md](../SKILL.md) 工作流的组成部分，进入 Phase -1 时完整读取；Phase 0 同时完整读取 [起点质量证据复用与执行 telemetry](./preflight-and-telemetry.md)。硬门禁、输出规范 P1–P8、路径变量、浏览器驱动与 subagent 派发约定以 SKILL.md 为准，本文件不重复。
 
 ---
 
@@ -27,6 +27,8 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" status \
 | `READY` | 继续 Phase 0 |
 
 4. 按 [浏览器驱动](../SKILL.md#浏览器驱动) 三档确定 `<browser-driver>`，取到第 1 或第 2 档时实际打开一次目标路由验证，不只看 `REPO-1` 的声明（硬门禁 15）。
+
+完成后分别追加 `phase-1.status` 与 `phase-1.browser-probe` telemetry；若 `<story-dir>` 尚未唯一定位，先保留真实起止时间，Phase 0 第 1 步定位后立即 flush。初始化往返与浏览器重试用递增 attempt 保留，不能覆盖或估算。
 
 路由返回后再次运行 `status` 与 `validate`。未通过不得进入 Phase 0，也不得把仓库未就绪登记成 Story 降级。
 
@@ -115,11 +117,20 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 | L | 任一满足：新增页面 / 路由、Task ≥ 5、改动仓库公共组件或公共样式 |
 | M | 其余 |
 
-#### 5. 提取开工失败集合
+完成路径、场景、工作区与 Impact 定级后追加 `phase-0.context` telemetry。
 
-按 `REPO-2` 实跑其中实际存在且适用于当前 app 的规范命令。记录命令、范围、退出码、耗时和**具体失败集合**；不存在的类别不生成表格行。若上游明确要求但 REPO-2 没有对应能力，回 Phase -1 补齐，不在 Story 中写“未提供”。
+#### 5. 提取或精确复用开工失败集合
 
-这组结果属于 `DEMAND-2`，与当前起点提交绑定。`REPO-2` 只说明命令怎么跑，不保存这组失败。
+按 [起点质量证据复用与执行 telemetry](./preflight-and-telemetry.md) 先执行 `probe`。命令选择仍以 `REPO-2` 为准；上游明确要求但 `REPO-2` 没有对应能力时回 Phase -1 补齐，不在 Story 中写“未提供”。
+
+| probe | 动作 |
+| --- | --- |
+| `HIT` | 不再执行同一组命令；复用缓存里的逐命令退出码、耗时和**具体失败集合**，在起点质量表注明 `复用`、状态指纹、来源、记录时间与缓存路径 |
+| `MISS` | 实跑全部适用命令，记录命令、范围、退出码、耗时和**具体失败集合**；用同一 snapshot + 紧凑结果 `record --source phase-0`，并在起点质量表注明 `实跑` 与 miss 原因 |
+
+不存在的类别不生成表格行。任何网络 / 外部 / 时变命令使整组证据固定 `MISS`，不得只复用其中一部分后拼出一套新结果。
+
+这组结果属于 `DEMAND-2`，与状态指纹绑定。`REPO-2` 只说明命令怎么跑，不保存这组失败；`<preflight-cache>` 也不是仓库事实源。无论 HIT / MISS 都追加 `phase-0.quality-gate` telemetry。**这里只允许替代 Phase 0 起点门；不得据此跳过 Phase C 候选全量门或最终代码指纹需要的 Phase D 最终门。**
 
 #### 6. 设计事实预检
 
@@ -131,4 +142,4 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 #### 7. 写执行起点
 
-新建 `<story-dir>/dev-baseline.md`，先写 `DEMAND-2`；Phase A2 再追加 `DEMAND-3`。**模板与两条约束在 [story-artifact-templates.md](./story-artifact-templates.md) 第一节。**
+新建 `<story-dir>/dev-baseline.md`，先写 `DEMAND-2`；Phase A2 再追加 `DEMAND-3`。**模板与两条约束在 [story-artifact-templates.md](./story-artifact-templates.md) 第一节。** 起点质量表必须区分 `实跑` / `复用`，不能只抄结果让后续读者猜来源。

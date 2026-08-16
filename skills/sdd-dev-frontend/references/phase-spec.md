@@ -4,6 +4,30 @@
 
 ---
 
+### 代码侧勘察模式：Impact S `lite` / 其余 `full`
+
+在第一次需要代码侧工程依据时只判一次模式。`lite` 是对**已经由 REPO-3 定义的范式做机械选读**，不是让主 agent 自行探索代码或创造结论。只有以下九项全部成立才可用：
+
+1. 影响面分级是 `S`；
+2. 基线源是 `原型` 或 `文字规格`，不是需要收集候选路由与结构化实测值的 `参照页`；
+3. Phase -1 的 REPO-3 validation 有效，Section 表中的指纹仍是当前版本；
+4. `tasks.md` 文件清单完整，没有 `TBD` / `TODO` / `未定义`，全部 Story 工程需要能从 Task 与 AC 逐条列出；
+5. 不新增 / 修改公共组件、公共样式、路由、schema、codegen、共享状态或其他工程边界；
+6. Requirement 工程决策不存在冲突、多个候选或待用户决定项；
+7. 每条 Story 工程需要都能通过显式 ID，或一次 `show --tag` 的**唯一结果**，映射到恰好一个现有 `PATTERN-*`；
+8. 每个被选 PATTERN 至少一个声明证据定位仍存在，并能机械核对入口、约束与验证方式；
+9. 不需要新增 / 改写 PATTERN，也不需要补 Requirement 工程决策。
+
+`lite` 走法：
+
+1. 主 agent 从 tasks / AC 列出 Story 工程需要；
+2. 只运行 `manage_repo_baseline.py show --pattern-id <ID>`，或先 `show --tag <tag>` 验证唯一再按 ID 读取；不整段读取 REPO-3，不展开相邻源码；
+3. 按 PATTERN 声明逐个检查至少一个证据路径 / locator 仍成立；
+4. 把与完整勘察相同结构的“Story 需要 → `REQ-DEC-*` / `PATTERN-*`”和完整 REPO-3 指纹并入 `dev-baseline.md / 工程依据`，标记 `勘察模式：lite`；不复制正文、不创建独立文件；
+5. telemetry 的 `phase-a1.recon-codebase` 记 `result: run`、`note: lite` 以及选中 / 核验证据数量。
+
+任一条件不满足、查询为 0 / 多结果、locator 失效或执行中出现不确定性，立即改走 `full`：派 `agents/recon-codebase.md`，telemetry 写明回退原因。这个回退是正常路由，不是阻断，也不允许通过猜一个 PATTERN 强保 `lite`。`full` 回传与现有检验、重试、卡死规则完全不变。
+
 ### Phase A1 — 规格抽取
 
 把设计稿的取值一次性搬进 `<design-spec-dir>`，之后全流程只读产物、不读原型（硬门禁 9）。**无决策时不单独占一轮（P6）。**
@@ -19,7 +43,7 @@
 | 5 | 对切分表里**哈希失配与新增的区块**逐个执行脚本 `block --anchor <锚点> --out <临时路径>`，物化单区块切片；切片不是正式工件，不写入 `<design-spec-dir>` | 主 agent |
 | 6 | 把每份临时切片作为 `区块切片路径` 派给 `extract-block-spec`，一区块一实例，同一轮并行 | 子代理 ×N |
 
-**首轮提前派出 `recon-codebase`。** 它不依赖设计稿（输入是仓库 baseline 与 diff），只要 A1 未整段跳过——全量管线、中稿自切、小稿直通道、全量复用都算——就在 A1 第一轮把它一并派出、回传暂存；A2 只补派 `recon-spec`，确认门仍只等一处。基线源不是 `原型` 时 A1 整段跳过，两份勘察按 A2 的降级串行走，不提前。
+**首轮处理代码侧勘察。** 它不依赖设计稿：只要 A1 未整段跳过——全量管线、中稿自切、小稿直通道、全量复用都算——就在 A1 第一轮先按上节判模式；`lite` 由主 agent 机械取证，`full` 才派 `recon-codebase`，回传暂存。A2 只补派 `recon-spec`，确认门仍只等一处。基线源不是 `原型` 时 A1 整段跳过，代码侧在 A2 先完成再派 `recon-spec`。
 
 #### 2. 分支与跳过
 
@@ -34,7 +58,7 @@
 
 **整稿时效用原型指纹，区块增量用内容哈希，都不用文件 mtime。** 原型指纹覆盖归一化 DOM/CSS、资源内容与缺失状态；只重排 HTML 空白不失效。指纹变化后仍只重抽哈希失配与新增的区块。
 
-**A1 必须跑完才能派 `recon-spec`**（理由见 [CONTEXT.md](../CONTEXT.md#分段依据a1-必须跑完才能派-recon-spec)）。`recon-codebase` 不依赖设计稿，仍与它并行放在 A2，让确认门只等一处。
+**A1 必须跑完才能派 `recon-spec`**（理由见 [CONTEXT.md](../CONTEXT.md#分段依据a1-必须跑完才能派-recon-spec)）。代码侧不依赖设计稿，所以 A1 内先完成 `lite` 或提前派 `full`，让 A2 确认门只等一处。
 
 #### 3. 回传校验
 
@@ -54,6 +78,8 @@
 | `<design-spec-dir>/blocks/<区块名>.md` | 每个 `extract-block-spec` 实例回传的区块规格，一区块一文件 |
 
 临时区块切片只用于一次 `extract-block-spec` 派发，规格落盘后不进入工件清单；后续需要时按 `block-index.md` 的锚点重新生成，避免缓存两份可能漂移的设计稿事实。
+
+本节结束时分别追加 `phase-a1.extract`、`phase-a1.block-specs` 与 `phase-a1.recon-codebase` telemetry：哈希命中写 `reuse`，没有对应动作写 `skip`，实际执行写 `run`；代码侧 note 固定写 `lite` / `full` / `fallback-to-full: <原因>`。
 
 #### 5. 小稿直通道
 
@@ -84,18 +110,18 @@
 
 #### 1. 派发
 
-基线源为 `原型` 时 `recon-codebase` 已在 A1 首轮提前派出，本阶段只补派 `recon-spec`；A1 整段跳过（基线源为参照页 / 文字规格）时两份都在本阶段发出，正常并行、降级路径按下文串行：
+基线源为 `原型` 时代码侧 `lite` / `full` 已在 A1 处理，本阶段只补派 `recon-spec`；A1 整段跳过（基线源为参照页 / 文字规格）时，先按本文件开头选模式：参照页固定 `full`，文字规格满足九项才可 `lite`。代码侧完成后再派 `recon-spec`：
 
 | 子代理 | prompt |
 | --- | --- |
 | 规格侧勘察 | `agents/recon-spec.md` + 路径变量取值表 |
-| 代码侧勘察 | `agents/recon-codebase.md` + 路径变量取值表 |
+| 代码侧完整勘察 | `agents/recon-codebase.md` + 路径变量取值表，仅 `full` 模式 |
 
-取值表里追加一行 `基线源`，取值为 `原型` / `参照页` / `文字规格`（按 [基线源](../SKILL.md#基线源没有-html-原型时) 判）。**基线源不是 `原型` 时两份改为串行**：先派 `recon-codebase` 收参照页事实，回传后把参照页那一节连同选定的路由一起追加进 `recon-spec` 的取值表再派它。串行只发生在这条降级路径上。
+取值表里追加一行 `基线源`，取值为 `原型` / `参照页` / `文字规格`（按 [基线源](../SKILL.md#基线源没有-html-原型时) 判）。**基线源不是 `原型` 时两侧串行**：先完成代码侧（`lite` 机械选读或 `full` 子代理）；参照页把候选事实和选定路由追加进 `recon-spec` 取值表，文字规格把选定的 token PATTERN ID 追加进去，再派 `recon-spec`。不得为了并行让规格侧在基线来源未定时先猜期望值。
 
 #### 2. 回传校验
 
-两份都按各自提示词「输出格式」节的自检清单逐项核对（规格侧的完整判据在 [qa-baseline-template.md](./qa-baseline-template.md) 的交付前自检）。不合格退回重跑一次，仍不合格按 P7 上报。
+`recon-spec` 与 `full` 代码勘察按各自提示词「输出格式」节的自检清单逐项核对（规格侧的完整判据在 [qa-baseline-template.md](./qa-baseline-template.md) 的交付前自检）。`lite` 则对照本文件九项与五步走法；任一项验不实就回退 `full`，不能把它当作“不合格重跑”。子代理回传不合格退回重跑一次，仍不合格按 P7 上报。
 
 主 agent 额外只查三条跨份一致性，因为子代理各自看不到对方的产物：
 
@@ -109,10 +135,12 @@
 
 | 文件 | 动作 |
 | --- | --- |
-| `<story-dir>/dev-baseline.md` | 在“执行起点（环境）”之后追加「工程依据」「功能理解」「QA 基线」「已知缺口」；工程依据只保存 Story 需要、采用的 `PATTERN-*` / `REQ-DEC-*`，不复制正文。**同时补写顶部「给人的摘要」**（模板见 story-artifact-templates 第一节：人话说清做什么、标准哪来、确认对象的数量），**并把 REPO-1～3、原型指纹等全部哈希收进文末「指纹附录」**——正文行只写「见指纹附录」 |
+| `<story-dir>/dev-baseline.md` | 在“执行起点（环境）”之后追加「工程依据」「功能理解」「QA 基线」「已知缺口」；工程依据标明 `勘察模式：lite / full`，只保存 Story 需要、采用的 `PATTERN-*` / `REQ-DEC-*`，不复制正文。**同时补写顶部「给人的摘要」**（模板见 story-artifact-templates 第一节：人话说清做什么、标准哪来、确认对象的数量），**并把 REPO-1～3、原型指纹等全部哈希收进文末「指纹附录」**——正文行只写「见指纹附录」 |
 | 还原契约规则草稿 | `recon-spec` 回传的 JSON 工件；主 agent 暂存到临时目录，确认门前不编译正式契约、不写进 Story |
 
 **原型切分表不再落进 `dev-baseline.md`。** 它是 Requirement 级事实，跟着设计稿走而不是跟着 Story 走，落在 `<design-spec-dir>/block-index.md`（见 [工件管理](../SKILL.md#工件管理)）；`dev-baseline.md` 只引用区块名。
+
+`recon-spec` 每次派发 / 重试追加 `phase-a2.recon-spec`；两侧合并、跨份一致性校验与确认门前的一次性落盘追加 `phase-a2.merge-validate`。不得把子代理等待、主 agent 合并与用户确认揉成一条时长。
 
 #### 4. 已知缺口的两条通道
 
@@ -178,3 +206,5 @@ python3 "<skill-dir>/scripts/verify_restore_contract.py" contract \
 4. 执行 `verify_restore_contract.py validate` 校验契约、基线哈希和 adapter。任一失败都停在 A2 修正，**未确认或未通过校验不进入 Phase B。**
 
 用户指出要改的地方 → 改完重新走同一个确认门，不跳过、不进 Phase B。
+
+发出确认门前开始 `human.qa-confirmation`，收到用户回答后结束；`kind` 固定为 `human_wait`。确认后主 agent 冻结、编译与 validate 的时间另记在 `phase-a2.merge-validate` 新 attempt，不算进人的等待。

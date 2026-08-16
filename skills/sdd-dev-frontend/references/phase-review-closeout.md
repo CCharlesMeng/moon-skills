@@ -6,7 +6,7 @@
 
 ### Phase C — 独立检视
 
-四个角色各自穷尽自己的维度、独立产出分级结论，主 agent 汇总进 `<story-dir>/dev-review.md`。**独立的是判断，不是证据采集。** 进入本阶段先完整读取 [Phase C 共享证据契约](./review-evidence.md)；编号、分级与汇总口径以 [review-dimensions.md](./review-dimensions.md) 为准。
+四个角色各自穷尽自己的维度、独立产出分级结论，主 agent 机械聚合进 `<story-dir>/dev-review.md`。**独立的是判断，不是证据采集。** 进入本阶段先完整读取 [Phase C 共享证据契约](./review-evidence.md) 与 [结构化检视结果契约](./review-result-contract.md)；编号、分级与汇总口径以 [review-dimensions.md](./review-dimensions.md) 为准。
 
 #### 1. 派发前自检
 
@@ -17,9 +17,9 @@
 | 全部 Task 已 GREEN | `tasks.md` 的 6 步 checkbox 全部勾完 | 回 Phase B，从第一个未完成 Task 继续 |
 | `alpha-tests.md` 无缺口 | 每条 AC 有证据链；还原轮记录含契约哈希、RED/GREEN 报告指纹与路径、摘要及适用的视觉缓存引用 | 回 Phase B 补记录 |
 | `dev-baseline.md` 已冻结 | 基线头「冻结状态」为 `已冻结 ✅` | 回 Phase A 走确认门 |
-| 候选全量质量门 | 按执行起点记录跑一遍全套质量命令，失败集合与 DEMAND-2 起点逐条相同或更好；把命令、退出码、耗时、失败集合与代码指纹写入 `review-evidence.json / quality_gate` | 出现新失败回 Phase B，归属哪个 Task 就从哪个修起；修复期只跑定向检查，候选再次稳定后再进本行 |
+| 候选全量质量门 | 按执行起点记录跑一遍全套质量命令，失败集合与 DEMAND-2 起点逐条相同或更好；把命令、退出码、耗时、失败集合与代码指纹写入 `review-evidence.json / quality_gate`，追加 telemetry，并按起点证据契约 `record --source phase-c` | 出现新失败回 Phase B，归属哪个 Task 就从哪个修起；修复期只跑定向检查，候选再次稳定后再进本行 |
 
-全量门完成后，**再采浏览器证据**：从冻结 R/F 行与两份浏览器检视范围取场景并集，相同代码指纹、fixture、viewport 与步骤只执行一次，写入 `review-evidence.json / scenarios`。质量命令会重载页面或清掉内存态时，这个顺序避免重复造临时页面。证据包只记原始事实，不先判通过/不通过。
+全量门完成后，**先提升、再补采浏览器证据**：用 `manage_review_pipeline.py promote` 把 `<story-dir>/phase-b-review-evidence.json` 中 runtime 与逐文件依赖哈希仍匹配的原始场景提升到 `review-evidence.json`；再从冻结 R/F 行与两份浏览器检视范围取场景并集，只执行没有被提升 / 复用覆盖的缺口。相同 fixture、页面、viewport、步骤与 runtime 只执行一次。质量命令会重载页面或清掉内存态时，这个顺序避免重复造临时页面。证据包只记原始事实，不先判通过/不通过；promote / run / reuse / stale 场景数与子代理启动、补位、重试分别追加 telemetry。
 
 最后按 [前置产物校验](../SKILL.md#前置产物校验) 核对四份检视各自的终止级前置，并把 `<review-evidence>` 的实际路径与 `evidence_epoch` 追加到四份取值表。
 
@@ -43,7 +43,7 @@
 | Story 特征 | 力度调整 |
 | --- | --- |
 | 纯逻辑：无还原轮且 diff 不含样式文件 | 布局与响应式检视**不派发**，记「不适用（无样式改动）」，照退出门禁第 10 条在检视基准表、收口结论与最终输出三处披露 |
-| 影响面分级 S | 布局页面范围限波及页 + 一个对照页；功能 REG 限波及页面主路径与直接入口；四份仍逐维度判断，但无发现维度只回一行覆盖矩阵，只有发现 / OQ / Deferred 候选展开；机器细节只引用 `review-evidence.json` |
+| 影响面分级 S | 布局页面范围限波及页 + 一个对照页；功能 REG 限波及页面主路径与直接入口；四份仍逐维度判断，但按结构化契约只回 coverage 与实际发现 / OQ / Deferred；机器细节只引用 `review-evidence.json` |
 | 其余 | 四份全量 |
 
 四份角色不变：
@@ -57,12 +57,23 @@
 
 **代码规范检视与质量检视不得合并成一个子代理**：前者以 REPO-3 范式作客观基准，后者靠通用工程判断，合并会让客观判断被主观判断稀释。
 
-派发按可用子代理槽位分波，不把物理上不可能的墙钟同轮当失败：
+派发采用**容量感知的动态补位**，不把物理上不可能的墙钟同轮当失败，也不等整波都结束才用空槽：
 
 1. 建立一个 `evidence_epoch`，冻结本轮代码指纹与证据包；
-2. 每波最多派当前可用槽位数，优先把互不依赖的角色塞满；只有 3 个子代理槽位时，合法计划就是第一波 3 份、第二波 1 份；
-3. 后一波继续引用同一纪元。前一波返回的**判断**不传给后一波，避免结论污染；只允许主 agent并入其补采的原始证据；
-4. 某份检视发现证据缺口时，只补跑缺口场景。相同新鲜度键已存在的场景不得重跑。
+2. 把适用角色放入待派队列，立即填满当前全部可用槽位；有浏览器场景缺口的长任务优先启动，其余顺序冻结后不再临场调整；
+3. **任一角色完成且 JSON 通过预校验，释放的槽位就立即进入补位流程**，不得等待同时在跑的其他角色完成。只有 3 个子代理槽位时，合法时序是先启动 3 份、其中任一完成就启动第 4 份；
+4. 完成结果没有 `evidence_added` 时直接补位；有时主 agent 先归档其中被结论引用的 artifact，再运行 `manage_review_pipeline.py merge-additions`，把原始 scenario 并入共享包并将该角色临时 JSON 的证据 ID 改写为正式 `BE-n`，然后立刻补位。这个机械步骤不得等待其他判断；
+5. 后启动角色继续引用同一纪元。已完成角色的**判断 JSON 不传给它**，避免结论污染；只允许它读取刚并入共享包的原始证据；
+6. 某份检视发现证据缺口时，只补跑缺口场景。相同新鲜度键已存在的场景不得重跑；代码或 runtime 变化则结束当前纪元，不能把新旧结果拼接。
+
+中间合并命令（没有 `evidence_added` 就跳过）：
+
+```bash
+python3 "<skill-dir>/scripts/manage_review_pipeline.py" merge-additions \
+  --review-evidence "<review-evidence>" \
+  --result "<临时目录>/<role>.json" \
+  --output-result "<临时目录>/<role>.json"
+```
 
 同一纪元内的四份判断仍是一次 Phase C；“同一轮”指同一代码指纹与基线，不指同一墙钟批次。
 
@@ -81,9 +92,9 @@
 
 #### 5. 回传校验
 
-四份各按自己提示词「输出格式」节的自检清单逐项核对。不合格退回重跑一次，仍不合格按 P7 上报。
+四份正文先分别保存为临时 JSON；每份完成时即做 schema、角色、覆盖维度、`evidence_epoch`、代码指纹与重复编号预校验，四份齐后再用 `manage_review_pipeline.py aggregate` 做跨份校验。不合格只退回对应角色重跑一次，仍不合格按 P7 上报。**不接受 Markdown 回传，也不允许主 agent 手工补齐缺失维度。**
 
-两份浏览器检视还要核一条：回传必须列出「复用的 `BE-n` / 补跑的 `BE-n`」。已存在且新鲜的场景被无理由重跑，回传不合格；补跑场景由主 agent按 [共享证据契约](./review-evidence.md) 并回 `review-evidence.json`。Impact S 的覆盖矩阵可压缩无发现维度，但不得缺维度或缺发现证据。
+两份浏览器检视还要核一条：JSON 的 `evidence_reused` 必须列出实际 `BE-n`，`evidence_added` 必须是完整原始 scenario。已存在且新鲜的场景被无理由重跑，回传不合格；补跑场景由聚合脚本按 [共享证据契约](./review-evidence.md) 分配 `BE-n` 并回 `review-evidence.json`。任何影响面档位都不得缺维度或缺发现证据。
 
 **`待主 agent 核豁免` 是主 agent 的活，不是子代理的缺陷。** 收到这个标记，对着 `dev-baseline.md` 豁免表逐条定夺：命中 `EX-n` 的从报告里删掉并记一行「命中 `EX-n`，不报」；未命中的按 [review-dimensions.md](./review-dimensions.md) 规则 3 判阻断级。
 
@@ -91,19 +102,32 @@
 
 子代理唯一允许的写入是截图文件，写在临时目录，路径在回传表头给出。临时目录随时会被清掉，所以由主 agent 归档：
 
-- 把被结论引用到的截图逐个复制到 `<story-dir>/evidence/review/`，未被引用的不归档
+- 从四份 JSON 的 finding / OQ / Deferred `evidence_ids` 反查 `review-evidence.json` 与 `evidence_added`，把被结论引用到的截图逐个复制到 `<story-dir>/evidence/review/`，未被引用的不归档
 - 文件名加检视前缀避免撞名：`layout-<结论编号>.png`、`self-test-<基线编号>.png`
-- 复制完把 `dev-review.md` 的截图列改写为归档路径，**不保留临时路径**
+- 复制完先把共享 scenario 或 `evidence_added.artifacts` 改写为归档路径，再运行聚合器；聚合器从证据 ID 生成 `dev-review.md` 的「截图 / 工件」列，**不保留临时路径**
 
 复制不到（文件已不在）时，该条结论的截图列写 `截图丢失：<临时路径>`；丢的是**阻断级**结论的截图，退回重跑那一份检视——阻断级没有证据就没有让人复核的余地。
 
 #### 7. 汇总落盘
 
-按 [review-dimensions.md](./review-dimensions.md) 第五节的口径合并四份回传（去重取高、不改级别、Open Question 与 Deferred 候选单独成节），写入 `<story-dir>/dev-review.md`。**模板在 [story-artifact-templates.md](./story-artifact-templates.md) 第二节。**
+四份 JSON 通过校验后运行：
+
+```bash
+python3 "<skill-dir>/scripts/manage_review_pipeline.py" aggregate \
+  --result "<临时目录>/review-layout.json" \
+  --result "<临时目录>/review-convention.json" \
+  --result "<临时目录>/review-quality.json" \
+  --result "<临时目录>/self-test.json" \
+  --review-evidence "<review-evidence>" \
+  --output-json "<story-dir>/review-results.json" \
+  --output-markdown "<story-dir>/dev-review.md"
+```
+
+脚本先校验并确定性并入 `evidence_added` 的原始 scenario、把角色临时证据 ID 改写为主包内 `BE-n`，再按 [review-dimensions.md](./review-dimensions.md) 第五节机械去重取高、分开 Open Question / Deferred 候选，并从结构化项生成 Handoff。相同 `canonical_key` 的现象、定位或用户可见文本冲突时脚本拒绝猜测，主 agent 回到原始证据消歧后重跑聚合。生成的 `dev-review.md` 再由 Phase D 填收口与执行量账本；**不得手工复制四份长报告。模板边界见 [story-artifact-templates.md](./story-artifact-templates.md) 第二节。**
 
 **「给人的摘要」节写在最顶部**（模板已含）：每条发现一句业务语言——现象、影响、建议动作，编号放句尾括号；机器细节表全部在摘要之后。再从建议级、Open Question 与 Deferred 候选生成结构化 `Handoff 清单`；Phase D 只从这张表生成 P8，不再靠回忆扫全文。
 
-Impact S 只保留：检视执行/覆盖矩阵、实际发现表、收口结论、Handoff 清单与机器工件引用。无发现维度不展开空表，浏览器步骤、命令输出和逐规则报告不复制进 `dev-review.md`。
+零发现时聚合器走 fast path：仍保留检视执行、覆盖矩阵、Handoff 与收口占位，但不生成四套空的逐维度表。Impact S 与 M / L 的发现都只展开实际发现；浏览器步骤、命令输出和逐规则报告不复制进 `dev-review.md`。
 
 **建议级不等于可以不写。** 它的定义是「不阻断收口」，不是「不进报告」。
 
@@ -148,7 +172,7 @@ Impact S 只保留：检视执行/覆盖矩阵、实际发现表、收口结论�
 
 - 每次修复只跑覆盖所改范围的定向测试、typecheck / lint 与对应契约，不在修复尚未稳定时跑全量门。
 - 按 `depends_on`、fixture 与运行时键只失效受影响的 `BE-n`；未受影响的浏览器场景继续复用。公共组件 / 公共样式改动才扩大到全部下游场景。
-- 阻断清零、定向检查与受影响检视都稳定后，若代码指纹不同于 Phase C 候选全量门，主 agent**只补一次**最终全量门；指纹未变直接复用候选门。
+- 阻断清零、定向检查与受影响检视都稳定后，若代码指纹不同于 Phase C 候选全量门，主 agent**只补一次**最终全量门，并按起点证据契约 `record --source phase-d`；指纹未变直接复用候选门，不重复写一份等价缓存记录。两种情况都进 telemetry，分别记 `run` / `reuse`。
 - 最终全量门先于浏览器补证；它之后只重采已经失效的 `BE-n`，不重跑整个浏览器清单。检视角色读取最终门原始结果，不再各自跑一套 test / check / build。
 
 #### 3. 待用户输入项按 P7 上报
@@ -176,7 +200,9 @@ Impact S 只保留：检视执行/覆盖矩阵、实际发现表、收口结论�
 | `<story-dir>/dev-review.md` | 阻断级表的「修复状态」逐条填「已修（复跑结论）」；写「收口结论」节 |
 | `<story-dir>/alpha-tests.md` | 功能自测试实测结果贴回对应 `F<n>-<m>` 行；AC ↔ 证据映射填状态，`Deferred` 附原因与解除条件 |
 | `<story-dir>/dev-baseline.md` | 收口期间动过基线的，变更记录已登记且已重新请用户确认（硬门禁 8） |
-| `<story-dir>/review-evidence.json` | 最终代码指纹、最终全量门与仍有效 / 已补采的 `BE-n` 齐全；不含检视判断 |
+| `<story-dir>/review-evidence.json` | 最终代码指纹、最终全量门与仍有效 / 已提升 / 已补采的 `BE-n` 齐全；不含检视判断 |
+| `<story-dir>/review-results.json` | 四份结构化结果同一 evidence epoch / 代码指纹；聚合计数与 `dev-review.md`、Handoff 一致 |
+| `<story-dir>/execution-telemetry.json` | 每次动作 / 重试已增量追加；QA 人工等待与 agent 主动时间分开；没有估算时长或 verbose log |
 | `<story-dir>/evidence/review/` | 归档完成，`dev-review.md` 中无临时截图路径残留 |
 
 **落账一次批量完成。** 上表各产物一次性写完，不逐文件反复读-写-再读；退出门禁核对（第 6 节）以本轮上下文里已有的检视回传、报告 JSON 与账本内容为准，**只重读本轮之后被修改过的工件**——重读未变化的大文件是纯粹的收口时延（实证：阻断级为 0 的收口曾耗 20 分钟，全在文书往返上）。
@@ -184,7 +210,7 @@ Impact S 只保留：检视执行/覆盖矩阵、实际发现表、收口结论�
 「收口结论」节固定三块：**四份检视的执行状态**（未执行的写原因）、**阻断级清零情况**、**未验收项清单**（`Deferred` 的 AC、因检视未执行而未覆盖的维度）。同时完成两张短表：
 
 - `Handoff 清单`：建议级、Open Question、Deferred 判定逐条一行，包含用户可见文本与是否需用户决定；三类来源计数必须与正文一致。
-- `执行量账本`：每 Phase 墙钟时间（拿不到写「未记录」，不估算）、全量门次数、定向检查次数、浏览器场景执行 / 复用次数、子代理波次与重试次数。只记动作，不用 LOC 推断时间占比。
+- `执行量账本`：从 `execution-telemetry.json` 机械生成子步骤与 Phase 汇总；agent 主动时间和人工等待分开，全量门 run / reuse、定向检查、浏览器场景 promote / run / reuse / stale、子代理启动 / 动态补位 / 重试都有计数。拿不到写「未记录」，不估算，不用 LOC 推断时间占比。
 
 #### 6. 出门
 

@@ -1,6 +1,6 @@
 ---
 name: sdd-dev-frontend
-description: 执行 SDD 前端 Story：把上游 tasks.md 与 HTML 设计稿变成前端代码和可追溯到 AC 的证据。流程为仓库接入门 → 设计规格抽取 → QA 基线冻结（需用户确认）→ 逐 Task 六步实现 → 四份独立检视（容量感知波次）→ 收口。用于执行前端 Story、按设计稿还原页面，或续跑其中的抽取、勘察、实现、检视、收口任一步。作用域是一个前端仓 × 一个 Story；仓库 baseline 缺失时自动路由 sdd-init-frontend。
+description: 执行 SDD 前端 Story：把上游 tasks.md 与 HTML 设计稿变成前端代码和可追溯到 AC 的证据。流程为仓库接入门 → 设计规格抽取 → QA 基线冻结（需用户确认）→ 逐 Task 六步实现 → 四份独立检视（共享新鲜证据、动态槽位补位、结构化聚合）→ 收口。用于执行前端 Story、按设计稿还原页面，或续跑其中的抽取、勘察、实现、检视、收口任一步。作用域是一个前端仓 × 一个 Story；仓库 baseline 缺失时自动路由 sdd-init-frontend。
 disable-model-invocation: true
 ---
 
@@ -24,11 +24,11 @@ disable-model-invocation: true
 | # | 做什么 | 到什么算过 |
 | --- | --- | --- |
 | 1 | 跑 `manage_repo_baseline.py status`，不 `READY` 就先跑完 `sdd-init-frontend`；定 `<browser-driver>` | Phase -1 出 `READY` |
-| 2 | 定四个需求路径；`tasks.md` 缺失且会话已聊清楚时先自动起草并经确认；跑一次 `REPO-2` 的质量命令记起点失败集合，定影响面分级，写 `dev-baseline.md` | 执行起点表写完 |
-| 3 | 跑 `extract_design_spec.py extract`；有覆盖缺口先登记再确认；按候选段数取切分（≤ 3 直通道零子代理、4–10 主 agent 自切、> 10 派 `extract-prototype`），再按区块并行派 `extract-block-spec`；**同轮提前派 `recon-codebase`** | `<design-spec-dir>` 里区块规格齐了 |
-| 4 | 派 `recon-spec`（`recon-codebase` 通常已提前派出），出 QA 基线与工程依据 | **确认门 → 用户确认 → 冻结 → 编译契约** |
-| 5 | 按 `tasks.md` 逐 Task 走 6 步，还原轮用契约报告当 RED/GREEN 证据，每步勾 checkbox | checkbox 全勾完 |
-| 6 | 候选代码稳定后跑一次全量门并采共享证据包；四份检视在同一证据纪元内按可用槽位分波、各自独立判断 | 四份都回传或已记「未执行」 |
+| 2 | 定四个需求路径；`tasks.md` 缺失且会话已聊清楚时先自动起草并经确认；精确命中 24h 内同状态质量证据就复用，否则跑 `REPO-2`，定影响面分级，写 `dev-baseline.md` | 执行起点表写完 |
+| 3 | 跑 `extract_design_spec.py extract`；有覆盖缺口先登记再确认；按候选段数取切分（≤ 3 直通道零子代理、4–10 主 agent 自切、> 10 派 `extract-prototype`），再按区块并行派 `extract-block-spec`；代码侧勘察先判 Impact S `lite`，不满足才同轮派 `recon-codebase` | `<design-spec-dir>` 里区块规格齐了 |
+| 4 | 派 `recon-spec`，合并规格侧结果与 `lite` / `full` 工程依据 | **确认门 → 用户确认 → 冻结 → 编译契约** |
+| 5 | 按 `tasks.md` 逐 Task 走 6 步；符合条件的同 Task 还原/逻辑走双通道锁步，Impact M 相邻最多两 Task 可共享一次非行为定向检查 | checkbox 全勾、`VAL-B-*` 全部新鲜且相对起点无新增失败 |
+| 6 | 候选代码稳定后跑一次全量门；提升仍新鲜的 Phase B 原始事实，只补采缺口；四份检视在同一证据纪元内动态补位、各自独立判断 | 四份结构化结果都回传或已记「未执行」 |
 | 7 | 只修阻断级（最多修—重跑两轮），修复期跑定向检查；代码指纹变化时阻断清零后只补一次最终全量门 | 出交付索引与结构化 handoff |
 
 三条最容易踩空的：**没有 `tasks.md` 且会话没聊清楚就不准开工**；**基线没冻结不准进 Phase B**；**报告有 YELLOW 不算完成**。
@@ -75,11 +75,11 @@ disable-model-invocation: true
 | Phase | 做什么 | 谁做 | 出口 |
 | --- | --- | --- | --- |
 | -1 仓库接入门 | 校验仓库 baseline；缺失或失效时路由 `sdd-init-frontend` | 主 agent | `READY`，或当前 Story 不受 limits 影响的 `READY_WITH_LIMITS` |
-| 0 执行起点 | 定位需求路径；`tasks.md` 缺失时判断能否自动起草；选择本次场景、记录 `base-ref` 与质量失败集合 | 主 agent | 写 `dev-baseline.md` 执行起点，直接进 A1（P6） |
-| A1 规格抽取 | 脚本产出 `design-facts.json` + 三份人类可读清单，再划区块、逐区块出规格 | 主 agent（跑脚本）+ 子代理 ×0–(1+N)，按候选段数；`recon-codebase` 同轮提前派出 | 设计事实与区块规格齐备 → 进 A2。基线源不是 `原型` 时整段跳过 |
-| A2 并行勘察 | 产出 QA 基线、还原契约规则草稿、代码事实清单 | 子代理 ×1–2（`recon-codebase` 常已提前派出） | **确认门**：用户确认后冻结基线并编译 `restore-contract.json`，才能进 B |
-| B 实现 | 逐 Task 走 6 步 | 主 agent | `tasks.md` checkbox 全勾完 → 进 C |
-| C 独立检视 | 布局 / 代码规范 / 质量 / 功能自测试；共享原始证据、判断独立 | 子代理 ×4，按可用槽位分波 | 四份汇总进 `dev-review.md` → 进 D |
+| 0 执行起点 | 定位需求路径；`tasks.md` 缺失时判断能否自动起草；选择本次场景、记录 `base-ref`；精确命中则复用起点质量失败集合，否则实跑 | 主 agent | 写 `dev-baseline.md` 执行起点，直接进 A1（P6） |
+| A1 规格抽取 | 脚本产出 `design-facts.json` + 三份人类可读清单，再划区块、逐区块出规格；先判代码侧 `lite` / `full` | 主 agent（跑脚本）+ 子代理 ×0–(1+N)，按候选段数与勘察模式 | 设计事实、区块规格与工程依据齐备 → 进 A2。基线源不是 `原型` 时整段跳过 |
+| A2 并行勘察 | 产出 QA 基线、还原契约规则草稿，合并代码侧工程依据 | 子代理 ×1–2；代码侧 `lite` 时由主 agent 完成 | **确认门**：用户确认后冻结基线并编译 `restore-contract.json`，才能进 B |
+| B 实现 | 逐 Task 走 6 步；按条件使用双通道与验证批次 | 主 agent | `tasks.md` checkbox 全勾；`VAL-B-*` 无待执行/失效或起点之外的新失败 → 进 C |
+| C 独立检视 | 布局 / 代码规范 / 质量 / 功能自测试；提升 Phase B 原始证据，判断独立，JSON 机械聚合 | 子代理 ×4，按可用槽位动态补位 | `review-results.json` + `dev-review.md` → 进 D |
 | D 收口 | 只修阻断级、落账、最终门与 handoff 对账 | 主 agent | 退出门禁全过 → 交付索引 |
 
 **只有下面这些时刻打断用户**，其余全程静默（P6）：
@@ -162,13 +162,16 @@ disable-model-invocation: true
 | `<base-ref>` | **可选**。本 Story 起点的 git 引用，供代码规范检视与质量检视取改动 diff | 开工前记录的起点提交，或与基线分支的分叉点；取法见 [Phase C 细则](./references/phase-review-closeout.md) 第 2 节 |
 | `<browser-driver>` | 打开页面、触发状态、注入采集脚本、截图的那一套工具。**还原轮 render / visual 层与两份实跑检视全靠它** | 见 [浏览器驱动](#浏览器驱动) |
 | `<review-evidence>` | Phase C 共享原始证据包 | 恒为 `<story-dir>/review-evidence.json`，不向用户提问 |
+| `<phase-b-review-evidence>` | Phase B 已执行浏览器 / 渲染场景的可提升原始事实 | 恒为 `<story-dir>/phase-b-review-evidence.json`，没有场景时可不存在 |
+| `<preflight-cache>` | 起点质量证据的本机缓存；不是 baseline 或 Story 工件 | `git -C "<repo-root>" rev-parse --git-path sdd-dev-frontend/preflight-quality.json`，不向用户提问 |
+| `<execution-telemetry>` | 本 Story 的紧凑动作账本 | 恒为 `<story-dir>/execution-telemetry.json`，不向用户提问 |
 
 - 仓库接入门先定位 `<repo-root>`、`<project-sdd-dir>` 与 `<repo-baseline-dir>`；Phase 0 再定位需求侧四个目录。**全部唯一命中则静默继续**，不为此占一轮。
 - **任何一个缺失或有多个候选，走一轮 P7 批量提问**，一次问完。
 - **`<design-spec-dir>` 随 `<requirement-dir>` 一并确定**，不占一个提问位——多问一个可推导的值只是多耗用户注意力。
 - **`<base-ref>` 不进这一轮提问。** 取不到时两份检视能自己从 git 状态推改动范围：能定位就传，不确定就不传。
 - 确认结果记入 `<story-dir>/dev-baseline.md` 的“执行起点（环境）”，后续全部引用变量。
-- 新产物 `dev-baseline.md` / `restore-contract.json` / `restore-adapter.json` / `restore-report-red.json` / `restore-report-green.json` / `review-evidence.json` / `dev-review.md` **一律写入 `<story-dir>`**，`design-spec/` 下的设计事实与视觉缓存**一律写入 `<design-spec-dir>`**；实现侧可选视觉截图挂 `<story-dir>` 下。两者的分界见 [工件管理](#工件管理)。
+- 新产物 `dev-baseline.md` / `restore-contract.json` / `restore-adapter.json` / `restore-report-red.json` / `restore-report-green.json` / `phase-b-review-evidence.json` / `review-evidence.json` / `review-results.json` / `execution-telemetry.json` / `dev-review.md` **一律写入 `<story-dir>`**，`design-spec/` 下的设计事实与视觉缓存**一律写入 `<design-spec-dir>`**；实现侧可选视觉截图挂 `<story-dir>` 下。`<preflight-cache>` 例外地只在 Git metadata，绝不进这两类正式工件。分界见 [工件管理](#工件管理)。
 
 ## 浏览器驱动
 
@@ -191,9 +194,9 @@ disable-model-invocation: true
 - **`<prototype-dir>` 只传给 `extract-prototype` 与 `extract-block-spec`。** 其余六份被硬门禁 9 禁止读原型，传给它们等于邀请违规。
 - 派 `extract-block-spec` 时，在路径变量表后再追加四行实例输入：`区块名`、`页面 / 路由`、`区块切片路径`、`目标视口`。切片路径必须指向主 agent 用 `block --anchor` 刚生成的那一个临时文件，不得给整份原型。
 - **子代理不再委派，不修改项目文件或正式工件。** 布局检视与功能自测试只允许把截图写入临时目录；其他产物以正文回传并由主 agent 落盘——并行子代理写同一个正式工件必然互相覆盖。
-- **同一 Phase 内优先并行，但不得假设槽位无限。** A1 / A2 在可用槽位内尽量同波；Phase C 按 [共享证据契约](./references/review-evidence.md) 在同一 `evidence_epoch` 下容量感知分波，四份角色不因无法墙钟同轮而判执行失败。
+- **同一 Phase 内优先并行，但不得假设槽位无限。** A1 / A2 在可用槽位内尽量同波；Phase C 按 [共享证据契约](./references/review-evidence.md) 在同一 `evidence_epoch` 下动态补位：任一角色完成且 JSON 预校验通过，立即用释放槽位启动下一份，不等整批；四份角色不因无法墙钟同轮而判执行失败。
 - 子代理返回 `前置缺失：<清单>` 时**不重跑、不自行补足、不猜测**，按 P7 把清单交给用户（Phase C 有一条细则，见 [Phase C 细则](./references/phase-review-closeout.md) 第 4 节）。
-- 回传后按该提示词的「输出格式」逐项校验。不合格退回重跑一次；仍不合格按 P7 上报，不带着缺口往下走。
+- 回传后按该提示词的「输出格式」逐项校验。Phase C 四份必须通过 [结构化检视结果契约](./references/review-result-contract.md) 与聚合脚本校验；不合格只退回对应角色重跑一次，仍不合格按 P7 上报，不带着缺口往下走。
 - `review-layout` / `self-test` 对 `<browser-driver>` 的使用约束见 [浏览器驱动](#浏览器驱动) 末段，此处不重复。
 
 | 提示词 | 职责 | Phase | 回传落盘 |
@@ -201,11 +204,11 @@ disable-model-invocation: true
 | `agents/extract-prototype.md` | 划页面 → 区块、审组件命名与变体归并 | A1 | `<design-spec-dir>/block-index.md`（原型切分表）；对 `interface-inventory.md` 的命名修订 |
 | `agents/extract-block-spec.md` | 单区块规格，**按区块并行多实例** | A1 | `<design-spec-dir>/blocks/<区块名>.md`，一区块一文件 |
 | `agents/recon-spec.md` | 规格侧勘察 | A2 | `<story-dir>/dev-baseline.md` |
-| `agents/recon-codebase.md` | 代码侧勘察：选择 Requirement 决策与仓库 `PATTERN-*` | A1 提前派出 / A2 | 合并进 `<story-dir>/dev-baseline.md` 的“工程依据”，不创建独立文件 |
-| `agents/review-layout.md` | 布局与响应式检视 | C | `<story-dir>/dev-review.md` |
-| `agents/review-convention.md` | 代码规范检视 | C | `<story-dir>/dev-review.md` |
-| `agents/review-quality.md` | 质量检视 | C | `<story-dir>/dev-review.md` |
-| `agents/self-test.md` | 功能自测试 | C | `<story-dir>/dev-review.md` |
+| `agents/recon-codebase.md` | 代码侧完整勘察：选择 Requirement 决策与仓库 `PATTERN-*`；仅 `lite` 条件不成立时派发 | A1 提前派出 / A2 | 合并进 `<story-dir>/dev-baseline.md` 的“工程依据”，不创建独立文件 |
+| `agents/review-layout.md` | 布局与响应式检视 | C | 临时 `review-layout.json` → 聚合 |
+| `agents/review-convention.md` | 代码规范检视 | C | 临时 `review-convention.json` → 聚合 |
+| `agents/review-quality.md` | 质量检视 | C | 临时 `review-quality.json` → 聚合 |
+| `agents/self-test.md` | 功能自测试 | C | 临时 `self-test.json` → 聚合 |
 
 ### 卡死巡检
 
@@ -223,7 +226,7 @@ disable-model-invocation: true
 | `extract-prototype` | **不可继续**：切分表是全部区块规格的入口，没有它派不出 `extract-block-spec`。按 P7 上报，停在 A1 |
 | `extract-block-spec` 某一实例 | 并行的其余实例照常收；该区块无规格可用，按 P7 上报——缺规格的区块不能编译可追溯契约，也不得改由主 agent 直读原型顶替（硬门禁 9） |
 | `recon-spec` | **不可继续**：QA 基线是确认门的对象。按 P7 上报，停在 Phase A |
-| `recon-codebase` | **不可继续**：没有工程依据就不能确定当前 Story 应遵循哪些仓库范式。按 P7 上报，停在 A2 |
+| `recon-codebase` | 仅 `full` 模式适用。**不可继续**：没有工程依据就不能确定当前 Story 应遵循哪些仓库范式。按 P7 上报，停在 A2；不得假装改走 `lite` 绕过失败 |
 | 四份检视任一 | 记「未执行（子代理两次卡死）」，按 [Phase C 细则](./references/phase-review-closeout.md) 第 4 节披露；能否收口按 [退出门禁](#退出门禁) 末尾三档表判 |
 
 两条约束：
@@ -237,7 +240,7 @@ disable-model-invocation: true
 
 | 缺的是 | 怎么认 | 动作 |
 | --- | --- | --- |
-| **事实** — 项目里客观存在，只是还没读 | 说得出它在哪类文件里，读一遍就有确定答案 | **起子代理去读，不打断用户**（P6）。需求事实落进 `dev-baseline.md`；仓库范式只引用 `PATTERN-*`，不复制正文 |
+| **事实** — 项目里客观存在，只是还没读 | 说得出它在哪类文件里，读一遍就有确定答案 | **起子代理去读，不打断用户**（P6）。唯一例外是 Phase A Impact S `lite` 的有界 PATTERN 查询；需求事实落进 `dev-baseline.md`，仓库范式只引用 `PATTERN-*`，不复制正文 |
 | **决策** — 有多个候选，选哪个要人拍板 | 读完之后仍有两个以上都说得通的答案 | **按 P7 问用户**，或并进最近的确认门。不自己选一个往下走 |
 | **真缺** — 项目里确实没有 | 穷尽检索后写得出「检索方式 + 未见」 | **分层处理**：仓库必需能力回 Phase -1；需求规格缺口进「已知缺口」；Story 特有限制进执行起点。最终输出带状态限定。不发明，不拿通用最佳实践顶替 |
 
@@ -246,7 +249,7 @@ disable-model-invocation: true
 两条容易踩的：
 
 - **读不出来不等于「由我来定」。** 第三类最常见的失手是被当成第二类的反面自行填空——冻结基线防的就是这件事。
-- **第一类的收集一律走子代理，主 agent 不边做边查**，否则「仓内本来怎么做」会和「我刚才怎么做的」混在一起。
+- **第一类的开放式收集一律走子代理，主 agent 不边做边查。** Phase A Impact S `lite` 只允许按已知 ID / 唯一 tag 机械选读并核验 locator；一出现探索或歧义就回 `full`。
 
 ### 基线源：没有 HTML 原型时
 
@@ -260,8 +263,8 @@ disable-model-invocation: true
 
 主 agent 在这两档上只管三件事，**期望值怎么写的完整判据在 [recon-spec.md](./agents/recon-spec.md) §一**：
 
-- **参照页候选由 `recon-codebase` 收集**（属事实，不打断用户）；**选哪个页面作参照是决策**，并进 Phase A 已有的确认门，不额外占一轮。
-- 这两档上 **Phase A 的两份勘察改为串行**：先 `recon-codebase` 收参照页事实，再把它作为输入派 `recon-spec`。正常路径仍并行。
+- **参照页候选由 `recon-codebase` 收集**（属事实，不打断用户；参照页固定 `full`）；**选哪个页面作参照是决策**，并进 Phase A 已有的确认门，不额外占一轮。
+- 这两档上 **Phase A 的两侧勘察改为串行**：先完成代码侧，再把参照页事实或文字规格采用的 token PATTERN ID 作为输入派 `recon-spec`。文字规格只有满足 [Phase A 细则](./references/phase-spec.md) 的九项时可用 `lite`；参照页不可用。
 - **降级必须在确认门里说明。** 用户确认的不只是期望值，还有「本次拿什么当基线」。
 
 第 3 档把承诺收窄到**仓内 token 一致性 + 「不破」三项 + 文字规格逐条落地**。R3 / R4 / R5 不得写出原型级的具体数值——没有基线还给数值就是发明规格。
@@ -285,16 +288,16 @@ disable-model-invocation: true
 
 | # | 门禁项 | 判据 |
 | --- | --- | --- |
-| 1 | Task 全部完成 | `tasks.md` 的 6 步 checkbox 全部勾完，无批量补勾、无别处另记的第二本进度 |
+| 1 | Task 全部完成 | `tasks.md` 的 6 步 checkbox 全部勾完，无批量补勾、无别处另记的第二本进度；双通道仍保留两套 checkbox，`VAL-B-*` 无待执行、失效或新增失败 |
 | 2 | 还原报告 GREEN | `restore-report-green.json` 无 RED、无 YELLOW；全部规则已验证或逐条命中契约内冻结豁免。因环境能力缺失而无法消除的 YELLOW 走 [放行通道](#还原-yellow-的放行通道) |
 | 3 | 阻断级为 0 | `dev-review.md` 阻断级表全部为「已修（复跑结论）」 |
 | 4 | 门禁兜底九项无命中 | 判据在 [review-dimensions.md](./references/review-dimensions.md) 规则 1，逐条核对 |
 | 5 | 确证的功能缺陷为 0 | 能给出**具体触发操作序列**且会产生错误结果的发现，一条不剩（规则 2） |
 | 6 | 冻结基线无一行不成立 | 未命中 `EX-n` 却证明某条 `R<n>-<m>` / `F<n>-<m>` 不成立的发现，一条不剩（规则 3） |
 | 7 | 回归未变差且最终门新鲜 | `review-evidence.json / quality_gate` 的代码指纹等于最终代码指纹，test / typecheck / lint / build 的失败项集合与 DEMAND-2 起点逐条相同或更好；`REG-n` 无「变差」；缺起点记录时为 `无基线可比`，**不得判定为通过** |
-| 8 | 证据可追溯 | `alpha-tests.md` 每条 AC 都有证据链与状态；还原记录能追到契约/报告指纹与路径及适用的视觉缓存；`review-evidence.json` 的场景能追到代码指纹、fixture、viewport 与运行时；`dev-review.md` 的截图全部指向 `<story-dir>/evidence/review/` |
+| 8 | 证据可追溯 | `alpha-tests.md` 每条 AC 都有证据链与状态；还原记录能追到契约/报告指纹与路径及适用的视觉缓存；共享定向检查能由 `VAL-B-*` 追到消费者、代码指纹、命令/scope、toolchain/runtime 与失败集合；`review-evidence.json` 的场景能追到逐依赖哈希、代码指纹、fixture、viewport 与运行时；`review-results.json` 与 `dev-review.md` 的 epoch / 指纹 / Handoff 计数一致；截图全部指向 `<story-dir>/evidence/review/` |
 | 9 | `Deferred` 未混进已验收 | 不进覆盖率、不拿豁免顶替，原因与解除条件已写明 |
-| 10 | 未执行的检视已显式披露 | `dev-review.md` 检视基准表与收口结论都写明了哪份未执行、为什么；最终输出第一行带状态限定 |
+| 10 | 未执行的检视已显式披露 | `review-results.json / known_gaps`、`dev-review.md` 检视基准与收口结论都写明了哪份未执行、为什么；最终输出第一行带状态限定 |
 | 11 | handoff 已结构化对账 | 每条 Open Question 已按 P7 问出答案，或进入 `Handoff 清单` 并记「需用户知悉/决定」；建议级与 Deferred 判定也逐条在清单中。清单非空时，最终只输出三行必判失败；最终 handoff 条数与清单逐类型计数一致，**落在文件里但没进会话不算交代** |
 
 第 4 条的九项**不是穷举**，第 5 与第 6 条补足其余情形。
@@ -381,7 +384,10 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | `restore-contract.json` | `<story-dir>/restore-contract.json` | Phase A2 确认后由脚本编译 | 新建；基线哈希不一致时拒绝执行 |
 | `restore-adapter.json` | `<story-dir>/restore-adapter.json` | Phase A2 确认后 | 新建；只存实现 locator、源码范围与采集模式 |
 | `restore-report-red.json` / `restore-report-green.json` | `<story-dir>/` | Phase B Step ① / ④ | 同一契约生成的机器报告 |
-| `review-evidence.json` | `<story-dir>/review-evidence.json` | Phase C 候选稳定后；Phase D 按精确失效规则更新 | 全量质量门与浏览器原始事实的唯一共享包；不含通过/不通过判断 |
+| `phase-b-review-evidence.json` | `<story-dir>/phase-b-review-evidence.json` | Phase B Step ⑥ 按实际执行场景增量写 | 可提升原始事实；逐依赖哈希，不含判断；无场景时不创建 |
+| `review-evidence.json` | `<story-dir>/review-evidence.json` | Phase C 候选稳定后；Phase D 按精确失效规则更新 | 全量质量门与浏览器原始事实的唯一共享包；含 Phase B 提升场景，不含判断 |
+| `review-results.json` | `<story-dir>/review-results.json` | Phase C 四份 JSON 校验后确定性生成 | 独立判断的结构化聚合与 Handoff 计数源 |
+| `execution-telemetry.json` | `<story-dir>/execution-telemetry.json` | Phase -1 起增量追加，Phase D 机械汇总 | 紧凑动作事实；重试追加、不覆盖，不保存 verbose log |
 | `dev-review.md` | `<story-dir>/dev-review.md` | Phase C 汇总，Phase D 写收口结论 | 新建 |
 | `design-facts.json` | `<design-spec-dir>/design-facts.json` | Phase A1 脚本输出 | 确定性重生成；相同内容不重写 |
 | `design-tokens.md` / `interface-inventory.md` / `content-inventory.md` | `<design-spec-dir>/` | Phase A1 脚本输出 | 新建；已存在时按下方并发写规则 |
@@ -393,6 +399,7 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | 原型视觉缓存 | `<design-spec-dir>/visual-baseline/<缓存指纹>/` | Phase B Step ② | 仅 visual YELLOW 懒生成；`prototype.png` + `manifest.json`，不可变 |
 | 实现侧视觉补证 | `<story-dir>/evidence/<Task 编号>-r<轮次>/` | Phase B Step ② / ④ | 仅 visual YELLOW 新建，命名按报告规则编号 |
 | 检视截图 | `<story-dir>/evidence/review/` | Phase C 归档 | 新建，命名 `layout-<结论编号>.png` / `self-test-<基线编号>.png` |
+| 起点质量证据缓存 | `<preflight-cache>`（Git metadata） | Phase 0 MISS、Phase C 候选门、Phase D 最终门后 | 本机缓存；只在状态 / 命令 / 环境精确一致且 24h 内复用，不提交 |
 
 **baseline 只有仓库级与需求级两层，都不写进 `<repo-root>`。** Requirement 和 Story 同属需求级，只按自然生命周期落盘：
 
@@ -422,11 +429,11 @@ YELLOW 的成因分两类，**只有第一类可以放行**：
 | 「初始化前端仓」「刷新仓库 baseline」「项目第一次接入」 | 路由 `sdd-init-frontend`；完成后若当前有 Story 则回 Phase -1，否则结束 |
 | 「重抽设计稿规格」「重新解析设计稿」 | 走完 Phase A1：跑脚本 → `extract-prototype` → `extract-block-spec` ×N。**哈希一致的区块照常复用**，说「重抽」不等于强制全量重来 |
 | 「`<区块名>` 的规格重来一份」「这个区块的规格不对」 | `extract-block-spec` 单实例，只覆写该区块那一份，切分表与其余区块不动 |
-| 「只做勘察」「重跑勘察」 | `recon-spec` + `recon-codebase` 同一轮并行；说明只要一侧时派对应那一份 |
+| 「只做勘察」「重跑勘察」 | `recon-spec` 照常派；代码侧先按 Phase A 的 `lite` 九条件判定，满足则主 agent 机械取证，不满足才派 `recon-codebase`。说明只要一侧时只跑对应侧 |
 | 「重跑还原验证」「重新生成 GREEN 报告」 | 校验冻结契约 → 静态预检 → 结构化渲染 → 按需视觉补证 → 更新对应报告；不改契约与基线 |
 | 「只补 YELLOW」「补视觉证据」 | 只处理报告中 YELLOW 的 `required_evidence`；机器可检项不截图，补证后重跑同一契约 |
 | 「重跑布局检视 / 代码规范检视 / 质量检视 / 功能自测试」 | 对应的那一份：`review-layout` / `review-convention` / `review-quality` / `self-test` |
-| 「重跑全部检视」「重新收口」 | 建共享证据包，四份按可用槽位分波，走完 Phase C → Phase D |
+| 「重跑全部检视」「重新收口」 | 提升 / 复用共享证据，四份按可用槽位动态补位，结构化聚合后走完 Phase C → Phase D |
 | 「继续跑」「从上次断的地方接着来」 | 完整流程，按 [失败恢复](./references/degradation-and-recovery.md#四失败恢复) 定起点 |
 
 六条规则：

@@ -48,12 +48,12 @@
 逐项通过才算格式合规满分。
 
 - [ ] **没有以「前置缺失」终止。** 本现场的 `status` 会报 `REPO-3` 失效——那是本 Story 新增源码文件造成的，不是仓库事实过期
-- [ ] C1–C7 七个维度小节全部出现，无发现的写「无发现」并给出检索范围
+- [ ] 回传是 schema v1 裸 JSON，`role=review-convention`，coverage 恰好包含 C1–C7；无发现维度用 `result=clear` 并给出 scope
 - [ ] **穷尽性：C3 小节同时点出 `OrderExportPanel.module.css` 与 `StatCard.module.css` 两处硬编码，不因为先找到一处就收敛**（对应 GT-1、GT-2）
 - [ ] **豁免核对：结论里明确提到 `EX-1` 并说明「失败批次卡的 `String()` 因豁免不报」，而不是保持沉默**——沉默无法区分"检查过豁免表后判定不报"与"根本没检查 `failedCount` 那一行"，这条要求显式留痕
 - [ ] **不把 `PATTERN-COMPONENT-1` 引用为 `orderExportFormat.ts` 违规基准**（对应 NG-2）
-- [ ] 表头写明 diff 取法（第 1 条，因为取值表给了 `<base-ref>`）与改动文件数 6
-- [ ] 「Open Question」与「已知缺口」两个标题都在，没有内容时写「无」
+- [ ] coverage scope 写明 diff 取法（第 1 条，因为取值表给了 `<base-ref>`）与改动文件数 6
+- [ ] `open_questions` 与 `known_gaps` 字段都存在，没有内容时为空数组
 
 ## 五、四项分计算
 
