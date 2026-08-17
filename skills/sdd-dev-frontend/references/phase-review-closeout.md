@@ -14,12 +14,12 @@
 
 | 项 | 判据 | 不满足时 |
 | --- | --- | --- |
-| 全部 Task 已 GREEN | `tasks.md` 的 6 步 checkbox 全部勾完 | 回 Phase B，从第一个未完成 Task 继续 |
+| 全部 Task 已 GREEN | `tasks.md` 的 6 步 checkbox 全部勾完，且 `validation-status.json / ready: true` | 回 Phase B，从第一个未完成或 status 未通过的 consumer 继续 |
 | `alpha-tests.md` 无缺口 | 每条 AC 有证据链；还原轮记录含契约哈希、RED/GREEN 报告指纹与路径、摘要及适用的视觉缓存引用 | 回 Phase B 补记录 |
 | `dev-baseline.md` 已冻结 | 基线头「冻结状态」为 `已冻结 ✅` | 回 Phase A 走确认门 |
 | 候选全量质量门 | 按执行起点记录跑一遍全套质量命令，失败集合与 DEMAND-2 起点逐条相同或更好；把命令、退出码、耗时、失败集合与代码指纹写入 `review-evidence.json / quality_gate`，追加 telemetry，并按起点证据契约 `record --source phase-c` | 出现新失败回 Phase B，归属哪个 Task 就从哪个修起；修复期只跑定向检查，候选再次稳定后再进本行 |
 
-全量门完成后，**先提升、再补采浏览器证据**：用 `manage_review_pipeline.py promote` 把 `<story-dir>/phase-b-review-evidence.json` 中 runtime 与逐文件依赖哈希仍匹配的原始场景提升到 `review-evidence.json`；再从冻结 R/F 行与两份浏览器检视范围取场景并集，只执行没有被提升 / 复用覆盖的缺口。相同 fixture、页面、viewport、步骤与 runtime 只执行一次。质量命令会重载页面或清掉内存态时，这个顺序避免重复造临时页面。证据包只记原始事实，不先判通过/不通过；promote / run / reuse / stale 场景数与子代理启动、补位、重试分别追加 telemetry。
+全量门完成后，**先提升、再批量补采浏览器证据**：用 `manage_review_pipeline.py promote` 把 `<story-dir>/phase-b-review-evidence.json` 中 runtime 与逐文件依赖哈希仍匹配的原始场景提升到 `review-evidence.json`；再从冻结 R/F 行与两份浏览器检视范围取场景并集，把没有被提升 / 复用覆盖的缺口登记成 validation intents，重编 plan，并按 status 的 browser batches 执行。相同 fixture、页面、runtime 与 reset 边界只连接/打开一次，viewport、状态与步骤在批次内连续跑。质量命令会重载页面或清掉内存态时，这个顺序避免重复造临时页面。证据包只记原始事实，不先判通过/不通过；batch / intent / assertion、browser_calls、promote / run / reuse / stale 与子代理启动、补位、重试分别追加 telemetry。
 
 最后按 [前置产物校验](../SKILL.md#前置产物校验) 核对四份检视各自的终止级前置，并把 `<review-evidence>` 的实际路径与 `evidence_epoch` 追加到四份取值表。
 
@@ -64,7 +64,7 @@
 3. **任一角色完成且 JSON 通过预校验，释放的槽位就立即进入补位流程**，不得等待同时在跑的其他角色完成。只有 3 个子代理槽位时，合法时序是先启动 3 份、其中任一完成就启动第 4 份；
 4. 完成结果没有 `evidence_added` 时直接补位；有时主 agent 先归档其中被结论引用的 artifact，再运行 `manage_review_pipeline.py merge-additions`，把原始 scenario 并入共享包并将该角色临时 JSON 的证据 ID 改写为正式 `BE-n`，然后立刻补位。这个机械步骤不得等待其他判断；
 5. 后启动角色继续引用同一纪元。已完成角色的**判断 JSON 不传给它**，避免结论污染；只允许它读取刚并入共享包的原始证据；
-6. 某份检视发现证据缺口时，只补跑缺口场景。相同新鲜度键已存在的场景不得重跑；代码或 runtime 变化则结束当前纪元，不能把新旧结果拼接。
+6. 某份检视发现证据缺口时，先收齐该角色全部缺口并在相同页面 / fixture / runtime / reset 边界内批量补跑；不得逐基线行启动浏览器。相同新鲜度键已存在的场景不得重跑；代码或 runtime 变化则结束当前纪元，不能把新旧结果拼接。
 
 中间合并命令（没有 `evidence_added` 就跳过）：
 
@@ -170,10 +170,10 @@ python3 "<skill-dir>/scripts/manage_review_pipeline.py" aggregate \
 
 验证与证据更新另守四条：
 
-- 每次修复只跑覆盖所改范围的定向测试、typecheck / lint 与对应契约，不在修复尚未稳定时跑全量门。
-- 按 `depends_on`、fixture 与运行时键只失效受影响的 `BE-n`；未受影响的浏览器场景继续复用。公共组件 / 公共样式改动才扩大到全部下游场景。
+- 每次修复先更新 validation intents 的 `depends_on` 并重编 plan，只执行 status `next_batches[]` 中覆盖所改范围的 command / browser 子批次；不在修复尚未稳定时跑全量门。
+- 批次 intent 与 `BE-n` 都按 `depends_on`、fixture 与运行时键精确失效；未受影响的消费者和浏览器场景继续复用。公共组件 / 公共样式改动才扩大到实际引用它的下游 intent，不把整个 batch 一刀切作废。
 - 阻断清零、定向检查与受影响检视都稳定后，若代码指纹不同于 Phase C 候选全量门，主 agent**只补一次**最终全量门，并按起点证据契约 `record --source phase-d`；指纹未变直接复用候选门，不重复写一份等价缓存记录。两种情况都进 telemetry，分别记 `run` / `reuse`。
-- 最终全量门先于浏览器补证；它之后只重采已经失效的 `BE-n`，不重跑整个浏览器清单。检视角色读取最终门原始结果，不再各自跑一套 test / check / build。
+- 最终全量门先于浏览器补证；它之后只重采 status 列出的 stale / failed / blocked / pending browser intents，并按兼容性合批，不重跑整个浏览器清单。检视角色读取最终门原始结果，不再各自跑一套 test / check / build。
 
 #### 3. 待用户输入项按 P7 上报
 
@@ -200,6 +200,7 @@ python3 "<skill-dir>/scripts/manage_review_pipeline.py" aggregate \
 | `<story-dir>/dev-review.md` | 阻断级表的「修复状态」逐条填「已修（复跑结论）」；写「收口结论」节 |
 | `<story-dir>/alpha-tests.md` | 功能自测试实测结果贴回对应 `F<n>-<m>` 行；AC ↔ 证据映射填状态，`Deferred` 附原因与解除条件 |
 | `<story-dir>/dev-baseline.md` | 收口期间动过基线的，变更记录已登记且已重新请用户确认（硬门禁 8） |
+| `<story-dir>/validation-plan.json` / `validation-receipts.json` / `validation-status.json` | plan 对应最终代码依赖；收据逐 assertion 可追溯；status `ready: true`，无待重跑 intent |
 | `<story-dir>/review-evidence.json` | 最终代码指纹、最终全量门与仍有效 / 已提升 / 已补采的 `BE-n` 齐全；不含检视判断 |
 | `<story-dir>/review-results.json` | 四份结构化结果同一 evidence epoch / 代码指纹；聚合计数与 `dev-review.md`、Handoff 一致 |
 | `<story-dir>/execution-telemetry.json` | 每次动作 / 重试已增量追加；QA 人工等待与 agent 主动时间分开；没有估算时长或 verbose log |
@@ -210,7 +211,7 @@ python3 "<skill-dir>/scripts/manage_review_pipeline.py" aggregate \
 「收口结论」节固定三块：**四份检视的执行状态**（未执行的写原因）、**阻断级清零情况**、**未验收项清单**（`Deferred` 的 AC、因检视未执行而未覆盖的维度）。同时完成两张短表：
 
 - `Handoff 清单`：建议级、Open Question、Deferred 判定逐条一行，包含用户可见文本与是否需用户决定；三类来源计数必须与正文一致。
-- `执行量账本`：从 `execution-telemetry.json` 机械生成子步骤与 Phase 汇总；agent 主动时间和人工等待分开，全量门 run / reuse、定向检查、浏览器场景 promote / run / reuse / stale、子代理启动 / 动态补位 / 重试都有计数。拿不到写「未记录」，不估算，不用 LOC 推断时间占比。
+- `执行量账本`：从 `execution-telemetry.json`、validation receipts / status 机械生成子步骤与 Phase 汇总；agent 主动时间和人工等待分开，全量门 run / reuse、command / browser 批次、intent 结果、browser calls / retries、场景 promote / run / reuse / stale、子代理启动 / 动态补位 / 重试都有计数。拿不到写「未记录」，不估算，不用 LOC 推断时间占比。
 
 #### 6. 出门
 

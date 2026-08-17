@@ -424,16 +424,16 @@
     },
     {
       "id": 33,
-      "name": "impact-m-adjacent-tasks-share-one-nonbehavior-validation-receipt",
+      "name": "compatible-tasks-share-one-command-validation-batch",
       "target": "references/phase-implementation.md",
       "prompt": "Impact M 有相邻 T1、T2，都改 packages/dashboard 内的私有文件，使用相同 pnpm、Node、包级回归、typecheck 和 lint 命令；两个 Task 不跨公共组件/API、schema、路由、权限或外部状态。T1 和 T2 各自新增的行为测试已经在各自 Step ④ GREEN。请安排剩余 Phase B 定向检查。",
-      "expected_output": "建立最多覆盖两个相邻 Task 的验证批次，在 T2 稳定后只跑一次包级回归、scope typecheck 与 lint，生成一个 VAL-B 收据供 T1/T2 引用；Task 行为 GREEN 仍各自执行，收据相对 DEMAND-2 无新增失败，Phase C 最终全量门保留。",
+      "expected_output": "把 T1/T2 的消费者、assertions、depends_on 与 scope 登记成两个 command intents；因 package、命令、toolchain/runtime 与风险边界兼容，计划生成一个 VAL-B 批次，scope 取并集并只执行一次。逐 Task 行为 GREEN 和逐 assertion 结果仍各自落账，Phase C 最终全量门保留。",
       "expectations": [
         "先逐 Task 保留各自新增/修改行为测试的 GREEN，不把行为证明推迟到批次",
-        "核对 Impact M、相邻最多两个 Task、同 package/命令/runtime 且无高风险边界后才批次化",
-        "只执行一次非行为定向检查，VAL-B 收据记录消费者、scope 代码指纹、完整命令顺序、toolchain/runtime、退出码和失败集合",
-        "两个 Task 引用同一收据而不复制命令输出；进入 Phase C 前收据必须新鲜且相对 DEMAND-2 无新增失败，候选全量门照常执行",
-        "telemetry 用 phase-b.validation.1 记录 result=run、commands/tasks/consumers/reused_results 计数与 VAL-B-1；未来新鲜度键完全相同的引用记 result=reuse"
+        "合批条件是同 package/命令/toolchain/runtime/boundary 且能归因，不再以 Impact M 或相邻最多两个 Task 为上限",
+        "plan 把两个 scope 取并集并只执行一次；receipt 逐 intent/assertion 记录消费者、依赖指纹、完整命令顺序、环境、退出码和失败集合",
+        "两个 Task 引用同一 VAL-B 而不复制命令输出；validation-status ready=true 且相对 DEMAND-2 无新增失败后才进 Phase C，候选全量门照常执行",
+        "telemetry 用 phase-b.validation.<batch-id> 记录 commands/intents/consumers/assertions/reused_results 与稳定哈希 VAL-B ID；未来 intent fingerprint 相同的结果记 reuse"
       ]
     },
     {
@@ -441,12 +441,12 @@
       "name": "validation-receipt-invalidates-only-on-scope-change-and-never-crosses-risk-boundary",
       "target": "references/phase-implementation.md",
       "prompt": "VAL-B-1 在 scope=packages/a、fingerprint=a1、固定命令和 Node/pnpm 版本下覆盖 T1/T2；T1 行为通道 depends_on=[packages/a/src/t1.ts]，T2 depends_on=[packages/a/src/t2.ts]。随后只改 packages/b/readme.md；另一个变体改了 packages/a/src/t2.ts。再考虑 T3 会修改公共 Drawer API，想和 T2 共用下一批。请分别安排。",
-      "expected_output": "packages/b 的 scope 外变化不让 VAL-B-1 失效；packages/a/src/t2.ts 的变化使共享收据和 T2 行为通道失效，T1/T2 的收据消费完成态先撤销，但只定向重跑 T2 行为与非行为检查，T1 行为证据保留；T3 因公共 API 风险边界不得与 T2 合批。",
+      "expected_output": "packages/b 的 scope 外变化不让任何 intent 失效；packages/a/src/t2.ts 只让 T2 intent 与消费者 stale，T1 的批次结果和行为证据都保持 passed。status 的 next_batches 只含 T2 子集；T3 因公共 API 风险边界标 barrier，不能与 T2 合批。",
       "expectations": [
         "scope 外变化保留 VAL-B-1，不因全局工作区指纹变化整批重跑",
-        "scope 内代码变化使 VAL-B-1 失效；按已给 depends_on 只重跑 T2 行为通道和非行为检查，T1 行为证据继续复用",
-        "失效时追加 telemetry attempt；共享收据的两个消费者 T1/T2 都撤销 ④/⑥，T1 行为 GREEN 事实仍可复用，新收据生成后才能恢复完成态",
-        "公共组件/API 边界强制打断验证批次；T3 每 Task 立即检查，不扩大批次 scope"
+        "按 intent_fingerprint 与 depends_on 只把 T2 标 stale；T1 的行为和同批 assertion 结果都继续复用",
+        "失效时追加 telemetry attempt；只有 T2 消费者撤销 ④/⑥，next_batches 的执行清单过滤掉 T1",
+        "公共组件/API 边界用 barrier 强制 flush；T3 独立批次，不扩大 T2 的执行 scope"
       ]
     },
     {
@@ -454,10 +454,10 @@
       "name": "impact-s-single-logic-task-keeps-red-green-and-final-full-gate",
       "target": "references/phase-implementation.md",
       "prompt": "Impact S 只有一个逻辑 Task，改一个私有组件和一个 20 行测试；没有还原轮，也没有可合并的相邻 Task。请给出最短合法验证路径。",
-      "expected_output": "只走一轮逻辑 6 步：先测试 RED，再最小实现与同一测试 GREEN；Phase B 跳过额外包级回归/typecheck/lint，不伪造双通道或验证批次，候选稳定后 Phase C 仍跑 REPO-2 中全部适用的全量命令。",
+      "expected_output": "只走一轮逻辑 6 步：RED 与 GREEN 因实现边界不能合成一次执行，各自保留 assertion 与结果；Phase B 跳过额外包级回归/typecheck/lint，不伪造第二消费者或空批次。候选稳定后 Phase C 仍跑 REPO-2 中全部适用的全量命令。",
       "expectations": [
         "逻辑测试仍须先按预期 RED 后 GREEN，不能因 Impact S 跳过行为证明",
-        "没有第二通道就不套双通道，没有相邻 Task 就不创建验证批次或空 VAL-B 收据",
+        "没有第二通道就不套双通道；单 intent 可以形成实际执行批次，但不得伪造多个消费者，RED/GREEN 以不同因果边界执行",
         "Phase B 可按 Impact S 规则跳过更宽包级回归、作用域 typecheck 与 lint",
         "源码稳定后仍执行 Phase C 候选全量门，命令集合取 REPO-2 中全部适用项（例如 test/check/build）；最终代码指纹变化时才按 Phase D 规则补一次最终门"
       ]
@@ -474,6 +474,72 @@
         "回退到先还原后逻辑不算流程失败；还原 GREEN 后重新取得原因正确的逻辑 RED",
         "仍保留两轮独立 6 步、证据与 AC 映射，不为追求少一轮而放宽 RED/GREEN 语义",
         "telemetry 记录双通道条件失败与 visual YELLOW 的回退原因；之后还原/逻辑通道的 RED/GREEN 仍使用各自稳定 ID 和 attempt"
+      ]
+    },
+    {
+      "id": 37,
+      "name": "single-task-browser-matrix-is-planned-before-execution",
+      "target": "references/validation-batches.md",
+      "prompt": "一个 T1 工作台要验证空态、1/4/5 行、Enter、Shift+Enter、IME、停止与错误态，并覆盖 1440/1280/900 三个视口。页面、fixture、账号、浏览器和 reset 策略相同，所有状态都能在内存中复位。请安排浏览器验证。",
+      "expected_output": "先把全部状态/视口/断言登记成 browser intents，再按共同页面、fixture、runtime 与 reset 边界编译成一个 VAL-B browser batch；只连接/打开一次，连续切状态和视口，逐 scenario/assertion 返回结果，不按断言临场调用浏览器。",
+      "expectations": [
+        "执行前先列完整场景矩阵，不发现一个事实就调用一次",
+        "viewport、状态和步骤差异保留在同一 batch 的 scenarios，不把它们误当成必须重连的执行键",
+        "能用 Runtime.evaluate 或 e2e runner 连续采集的场景一次注入；IME 等真实事件只拆成少量连续调用，仍属于同一 batch",
+        "receipt 逐 assertion 保存 evidence，并记录实际 browser_calls/retries；一个总体 pass 不合格",
+        "原始 observations 另写 phase-b-review-evidence.json，不能把 receipt 的 pass/fail 写进共享原始证据"
+      ]
+    },
+    {
+      "id": 38,
+      "name": "browser-batch-reruns-only-stale-intents",
+      "target": "scripts/manage_validation_batches.py",
+      "prompt": "VAL-B-2 有三个 browser intents：A 依赖 view.tsx，B 依赖 style.css，C 依赖 errors.ts。三项都已 passed。修复后只改 view.tsx，再生成计划与状态。",
+      "expected_output": "只有 A 的 intent fingerprint 变化并变成 stale；B/C 保持 passed。next_batches 仍可引用 VAL-B-2，但 execution.scenarios 只包含 A；补跑并记录 A 后 ready 恢复 true。",
+      "expectations": [
+        "逐 intent 比较 captured dependency hashes，不按 batch fingerprint 把三项一起作废",
+        "next_batches 的 browser execution 过滤掉 B/C，不只是文字说明只跑 A",
+        "部分收据可只覆盖 A，B/C 的旧新鲜结果继续有效",
+        "consumer 状态由各自映射的 intents 计算，不因同批其他 intent stale 而撤销"
+      ]
+    },
+    {
+      "id": 39,
+      "name": "validation-batch-rejects-summary-only-success",
+      "target": "scripts/manage_validation_batches.py",
+      "prompt": "一个 browser batch 有两个 intents，每个各含两个 assertions。执行者只回传 batch_id、overall=pass 和一张截图，没有逐 assertion 结果；另一个变体漏掉其中一个 assertion。请落账。",
+      "expected_output": "两种结果都拒绝记录：items 必须非空，每个 intent 必须恰好覆盖计划中的全部 assertions，每条有 pass/fail/blocked 与非空 evidence；browser_calls 也必须大于 0。",
+      "expectations": [
+        "不能把总体退出码、overall pass 或一张截图分发给多个消费者",
+        "漏 assertion、重复 assertion、未知 intent 或空 evidence 都是 schema 错误",
+        "脚本从逐 assertion 状态机械派生 item/batch 状态，不接受调用者手写总体结论",
+        "拒绝后 status 保持 pending/stale，不得把 Task checkbox 视为通过"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "risk-boundary-flushes-even-inside-one-task",
+      "target": "references/validation-batches.md",
+      "prompt": "同一个 T2 同时要验证本地筛选交互、真实账号权限变化和一次不可回滚的数据提交。它们使用同一页面和浏览器。为了减少打开次数，能否全放一个 browser batch？",
+      "expected_output": "不能。页面相同不覆盖风险边界：本地可复位交互可合批；权限变化与不可回滚写入分别标 barrier 并强制 flush。批次大小取决于状态可复位和失败可归因，不取决于是否同一 Task。",
+      "expectations": [
+        "鉴权/权限、真实数据写入与不可复位状态命中强制 flush",
+        "同一 Task 也可以拆成多个 batch，不为降低调用数破坏隔离",
+        "每个 barrier intent 仍逐 assertion 落账并披露测试数据清理情况",
+        "Impact 档位、页面相同或浏览器相同都不能覆盖风险边界"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "phase-c-collects-all-gaps-before-browser-batch",
+      "target": "references/review-evidence.md",
+      "prompt": "Phase C 提升后，布局检视缺 900px 溢出场景，功能自测缺错误态和停止态；三项共用页面、fixture、runtime 与 reset 策略。主 agent 尚未派四份检视。请补证。",
+      "expected_output": "主 agent 先从两份检视范围取缺口并集，把三项登记成 validation intents，编译一个 browser batch 后一次进入页面连续采集，再把原始事实写入 review evidence；之后才派检视角色独立判断。",
+      "expectations": [
+        "先提升新鲜 Phase B 事实，再计算真正缺口，不重复有效场景",
+        "布局与功能缺口共享执行但不共享判断，逐场景保留消费者与原始 observations",
+        "质量命令 batch 在前、browser batch 在后，避免反复重载页面",
+        "检视角色若后来发现额外缺口，也必须先收齐本角色缺口再按执行边界合批，不逐 coverage 行调用"
       ]
     }
   ]

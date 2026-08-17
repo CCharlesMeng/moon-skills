@@ -59,12 +59,16 @@ _Avoid_: 共享结论、复用检视报告、浏览器缓存
 _Avoid_: 同一批次、四代理同时启动
 
 **验证批次**：
-Impact M 下相邻最多两个 Task 在同一 package、命令和运行时且不跨高风险边界时，共享一次更宽包/目录回归、作用域 typecheck 与 lint 的执行边界。本轮行为测试或冻结契约仍逐通道 GREEN。
-_Avoid_: 合并 Task、跳过 Task 测试、把 Phase C 全量门前移
+从冻结 R/F、Task 通道与 AC 先编译出的 `VAL-B-<n>` 执行单元。相同 package/命令/toolchain/runtime 的质量检查，或相同页面/fixture/runtime/reset 边界的浏览器状态与视口矩阵，共享一次执行；每个 intent / assertion 仍逐消费者返回结果。批次大小由兼容性与失败可归因性决定，不由 Task 数或 Impact 档位硬切。
+_Avoid_: 证据缓存、合并 Task、一个总体 pass 分给所有消费者、逐断言临场调用
 
-**定向质量检查收据**：
-`alpha-tests.md` 中编号为 `VAL-B-<n>` 的单次 Phase B 非行为定向检查事实，包含消费者、scope 代码指纹、完整命令、toolchain/runtime 与失败集合。新鲜度键完全相同时可被多个 Task 引用；它不是检视结论。
-_Avoid_: 共享通过结论、为每个 Task 复制相同命令输出
+**验证意图**：
+一个必须被验证、能独立失效和归因的最小项；含 consumers、assertions、`depends_on`、执行输入与风险边界。相同执行输入的多个意图可以合批，但一个意图不能横跨无法共同复位或归因的风险边界。
+_Avoid_: 浏览器步骤、临时检查、Task checkbox
+
+**验证批次收据**：
+`validation-receipts.json` 中编号为 `VAL-B-<n>` 的一次实际执行事实，包含逐 intent / assertion 结果、依赖指纹、命令/scope 或浏览器场景、toolchain/runtime 与调用计数。`alpha-tests.md` 只引用收据与消费者；它不是检视结论。
+_Avoid_: 只有总退出码、共享通过结论、为每个 Task 复制相同输出
 
 **工作假设**：
 已知缺口中存在安全默认值的一类，随 QA 基线确认门同轮列出并经用户确认；确认后与基线同等冻结，变更走硬门禁 8。
@@ -178,7 +182,7 @@ QA 基线还原侧的期望值只能取自区块规格。A1 没跑完就派 `rec
 
 Impact S 的 `lite` 也只消除重复发现，不降低工程依据：它只能在“每条需要唯一命中已有 PATTERN 且 locator 仍成立”时成立。公共边界、参照页、歧义或新范式都会回完整勘察；因此被省掉的是开放式搜索与长报告，不是 REPO-3 指纹、证据复核或 Story 需要到工程依据的映射。
 
-Phase B 同样按风险缩放，但边界是“行为证明 / 非行为检查”，不是笼统的 Task。还原契约与逻辑测试分别回答两个行为是否成立，所以每个通道都要 RED/GREEN；同一组代码修改和相同新鲜度的 typecheck/lint 只执行一次即可。Impact S 已由 Phase C 全量门兜底，Impact M 最多合并相邻两个低风险 Task，Impact L 每 Task 立即检查；这样省掉的是重复命令与重复实现轮，不是失败证据或最终门。
+Phase B 同样按风险缩放，但边界是“结论所有权 / 执行动作”，不是笼统的 Task。还原契约与逻辑测试分别回答两个行为是否成立，所以每个通道都要自己的 RED/GREEN；同页面、fixture 与 runtime 的状态/视口矩阵，以及相同 package、命令和环境的 typecheck/lint，则先组成批次再执行。Impact S 可减少非行为检查范围，M / L 扩大检查与风险 flush，但都不要求相同动作按 Task 数重复。这样省掉的是重复操作，不是失败证据、逐 AC 结论或最终门。
 
 执行耗时必须按可控边界记录。Phase 总时长把 agent 主动执行、子代理等待和用户确认混在一起，不能支持下一轮优化；`execution-telemetry.json` 因此先拆 Phase -1 / 0 / A 的稳定子步骤，并把 `human_wait` 单列。它只记动作边界与计数，不保存 verbose log，也不允许事后按 LOC 估算。
 

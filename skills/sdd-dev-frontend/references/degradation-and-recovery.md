@@ -42,12 +42,13 @@
 
 ## 四、失败恢复
 
-中断后重跑，先读进度再决定从哪继续。**`tasks.md` 的 checkbox 是唯一进度真相。**
+中断后重跑，先读进度再决定从哪继续。**`tasks.md` 的 checkbox 是唯一步骤进度真相；验证结果是否仍新鲜只由 validation status 决定。**
 
 | 产物 | 重跑时 | 理由 |
 | --- | --- | --- |
 | 仓库 `repo-baseline.md` | 最先运行 `status` / `validate`；失效即回 Phase -1，**但本 Story 自身改动引起的失效除外**（判据见 SKILL.md 的 Phase -1 仓库接入门） | 不能在过期仓库事实上续跑 Story；反过来，也不能把本 Story 未过检视的代码刷成仓库范式 |
-| `tasks.md` checkbox + `alpha-tests.md` | 先读，从**第一个未完成 Task** 继续 | 已勾的步骤有证据可查，重做只会覆盖掉证据 |
+| `tasks.md` checkbox + `alpha-tests.md` | 先读；再与 validation status 对账，从**第一个未完成或消费者未通过的 Task** 继续 | 已勾且 fresh + passed 的步骤有证据可查；status 失效的步骤必须撤销，不能只信旧 checkbox |
+| `validation-intents.json` / plan / receipts / status | 以当前工作区重编 plan、重算 status；只执行 `next_batches[]` 的 intent 子集 | 批次 ID 稳定；逐依赖精确失效，同批未受影响结果和精确回退后重新匹配的旧结果继续复用 |
 | `<design-spec-dir>` 的 `design-facts.json`、三份 Markdown、切分表与区块规格 | 重跑脚本算原型指纹与区块哈希；指纹一致全量只读复用，指纹变化后只重抽失配 / 新增区块 | 原型指纹覆盖 DOM/CSS、资源内容与缺失状态；区块增量仍按内容哈希，不用 mtime |
 | `<design-spec-dir>/visual-baseline/` | 缓存键全量一致只读命中；任一环境维度变化创建新指纹目录 | 不覆盖旧版本；没有 visual YELLOW 不查询、不截图 |
 | `restore-contract.json` | `dev-baseline.md` 未变则复用；基线哈希不一致硬失败 | 只有重新确认基线后才能重新编译 |

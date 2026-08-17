@@ -109,6 +109,25 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 
 事实能从仓库或上游读出就直接记录；多个场景都合理且会改变验收结果时才按 P7 请用户决定。
 
+##### 上游接缝字段（`sdd-task-frontend` 产出时才有）
+
+`tasks.md` 的 TaskPacket 头可能带 `baseline_source` / `prototype_dir` / `reference_route` / `affected_routes` / `required_states` / `restore_tasks`。它们由 `sdd-task-frontend` 写入，**全部可选：缺席即按本文既有方式自行判定，不是降级项、不进「已知缺口」**。
+
+| 字段 | 怎么用 |
+| --- | --- |
+| `baseline_source` | 作为 [基线源](../SKILL.md#基线源没有-html-原型时) 三档判定的**候选答案**，省掉一轮探测 |
+| `prototype_dir` | 作为 `<prototype-dir>` 的候选值，唯一命中则不占提问位 |
+| `reference_route` | 第 2 档时作为参照页**候选**交给 `recon-codebase` 与确认门 |
+| `affected_routes` | 目标页面与路由、以及下方影响面分级的输入 |
+| `required_states` | Phase B 场景矩阵的必测状态，与 Step ④ 已知约束核销的输入 |
+| `restore_tasks` | 还原轮索引，供 Phase B 少猜形态 |
+
+三条约束，缺一条这些字段就会变成第二个真相源：
+
+- **验证，不采信。** 按 `baseline_source` 行动前必须核实：声明 `prototype`（或给了 `prototype_dir`）时，该目录要真的存在且含 HTML。核不上就按本文既有方式重新判档，并在执行起点记一行「上游声明 `<值>`，实测不成立，改判 `<档>`」。**判错的后果是整个 Phase A1 被错误跳过**（判据见 [Phase A 细则](./phase-spec.md)），这个核实很便宜，不得省。
+- **不替代确认门。** `baseline_source` 与 `reference_route` 进的是 Phase A2 确认门的输入，**不是冻结结果**。参照页收集候选属事实、选哪一个仍属决策，照原规则进确认门——用户确认的不只是期望值，还有本次拿什么当基线。
+- **Task 内容优先。** 任一字段与 `tasks.md` 正文冲突时以正文为准（典型：`restore_tasks` 说是还原轮，但该 Task 文件清单里没有样式文件）。字段只是索引，不是判据。
+
 再按下表从 `tasks.md` 事实定出**影响面分级**，记入执行起点。分级只影响明示引用它的条款（布局与响应式检视的页面范围等），**不改变任何门禁语义**；拿不准时取更大的一档。
 
 | 级 | 判据 |

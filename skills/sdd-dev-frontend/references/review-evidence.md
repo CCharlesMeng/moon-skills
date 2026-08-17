@@ -1,6 +1,6 @@
 # Phase C 共享证据契约
 
-Phase C 的检视必须**判断独立**，不要求**采集重复**。主 agent 先把质量命令与浏览器场景的原始事实收进一个证据包；四个检视角色各自按自己的判据下结论，只补证据包覆盖不到或已经失效的场景。
+Phase C 的检视必须**判断独立**，不要求**采集重复**。主 agent 先按 [验证批次执行契约](./validation-batches.md) 把质量命令与浏览器场景批量执行，再把原始事实收进一个证据包；四个检视角色各自按自己的判据下结论，只补证据包覆盖不到或已经失效的场景。
 
 ## 一、证据纪元与代码指纹
 
@@ -87,6 +87,8 @@ Phase B Step ④ 已实际执行的浏览器 / 结构化渲染场景，不等 Ph
 - 与 Phase C 相同形态的 runtime、fixture、page、viewport、steps、observations、artifacts；
 - 不含 `result`、`pass/fail`、finding、级别或结论。
 
+这些场景必须能由 `validation-receipts.json` 的 browser batch item 追到，但两份工件职责不同：receipt 保存逐 assertion 的执行结果，`phase-b-review-evidence.json` 只保存可供不同角色重新判断的原始观察。不得把 receipt 的 pass / fail 复制进原始证据包。
+
 Phase C 的候选全量门完成、页面状态稳定后，若该文件存在就先运行：
 
 ```bash
@@ -102,10 +104,10 @@ python3 "<skill-dir>/scripts/manage_review_pipeline.py" promote \
 
 ## 四、场景规划与所有权
 
-1. 主 agent 从冻结的 R/F 行与两份浏览器检视范围取并集，先列场景，再执行；相同页面、fixture、viewport、步骤合并为一个 `BE-n`。
-2. 会重载页面或清空内存态的质量命令先跑，浏览器场景后采集。不得在两者之间反复生成同一个临时页面。
+1. 主 agent 从冻结的 R/F 行与两份浏览器检视范围取并集，先登记 validation intents，再执行 status 的 `next_batches[]`；相同页面、fixture、runtime 与 reset 边界进入一个 browser batch，viewport、状态和步骤作为批次内 scenarios 连续执行。相同新鲜度场景才合并为一个 `BE-n`。
+2. 会重载页面或清空内存态的质量命令 batch 先跑，浏览器 batch 后采集。每个 browser batch 只连接/打开一次，按 reset strategy 复位；不得在两者之间反复生成同一个临时页面。
 3. 主 agent 是证据包所有者；布局检视与功能自测试是独立判定者。两者收到包后先做新鲜度与覆盖检查，**有效场景不得重跑**。
-4. 检视角色只有在下列情况才补跑：缺目标行需要的场景；原始事实不足以下结论；证据已按第五节失效。补跑后把完整原始场景记录放进结构化结果的 `evidence_added`，由聚合脚本校验、分配 `BE-n` 并入同一证据包。
+4. 检视角色只有在下列情况才补跑：缺目标行需要的场景；原始事实不足以下结论；证据已按第五节失效。角色先收齐自己的全部缺口，按页面 / fixture / runtime / reset 边界组成批次后再启动浏览器；不得发现一行就调用一次。补跑后把完整原始场景记录放进结构化结果的 `evidence_added`，由聚合脚本校验、分配 `BE-n` 并入同一证据包。
 
 检视独立性的判据是「各自回到冻结基线与本角色规则作判断」，不是「各自重新点击一次页面」。
 

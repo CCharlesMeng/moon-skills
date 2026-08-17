@@ -482,19 +482,39 @@ function checkPromptFiles() {
 const FRONTEND_ROOTS = [
   join(SKILLS_DIR, "sdd-dev-frontend"),
   join(SKILLS_DIR, "sdd-init-frontend"),
+  join(SKILLS_DIR, "sdd-task-frontend"),
   join(ROOT, "docs", "skills", "frontend-sdd"),
 ];
 
 // Namespaces registered in docs/skills/frontend-sdd/接缝契约.md §2. The registry
 // itself is skipped when scanning, since it necessarily names every prefix.
 // 与 接缝契约.md §2 的注册表保持一致；加前缀两处都要改。
-const ID_PREFIX_WHITELIST = [
-  "REPO", "PATTERN", "REQ", "DEC", "DEMAND", "IC", "EX", "REG",
-  "SHA", "AC", "TB", "TC", "EV", "ADR", "DEF",
-  // 种子缺陷用例的 ground truth 编号
-  "GT", "NG", "OPT",
-];
 const ID_REGISTRY = join("frontend-sdd", "接缝契约.md");
+const ID_REGISTRY_PATH = join(ROOT, "docs", "skills", ID_REGISTRY);
+
+// 标准名，形状上撞 ID 规则但不是命名空间（SHA-256 / ISO-8601）。
+// 它们刻意不在 接缝契约 §2 登记，所以只能列在这里。
+const NON_ID_PREFIXES = ["SHA", "ISO"];
+
+// 前缀白名单从 接缝契约 §2 的表格现读，不再在此复制一份。
+// 复制过一份，结果两处漂移：曾有 7 个前缀只在代码里、不在表里。
+function readRegisteredIdPrefixes() {
+  const content = readFileSync(ID_REGISTRY_PATH, "utf-8");
+  const section = content.split(/^### 2\. /m)[1]?.split(/^### /m)[0];
+  if (!section) return null;
+  const prefixes = new Set(NON_ID_PREFIXES);
+  for (const line of section.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const firstCell = line.split("|")[1] ?? "";
+    for (const token of firstCell.matchAll(/`([^`]+)`/g)) {
+      // 只取命名空间段：`REQ-DEC-*` 登记 REQ，`REG` 这类无后缀的整体登记。
+      const withSuffix = token[1].match(/^([A-Z]{2,10})-/);
+      if (withSuffix) prefixes.add(withSuffix[1]);
+      else if (/^[A-Z]{2,10}$/.test(token[1])) prefixes.add(token[1]);
+    }
+  }
+  return prefixes;
+}
 
 const AGENT_SECTIONS = ["前置", "只读", "输出格式"];
 
@@ -714,6 +734,16 @@ function checkFrontendDimensionNames(files) {
 }
 
 function checkFrontendIdPrefixes(files) {
+  const registered = readRegisteredIdPrefixes();
+  // 解析不出来时按失败处理：白名单静默变空会让每个前缀都报错，噪音掩盖真问题。
+  if (!registered || registered.size < 10) {
+    report(
+      "fail",
+      "fe-id-prefix",
+      `无法从 ${ID_REGISTRY} §2 解析出前缀表（得到 ${registered ? registered.size : 0} 条），检查该节的表格结构`
+    );
+    return;
+  }
   const seen = new Map();
   // Only the leading segment is the namespace: PATTERN-CARD-1 registers PATTERN.
   const idPattern = /(?<![A-Za-z0-9-])([A-Z]{2,10})(?:-[A-Z0-9]{1,12})*-(?:<[nmi]d?>|\d+|\*)/g;
@@ -728,7 +758,7 @@ function checkFrontendIdPrefixes(files) {
 
   let failed = 0;
   for (const [prefix, where] of seen) {
-    if (!ID_PREFIX_WHITELIST.includes(prefix)) {
+    if (!registered.has(prefix)) {
       report(
         "fail",
         "fe-id-prefix",

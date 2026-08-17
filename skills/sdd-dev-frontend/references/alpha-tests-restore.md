@@ -1,6 +1,6 @@
 # `alpha-tests.md` 还原证据扩容
 
-本文描述 `sdd-dev-frontend` 阶段对上游 `sdd-task` 产出的 `alpha-tests.md` 做的三处扩容：**新增「还原证据记录」**、**新增可选的「Phase B 定向质量检查收据」**，以及**扩展既有的「AC ↔ 证据映射」**。
+本文描述 `sdd-dev-frontend` 阶段对上游 `sdd-task` 产出的 `alpha-tests.md` 做的三处扩容：**新增「还原证据记录」**、**新增「Phase B 验证批次收据」**，以及**扩展既有的「AC ↔ 证据映射」**。
 
 **这是扩容既有账本，不是新开一本账。** `alpha-tests.md` 继续是唯一证据账本；冻结契约、机器报告和视觉文件是账本引用的证据工件。账本只记录它们的指纹、路径与摘要，不复制第二份规则表或报告。
 
@@ -54,7 +54,7 @@ V2 还原证据使用冻结机器契约与选择性截图；工件格式见 [res
 | 报告指纹 | `<report_sha256>` |
 | 汇总 | `RED 0 / YELLOW 0 / GREEN <总规则数>` |
 | 契约一致性 | `RED / GREEN 报告的 contract_sha256 相同` |
-| 回归 | `<本轮行为 GREEN 摘要；非行为定向检查直接写结果，或引用 VAL-B-<n>；与 DEMAND-2 起点相比无退化>` |
+| 回归 | `<本轮行为 GREEN 摘要；引用对应 VAL-B-<n> 与 intent/assertion；非行为命令与 DEMAND-2 起点相比无退化>` |
 | 处置 | `<本轮 RED rule_id 均已验证通过；或逐条命中冻结豁免>` |
 
 合法 GREEN 只有两种：
@@ -102,7 +102,7 @@ RED 报告：`<story-dir>/restore-report-red.json` · `9af…`
 
 GREEN 报告：`<story-dir>/restore-report-green.json` · `e23…`
 汇总：RED 0 / YELLOW 0 / GREEN 6；契约哈希仍为 `c41…`。
-回归：本轮行为测试 GREEN；非行为定向检查引用 `VAL-B-1`，与 DEMAND-2 起点相同。
+回归：本轮行为 assertions GREEN，引用 `VAL-B-a1b2c3d4e5f6 / order-list-restore`；非行为命令与 DEMAND-2 起点相同。
 
 视觉证据：不适用。机器可检项目由 static / render 层完成，本轮未截图。
 ```
@@ -135,18 +135,18 @@ python3 <skill-dir>/scripts/verify_restore_contract.py evidence-format \
 
 输出为 `legacy-screenshot-v1` 时只能按旧流程读取；新 Story 不得选择旧格式绕过冻结契约和 YELLOW 语义。
 
-## 二、可选的「Phase B 定向质量检查收据」
+## 二、「Phase B 验证批次收据」
 
-本节放在「还原证据记录」之后、「AC ↔ 证据映射」之前。只有实际执行包/目录回归、作用域 typecheck 或 lint 时才追加；Impact S 按规则跳过时只写一行「不适用，Phase C 最终全量门兜底」，不造空收据。
+本节放在「还原证据记录」之后、「AC ↔ 证据映射」之前。实际执行 command / browser batch 时追加；逐 intent / assertion 机器结果只保存在 `validation-receipts.json`，当前新鲜度与增量重跑只保存在 `validation-status.json`，本账本不复制它们。Impact S 只可跳过额外非行为命令，不能跳过冻结行为或浏览器基线行。
 
 | 字段 | 填法 |
 | --- | --- |
 | 收据 | `VAL-B-<序号>` |
-| 消费者 | 引用本次结果的 Task / 轮次列表 |
-| 新鲜度 | 检查 scope 的代码指纹、完整命令与顺序、scope、toolchain/runtime、执行时间 |
-| 结果 | 每条命令退出码、失败集合及与 DEMAND-2 起点的对照 |
+| 类型 / 消费者 | command / browser；引用结果的 Task / 轮次 / AC / R/F 行 |
+| 执行键 | intent fingerprint；package + commands + scope，或 page + fixture + runtime + reset strategy |
+| 结果 | passed / failed / blocked assertions 摘要；commands / browser_calls / retries 计数；命令与 DEMAND-2 的对照 |
 
-代码指纹、命令、scope、toolchain/runtime 全部相同的结果只写一条，多个 Task / 轮次引用同一编号；不得为了让每条记录看起来独立而重复执行。scope 内代码变化使收据失效，scope 外变化不自动失效。失效或失败时，引用它的受影响 Task Step ④/⑥ 必须恢复为未完成，直到对应检查重新通过。
+兼容 intent 只执行一个批次，多个 Task / 轮次引用同一编号；不得为了让每条记录看起来独立而重复调用命令或浏览器。代码变化后以 `validation-status.json` 为准：只有 stale / failed / blocked / pending consumer 的 Step ④/⑥ 恢复为未完成，同批其他 fresh + passed consumer 继续有效。
 
 ## 三、扩展「AC ↔ 证据映射」
 
@@ -184,7 +184,7 @@ python3 <skill-dir>/scripts/verify_restore_contract.py evidence-format \
 ## 五、交付前自检
 
 - [ ] 每个还原轮恰有一条 `R-<Task>-<轮次>` 记录
-- [ ] 同一非行为定向检查结果只写一条 `VAL-B-*`，消费者、新鲜度与失败集合齐全；不存在只为分 Task 留痕而重跑
+- [ ] 相同执行键的 command / browser intents 只写一条 `VAL-B-*`；消费者、逐 assertion 机器结果、新鲜度与调用计数可追溯，不存在只为分 Task / AC 留痕而重跑
 - [ ] 记录引用冻结契约、RED / GREEN 报告的路径与指纹
 - [ ] RED / GREEN 报告使用同一 contract hash，且 baseline hash 校验通过
 - [ ] GREEN 汇总为 RED 0、YELLOW 0

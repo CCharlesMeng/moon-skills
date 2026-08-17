@@ -137,8 +137,9 @@
 | --- | ---: |
 | 全量门（run / reuse 分列） | |
 | 定向检查（run / reuse 分列） | |
-| Phase B 验证批次 / 覆盖 Task | |
-| 浏览器场景（promote / run / reuse / stale 分列） | |
+| Phase B 验证批次（command / browser）/ 覆盖 Task | |
+| 验证 intent（passed / failed / blocked / stale / reused） | |
+| 浏览器调用 / 重试 / 场景（promote / run / reuse / stale） | |
 | 子代理启动 / 动态补位 / 重试 | |
 ```
 
@@ -239,7 +240,7 @@
 - [ ] ① RED（逻辑）—— 写失败的单元测试或接口集成测试，给出完整代码
 - [ ] ② 验 RED —— 运行测试，确认按预期失败
 - [ ] ③ GREEN —— 最小实现让测试转绿
-- [ ] ④ 验 GREEN —— 本 Task 行为测试转绿；执行或登记适用的 `VAL-B-*` 非行为定向检查（全量对账仍在 Phase C）
+- [ ] ④ 验 GREEN —— 本 Task 行为测试逐 assertion 转绿；执行或登记适用的 `VAL-B-*` command / browser 批次（全量对账仍在 Phase C）
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -284,13 +285,13 @@
 
 <sdd-dev-frontend 执行还原轮时按 `R-<Task 编号>-<轮次>` 自动追加，此处留空>
 
-## Phase B 定向质量检查收据
+## Phase B 验证批次收据
 
-<只在实际执行非行为定向检查时追加 `VAL-B-<序号>`；相同结果只写一条，多个 Task / 轮次按消费者引用。Impact S 跳过时写「不适用，Phase C 最终全量门兜底」>
+<实际执行 command / browser 批次时追加 `VAL-B-<序号>`；相同执行只写一条，多个 Task / 轮次 / AC / R/F 行按消费者引用。逐 intent / assertion 机器结果见 `validation-receipts.json`，当前新鲜度与精确重跑见 `validation-status.json`，本表不复制 JSON。Impact S 只可跳过非行为命令，行为与浏览器基线行仍须落账。>
 
-| 收据 | 消费者 | 代码指纹 / scope | 命令与环境 | 结果 |
-| --- | --- | --- | --- | --- |
-| VAL-B-1 | T1-r1, T2-r1 | `<scope fingerprint>` / `<package or paths>` | `<完整命令顺序>`；`<toolchain/runtime>` | `<退出码、失败集合、与 DEMAND-2 对照>` |
+| 收据 | 类型 / 消费者 | 依赖 / 执行键 | 结果与调用计数 |
+| --- | --- | --- | --- |
+| VAL-B-a1b2c3d4e5f6 | command / browser；T1-r1, T2-r1, AC-x.1 | `<intent fingerprint>`；`<package + commands + scope / page + fixture + runtime + reset>` | `<passed / failed / blocked assertions>`；`commands=<n> / browser_calls=<n> / retries=<n>` |
 
 ## AC ↔ 证据映射
 

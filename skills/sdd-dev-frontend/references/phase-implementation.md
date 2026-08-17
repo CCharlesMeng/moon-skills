@@ -10,14 +10,14 @@
 
 #### 1. 开工前必读
 
-进入 Phase B 时先读 `dev-baseline.md / 工程依据`，把其中引用的全部 `PATTERN-*` 正文**一次性预读完**（命令见下，逐 ID 执行），Requirement 的 `REQ-DEC-*` 回读 `requirement-frontend-design.md`。之后每个 Task 动手前只回看与当前 Task 命中的那几条，**不重复跑脚本**。
+进入 Phase B 时先完整读取 [验证批次执行契约](./validation-batches.md)，再读 `dev-baseline.md / 工程依据`，把其中引用的全部 `PATTERN-*` 正文**一次性预读完**（命令见下，逐 ID 执行），Requirement 的 `REQ-DEC-*` 回读 `requirement-frontend-design.md`。之后每个 Task 动手前只回看与当前 Task 命中的那几条，**不重复跑脚本**。
 
 ```bash
 python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
   --baseline-dir "<repo-baseline-dir>" --pattern-id "<PATTERN-ID>"
 ```
 
-这是细粒度复用的**第一道防线**，第二道在 Phase C 的代码规范检视。
+这是细粒度复用的**第一道防线**，第二道在 Phase C 的代码规范检视。随后从冻结 R/F、Task 通道、AC 与适用质量命令一次编译 `<story-dir>/validation-intents.json` → `validation-plan.json`；实现中新增状态或代码变化时重编，执行顺序只读 status 的 `next_batches[]`，不得靠临场想到一条就跑一条。
 
 #### 2. Task 与轮次调度
 
@@ -80,26 +80,26 @@ Step ④ 不只证明「主要实现完成」。主 agent 必须读 `tasks.md` �
 - 未核销完不得勾本轮 GREEN、不得进 Step ⑥。
 - 当场执行过的浏览器 / 结构化渲染检查同时按 [Phase C 共享证据契约](./review-evidence.md#三phase-b-事实提升) 记录原始 scenario；后续 Phase C 能精确复用时不得重跑。
 
-##### 定向验证梯度、验证批次与结果复用
+##### 定向验证梯度、执行批次与结果分发
 
-Phase B 把验证分成两层，不能混成「每个 Task 都跑一遍所改包的全部命令」：
+Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复执行”分开：
 
-| 层 | 最晚时机 | 能否批次化 |
+| 层 | 结论所有权 | 执行方式 |
 | --- | --- | --- |
-| 本轮行为证明：本轮新增/修改的逻辑测试，或同一冻结还原契约 | 每轮 Step ④ | **不能。** 每个通道都要有自己的 GREEN |
-| 非行为定向检查：更宽的包/目录回归、作用域 typecheck、lint | Task 稳定后；符合条件时可到验证批次边界 | Impact S 仍按第 4 节跳过；Impact M 可批次化；Impact L 每 Task 立即跑 |
+| 本轮行为证明：逻辑测试或冻结还原契约 | 每个 Task / 通道分别保留 RED、GREEN、checkbox 与 AC 映射 | 因果独立；兼容的状态 / 视口 /操作可进入同一个 browser batch，但结果必须逐 assertion 回到原消费者 |
+| 非行为定向检查：包/目录回归、作用域 typecheck、lint | 每个消费它的 Task 分别核“相对 DEMAND-2 无新增失败” | 相同 package、命令、toolchain/runtime 与风险边界时合成一个 command batch，scope 取并集 |
 
-Impact M 只有在**相邻最多两个 Task** 同时满足以下条件时，才建立一个验证批次：同一 app/package、相同命令与 toolchain/runtime、检查 scope 能安全取两个 Task 文件清单的并集；中间没有公共组件/公共 API、schema/migration、路由/权限、跨进程协议或外部时变状态边界；两个 Task 的通道 GREEN 与已知约束已经各自核销。任一项不满足就每 Task 立即跑，不为省命令扩大风险面。
+批次大小按 [验证批次执行契约](./validation-batches.md) 的兼容性与强制 flush 条件决定，**不再以 Impact M 或“相邻最多两个 Task”作为执行上限**。Impact S 仍可按原规则跳过非行为定向检查；Impact M / L 只决定检查范围与风险边界，不要求同一命令、页面或 fixture 为每个 Task 重跑。
 
-进入批次的 Task 在 Step ④ 仍先跑自己的行为证明，Step ⑥ 则在 `alpha-tests.md` 登记它消费的 `VAL-B-<n>`。批次到边界后只执行一次非行为定向检查，并生成一条共享收据：
+固定动作：
 
-| 必填 | 内容 |
-| --- | --- |
-| 收据与消费者 | `VAL-B-<n>`；消费它的 Task / 轮次列表 |
-| 新鲜度 | 检查 scope 的代码指纹、完整命令与顺序、scope、toolchain/runtime、执行时间 |
-| 结果 | 每条命令的退出码、失败集合，与 DEMAND-2 起点对照 |
+1. Task 到 Step ④ 前，把本轮 consumers、assertions、`depends_on`、浏览器场景或命令 scope 登记进 `validation-intents.json` 并重编计划；
+2. 到安全边界后按 `validation-status.json / next_batches[]` 执行一个完整 `VAL-B-<n>`，浏览器同批次只连接/打开一次并按 reset strategy 连续跑场景矩阵；
+3. 用 `manage_validation_batches.py record` 逐 intent、逐 assertion 追加 `validation-receipts.json`，再用 `status` 生成消费者状态；只有当前 Task 映射的全部结果 fresh + passed 才完成 Step ④/⑥；
+4. 命令结果仍与 DEMAND-2 起点逐项对照；浏览器原始观察同时写 `phase-b-review-evidence.json`，判断只进批次收据与 Task 证据链；
+5. 代码变化后重编计划，只执行 status 列出的 stale / failed / blocked / pending intent。批次里其他 passed intent 与消费者不撤销、不重跑。
 
-同一收据可以被多个 Task / 轮次引用；**代码指纹、命令、scope、toolchain/runtime 逐项相同就复用，不为多写一行证据而重跑。** scope 内代码变化只失效依赖该 scope 的收据；轮次行为证明按其实际 `depends_on` 精确失效；scope 外变化不把收据一刀切作废。收据失效或失败时，所有消费它的 Task 都先撤销 Step ④/⑥；行为证明只按实际 `depends_on` 重跑，未命中的既有 GREEN 继续复用。批次失败时先做定向诊断，不得直接跑全量门碰运气。进入 Phase C 前，所有 `VAL-B-*` 必须新鲜且相对 DEMAND-2 无新增失败，不能把待执行批次带入候选全量门。
+一个 batch 总体退出码为 0、一个截图或一句“场景全部通过”都不能分发给多个 Task；缺任何 assertion 的 evidence 时，脚本拒绝记录。批次失败先做定向诊断；同一路径两次仍失败就拆批或记 blocked，不跑全量门碰运气。进入 Phase C 前 `validation-status.json / ready` 必须为 `true`，不能把待执行或失效 intent 带入候选全量门。
 
 #### 4. 还原轮 6 步的动作
 
@@ -138,7 +138,7 @@ Impact M 只有在**相邻最多两个 Task** 同时满足以下条件时，才�
 
 - 重跑 ① 的同一条链，唯一差别是 `report --phase green`。**不得编辑 RED 报告得到 GREEN 报告**；该命令在 `overall` 非 `green` 时以退出码 3 阻断。
 - 合法结论只有：全部规则已验证；或未实际匹配的规则逐条命中契约内的冻结豁免。任何 RED、任何未解决 YELLOW 都不是 GREEN；**不得为收口就地新增豁免**。
-- 本轮新增/修改的逻辑测试或同一冻结契约必须当场 GREEN。更宽的包/目录回归、所改范围 typecheck 与 lint 按上方「定向验证梯度、验证批次与结果复用」执行：**Impact S 可跳过，Impact M 仅在满足条件时最多合并相邻两个 Task，Impact L 每 Task 立即跑**。不必每个 Task 全量跑一遍——候选稳定后的全量对账在 Phase C 由主 agent 执行一次并写入 `review-evidence.json`，功能自测试独立判断这份原始结果，不重复执行同一套命令。定向检查的**判定基准是 DEMAND-2 的起点失败集合，不是「全绿」**：
+- 本轮新增/修改的逻辑测试或同一冻结契约必须给当前通道独立 GREEN；兼容动作可按上方批次一次执行，但逐 assertion 结果不能合并。更宽的包/目录回归、所改范围 typecheck 与 lint 也由计划合批；Impact S 可跳过，M / L 按风险边界决定 flush，不按 Task 数重复执行。不必每个 Task 全量跑一遍——候选稳定后的全量对账在 Phase C 由主 agent 执行一次并写入 `review-evidence.json`，功能自测试独立判断这份原始结果，不重复执行同一套命令。定向检查的**判定基准是 DEMAND-2 的起点失败集合，不是「全绿」**：
 
 | 作用域内与基线对照 | 判定 |
 | --- | --- |
@@ -159,7 +159,7 @@ Impact M 只有在**相邻最多两个 Task** 同时满足以下条件时，才�
 
 - 按 [alpha-tests-restore.md](./alpha-tests-restore.md) 在 `alpha-tests.md` 新增一条：契约哈希、RED/GREEN 报告指纹与路径、三色摘要、视觉缓存指纹与路径、可选实现截图。
 - `alpha-tests.md` 不复制完整报告，不保存第二份偏差表；`restore-report-*.json` 是机器细节的唯一来源。
-- 本轮消费验证批次时只引用一条 `VAL-B-<n>`，不要把同一命令结果复制进每个 Task；批次尚未到边界时先登记消费者，边界执行后回填同一收据。收据失效或失败时，全部消费者的 Step ④/⑥ 立即改回未完成；各自行为 GREEN 是否重跑仍按 `depends_on` 判断。
+- 本轮消费验证批次时只引用 `VAL-B-<n>` 与对应 intent / assertion，不把同一命令或浏览器结果复制进每个 Task。批次尚未到边界时先登记消费者；执行后以 `validation-status.json / consumers` 回填。只有 stale / failed / blocked / pending 的消费者撤销 Step ④/⑥，已 fresh + passed 的消费者保持完成。
 - 本轮实际执行过浏览器 / 结构化渲染检查时，把可供布局检视或功能自测复用的原始事实增量写入 `<story-dir>/phase-b-review-evidence.json`。每条包含 `depends_on` 及采集时逐文件哈希、fixture、runtime、viewport、步骤、观察与 artifact；**不得写通过/不通过或级别**。同一新鲜度键幂等覆盖，不复制第二条。没有这类场景时不为凑工件创建空文件。
 - 回填「AC ↔ 证据映射」：证据类型加「还原」，证据链填记录编号，状态填 `GREEN` 或 `Deferred`
 - 勾 `tasks.md` 的 checkbox，提交
@@ -196,7 +196,7 @@ Impact M 只有在**相邻最多两个 Task** 同时满足以下条件时，才�
 #### 7. 进度真相与落账
 
 - **`tasks.md` 的 checkbox 是唯一进度真相。** 完成一步勾一步，不批量补勾，不在别处另记一份进度
-- 双通道快路径仍按每个通道逐项勾选；共享一次实现或重构，不代表可以把两轮 ③–⑥ 一次性补勾。验证批次尚未执行时，Task 可登记 `VAL-B-<n>` 消费者并继续到相邻 Task；批次失败或失效必须立即撤销全部消费者的 ④/⑥，行为证明只精确重跑依赖命中的通道，不能让 checkbox 与证据新鲜度分叉。
+- 双通道快路径仍按每个通道逐项勾选；共享一次实现、重构或批次执行，不代表可以把两轮 ③–⑥ 一次性补勾。验证批次尚未执行时，Task 可登记消费者并继续到下一安全边界；批次失败或失效时只撤销 status 命中的消费者 ④/⑥，不能把同批其他新鲜结果一刀切作废，也不能让 checkbox 与消费者状态分叉。
 - Step ⑥ 把证据落进 `alpha-tests.md`：还原轮进「还原证据记录」节，逻辑轮进 L4 / L3 记录节，两者都回填 AC ↔ 证据映射。**不另开第二本账**
 - 上游未声明对接模式且接口实际不可用时，降级为静态实现模式，把受影响的 AC 标 `Deferred` 并写明原因与解除条件。**不得拿豁免顶替 `Deferred`**
 - 全部 Task 的 checkbox 勾完、`alpha-tests.md` 无缺口，才进 Phase C
