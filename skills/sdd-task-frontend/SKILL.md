@@ -210,7 +210,7 @@ Step ③ 是越界的高发处：**它的读者是能读代码的 Dev，不是�
 
 ### Step 9：落盘与回传
 
-`tasks.md` 的骨架取 [templates/tasks-frontend.md](./templates/tasks-frontend.md)——它派生自上游 `sdd-task/ templates/task.md`，章节编号一致，只把 §3.4 换成还原基线、Task 块加形态标注、自审清单加越界与重复两条。`alpha-tests.md` 仍用上游模板，四节结构不变。
+`tasks.md` 的骨架取 [templates/tasks-frontend.md](./templates/tasks-frontend.md)——它派生自上游 `sdd-task/templates/task.md`，章节编号一致，只把 §3.4 换成还原基线、Task 块加形态标注、自审清单加越界与重复两条。`alpha-tests.md` 仍用上游模板，四节结构不变。
 
 按 `schema_tasks` / `schema_alpha_tests` 的 outputPath 落盘到 `story_dir`，向 `sdd-task` 回传两条路径与降级标注清单。
 
@@ -284,7 +284,7 @@ Step ③ 是越界的高发处：**它的读者是能读代码的 Dev，不是�
 | ---------------------------------------------- | --------------------- |
 | `sdd-task/references/test-framework-detection.md`  | Step 4 框架探测判据（`detection_ref`）  |
 | `sdd-task/references/acceptance-criteria-extraction.md` | Step 5 AT- 提炼判据（`extraction_ref`） |
-| `sdd-task/ templates/alpha-tests.md`               | `alpha-tests.md` 骨架   |
+| `sdd-task/templates/alpha-tests.md`                | `alpha-tests.md` 骨架   |
 
 设计依据（已由本 skill 执行，**不再需要带到上游**）：`sdd-dev-frontend/references/sdd-task-frontend-split.md`、`sdd-dev-frontend/references/sdd-task-amendments.md`。
 
