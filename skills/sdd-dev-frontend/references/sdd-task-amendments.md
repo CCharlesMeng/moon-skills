@@ -1,8 +1,14 @@
-# 上游 `sdd-task` 回改需求说明书
+# 上游 `sdd-task` 回改需求说明书（已落地，现为设计依据）
+
+> **现状：本文的要求已经执行完了，不要再带到上游。**
+>
+> 落地位置是 `skills/sdd-task-frontend/references/failure-evidence-forms.md`。`sdd-task` 的 Step 2.4 会把 `type=frontend` 的行整行路由给 `sdd-task-frontend`，前端 `tasks.md` 不再由公共主干生成，所以下面那句「下游改不到上游」已经不成立。
+>
+> 本文保留为**设计依据**：它记着为什么要有两种形态、以及被否决的三个替代方案。要改前端规则请改 `sdd-task-frontend`，**不要在这里改，也不要为前端规则新写上游说明书**（边界见 `skills/sdd-task/VENDORED.md`）。两处冲突时以 `sdd-task-frontend` 为准。
 
 ## 这份文档是什么
 
-`sdd-dev-frontend` 阶段的一条设计决策溢出到了上游：`sdd-task` 产出的 `tasks.md` 模板必须支持两种失败证据形态。`sdd-task` 由上游维护，下游改不到它，所以把需求落成这份说明书，由使用者带到上游照着改。
+`sdd-dev-frontend` 阶段的一条设计决策溢出到了上游：`sdd-task` 产出的 `tasks.md` 模板必须支持两种失败证据形态。写作时 `sdd-task` 由上游维护、下游改不到它，所以把需求落成这份说明书，由使用者带到上游照着改。
 
 本文自包含：读完就能改，不需要回头翻 `sdd-dev-frontend` 的任何文件。
 

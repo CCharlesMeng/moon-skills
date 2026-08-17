@@ -27,7 +27,7 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 | 单形态 Task | 按该形态的一轮 6 步完成 |
 | 同时含还原与逻辑的 Task | 默认先还原轮、后逻辑轮；满足下列条件时走**双通道快路径** |
 
-一个 Task 内允许多轮 6 步：默认一个区块先完成还原轮再走逻辑轮；符合下方条件时，两轮改为锁步。每轮独立编号并标注形态，如 `Task 3 · 轮 1（还原）`、`Task 3 · 轮 2（逻辑）`。上游已按 [sdd-task-frontend-split.md](./sdd-task-frontend-split.md) 把整页样式切成独立还原 Task 时，该 Task 只有还原轮、其余 Task 只有逻辑轮，Task 间顺序仍由 `tasks.md` 决定。
+一个 Task 内允许多轮 6 步：默认一个区块先完成还原轮再走逻辑轮；符合下方条件时，两轮改为锁步。每轮独立编号并标注形态，如 `Task 3 · 轮 1（还原）`、`Task 3 · 轮 2（逻辑）`。上游已把整页样式切成独立还原 Task 时（`sdd-task-frontend` 产出的 `tasks.md` 都是这个形状，切分口径见它的 `references/task-split.md`；本 skill 侧的设计依据是 [sdd-task-frontend-split.md](./sdd-task-frontend-split.md)），该 Task 只有还原轮、其余 Task 只有逻辑轮，Task 间顺序仍由 `tasks.md` 决定。
 
 **双通道快路径只合并执行波次，不合并证据链。** 同一 Task 的还原与逻辑同时存在时，逐项核对：
 

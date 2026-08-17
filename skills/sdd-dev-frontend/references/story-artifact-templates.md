@@ -172,6 +172,8 @@
 | project_type | frontend |
 | 归属 Story | <Story 编号 · 名称> |
 | frontend_design_path | <story-delta-frontend-design.md 的路径> |
+| baseline_source | prototype / reference_page / text_spec / none |
+| restore_tasks | <还原轮的 Task 编号；本 Story 无静态呈现时留空> |
 
 ## 项目边界
 
@@ -204,6 +206,8 @@
 除这两种形态之外，没有失败证据不写实现。
 
 **No Placeholders 铁规**：禁止 TBD / TODO / "类似任务 N" / 无代码步骤。
+
+**不越界铁规**：Step ③ 只写「改哪个文件 + 达成什么可观测行为」，禁止对象字面量、模板片段、完整函数体、内部 helper 名、指定 API 调用、具体 px / 色值 / 字号。判据是「改掉这个细节，AC 或测试断言会不会变」——不会变就属实现自由度。**越界与占位符同为计划缺陷**：只禁占位符时，起草会一路滑向写实现代码。
 
 每步 2-5 分钟一个动作，「写失败证据」和「运行确认失败」是两步，不可合并。**一个 Task 内允许出现多轮 6 步**：还原与逻辑各走一轮，默认先还原、后逻辑，每轮独立编号并标注形态。只有两边能在产品实现前得到原因独立的 RED、由同一组产品改动共同满足且无 YELLOW / fixture 冲突时，才标注「双通道候选」；执行侧可锁步推进，但不得合并两套 RED/GREEN、checkbox 或 AC 证据链。
 
@@ -248,6 +252,7 @@
 
 - [ ] AC 覆盖：Story / AC 追溯表中每条 AC 都有 Task 覆盖
 - [ ] 占位符扫描：全文无 TBD / TODO / "类似任务 N"
+- [ ] 越界扫描：Step ③ 无对象字面量、模板片段、函数体、内部 helper 名、指定 API 调用、`#` 色值 / `px`
 - [ ] 类型一致性：涉及的接口字段类型与 `story-delta-frontend-design.md` 一致
 - [ ] 前端行另查 1：组件树 / 界面清单是否已烘焙（首个 Story 可写「无，暂无复用组件」）
 - [ ] 前端行另查 2：每个前端 Task 的每一轮 6 步，Step ① 是否明确标注了失败证据形态
