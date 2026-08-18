@@ -79,6 +79,20 @@
 - **R1 的期望值写实现中立的结构事实**：元素的存在与数量、层级、角色（heading / img 等）、可访问名。**不得把原型 class 名写进 `expected`**——类名是设计稿侧工件，实现没有复刻义务；类名只出现在 `design_fact_source` 锚点与（适用时的）CSS locator 里；
 - `exact` / `structure` / `state` 保持精确相等，**R2 文案逐字比对不经过任何归一化**。
 
+### 未覆盖形态：`suspected-tool-equivalence`
+
+上一节的归一化是**枚举**，枚举永远会有下一个未覆盖形态。这类 RED 的危险不在于它是红的，而在于它和真偏差走同一条升级路径：修 3 次不成 → 打断用户 → 补一条豁免。实证是区域流水地图 Story 的 `EX-2`–`EX-5`——四条工具债被写成了冻结基线里「允许与设计稿不一致」的永久记录。
+
+所以比对器另带一个**不依赖枚举**的信号：严格比对失败时，再用一次故意过宽的规范化（在上节归一化之上抹掉 token 顺序、分隔符与 `0` 值单位）。过宽形态一致就把该条标成 `reason_class: "suspected-tool-equivalence"`，写进报告顶层 `tool_equivalence_suspects[]`，`report` 以**退出码 5** 阻断（先于 `--phase green` 的退出码 3）。
+
+| 命中后不许做 | 只能做 |
+| --- | --- |
+| 改实现去迎合字符串 | 按 [CONTEXT.md 的问题分流](../CONTEXT.md#设计稿链路的问题分流) 定位到「比对器等价」层，把该形态补进 `verify_restore_contract.py` 的 normalize / canonicalize 函数族与 `collect_restore_facts.js` 的同源别名表 |
+| 为它新增豁免（**硬门禁 16**） | 补不了或形态存疑时按 P7 上报为工具等价缺口，附 `rule_id` 与两侧原值 |
+| 把它算进「同一报错修 3 次」的计数 | 补完归一化后重跑同一契约；两端映射必须同步改 |
+
+**过宽规范化只用于怀疑，永远不进判定通道**——它会把 `12px 8px` 与 `8px 12px` 拉平，作为通过判据就会漏掉真偏差。因此它命中时的结论是「这条要人看一眼工具」，不是「这条通过了」。
+
 ### 静态预检
 
 规则要求 `static` 层时必须给 `static_check`：
@@ -197,7 +211,16 @@ python3 "<skill-dir>/scripts/verify_restore_contract.py" report \
 ```
 
 GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集方式保持相同。
-`--phase green` 仍会把完整报告写出，但只要 `overall` 不是 `green` 就以退出码 `3` 结束，供调用链机械阻断；RED 阶段出现 RED 是预期证据，命令仍正常返回。
+
+退出码：
+
+| 码 | 含义 | 动作 |
+| --- | --- | --- |
+| `0` | 报告已写出且无需阻断。RED 阶段出现 RED 是预期证据，仍返回 0 | 照常进 Step ② |
+| `3` | `--phase green` 下 `overall` 不是 `green` | 不得当成完成；按状态语义处理 RED / YELLOW |
+| `5` | 存在 `suspected-tool-equivalence`，两个 phase 都阻断 | 走硬门禁 16：补比对器映射或上报工具缺口，**不修实现、不补豁免** |
+
+退出码 `5` 先于 `3` 判定——工具缺口没排除前，`overall` 是什么都不可信。
 
 ## 五、状态语义
 

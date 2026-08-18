@@ -37,25 +37,24 @@
 | Test Design 用例 | F1 层级对账少一个证据来源 | 记入「已知缺口」，改跑仓内测试命令核对，写明命令与输出关键行 |
 | `dev-baseline.md / 工程依据` 缺失或引用失效 | 代码规范检视**终止**；布局检视拿不到 token 范式；质量检视判不了某条发现是否违反仓内约定 | 重新执行代码侧勘察，只回填 ID 与 REPO-3 指纹，不创建范式副本 |
 | `<preflight-cache>` 缺失、损坏或 Git metadata 不可写 | 不能复用上次起点质量事实 | 按普通 cache MISS 实跑 `REPO-2`；结果仍写 `dev-baseline.md` 与 telemetry。缓存写回失败只记 note，不把缓存能力升级成开工阻断 |
-| `execution-telemetry.json` 缺失或单步漏记 | 无法准确拆分本轮耗时与动作次数 | 从当前时刻继续记；既往行写“未记录”，禁止凭聊天时间戳、LOC 或记忆补估 |
+| `execution-telemetry.json` 缺失或单步漏记 | 本次没开启就没有后果，**不是降级项**；开启过而漏记则拆不准耗时与动作次数 | 没开启的不补建、不登记。开启过的从当前时刻继续记；既往行写“未记录”，禁止凭聊天时间戳、LOC 或记忆补估 |
 | `alpha-tests.md` 还原证据 | 检视核不了哪些偏差已命中冻结豁免 | 子代理标 `待主 agent 核豁免`，主 agent 对着豁免表定夺 |
 | 接口实际不可用 | F4 与部分 F2 / F3 跑不了 | 逐条记 `未跑（接口不可用）`，走 `Deferred`。**不得写成通过，不得自行判为豁免** |
 
 ## 四、失败恢复
 
-中断后重跑，先读进度再决定从哪继续。**`tasks.md` 的 checkbox 是唯一步骤进度真相；验证结果是否仍新鲜只由 validation status 决定。**
+中断后重跑，先读进度再决定从哪继续。**`tasks.md` 的 checkbox 是唯一步骤进度真相；已勾的步骤是否仍成立，由它引用的那次执行的新鲜度键决定。**
 
 | 产物 | 重跑时 | 理由 |
 | --- | --- | --- |
 | 仓库 `repo-baseline.md` | 最先运行 `status` / `validate`；失效即回 Phase -1，**但本 Story 自身改动引起的失效除外**（判据见 SKILL.md 的 Phase -1 仓库接入门） | 不能在过期仓库事实上续跑 Story；反过来，也不能把本 Story 未过检视的代码刷成仓库范式 |
-| `tasks.md` checkbox + `alpha-tests.md` | 先读；再与 validation status 对账，从**第一个未完成或消费者未通过的 Task** 继续 | 已勾且 fresh + passed 的步骤有证据可查；status 失效的步骤必须撤销，不能只信旧 checkbox |
-| `validation-intents.json` / plan / receipts / status | 以当前工作区重编 plan、重算 status；只执行 `next_batches[]` 的 intent 子集 | 批次 ID 稳定；逐依赖精确失效，同批未受影响结果和精确回退后重新匹配的旧结果继续复用 |
+| `tasks.md` checkbox + `alpha-tests.md` | 先读；再逐条核 Step ④ 引用的那次执行是否仍新鲜，从**第一个未完成或引用已失效的 Task** 继续 | 已勾且引用仍新鲜的步骤有证据可查；引用失效的步骤必须撤销，不能只信旧 checkbox |
 | `<design-spec-dir>` 的 `design-facts.json`、三份 Markdown、切分表与区块规格 | 重跑脚本算原型指纹与区块哈希；指纹一致全量只读复用，指纹变化后只重抽失配 / 新增区块 | 原型指纹覆盖 DOM/CSS、资源内容与缺失状态；区块增量仍按内容哈希，不用 mtime |
 | `<design-spec-dir>/visual-baseline/` | 缓存键全量一致只读命中；任一环境维度变化创建新指纹目录 | 不覆盖旧版本；没有 visual YELLOW 不查询、不截图 |
 | `restore-contract.json` | `dev-baseline.md` 未变则复用；基线哈希不一致硬失败 | 只有重新确认基线后才能重新编译 |
 | `dev-baseline.md / 工程依据` | Story 未变且记录的 REPO-3 指纹仍一致时**跳过重跑**；Story 变更时重新判 `lite` / `full` | 选择引用仍指向同一版仓库范式；指纹变化或 lite 条件不再成立就走 `full`，不复制正文 |
 | `<preflight-cache>` | 每次 Phase 0 都重新 `probe`，只有状态 / REPO-2 / 命令 / toolchain / runtime 全同且 24h 内才复用 | 缓存自身不是进度真相；MISS 实跑，Phase C / D 的全量门照常 |
-| `execution-telemetry.json` | 已有 attempt 只读保留，从下一 attempt / 下一稳定 ID 继续追加 | 不覆盖失败轮；人的等待与 agent 主动时间继续分开 |
+| `execution-telemetry.json`（可选） | 本次开启过就从下一 attempt / 下一稳定 ID 继续追加；没开启过不补建 | 不覆盖失败轮；缺席不算降级项 |
 | `dev-baseline.md` 的确认门 | 已冻结时**不重新走** | 重走一次等于让用户对同一份基线确认两次（P1） |
 | `review-evidence.json` / `dev-review.md` | 先按代码指纹与逐场景 `depends_on` 判失效；未失效的原始证据继续复用，受影响角色重新作判断 | 判断不继承，但相同 fixture / viewport / 运行时的事实无需重复采集；角色集合按 Phase D 冻结映射取，不无条件四份全跑 |
 

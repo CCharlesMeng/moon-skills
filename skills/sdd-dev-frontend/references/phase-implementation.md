@@ -10,14 +10,27 @@
 
 #### 1. 开工前必读
 
-进入 Phase B 时先完整读取 [验证批次执行契约](./validation-batches.md)，再读 `dev-baseline.md / 工程依据`，把其中引用的全部 `PATTERN-*` 正文**一次性预读完**（命令见下，逐 ID 执行），Requirement 的 `REQ-DEC-*` 回读 `requirement-frontend-design.md`。之后每个 Task 动手前只回看与当前 Task 命中的那几条，**不重复跑脚本**。
+进入 Phase B 时先读 `dev-baseline.md / 工程依据`，把其中引用的全部 `PATTERN-*` 正文**一次性预读完**（命令见下，逐 ID 执行），Requirement 的 `REQ-DEC-*` 回读 `requirement-frontend-design.md`。之后每个 Task 动手前只回看与当前 Task 命中的那几条，**不重复跑脚本**。
 
 ```bash
 python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
   --baseline-dir "<repo-baseline-dir>" --pattern-id "<PATTERN-ID>"
 ```
 
-这是细粒度复用的**第一道防线**，第二道在 Phase C 的代码规范检视。随后从冻结 R/F、Task 通道、AC 与适用质量命令一次编译 `<story-dir>/validation-intents.json` → `validation-plan.json`；实现中新增状态或代码变化时重编，执行顺序只读 status 的 `next_batches[]`，不得靠临场想到一条就跑一条。
+这是细粒度复用的**第一道防线**，第二道在 Phase C 的代码规范检视。
+
+**参考文件按 Task 形态取，不在 Phase B 开头一次性全读。** 读文档的时间也是 Story 时间：
+
+| 什么时候 | 读什么 | 什么时候不读 |
+| --- | --- | --- |
+| 进 Phase B | 本文件 | —— |
+| 第一个还原轮的 Step ① 之前 | [restore-contract.md](./restore-contract.md) 第四、六节（命令与视觉缓存） | 本 Story 无还原轮时整份不读 |
+| 第一次写还原证据（Step ⑥） | [alpha-tests-restore.md](./alpha-tests-restore.md) | 纯逻辑 Task 只按 L4 / L3 记录节写，不读它 |
+| 第一次要落浏览器 / 结构化渲染场景 | [review-evidence.md](./review-evidence.md) 第二、三、五节 | 本轮没有这类场景时不读 |
+
+同一份参考文件**一个 Story 内只读一次**，后续 Task 直接按已读内容执行；记不清某个字段时回看那一节，不整份重读。
+
+**Impact S 的短路径**：单 Task、无还原轮、不碰公共边界的 Story，Phase B 只读本文件即可开工——冻结契约、还原证据与浏览器场景三份参考都不适用。它省掉的是不适用形态的参考读取与非行为定向检查，**不省** RED/GREEN、AC 证据链与 Phase C 全量门。
 
 #### 2. Task 与轮次调度
 
@@ -78,28 +91,43 @@ Step ④ 不只证明「主要实现完成」。主 agent 必须读 `tasks.md` �
 - **无法在本 Task 内验证的，必须显式写明「推迟到 Phase C 的哪一份检视核实」以及理由**；**禁止用批量 `N/A` 打包清零**。
 - 这道检查**不替代**契约与检视，只防止「计划里已经写明的约束」被静默带到收口才第一次发现。
 - 未核销完不得勾本轮 GREEN、不得进 Step ⑥。
-- 当场执行过的浏览器 / 结构化渲染检查同时按 [Phase C 共享证据契约](./review-evidence.md#三phase-b-事实提升) 记录原始 scenario；后续 Phase C 能精确复用时不得重跑。
+- 当场执行过的浏览器 / 结构化渲染检查按 [共享证据契约](./review-evidence.md#三phase-b-场景就地入包) 把原始 scenario **直接写进 `review-evidence.json`**（不另存中间文件）：
 
-##### 定向验证梯度、执行批次与结果分发
+```bash
+python3 "<skill-dir>/scripts/manage_review_pipeline.py" scenarios \
+  --review-evidence "<review-evidence>" \
+  --code-manifest "<临时目录>/code-manifest.json" \
+  --runtime "<临时目录>/runtime.json" \
+  --add "<临时目录>/phase-b-scenarios.json"
+```
+
+  脚本按新鲜度键幂等入包并回报 `recorded / fresh / stale`；Phase C 只在此基础上核新鲜度、补缺口，不重跑仍有效的场景。
+
+##### 定向验证梯度与结果复用
 
 Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复执行”分开：
 
 | 层 | 结论所有权 | 执行方式 |
 | --- | --- | --- |
-| 本轮行为证明：逻辑测试或冻结还原契约 | 每个 Task / 通道分别保留 RED、GREEN、checkbox 与 AC 映射 | 因果独立；兼容的状态 / 视口 /操作可进入同一个 browser batch，但结果必须逐 assertion 回到原消费者 |
-| 非行为定向检查：包/目录回归、作用域 typecheck、lint | 每个消费它的 Task 分别核“相对 DEMAND-2 无新增失败” | 相同 package、命令、toolchain/runtime 与风险边界时合成一个 command batch，scope 取并集 |
+| 本轮行为证明：逻辑测试或冻结还原契约 | 每个 Task / 通道分别保留 RED、GREEN、checkbox 与 AC 映射 | 因果独立，必须各自执行 |
+| 非行为定向检查：包/目录回归、作用域 typecheck、lint | 每个消费它的 Task 分别核“相对 DEMAND-2 无新增失败” | 同一次执行的结果可被多个 Task 引用，见下方新鲜度键 |
 
-批次大小按 [验证批次执行契约](./validation-batches.md) 的兼容性与强制 flush 条件决定，**不再以 Impact M 或“相邻最多两个 Task”作为执行上限**。Impact S 仍可按原规则跳过非行为定向检查；Impact M / L 只决定检查范围与风险边界，不要求同一命令、页面或 fixture 为每个 Task 重跑。
+**同一动作不为每个 Task 重跑。** 判据只有一条新鲜度键，不另立批次编号或意图账本：
 
-固定动作：
+| 动作 | 新鲜度键 | 键不变时 | 键变化时 |
+| --- | --- | --- | --- |
+| 命令类（test / typecheck / lint / build） | 完整命令字符串 + scope + toolchain/runtime + 代码指纹 | 后续 Task 直接引用上一次的**逐项失败集合**，在 Step ⑥ 记一行「引用 `<命令>` 于 `<代码指纹>`」 | 重跑 |
+| 浏览器 / 结构化渲染场景 | 页面 + fixture + viewport + runtime + `depends_on` 逐文件哈希 | 引用同一条场景记录 | 重采该条场景 |
 
-1. Task 到 Step ④ 前，把本轮 consumers、assertions、`depends_on`、浏览器场景或命令 scope 登记进 `validation-intents.json` 并重编计划；
-2. 到安全边界后按 `validation-status.json / next_batches[]` 执行一个完整 `VAL-B-<n>`，浏览器同批次只连接/打开一次并按 reset strategy 连续跑场景矩阵；
-3. 用 `manage_validation_batches.py record` 逐 intent、逐 assertion 追加 `validation-receipts.json`，再用 `status` 生成消费者状态；只有当前 Task 映射的全部结果 fresh + passed 才完成 Step ④/⑥；
-4. 命令结果仍与 DEMAND-2 起点逐项对照；浏览器原始观察同时写 `phase-b-review-evidence.json`，判断只进批次收据与 Task 证据链；
-5. 代码变化后重编计划，只执行 status 列出的 stale / failed / blocked / pending intent。批次里其他 passed intent 与消费者不撤销、不重跑。
+浏览器场景的键与 [共享证据契约](./review-evidence.md) 第五节**完全同一套**——Phase C 本来就要用它做精确失效，Phase B 不再维护第二套编号。同页面、fixture 与 runtime 的状态/视口矩阵仍只连接/打开一次，按 reset strategy 连续跑完再断开。
 
-一个 batch 总体退出码为 0、一个截图或一句“场景全部通过”都不能分发给多个 Task；缺任何 assertion 的 evidence 时，脚本拒绝记录。批次失败先做定向诊断；同一路径两次仍失败就拆批或记 blocked，不跑全量门碰运气。进入 Phase C 前 `validation-status.json / ready` 必须为 `true`，不能把待执行或失效 intent 带入候选全量门。
+Impact S 仍可跳过非行为定向检查；M / L 只决定检查范围与风险边界，不要求同一命令为每个 Task 重复执行。
+
+三条不许含糊的地方：
+
+- **一个总体退出码不是结论。** 被引用的是那次执行的逐项失败集合与逐场景观察，不是「通过了」。给不出本 Task 关心的那一项结果时，就是没验证。
+- **失败先定向诊断**，同一路径两次仍失败就缩小 scope 单独跑，不靠全量门碰运气。
+- **进 Phase C 前，每个 Task 的 Step ④ 引用必须都指向仍新鲜的执行**；键已变化的引用作废，回到对应 Task 重跑，不带着失效引用进候选全量门。
 
 #### 4. 还原轮 6 步的动作
 
@@ -125,7 +153,7 @@ Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复
 **② 验 RED — 核出处、定位与 YELLOW**
 
 - 每条 RED 必须同时有期望值、实际值、`baseline_id` / `design_fact_source` 和实现 locator；缺一视为报告执行失败，不进 ③。
-- **语义等价核对**：expected 与 actual 语义相同、仅序列化不同（颜色写法、分量顺序、简写属性、空白）的 RED，是比对器归一化没覆盖的新形态——**不进 ③、不改实现去迎合字符串、不得为它新增豁免**，按 P7 上报为工具等价缺口，定位方法见 [CONTEXT.md 的问题分流](../CONTEXT.md#设计稿链路的问题分流)。已知等价形态比对器会自动拉平（见 [restore-contract.md](./restore-contract.md)），能走到这里的都值得上报。
+- **语义等价核对**：expected 与 actual 语义相同、仅序列化不同（颜色写法、分量顺序、简写属性、空白）的 RED，是比对器归一化没覆盖的新形态——**不进 ③、不改实现去迎合字符串、不得为它新增豁免**（硬门禁 16），按 P7 上报为工具等价缺口，定位方法见 [CONTEXT.md 的问题分流](../CONTEXT.md#设计稿链路的问题分流)。已知等价形态比对器会自动拉平（见 [restore-contract.md](./restore-contract.md)）。**这条不靠肉眼核对兜底**：`report` 对疑似形态直接以退出码 5 阻断并列出 `tool_equivalence_suspects[]`，见到它就走本条，不要自行判断「大概只是写法不同」再决定报不报。
 - YELLOW 先补页面、fixture 或状态触发，再重跑结构化采集。仍无法结构化判定且契约要求 visual 层时，按 restore-contract.md 第六节查视觉缓存：命中只读复用，未命中才截原型写入新缓存目录。**机器可检项不截图**（硬门禁 12）。实现侧截图写 `<story-dir>/evidence/<Task 编号>-r<轮次>/`。
 - 视觉补证发现偏差时，把 `visual-results.json` 对应规则写成 `red` 再重跑 RED 报告；**不得把主观观察直接塞进实现清单而绕过报告**。
 
@@ -138,7 +166,7 @@ Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复
 
 - 重跑 ① 的同一条链，唯一差别是 `report --phase green`。**不得编辑 RED 报告得到 GREEN 报告**；该命令在 `overall` 非 `green` 时以退出码 3 阻断。
 - 合法结论只有：全部规则已验证；或未实际匹配的规则逐条命中契约内的冻结豁免。任何 RED、任何未解决 YELLOW 都不是 GREEN；**不得为收口就地新增豁免**。
-- 本轮新增/修改的逻辑测试或同一冻结契约必须给当前通道独立 GREEN；兼容动作可按上方批次一次执行，但逐 assertion 结果不能合并。更宽的包/目录回归、所改范围 typecheck 与 lint 也由计划合批；Impact S 可跳过，M / L 按风险边界决定 flush，不按 Task 数重复执行。不必每个 Task 全量跑一遍——候选稳定后的全量对账在 Phase C 由主 agent 执行一次并写入 `review-evidence.json`，功能自测试独立判断这份原始结果，不重复执行同一套命令。定向检查的**判定基准是 DEMAND-2 的起点失败集合，不是「全绿」**：
+- 本轮新增/修改的逻辑测试或同一冻结契约必须给当前通道独立 GREEN；新鲜度键相同的动作只执行一次，但逐 assertion 结果不能合并。更宽的包/目录回归、所改范围 typecheck 与 lint 同样按新鲜度键复用；Impact S 可跳过，M / L 按风险边界决定收束范围，不按 Task 数重复执行。不必每个 Task 全量跑一遍——候选稳定后的全量对账在 Phase C 由主 agent 执行一次并写入 `review-evidence.json`，功能自测试独立判断这份原始结果，不重复执行同一套命令。定向检查的**判定基准是 DEMAND-2 的起点失败集合，不是「全绿」**：
 
 | 作用域内与基线对照 | 判定 |
 | --- | --- |
@@ -159,8 +187,8 @@ Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复
 
 - 按 [alpha-tests-restore.md](./alpha-tests-restore.md) 在 `alpha-tests.md` 新增一条：契约哈希、RED/GREEN 报告指纹与路径、三色摘要、视觉缓存指纹与路径、可选实现截图。
 - `alpha-tests.md` 不复制完整报告，不保存第二份偏差表；`restore-report-*.json` 是机器细节的唯一来源。
-- 本轮消费验证批次时只引用 `VAL-B-<n>` 与对应 intent / assertion，不把同一命令或浏览器结果复制进每个 Task。批次尚未到边界时先登记消费者；执行后以 `validation-status.json / consumers` 回填。只有 stale / failed / blocked / pending 的消费者撤销 Step ④/⑥，已 fresh + passed 的消费者保持完成。
-- 本轮实际执行过浏览器 / 结构化渲染检查时，把可供布局检视或功能自测复用的原始事实增量写入 `<story-dir>/phase-b-review-evidence.json`。每条包含 `depends_on` 及采集时逐文件哈希、fixture、runtime、viewport、步骤、观察与 artifact；**不得写通过/不通过或级别**。同一新鲜度键幂等覆盖，不复制第二条。没有这类场景时不为凑工件创建空文件。
+- 引用别人跑过的定向检查时，写清引用的是哪一次执行（命令 + 代码指纹，或场景记录编号）与本 Task 关心的那几项结果，**不把同一命令输出或浏览器观察复制进每个 Task**。引用的新鲜度键变化时，本轮 Step ④/⑥ 作废并重跑；未受影响的引用保持完成。
+- 本轮实际执行过浏览器 / 结构化渲染检查时，把可供布局检视或功能自测复用的原始事实增量写入 `<story-dir>/review-evidence.json` 的 `scenarios[]`，标 `source: "phase-b"`。每条包含 `depends_on` 及采集时逐文件哈希、fixture、runtime、viewport、步骤、观察与 artifact；**不得写通过/不通过或级别**。同一新鲜度键幂等覆盖，不复制第二条。没有这类场景时不为凑工件创建空文件。
 - 回填「AC ↔ 证据映射」：证据类型加「还原」，证据链填记录编号，状态填 `GREEN` 或 `Deferred`
 - 勾 `tasks.md` 的 checkbox，提交
 
@@ -176,7 +204,7 @@ Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复
 
 | # | 约束 | 违反时 |
 | --- | --- | --- |
-| 1 | 修复动作**不出本 Task 的文件清单** | 停下上报，不自行扩大范围 |
+| 1 | 修复动作**不出本 Task 的文件清单** | 停下上报，不自行扩大范围；唯一例外是第 6 节「机械必然的连带修改」，那类直接做并记录 |
 | 2 | 禁止用**检查抑制手段**或**没有理由的类型断言**绕过（按仓库栈取值：`any` / `@ts-ignore` / `eslint-disable` / `# type: ignore` / `@SuppressWarnings` / `// @ts-nocheck` 等一切让类型检查或 lint 闭嘴的写法；以及 TypeScript 的 `as` 类型转换、非空断言 `!`） | 仓内既有范式就是如此才可用，且必须在代码旁写明理由；断言须有结构守卫（先做 `typeof` / `in` 等判断再断言）或旁注理由，否则与检查抑制同类，是 Phase C 的阻断级 |
 | 3 | **同一个报错连续修 3 次不成就停止** | 停下上报 |
 
@@ -187,16 +215,33 @@ Phase B 把“谁必须得到独立结论”和“底层动作是否必须重复
 | 触发 | 判据 |
 | --- | --- |
 | 编译修不动 | 同一个报错连续修 3 次未成 |
-| 需越界改动 | 修好它必须改本 Task 文件清单之外的文件 |
+| 需越界改动 | 修好它必须改本 Task 文件清单之外的文件，**且不属于下方「机械必然的连带修改」** |
 
 两者都按 P7 上报，**不自行决定**，同一时刻攒到的多个问题合并一轮。每个问题必须写出：报错原文或阻塞点、要改的文件、它为什么在清单外、推测与理由。
 
 等待回答期间**停在当前 Task**：不跳过它做下一个、不用检查抑制手段临时糊过去、不把改动范围先扩出去再补问。
 
+**机械必然的连带修改：直接做，只记录，不提问。** 一处改动的下游后果**已经被冻结产物唯一确定**时，问用户拿不到任何新信息——用户唯一能给的答案就是那份产物已经写着的东西，而这一问的代价是整条流程停在这里等人（实证：一次「测试断言要不要跟着改」的提问让 Story 停等 73 分钟，而答案就写在已冻结的 QA 基线里）。
+
+四条同时成立才算机械必然：
+
+| # | 条件 |
+| --- | --- |
+| 1 | 期望值的**唯一来源**是已冻结产物（`restore-contract.json` 规则、`dev-baseline.md` 的 QA 基线行、`tasks.md` 本 Task 描述），照抄即可，不需要在两个合法取值间取舍 |
+| 2 | 改动**不新增、不放宽、不删除任何验收意图**：只是让断言 / 类型 / 引用与冻结期望重新对齐 |
+| 3 | 落点是**测试、类型声明、引用路径或调用点这类跟随性代码**，不是产品行为实现 |
+| 4 | 不触碰公共 API、schema、路由、权限、数据写入等风险边界 |
+
+典型命中：冻结契约把某个值定为 A，测试里还写着旧值 B，把 B 改成 A；重命名后同步调用点；类型收窄后同步声明。
+
+典型不命中（仍按 P7 上报）：冻结产物本身写错或自相矛盾（走硬门禁 8 重新确认基线）；有两个都合法的取值；要改产品行为让测试变绿；疑似工具等价缺口（走硬门禁 16，不在此列）。
+
+命中时在 Step ⑥ 的证据里记一行「连带修改：`<文件>` — 因 `<冻结产物 + 具体条目>` 唯一确定」，并照常勾选；`dev-review.md` 收口时这些行汇总一次供用户复核。**不满足四条中任意一条，就不是机械必然，按 P7 上报。**
+
 #### 7. 进度真相与落账
 
 - **`tasks.md` 的 checkbox 是唯一进度真相。** 完成一步勾一步，不批量补勾，不在别处另记一份进度
-- 双通道快路径仍按每个通道逐项勾选；共享一次实现、重构或批次执行，不代表可以把两轮 ③–⑥ 一次性补勾。验证批次尚未执行时，Task 可登记消费者并继续到下一安全边界；批次失败或失效时只撤销 status 命中的消费者 ④/⑥，不能把同批其他新鲜结果一刀切作废，也不能让 checkbox 与消费者状态分叉。
+- 双通道快路径仍按每个通道逐项勾选；共享一次实现或重构，不代表可以把两轮 ③–⑥ 一次性补勾。被引用的执行失效时只撤销真正依赖它的那几轮 ④/⑥，不把仍新鲜的结果一刀切作废。
 - Step ⑥ 把证据落进 `alpha-tests.md`：还原轮进「还原证据记录」节，逻辑轮进 L4 / L3 记录节，两者都回填 AC ↔ 证据映射。**不另开第二本账**
 - 上游未声明对接模式且接口实际不可用时，降级为静态实现模式，把受影响的 AC 标 `Deferred` 并写明原因与解除条件。**不得拿豁免顶替 `Deferred`**
 - 全部 Task 的 checkbox 勾完、`alpha-tests.md` 无缺口，才进 Phase C

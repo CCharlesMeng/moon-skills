@@ -1910,5 +1910,86 @@ class CssEquivalenceTests(unittest.TestCase):
         self.assertEqual(item["status"], "fail")
 
 
+class ToolEquivalenceSuspectTests(unittest.TestCase):
+    """比对器归一化没覆盖的新形态必须被认出来，而不是当成还原偏差。
+
+    区域流水地图 Story 的教训不是「少了四条归一化」——那四条已经补上了，而是
+    这类 RED 走的升级路径和真偏差完全相同：修 3 次不成 → 打断用户 → 补豁免。
+    结果工具债被写成了「允许与设计稿不一致」的冻结记录。归一化表永远会有下一个
+    未覆盖形态，所以需要一个不依赖穷举的信号。
+    """
+
+    def numeric_report(self, expected: dict, actual: dict, phase: str = "red") -> dict:
+        rule = make_rule(
+            "R3-1",
+            "R3",
+            check_mode="numeric",
+            layers=["render"],
+            expected=expected,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            space = Workspace(Path(directory), [rule])
+            render = space.render({"R3-1": {"status": "ok", "actual": actual}})
+            return space.report(phase, render=render)
+
+    def test_unknown_serialization_form_is_flagged_not_treated_as_deviation(self) -> None:
+        # `padding` 的分量顺序不是当前归一化覆盖的形态，严格比对必然失败；
+        # 但过宽规范化后一致，说明这是序列化差异而不是还原偏差。
+        report = self.numeric_report(
+            expected={"padding": "12px 8px"},
+            actual={"padding": "8px 12px"},
+        )
+        entry = report["entries"][0]
+        self.assertEqual(report["overall"], "red")
+        self.assertEqual(entry["reason_class"], "suspected-tool-equivalence")
+        self.assertEqual(entry["suspect_layers"], ["render"])
+        self.assertEqual(report["tool_equivalence_suspects"], ["R3-1"])
+
+    def test_real_deviation_is_not_flagged_as_a_tool_gap(self) -> None:
+        report = self.numeric_report(
+            expected={"padding": "12px 8px"},
+            actual={"padding": "12px 24px"},
+        )
+        self.assertEqual(report["overall"], "red")
+        self.assertNotIn("reason_class", report["entries"][0])
+        self.assertEqual(report["tool_equivalence_suspects"], [])
+
+    def test_already_normalized_forms_do_not_reach_the_suspect_channel(self) -> None:
+        # 已被归一化拉平的四类直接 green，不该出现在怀疑清单里。
+        report = self.numeric_report(
+            expected={"background": "#ffffff", "flex": "1", "min-height": "0"},
+            actual={
+                "background-color": "rgb(255, 255, 255)",
+                "flex-grow": "1",
+                "min-height": "0px",
+            },
+            phase="green",
+        )
+        self.assertEqual(report["overall"], "green")
+        self.assertEqual(report["tool_equivalence_suspects"], [])
+
+    def test_suspect_blocks_with_its_own_exit_code_in_both_phases(self) -> None:
+        for phase in ("red", "green"):
+            with self.subTest(phase=phase):
+                self.assertEqual(
+                    VERIFIER.report_exit_code(phase, "red", suspects=1),
+                    VERIFIER.EXIT_TOOL_EQUIVALENCE,
+                )
+
+    def test_ordinary_red_keeps_its_existing_exit_codes(self) -> None:
+        self.assertEqual(VERIFIER.report_exit_code("red", "red"), VERIFIER.EXIT_OK)
+        self.assertEqual(
+            VERIFIER.report_exit_code("green", "red"), VERIFIER.EXIT_NOT_GREEN
+        )
+
+    def test_aggressive_key_is_never_used_for_pass_fail(self) -> None:
+        # 过宽规范化会把语义不同的值拉平，所以它只能进怀疑通道。
+        self.assertEqual(
+            VERIFIER.aggressive_css_key("12px 8px"),
+            VERIFIER.aggressive_css_key("8px 12px"),
+        )
+        self.assertFalse(VERIFIER.css_values_equivalent("12px 8px", "8px 12px"))
+
+
 if __name__ == "__main__":
     unittest.main()

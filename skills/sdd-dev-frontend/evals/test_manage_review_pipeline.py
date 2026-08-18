@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for Phase B evidence promotion and review aggregation."""
+"""Regression tests for shared scenario recording and review aggregation."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def scenario(identifier, path, digest, page):
     }
 
 
-def phase_b(*scenarios):
-    return {"schema_version": 1, "runtime": RUNTIME, "scenarios": list(scenarios)}
+def empty_package():
+    return {"schema_version": 1, "evidence_epoch": "review-1", "scenarios": []}
 
 
 def review(role, dimensions, *, findings=None, questions=None, deferred=None, status="executed"):
@@ -88,29 +88,29 @@ def finding(identifier, key, level="suggestion"):
     }
 
 
-class PromotionTests(unittest.TestCase):
+class ScenarioRecordingTests(unittest.TestCase):
     def test_unrelated_code_change_does_not_invalidate_exact_dependency(self):
-        evidence, summary = MODULE.promote_phase_b(
-            {"schema_version": 1, "evidence_epoch": "review-1", "scenarios": []},
+        evidence, summary = MODULE.record_scenarios(
+            empty_package(),
             code(unrelated="u9"),
-            phase_b(scenario("PB-1", "src/a.tsx", "a1", "/a")),
+            [scenario("PB-1", "src/a.tsx", "a1", "/a")],
             RUNTIME,
         )
-        self.assertEqual(summary, {"promoted": ["BE-1"], "reused": [], "stale": []})
+        self.assertEqual(summary, {"recorded": ["BE-1"], "fresh": [], "stale": []})
         self.assertEqual(evidence["scenarios"][0]["captured_dependency_hashes"], {"src/a.tsx": "a1"})
         self.assertEqual(evidence["scenarios"][0]["source"], "phase-b")
 
     def test_only_changed_dependency_is_stale(self):
-        evidence, summary = MODULE.promote_phase_b(
-            {"schema_version": 1, "evidence_epoch": "review-1", "scenarios": []},
+        evidence, summary = MODULE.record_scenarios(
+            empty_package(),
             code(a="a2", b="b1"),
-            phase_b(
+            [
                 scenario("PB-A", "src/a.tsx", "a1", "/a"),
                 scenario("PB-B", "src/b.tsx", "b1", "/b"),
-            ),
+            ],
             RUNTIME,
         )
-        self.assertEqual(summary["promoted"], ["BE-1"])
+        self.assertEqual(summary["recorded"], ["BE-1"])
         self.assertEqual(summary["stale"], [{"id": "PB-A", "reason": ["src/a.tsx"]}])
         self.assertEqual([item["page"] for item in evidence["scenarios"]], ["/b"])
 
@@ -118,7 +118,47 @@ class PromotionTests(unittest.TestCase):
         unsafe = scenario("PB-1", "src/a.tsx", "a1", "/a")
         unsafe["result"] = "pass"
         with self.assertRaisesRegex(MODULE.ReviewPipelineError, "judgment key"):
-            MODULE.promote_phase_b({}, code(), phase_b(unsafe), RUNTIME)
+            MODULE.record_scenarios(empty_package(), code(), [unsafe], RUNTIME)
+
+    def test_empty_additions_is_a_pure_freshness_check(self):
+        package, _ = MODULE.record_scenarios(
+            empty_package(),
+            code(),
+            [
+                scenario("PB-A", "src/a.tsx", "a1", "/a"),
+                scenario("PB-B", "src/b.tsx", "b1", "/b"),
+            ],
+            RUNTIME,
+        )
+        before = [dict(item) for item in package["scenarios"]]
+        checked, summary = MODULE.record_scenarios(package, code(a="a2"), [], RUNTIME)
+        self.assertEqual(summary["recorded"], [])
+        self.assertEqual(summary["fresh"], ["BE-2"])
+        self.assertEqual(summary["stale"], [{"id": "BE-1", "reason": ["src/a.tsx"]}])
+        self.assertEqual(checked["scenarios"], before)
+
+    def test_recapturing_a_stale_scenario_keeps_its_id(self):
+        package, _ = MODULE.record_scenarios(
+            empty_package(), code(), [scenario("PB-A", "src/a.tsx", "a1", "/a")], RUNTIME
+        )
+        recaptured = scenario("PB-A", "src/a.tsx", "a2", "/a")
+        updated, summary = MODULE.record_scenarios(package, code(a="a2"), [recaptured], RUNTIME)
+        self.assertEqual(summary["recorded"], ["BE-1"])
+        self.assertEqual(summary["stale"], [])
+        self.assertEqual(len(updated["scenarios"]), 1)
+        self.assertEqual(
+            updated["scenarios"][0]["captured_dependency_hashes"], {"src/a.tsx": "a2"}
+        )
+
+    def test_runtime_change_marks_every_scenario_stale(self):
+        package, _ = MODULE.record_scenarios(
+            empty_package(), code(), [scenario("PB-A", "src/a.tsx", "a1", "/a")], RUNTIME
+        )
+        _, summary = MODULE.record_scenarios(
+            package, code(), [], {**RUNTIME, "browser": "Chromium 141"}
+        )
+        self.assertEqual(summary["fresh"], [])
+        self.assertEqual(summary["stale"], [{"id": "BE-1", "reason": ["runtime-changed"]}])
 
 
 class AggregateTests(unittest.TestCase):

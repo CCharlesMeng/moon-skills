@@ -1,6 +1,8 @@
-# Phase C 共享证据契约
+# 共享证据契约
 
-Phase C 的检视必须**判断独立**，不要求**采集重复**。主 agent 先按 [验证批次执行契约](./validation-batches.md) 把质量命令与浏览器场景批量执行，再把原始事实收进一个证据包；四个检视角色各自按自己的判据下结论，只补证据包覆盖不到或已经失效的场景。
+检视必须**判断独立**，不要求**采集重复**。`review-evidence.json` 是浏览器与命令原始事实的**唯一**共享包：Phase B Step ⑥ 把已经跑过的场景直接写进来，Phase C 补全量质量门与仍缺的场景，四个检视角色各自按自己的判据下结论，只补证据包覆盖不到或已经失效的场景。
+
+本文件的第五节「新鲜度与精确失效」同时是 Phase B 复用同一次执行的判据，两处不另立第二套定义。
 
 ## 一、证据纪元与代码指纹
 
@@ -78,34 +80,28 @@ Phase C 的检视必须**判断独立**，不要求**采集重复**。主 agent 
 
 证据包只保存**原始事实**，不保存 `通过 / 不通过` 或级别。否则后来的检视只是复述证据所有者的判断，不再独立。
 
-## 三、Phase B 事实提升
+## 三、Phase B 场景就地入包
 
-Phase B Step ④ 已实际执行的浏览器 / 结构化渲染场景，不等 Phase C 再点一次。Step ⑥ 把这些**原始事实**追加到 `<story-dir>/phase-b-review-evidence.json`，每条必须包含上节 scenario 字段以及：
+Phase B Step ④ 已实际执行的浏览器 / 结构化渲染场景，不等 Phase C 再点一次，**也不另存一份「可提升事实」**。Step ⑥ 直接把原始事实写进 `review-evidence.json` 的 `scenarios[]`，标 `source: "phase-b"`，每条必须含上节全部 scenario 字段以及：
 
 - `captured_dependency_hashes`：完整覆盖 `depends_on`，记录采集当时每个依赖文件的内容 SHA-256；
 - `captured_runtime`：复制采集当时的非秘密 runtime 键；不能只依赖证据包顶部的当前 runtime，否则环境变化后旧场景会被误认成新环境事实；
-- 与 Phase C 相同形态的 runtime、fixture、page、viewport、steps、observations、artifacts；
+- `captured_at_code_fingerprint`：采集当时的代码指纹；
 - 不含 `result`、`pass/fail`、finding、级别或结论。
 
-这些场景必须能由 `validation-receipts.json` 的 browser batch item 追到，但两份工件职责不同：receipt 保存逐 assertion 的执行结果，`phase-b-review-evidence.json` 只保存可供不同角色重新判断的原始观察。不得把 receipt 的 pass / fail 复制进原始证据包。
+**一份工件、一套字段、一套新鲜度键**：此前的两文件加提升流程（`phase-b-review-evidence.json` + `promote` 子命令）只是把同一批字段搬一次家，搬运本身不产生任何判据。取消它之后：
 
-Phase C 的候选全量门完成、页面状态稳定后，若该文件存在就先运行：
+- Phase B 写入时就按第五节的键做幂等覆盖，同一键不写第二条；
+- Phase C 候选全量门完成、页面状态稳定后，主 agent 只做一次**新鲜度核对**：`source: "phase-b"` 的场景里，runtime 键仍一致且 `depends_on` 逐文件哈希仍匹配的继续有效，任一不匹配的标 `stale` 并重采；
+- 全局代码指纹因无关文件变化，不让精确依赖仍匹配的场景失效；一个依赖变化，也只让命中它的场景失效；
+- Phase B 没有这类场景时 `scenarios[]` 里就没有 `source: "phase-b"` 的条目，这是正常情形，不是缺产物。
 
-```bash
-python3 "<skill-dir>/scripts/manage_review_pipeline.py" promote \
-  --review-evidence "<review-evidence>" \
-  --code-manifest "<临时代码指纹 JSON>" \
-  --phase-b-scenarios "<story-dir>/phase-b-review-evidence.json" \
-  --runtime "<临时运行时 JSON>" \
-  --evidence-epoch "<evidence_epoch>"
-```
-
-脚本只提升 runtime 键仍一致、且全部逐文件依赖哈希仍匹配的场景。全局代码指纹因无关文件变化，不会让精确依赖仍匹配的场景失效；一个依赖变化，也只把命中它的场景列为 stale。随后主 agent 只执行 `promoted / reused` 仍未覆盖的场景缺口。文件不存在代表 Phase B 没有可提升场景，记 telemetry `skip` 后照常规划 Phase C，不把缺少可选工件判成阻断。
+Phase B 的行为结论（RED/GREEN、逐项失败集合）仍只在 `alpha-tests.md` 的证据链里；**证据包永远不保存 pass / fail**。
 
 ## 四、场景规划与所有权
 
-1. 主 agent 从冻结的 R/F 行与两份浏览器检视范围取并集，先登记 validation intents，再执行 status 的 `next_batches[]`；相同页面、fixture、runtime 与 reset 边界进入一个 browser batch，viewport、状态和步骤作为批次内 scenarios 连续执行。相同新鲜度场景才合并为一个 `BE-n`。
-2. 会重载页面或清空内存态的质量命令 batch 先跑，浏览器 batch 后采集。每个 browser batch 只连接/打开一次，按 reset strategy 复位；不得在两者之间反复生成同一个临时页面。
+1. 主 agent 从冻结的 R/F 行与两份浏览器检视范围取并集，减去已在包内且仍新鲜的场景，剩下的才是本次要采的缺口；相同页面、fixture、runtime 与 reset 边界的缺口只连接/打开一次，viewport、状态和步骤在这一次连接内连续执行。相同新鲜度键的场景合并为一个 `BE-n`。
+2. 会重载页面或清空内存态的质量命令先跑，浏览器场景后采集；不得在两者之间反复生成同一个临时页面。
 3. 主 agent 是证据包所有者；布局检视与功能自测试是独立判定者。两者收到包后先做新鲜度与覆盖检查，**有效场景不得重跑**。
 4. 检视角色只有在下列情况才补跑：缺目标行需要的场景；原始事实不足以下结论；证据已按第五节失效。角色先收齐自己的全部缺口，按页面 / fixture / runtime / reset 边界组成批次后再启动浏览器；不得发现一行就调用一次。补跑后把完整原始场景记录放进结构化结果的 `evidence_added`，由聚合脚本校验、分配 `BE-n` 并入同一证据包。
 

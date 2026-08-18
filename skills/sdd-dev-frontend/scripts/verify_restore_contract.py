@@ -21,6 +21,7 @@ from typing import Any
 EXIT_OK = 0
 EXIT_ERROR = 2
 EXIT_NOT_GREEN = 3
+EXIT_TOOL_EQUIVALENCE = 5
 CONTRACT_SCHEMA_VERSION = 2
 ADAPTER_SCHEMA_VERSION = 1
 RESULT_SCHEMA_VERSION = 1
@@ -701,6 +702,51 @@ def css_values_equivalent(expected: Any, actual: Any) -> bool:
     return canonicalize_css_value(expected) == canonicalize_css_value(actual)
 
 
+def aggressive_css_key(value: Any) -> str:
+    """故意过宽的规范化，**只用于怀疑，永远不用于判定通过**。
+
+    在 `canonicalize_css_value` 之上再抹掉 token 顺序、分隔符与 `0` 值的单位。
+    它会把语义不同的值也拉平（`10px 20px` 与 `20px 10px`），所以不能进比对通道；
+    它的唯一用途是回答「这条 RED 看起来像不像序列化差异」。
+    """
+    text = canonicalize_css_value(value)
+    text = re.sub(r"\b0(?:px|em|rem|%|vh|vw)\b", "0", text)
+    tokens = sorted(token for token in re.split(r"[\s,]+", text) if token)
+    return " ".join(tokens)
+
+
+def suspect_tool_equivalence(expected: Any, actual: Any) -> bool:
+    """严格比对失败、但过宽规范化后一致 —— 疑似比对器等价缺口。
+
+    命中它的 RED 不是还原偏差：既不该改实现去迎合字符串，也不该补豁免掩盖，
+    只能按 CONTEXT.md 的问题分流上报为工具等价缺口。判据见
+    `references/restore-contract.md` 第五节。
+    """
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        for key, expected_value in expected.items():
+            actual_key = key if key in actual else CSS_PROPERTY_ALIASES.get(key)
+            if actual_key is None or actual_key not in actual:
+                return False
+            if expected_value == actual[actual_key]:
+                continue
+            if not suspect_tool_equivalence(expected_value, actual[actual_key]):
+                return False
+        return bool(expected)
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return False
+        return all(
+            expected_item == actual_item
+            or suspect_tool_equivalence(expected_item, actual_item)
+            for expected_item, actual_item in zip(expected, actual)
+        )
+    if isinstance(expected, str) and isinstance(actual, str):
+        if expected == actual:
+            return False
+        return aggressive_css_key(expected) == aggressive_css_key(actual)
+    return False
+
+
 def css_needle_variants(needle: str) -> list[str]:
     """static 针的归一化变体：原样之外，补 CSS 归一形态与简写别名互换形态。"""
     base = normalize_css_text(needle)
@@ -818,6 +864,7 @@ def evaluate_rule(
     required_evidence: list[str] = []
     actual_by_layer: dict[str, Any] = {}
     verified_layers: list[str] = []
+    equivalence_suspects: list[str] = []
 
     for layer in rule["required_layers"]:
         expected = expected_for_layer(rule, layer)
@@ -869,6 +916,8 @@ def evaluate_rule(
                 verified_layers.append(layer)
             else:
                 red_reasons.append("结构化渲染实际值不符合冻结契约")
+                if suspect_tool_equivalence(expected, item.get("actual")):
+                    equivalence_suspects.append(layer)
             continue
 
         if layer == "visual":
@@ -888,12 +937,17 @@ def evaluate_rule(
                 red_reasons.append(f"visual-results 返回未知状态：{item.get('status')}")
 
     if red_reasons:
-        return {
+        entry = {
             **base,
             "status": "red",
             "actual": actual_by_layer,
             "reasons": red_reasons,
         }
+        if equivalence_suspects:
+            # 疑似比对器等价：不得改实现、不得补豁免，按工具缺口上报。
+            entry["reason_class"] = "suspected-tool-equivalence"
+            entry["suspect_layers"] = equivalence_suspects
+        return entry
     if yellow_reasons:
         return {
             **base,
@@ -950,6 +1004,11 @@ def build_report(
         for status in ("red", "yellow", "green")
     }
     overall = "red" if counts["red"] else ("yellow" if counts["yellow"] else "green")
+    suspects = [
+        entry["rule_id"]
+        for entry in entries
+        if entry.get("reason_class") == "suspected-tool-equivalence"
+    ]
     report = {
         "schema_version": REPORT_SCHEMA_VERSION,
         "phase": phase,
@@ -960,6 +1019,7 @@ def build_report(
             **counts,
             "total": len(entries),
         },
+        "tool_equivalence_suspects": suspects,
         "entries": entries,
     }
     report["report_sha256"] = sha256_text(canonical_json(report))
@@ -1085,7 +1145,11 @@ def command_static(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def report_exit_code(phase: str, overall: str) -> int:
+def report_exit_code(phase: str, overall: str, suspects: int = 0) -> int:
+    # 疑似比对器等价先于 NOT_GREEN 阻断：这类 RED 不是实现任务，继续走
+    # 「修 RED」或「补豁免」都会把工具债写进冻结基线。
+    if suspects:
+        return EXIT_TOOL_EQUIVALENCE
     if phase == "green" and overall != "green":
         return EXIT_NOT_GREEN
     return EXIT_OK
@@ -1102,18 +1166,21 @@ def command_report(args: argparse.Namespace) -> int:
         optional_json(args.visual_results),
     )
     write_json(Path(args.out).expanduser(), report)
-    print(
-        json.dumps(
-            {
-                "status": report["overall"],
-                "out": str(Path(args.out).expanduser()),
-                "report_sha256": report["report_sha256"],
-                "summary": report["summary"],
-            },
-            ensure_ascii=False,
+    payload = {
+        "status": report["overall"],
+        "out": str(Path(args.out).expanduser()),
+        "report_sha256": report["report_sha256"],
+        "summary": report["summary"],
+    }
+    suspects = report["tool_equivalence_suspects"]
+    if suspects:
+        payload["tool_equivalence_suspects"] = suspects
+        payload["action"] = (
+            "疑似比对器等价缺口：按 CONTEXT.md 的问题分流上报工具缺口，"
+            "不得改实现迎合字符串，不得为它新增豁免"
         )
-    )
-    return report_exit_code(args.phase, report["overall"])
+    print(json.dumps(payload, ensure_ascii=False))
+    return report_exit_code(args.phase, report["overall"], len(suspects))
 
 
 def command_evidence_format(args: argparse.Namespace) -> int:

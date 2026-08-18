@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Promote Phase B browser facts and aggregate independent Phase C reviews."""
+"""Record raw browser scenarios and aggregate independent Phase C reviews."""
 
 from __future__ import annotations
 
@@ -156,71 +156,69 @@ def scenario_stale_reasons(
     return sorted(set(reasons))
 
 
-def validate_phase_b_scenario(
-    raw: Any, index: int, current_hashes: dict[str, str], runtime: dict[str, Any]
+def validate_raw_scenario(
+    raw: Any,
+    index: int,
+    current_hashes: dict[str, str],
+    runtime: dict[str, Any],
+    source: str,
+    label: str = "scenarios",
 ) -> tuple[dict[str, Any], list[str]]:
-    scenario = require_dict(raw, f"phase_b.scenarios[{index}]")
-    reject_judgments(scenario, f"phase_b.scenarios[{index}]")
+    scenario = require_dict(raw, f"{label}[{index}]")
+    reject_judgments(scenario, f"{label}[{index}]")
     for field in ("page", "fixture", "viewport", "steps", "observations", "artifacts", "depends_on", "captured_runtime"):
         if field not in scenario:
-            raise ReviewPipelineError(f"phase_b.scenarios[{index}] missing {field}")
-    require_text(scenario["page"], f"phase_b.scenarios[{index}].page")
-    require_dict(scenario["fixture"], f"phase_b.scenarios[{index}].fixture")
-    require_dict(scenario["viewport"], f"phase_b.scenarios[{index}].viewport")
-    require_list(scenario["steps"], f"phase_b.scenarios[{index}].steps")
-    require_list(scenario["observations"], f"phase_b.scenarios[{index}].observations")
-    require_list(scenario["artifacts"], f"phase_b.scenarios[{index}].artifacts")
-    depends_on = require_list(scenario["depends_on"], f"phase_b.scenarios[{index}].depends_on")
+            raise ReviewPipelineError(f"{label}[{index}] missing {field}")
+    require_text(scenario["page"], f"{label}[{index}].page")
+    require_dict(scenario["fixture"], f"{label}[{index}].fixture")
+    require_dict(scenario["viewport"], f"{label}[{index}].viewport")
+    require_list(scenario["steps"], f"{label}[{index}].steps")
+    require_list(scenario["observations"], f"{label}[{index}].observations")
+    require_list(scenario["artifacts"], f"{label}[{index}].artifacts")
+    depends_on = require_list(scenario["depends_on"], f"{label}[{index}].depends_on")
     for dependency_index, dependency in enumerate(depends_on):
         require_text(
             dependency,
-            f"phase_b.scenarios[{index}].depends_on[{dependency_index}]",
+            f"{label}[{index}].depends_on[{dependency_index}]",
         )
     if len(set(depends_on)) != len(depends_on):
-        raise ReviewPipelineError(f"phase_b.scenarios[{index}] has duplicate depends_on paths")
+        raise ReviewPipelineError(f"{label}[{index}] has duplicate depends_on paths")
     captured = require_dict(
         scenario.get("captured_dependency_hashes"),
-        f"phase_b.scenarios[{index}].captured_dependency_hashes",
+        f"{label}[{index}].captured_dependency_hashes",
     )
     if not depends_on or set(depends_on) != set(captured):
         raise ReviewPipelineError(
-            f"phase_b.scenarios[{index}] dependency hashes must exactly cover depends_on"
+            f"{label}[{index}] dependency hashes must exactly cover depends_on"
         )
     for dependency in depends_on:
         require_text(
             captured[dependency],
-            f"phase_b.scenarios[{index}].captured_dependency_hashes[{dependency}]",
+            f"{label}[{index}].captured_dependency_hashes[{dependency}]",
         )
-    require_dict(scenario["captured_runtime"], f"phase_b.scenarios[{index}].captured_runtime")
+    require_dict(scenario["captured_runtime"], f"{label}[{index}].captured_runtime")
     stale = scenario_stale_reasons(scenario, current_hashes, runtime)
     normalized = dict(scenario)
     normalized["scenario_key"] = scenario_identity(normalized, runtime)
-    normalized["source"] = "phase-b"
+    normalized["source"] = source
     return normalized, sorted(stale)
 
 
-def promote_phase_b(
+def record_scenarios(
     review_evidence: dict[str, Any],
     code: dict[str, Any],
-    phase_b: dict[str, Any],
+    additions: list[Any],
     runtime: dict[str, Any],
+    source: str = "phase-b",
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Append raw scenarios to review-evidence.json and report freshness.
+
+    Called with an empty `additions` list it is a pure freshness check: every
+    scenario already in the package is graded against the current code hashes
+    and runtime, and nothing is rewritten.
+    """
     require_dict(review_evidence, "review_evidence")
     current_hashes = code_hashes(code)
-    phase_b_runtime = require_dict(phase_b.get("runtime"), "phase_b.runtime")
-    if canonical_json(phase_b_runtime) != canonical_json(runtime):
-        scenarios = require_list(phase_b.get("scenarios"), "phase_b.scenarios")
-        validated_ids = []
-        for index, raw in enumerate(scenarios):
-            scenario, _ = validate_phase_b_scenario(
-                raw, index, current_hashes, phase_b_runtime
-            )
-            validated_ids.append(scenario.get("id") or f"phase-b-{index + 1}")
-        return ({**review_evidence, "code": code, "runtime": runtime}, {
-            "promoted": [], "reused": [],
-            "stale": [{"id": identifier, "reason": ["runtime-changed"]}
-                      for identifier in validated_ids],
-        })
 
     existing = require_list(review_evidence.get("scenarios", []), "review_evidence.scenarios")
     by_key: dict[str, dict[str, Any]] = {}
@@ -231,14 +229,16 @@ def promote_phase_b(
             raise ReviewPipelineError(f"duplicate existing scenario_key: {key}")
         by_key[key] = record
 
-    promoted: list[str] = []
-    reused: list[str] = []
+    recorded: list[str] = []
+    fresh: list[str] = []
     stale: list[dict[str, Any]] = []
     next_number = 1
     used_ids = {item.get("id") for item in existing if isinstance(item, dict)}
-    for index, raw in enumerate(require_list(phase_b.get("scenarios"), "phase_b.scenarios")):
-        scenario, stale_paths = validate_phase_b_scenario(raw, index, current_hashes, runtime)
-        source_id = scenario.get("id") or f"phase-b-{index + 1}"
+    for index, raw in enumerate(additions):
+        scenario, stale_paths = validate_raw_scenario(
+            raw, index, current_hashes, runtime, source
+        )
+        source_id = scenario.get("id") or f"{source}-{index + 1}"
         if stale_paths:
             stale.append({"id": source_id, "reason": stale_paths})
             continue
@@ -246,27 +246,46 @@ def promote_phase_b(
         if key in by_key:
             existing_id = require_text(by_key[key].get("id"), "existing scenario id")
             if not scenario_stale_reasons(by_key[key], current_hashes, runtime):
-                reused.append(existing_id)
+                fresh.append(existing_id)
                 continue
             scenario["id"] = existing_id
-            scenario["promoted_at_code_fingerprint"] = code["code_fingerprint"]
+            scenario["recorded_at_code_fingerprint"] = code["code_fingerprint"]
             by_key[key] = scenario
-            promoted.append(existing_id)
+            recorded.append(existing_id)
             continue
         while f"BE-{next_number}" in used_ids:
             next_number += 1
         scenario["id"] = f"BE-{next_number}"
-        scenario["promoted_at_code_fingerprint"] = code["code_fingerprint"]
+        scenario["recorded_at_code_fingerprint"] = code["code_fingerprint"]
         used_ids.add(scenario["id"])
         by_key[key] = scenario
-        promoted.append(scenario["id"])
+        recorded.append(scenario["id"])
+
+    added_keys = set()
+    for identifier in recorded + fresh:
+        for key, record in by_key.items():
+            if record.get("id") == identifier:
+                added_keys.add(key)
+    for key, record in by_key.items():
+        if key in added_keys:
+            continue
+        identifier = require_text(record.get("id"), "existing scenario id")
+        reasons = scenario_stale_reasons(record, current_hashes, runtime)
+        if reasons:
+            stale.append({"id": identifier, "reason": reasons})
+        else:
+            fresh.append(identifier)
 
     output = dict(review_evidence)
     output.setdefault("schema_version", SCHEMA_VERSION)
     output["code"] = code
     output["runtime"] = runtime
     output["scenarios"] = sorted(by_key.values(), key=lambda item: item.get("id", ""))
-    return output, {"promoted": promoted, "reused": reused, "stale": stale}
+    return output, {
+        "recorded": recorded,
+        "fresh": sorted(set(fresh)),
+        "stale": sorted(stale, key=lambda item: item["id"]),
+    }
 
 
 def validate_common_item(item: dict[str, Any], label: str, fields: tuple[str, ...]) -> None:
@@ -446,7 +465,9 @@ def merge_evidence_additions(
         role = result["role"]
         for index, raw in enumerate(result["evidence_added"]):
             provisional = require_text(raw.get("id"), f"{role}.evidence_added[{index}].id")
-            scenario, stale_paths = validate_phase_b_scenario(raw, index, current_hashes, runtime)
+            scenario, stale_paths = validate_raw_scenario(
+                raw, index, current_hashes, runtime, role, f"{role}.evidence_added"
+            )
             if stale_paths:
                 raise ReviewPipelineError(
                     f"{role} evidence addition {provisional} is stale: {stale_paths}"
@@ -629,7 +650,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def command_promote(args: argparse.Namespace) -> None:
+def command_scenarios(args: argparse.Namespace) -> None:
     evidence_path = Path(args.review_evidence)
     evidence = read_json(evidence_path) if evidence_path.exists() else {
         "schema_version": SCHEMA_VERSION,
@@ -637,11 +658,13 @@ def command_promote(args: argparse.Namespace) -> None:
         "quality_gate": {},
         "scenarios": [],
     }
-    output, summary = promote_phase_b(
+    additions = require_list(read_json(Path(args.add)), "add") if args.add else []
+    output, summary = record_scenarios(
         require_dict(evidence, "review_evidence"),
         require_dict(read_json(Path(args.code_manifest)), "code_manifest"),
-        require_dict(read_json(Path(args.phase_b_scenarios)), "phase_b_scenarios"),
+        additions,
         require_dict(read_json(Path(args.runtime)), "runtime"),
+        args.source,
     )
     atomic_write_json(evidence_path, output)
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
@@ -677,13 +700,14 @@ def command_merge_additions(args: argparse.Namespace) -> None:
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     subparsers = root.add_subparsers(dest="command", required=True)
-    promote = subparsers.add_parser("promote")
-    promote.add_argument("--review-evidence", required=True)
-    promote.add_argument("--code-manifest", required=True)
-    promote.add_argument("--phase-b-scenarios", required=True)
-    promote.add_argument("--runtime", required=True)
-    promote.add_argument("--evidence-epoch", default="review-1")
-    promote.set_defaults(handler=command_promote)
+    scenarios = subparsers.add_parser("scenarios")
+    scenarios.add_argument("--review-evidence", required=True)
+    scenarios.add_argument("--code-manifest", required=True)
+    scenarios.add_argument("--runtime", required=True)
+    scenarios.add_argument("--add", help="JSON array of new raw scenarios; omit for a freshness check only")
+    scenarios.add_argument("--source", default="phase-b")
+    scenarios.add_argument("--evidence-epoch", default="review-1")
+    scenarios.set_defaults(handler=command_scenarios)
     merge_additions = subparsers.add_parser("merge-additions")
     merge_additions.add_argument("--review-evidence", required=True)
     merge_additions.add_argument("--result", required=True)

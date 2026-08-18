@@ -75,7 +75,9 @@ python3 "<skill-dir>/scripts/manage_execution_evidence.py" record \
 
 Phase C 候选全量门和 Phase D 最终全量门完成后，也用它们各自的最终状态 snapshot 与紧凑结果调用 `record --source phase-c|phase-d`。因此，下一个 Story 在仓库状态、命令和环境完全相同时可以直接复用；一次 Story 内 Phase C / D 的门禁语义不变。
 
-## 三、执行 telemetry
+## 三、执行 telemetry（可选）
+
+**默认不开。** telemetry 是流程自身的度量工具，不是交付判据：任何门禁都不因它缺失而拦截，`dev-review.md` 也不因此少一条结论。只有用户明确要求本 Story 记执行量、或正在排查某段流程为什么慢时才开；开了就整段按本节记满，不开就整段不写，不留空文件和半张表。
 
 `<execution-telemetry>` 恒为 `<story-dir>/execution-telemetry.json`。它是紧凑机器账本，由主 agent 在动作完成时增量追加；不保存命令 stdout/stderr、原文报告或推测时间。
 
@@ -120,11 +122,10 @@ Phase -1 开始时 `<story-dir>` 可能尚未唯一定位：此时只把 `phase-
 | `human.qa-confirmation` | 等待 QA 基线确认，`kind: human_wait` |
 | `phase-b.task.<task>.<channel>.red` | 还原 / 逻辑通道的 RED；双通道时各写一行，counts 记 commands，不因共享波次合并 |
 | `phase-b.task.<task>.<channel>.green` | 对应通道的 GREEN 与受影响重跑；counts 记 commands / reused_results |
-| `phase-b.validation-plan` | validation intents → plan → status 的初次编译或重编；counts 记 batches / command_batches / browser_batches / intents / consumers / assertions / stale |
-| `phase-b.validation.<n>` | `VAL-B-<n>` command / browser 批次的 run / reuse / blocked；counts 记 commands / browser_calls / retries / intents / consumers / assertions / passed / failed / blocked / reused_results |
-| `phase-b.browser-evidence` | Step ④ 已执行场景写入可提升原始事实；counts 记 capture / update |
+| `phase-b.directed-check` | 定向检查的 run / reuse / blocked；counts 记 commands / browser_calls / retries / reused_results |
+| `phase-b.browser-evidence` | Step ④ 场景直接写入 `review-evidence.json`；counts 记 capture / update |
 | `phase-c.quality-gate` | 候选全量门 run / reuse |
-| `phase-c.browser-evidence` | Phase B 场景 promote / stale 与缺口 run / reuse |
+| `phase-c.browser-evidence` | Phase B 场景仍有效 / stale 与缺口 run / reuse |
 | `phase-c.review.<role>` | 每个角色独立的 start / complete / retry；attempt 递增 |
 | `phase-c.review-refill` | 任一槽位释放后启动下一待派角色；counts 记 refill |
 | `phase-c.aggregate` | 四份 JSON 校验与确定性聚合 |
@@ -140,6 +141,6 @@ python3 "<skill-dir>/scripts/manage_execution_evidence.py" telemetry \
   --note "cache HIT: <state_fingerprint>"
 ```
 
-双通道共享一次产品实现时，两条 RED 与两条 GREEN telemetry 仍分别存在，`note` 可引用同一个 implementation fingerprint；不要伪造成一个通道。验证批次复用时用 `result: reuse`，在 `evidence` 引用同一个 `VAL-B-<n>` 与 `validation-status.json`，并用 `counts` 区分 `commands`、`browser_calls`、`retries`、`intents`、`consumers`、`assertions` 与 `reused_results`。一个 browser batch 只记实际 browser tool calls，不把场景数冒充调用数。代码变化导致失效时追加新 attempt 和失效原因，不覆盖旧行。
+双通道共享一次产品实现时，两条 RED 与两条 GREEN telemetry 仍分别存在，`note` 可引用同一个 implementation fingerprint；不要伪造成一个通道。定向检查按新鲜度键复用时用 `result: reuse`，在 `evidence` 引用被复用的那次执行（完整命令 + 代码指纹，或场景记录号），并用 `counts` 区分 `commands`、`browser_calls`、`retries` 与 `reused_results`。浏览器场景只记实际 browser tool calls，不把场景数冒充调用数。代码变化导致失效时追加新 attempt 和失效原因，不覆盖旧行。
 
-Phase B / C / D 至少按上述稳定边界续记；质量门、验证计划重编、command / browser 批次、逐 intent 状态、浏览器场景 promote / run / reuse / stale、子代理启动 / 动态补位 / 重试要能从 `steps[]` 的 ID / `counts` 机械汇总。Phase D 从这份 JSON 与 `validation-receipts.json / validation-status.json` 生成 `dev-review.md / 执行量账本`，没有记录就写“未记录”，禁止凭 LOC 或回忆估算。
+开了 telemetry 就 Phase B / C / D 都按上述稳定边界续记：质量门、定向检查、浏览器场景 run / reuse / stale、子代理启动 / 动态补位 / 重试要能从 `steps[]` 的 ID / `counts` 机械汇总。Phase D 只从这份 JSON 生成 `dev-review.md / 执行量账本`，没有记录就写“未记录”，禁止凭 LOC 或回忆估算。

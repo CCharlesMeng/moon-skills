@@ -127,7 +127,7 @@
 
 ## 执行量账本
 
-数据源：`execution-telemetry.json`。只列真实记录；拿不到写“未记录”，不估算。
+**本节只在本 Story 开启了 telemetry 时存在**；没开启就整节删掉，不写空表。数据源：`execution-telemetry.json`。只列真实记录；拿不到写“未记录”，不估算。
 
 | 子步骤 / Phase | agent 主动时间 | 人工等待 | 结果 | 动作计数 / 证据 |
 | --- | ---: | ---: | --- | --- |
@@ -137,9 +137,7 @@
 | --- | ---: |
 | 全量门（run / reuse 分列） | |
 | 定向检查（run / reuse 分列） | |
-| Phase B 验证批次（command / browser）/ 覆盖 Task | |
-| 验证 intent（passed / failed / blocked / stale / reused） | |
-| 浏览器调用 / 重试 / 场景（promote / run / reuse / stale） | |
+| 浏览器调用 / 重试 / 场景（run / reuse / stale） | |
 | 子代理启动 / 动态补位 / 重试 | |
 ```
 
@@ -244,7 +242,7 @@
 - [ ] ① RED（逻辑）—— 写失败的单元测试或接口集成测试，给出完整代码
 - [ ] ② 验 RED —— 运行测试，确认按预期失败
 - [ ] ③ GREEN —— 最小实现让测试转绿
-- [ ] ④ 验 GREEN —— 本 Task 行为测试逐 assertion 转绿；执行或登记适用的 `VAL-B-*` command / browser 批次（全量对账仍在 Phase C）
+- [ ] ④ 验 GREEN —— 本 Task 行为测试逐 assertion 转绿；定向检查按新鲜度键复用或补跑（全量对账仍在 Phase C）
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -289,14 +287,6 @@
 ## 还原证据记录
 
 <sdd-dev-frontend 执行还原轮时按 `R-<Task 编号>-<轮次>` 自动追加，此处留空>
-
-## Phase B 验证批次收据
-
-<实际执行 command / browser 批次时追加 `VAL-B-<序号>`；相同执行只写一条，多个 Task / 轮次 / AC / R/F 行按消费者引用。逐 intent / assertion 机器结果见 `validation-receipts.json`，当前新鲜度与精确重跑见 `validation-status.json`，本表不复制 JSON。Impact S 只可跳过非行为命令，行为与浏览器基线行仍须落账。>
-
-| 收据 | 类型 / 消费者 | 依赖 / 执行键 | 结果与调用计数 |
-| --- | --- | --- | --- |
-| VAL-B-a1b2c3d4e5f6 | command / browser；T1-r1, T2-r1, AC-x.1 | `<intent fingerprint>`；`<package + commands + scope / page + fixture + runtime + reset>` | `<passed / failed / blocked assertions>`；`commands=<n> / browser_calls=<n> / retries=<n>` |
 
 ## AC ↔ 证据映射
 
