@@ -6,13 +6,13 @@
 
 **任何需求级降级都必须可见**：在 `dev-baseline.md` 执行起点的「降级项」登记、在受影响证据中标注、在最终输出里带出来（硬门禁 4）。
 
-**仓库级能力失效不适用本文件，必须回 Phase -1** 让 `sdd-init-frontend` 解除，不得写成 Story 降级项继续开工（硬门禁 0）。
+**仓库 baseline 的事实源或初始化承诺失效时回 Phase -1。** 某项可选执行能力只有被当前验证组合选中后才形成 Story 限制；未被选择时不探测，也不算降级。
 
 ## 二、环境降级
 
 | 探测项 | Phase B 还原轮 | 布局与响应式检视 | 功能自测试 | 代码规范 / 质量检视 |
 | --- | --- | --- | --- | --- |
-| `<browser-driver>` 取不到 | 静态规则照常；render / visual-required 规则保持 YELLOW | **未执行** | **未执行** | 不受影响 |
+| 已选浏览器模块但 `<browser-driver>` 取不到 | 静态规则照常；render / visual-required 规则保持 YELLOW | **未执行** | **未执行** | 不受影响 |
 | 起不了页面 | 静态规则照常；render / visual-required 规则保持 YELLOW，不能完成还原轮 | **未执行** | **未执行** | 不受影响 |
 | 截图不可，页面可 | 静态与结构化规则照常，机器可检规则照常得出 RED / GREEN；只有 visual-required 规则保持 YELLOW | **未执行** | 照常实跑，截图列填 `降级：无截图能力` | 不受影响 |
 | 起点质量命令跑不起来 | Step ④ 的回归判定无基准 | 不受影响 | `REG-n` 记 `无基线可比`，**不得判定「回归未变差」** | 不受影响 |
@@ -20,7 +20,7 @@
 两条通用约束：
 
 - **源码级结果只能作为 static 层事实，不得越级替代 render / visual 层。** 没有渲染结果就是 YELLOW，不是 GREEN。
-- 保持 YELLOW 的规则要收口，走 SKILL.md 的 [还原 YELLOW 的放行通道](../SKILL.md#还原-yellow-的放行通道)。
+- 保持 YELLOW 的规则要收口，走 SKILL.md 的 [还原 YELLOW 的声明降级](../SKILL.md#还原-yellow-的声明降级)：证据不足写 `UNVERIFIED`，外部依赖未就绪才写 `DEFERRED`。
 
 布局检视对无截图判**终止**、功能自测试判**降级**，两者相反是刻意的，理由见 [CONTEXT.md](../CONTEXT.md#无截图能力时布局检视终止功能自测试降级)。
 
@@ -53,7 +53,7 @@
 | `<design-spec-dir>/visual-baseline/` | 缓存键全量一致只读命中；任一环境维度变化创建新指纹目录 | 不覆盖旧版本；没有 visual YELLOW 不查询、不截图 |
 | `restore-contract.json` | `dev-baseline.md` 未变则复用；基线哈希不一致硬失败 | 只有重新确认基线后才能重新编译 |
 | `dev-baseline.md / 工程依据` | Story 未变且记录的 REPO-3 指纹仍一致时**跳过重跑**；Story 变更时重新判 `lite` / `full` | 选择引用仍指向同一版仓库范式；指纹变化或 lite 条件不再成立就走 `full`，不复制正文 |
-| `<preflight-cache>` | 每次 Phase 0 都重新 `probe`，只有状态 / REPO-2 / 命令 / toolchain / runtime 全同且 24h 内才复用 | 缓存自身不是进度真相；MISS 实跑，Phase C / D 的全量门照常 |
+| `<preflight-cache>` | 每次 Phase 0 都重新 `probe`，只有状态 / REPO-2 / 命令 / toolchain / runtime 全同且 24h 内才复用 | 缓存自身不是进度真相；MISS 时只实跑验证组合已选命令，Phase C / D 按最终组合与依赖失效决定是否重跑 |
 | `execution-telemetry.json`（可选） | 本次开启过就从下一 attempt / 下一稳定 ID 继续追加；没开启过不补建 | 不覆盖失败轮；缺席不算降级项 |
 | `dev-baseline.md` 的确认门 | 已冻结时**不重新走** | 重走一次等于让用户对同一份基线确认两次（P1） |
 | `review-evidence.json` / `dev-review.md` | 先按代码指纹与逐场景 `depends_on` 判失效；未失效的原始证据继续复用，受影响角色重新作判断 | 判断不继承，但相同 fixture / viewport / 运行时的事实无需重复采集；角色集合按 Phase D 冻结映射取，不无条件四份全跑 |

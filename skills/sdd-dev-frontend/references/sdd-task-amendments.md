@@ -1,5 +1,7 @@
 # 上游 `sdd-task` 回改需求说明书（已落地，现为设计依据）
 
+> **当前边界：** 本文保留当时把“失败测试”扩成“失败证据”的设计推导，不再是执行契约。当前计划写法以 `sdd-task-frontend/SKILL.md` 与其 `references/failure-evidence-forms.md` 为准：Task 只写验收声明和因果证据意图，不写完整测试代码、精确命令、双通道调度或宽验证。执行动作由 [validation-policy.md](./validation-policy.md) 按风险与最终 diff 编译。下文与这些规则冲突的示例均视为历史材料。
+
 > **现状：本文的要求已经执行完了，不要再带到上游。**
 >
 > 落地位置是 `skills/sdd-task-frontend/references/failure-evidence-forms.md`。`sdd-task` 的 Step 2.4 会把 `type=frontend` 的行整行路由给 `sdd-task-frontend`，前端 `tasks.md` 不再由公共主干生成，所以下面那句「下游改不到上游」已经不成立。

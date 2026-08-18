@@ -8,9 +8,9 @@
 
 **Tech Stack:** <!-- 关键技术栈 -->
 
-**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks=
+**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks= | risk_triggers=
 
-> `baseline_source` 必填（`prototype` / `reference_page` / `text_spec` / `none`）；其余按档位与实际情况填，不适用留空。字段语义与缺席行为见 `references/handoff-fields.md`。
+> `baseline_source` 必填（`prototype` / `reference_page` / `text_spec` / `none`）；`risk_triggers` 填计划事实能直接支持的规范 token，其余按档位与实际情况填。字段语义与缺席行为见 `references/handoff-fields.md`。
 
 ---
 
@@ -77,21 +77,22 @@
 
 ## 5. 执行规则
 
-- **Iron Law：** 没有失败证据，就不写实现代码。失败证据有两种形态，见下。
+- **声明诚信：** 没有覆盖验收声明的新鲜证据，就不能把它标成 `PROVEN`。
 - **No Placeholders 铁规：** 禁止 TBD、TODO、"适当处理错误"、"类似任务 N"、无要点的步骤。
 - **不越界铁规：** 禁止对象字面量、模板/JSX 片段、完整函数体、内部 helper 名、指定 API 调用、视觉数值。**越界与占位符同为计划缺陷。**
 - **禁止修改测试以适配实现**；测试表达验收契约。
 - 仅在确认的 `search_paths[]` 内执行；超出须记录原因并回流 Design。
-- 每条任务必须 trace 到 `alpha-tests.md` 的 AT- 用例标识。逻辑轮 Step 1 的测试要点须基于 TaskPacket 头声明的 `test_framework`（前端 = mock 集成级测试）。具体代码由 Dev 阶段基于要点 + alpha-tests GWT 用例现写。
+- 每条任务必须 trace 到 `alpha-tests.md` 的 AT- 用例标识。计划只写因果证据意图；命令、范围、浏览器矩阵、全量门与独立检视由 Dev 根据风险触发器和最终 diff 编译。
 
-### 失败证据的两种形态
+### 因果证据形态
 
-| 形态 | Step 1 内容 | Step 2 预期 |
+| 形态 | Step 1 内容 | Step 4 声明 |
 | --- | --- | --- |
-| **逻辑** | 测什么行为 + 关键断言 + 测试文件路径 | 测试 FAIL |
-| **还原** | 运行已冻结的外部设计契约生成机器报告 + 视觉来源 + 区块名 | 至少一项明确 RED |
+| **逻辑** | 受影响 AT-/AC + 行为缺口 + 关键断言 + 候选测试位置 | 哪些声明应变成 `PROVEN` |
+| **还原** | 受影响 AT-/AC + 视觉来源 + 页面/区块 + 预期差异 | 哪些声明应由冻结契约证明 |
+| **机械** | 类型/构建/引用缺口 + 为什么没有行为分支 | 哪些声明应由编译或构建事实证明 |
 
-**每一轮 Step 1 必须显式标注形态。** 一个 Task 内可以有多轮 6 步（默认还原轮在前），6 步的编号、顺序与 RED/GREEN 语义不得合并。细则见 `references/failure-evidence-forms.md`。
+保留 6 步 checkbox 兼容形状；每轮标注形态，但不预排双通道、并行或复用策略。细则见 `references/failure-evidence-forms.md`。
 
 ## Task List（任务清单）
 
@@ -111,23 +112,17 @@
 - Modify: `精确路径`
 - Style: `精确样式文件路径` <!-- 还原 Task 独占样式文件 -->
 
-- [ ] **Step 1: 写失败证据（RED）— 形态：还原** — 运行冻结契约生成机器报告；至少一项明确 RED 才进入实现
+- [ ] **Step 1: 暴露缺口（RED）— 形态：还原** — 受影响声明：<AT-/AC>；视觉来源与页面/区块：<...>；预期差异：<...>
 
-- [ ] **Step 2: 运行确认失败**
-
-Run: `精确契约命令`
-Expected: RED — <一句话预期失败点>
+- [ ] **Step 2: 确认原因** — <什么现象才算差异来自未实现，而非基线/工具/环境问题>
 
 - [ ] **Step 3: 写最小实现（GREEN）** — 实现要点：改哪个文件 + 达成什么可观测行为（不写实现代码，YAGNI）
 
-- [ ] **Step 4: 重跑契约确认清零 + 全量回归仍绿**
-
-Run: `精确契约命令`
-Expected: 无 RED、无 YELLOW；或未匹配项逐条命中已冻结豁免
+- [ ] **Step 4: 证明声明（GREEN）** — <AT-/AC> 应变成 `PROVEN`；最小可观察结果：<...>
 
 - [ ] **Step 5: （按需）REFACTOR，保持绿色**
 
-- [ ] **Step 6: 提交** — 勾选即代表本轮完成（含红绿验证通过）
+- [ ] **Step 6: 记录证据并提交** — 在 `alpha-tests.md` 回填实际证据与声明状态后提交
 
 ```bash
 git add <files>
@@ -151,19 +146,13 @@ git commit -m "【问题单号 Defect】{work_item_id}" -m "【修改说明 Modi
 <!-- 逻辑 Task 的文件清单不得含样式文件。确有必要时显式登记：
      越界改样式：<文件> — <原因>；影响 Task <编号> 的 GREEN 报告 -->
 
-- [ ] **Step 1: 写失败证据（RED）— 形态：逻辑** — 测试要点：测什么行为 + 关键断言 + 测试文件路径
+- [ ] **Step 1: 暴露缺口（RED）— 形态：逻辑** — 受影响声明：<AT-/AC>；行为缺口、关键断言与候选测试位置：<...>
 
-- [ ] **Step 2: 运行测试，确认因正确原因失败**
-
-Run: `精确测试命令`
-Expected: FAIL — <一句话预期失败点>
+- [ ] **Step 2: 确认原因** — <什么现象才算因正确原因失败>
 
 - [ ] **Step 3: 写最小实现（GREEN）** — 实现要点：改哪个文件 + 达成什么可观测行为
 
-- [ ] **Step 4: 运行测试确认通过 + 全量回归仍绿**
-
-Run: `精确测试命令`
-Expected: PASS
+- [ ] **Step 4: 证明声明（GREEN）** — <AT-/AC> 应变成 `PROVEN`；最小可观察结果：<...>
 
 - [ ] **Step 5: （按需）REFACTOR，保持绿色**
 
@@ -176,8 +165,6 @@ Expected: PASS
 ### Task N: <区块名> [用例: AT-...]
 
 **含还原轮的理由:** <!-- 为什么切不开：样式由运行时状态计算得出，静态形态不存在 -->
-**双通道候选:** 是 / 否 <!-- 标「是」须说明三条条件如何成立；下游会自行复核，不满足即回退默认顺序 -->
-
 #### Task N · 轮 1（还原）
 … 6 步 …
 #### Task N · 轮 2（逻辑）
@@ -190,7 +177,9 @@ Expected: PASS
 - [ ] **占位符扫描：** 无 TBD/TODO/无要点步骤/"类似任务 N"
 - [ ] **越界扫描：** Step 3 与第 3 章无对象字面量、模板/JSX 片段、函数体、内部 helper 名、指定 API 调用、`#` 色值 / `px` / `rem`
 - [ ] **重复扫描：** 同一枚举 / 字段清单 / URL 常量在全文只出现一处
-- [ ] **形态标注：** 每个 Task 每一轮都标了形态；还原轮有视觉来源与区块名，且**无 class 锚点**
+- [ ] **声明与证据意图：** 每个 Task 引用受影响 AT-/AC 并写明证据形态；还原轮有视觉来源与区块名，且**无 class 锚点**
+- [ ] **动作越界：** 全文无精确验证命令、全量回归、浏览器矩阵、独立检视与双通道调度
+- [ ] **风险触发事实：** `risk_triggers` 只含规范 token；明显的视觉、交互、导航、公共边界、鉴权或写副作用无漏标
 - [ ] **切分口径：** 每页一个还原 Task 且排在该页逻辑 Task 之前；逻辑 Task 无样式文件（例外已登记）；无「样式微调 / 统一优化 / 走查修复」类 Task
 - [ ] **基线一致性：** 第 3.4 节的档位与 TaskPacket 头 `baseline_source` 一致；`prototype` 档位的 `prototype_dir` 真实存在且含 HTML；第 3 档未出现原型级数值
 - [ ] **类型一致性：** 跨任务的方法签名、类型名、属性名一致

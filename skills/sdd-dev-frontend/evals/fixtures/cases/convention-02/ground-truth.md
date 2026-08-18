@@ -18,10 +18,10 @@
 
 | # | 维度 | 应判级别 | 定位 | 应引用的基准 | 判定要点 |
 | --- | --- | --- | --- | --- | --- |
-| GT-1 | C3 | **阻断级** | `OrderExportPanel.module.css` L15 | `PATTERN-TOKEN-1` | `gap: 16px` → `--space-4`；命中规则 1「公共样式硬编码」门禁 |
-| GT-2 | C3 | **阻断级** | `StatCard.module.css` L4 | `PATTERN-TOKEN-1` | `padding: 12px` → `--space-3`；与 GT-1 同类违规，但落在不同目录的不同文件（新目录 `src/features/order-export/` vs 既有目录 `src/components/StatCard/`）——**两条都要报，只报一条算漏检**，不因为"看起来像同一个问题"就合并成一条 |
+| GT-1 | C3 | **建议级** | `OrderExportPanel.module.css` L15 | `PATTERN-TOKEN-1` | `gap: 16px` → `--space-4`；未违反冻结 token 声明，也无可复现错误结果 |
+| GT-2 | C3 | **建议级** | `StatCard.module.css` L4 | `PATTERN-TOKEN-1` | `padding: 12px` → `--space-3`；与 GT-1 同类但落在不同文件，两条都要报；问题类型不自动升阻断 |
 
-级别分布：阻断级 **2 条**（全部）。
+级别分布：阻断级 **0 条**，建议级 **2 条**。
 
 ## 二、不得报项（误报分母 = 4）
 

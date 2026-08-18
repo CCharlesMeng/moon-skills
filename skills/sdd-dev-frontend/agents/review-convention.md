@@ -18,7 +18,8 @@
 | 工程依据中的 ID 可读 | `<repo-baseline-dir>/repo-baseline.md` + `show --pattern-id` | 终止 |
 | `dev-baseline.md` 记录的 REPO-3 指纹（指纹附录，旧产物在工程依据行）与 `repo-baseline.md` 的 `## Section` 表一致 | 两处逐字比对 | 终止 |
 | 本 Story 改动 diff 可取 | `<repo-root>` 的 git 状态 | 终止 |
-| Phase C 共享证据包存在，且代码指纹与当前 Story diff 一致 | `<review-evidence>`；格式见 `<skill-dir>/references/review-evidence.md` | 终止；本角色从这里取 `evidence_epoch` 与 `code_fingerprint`，不重跑质量门 |
+| Phase C 共享证据包存在，且代码指纹与当前 Story diff 一致 | `<review-evidence>`；格式见 `<skill-dir>/references/review-evidence.md` | 终止；本角色从这里取 `evidence_epoch`、`code_fingerprint` 与分配维度，不重跑已选命令 |
+| 验证组合含 `review-convention` 且给出分配维度 | `<review-evidence> / validation_portfolio.review_dimensions.review-convention` | 终止 |
 | `tasks.md` | `<story-dir>/tasks.md` | 不终止，记入「已知缺口」 |
 | `<skill-dir>/references/stack-antipatterns.md` 里对应本仓栈的那一节 | 栈按 `REPO-1` 的框架字段定 | 不终止；表里没有本仓的栈时用该文件的「与栈无关的判据」一节 |
 
@@ -50,11 +51,11 @@
 - **不得再委派子代理。**
 - **不得顺手修复。** 看到违规只记录，不改。
 - 不得执行会改变仓库状态的命令（安装依赖、启动服务、跑构建、`git` 写操作）。读文件、列目录、检索、`git diff` / `git log` / `git show` 这类只读 git 命令是允许的。
-- 需要跑 lint 才能确认时：只跑仓内既有的只读检查命令（不带 `--fix`），并在结论里写明命令与输出摘要。
+- 需要 lint 才能确认时，只读共享 `quality_gate` 中验证组合已选的结果。组合没有选 lint 时不自行加跑；缺少客观证据的判断记入缺口，不伪装确证。
 
 ## 三、检视维度
 
-七个维度，**逐条穷尽，不得找到几条就收敛**。每个维度都必须出现在 coverage。无发现只写 coverage；只有 finding 与 OQ 展开结构化证据。省略维度仍不合格。
+只判断 `validation_portfolio.review_dimensions.review-convention` 分配的维度，**对分配集合逐条穷尽，不向未分配维度扩张**。无发现只写 coverage；只有 finding 与 OQ 展开结构化证据。
 
 **检视范围只限本 Story 的改动。** 仓内既有的历史违规不报，除非本 Story 的改动扩大了它（比如复制了一段旧的坏写法到新文件），那时报的是新增的那份。
 
@@ -64,13 +65,13 @@
 | --- | --- | --- | --- |
 | C1 | 目录与文件命名 | 工程依据选中的目录/命名 `PATTERN-*` | 建议级 |
 | C2 | 组件写法范式 | 工程依据选中的组件 `PATTERN-*` | 建议级 |
-| C3 | 样式方案一致性与硬编码 | 工程依据选中的样式/token `PATTERN-*` | **硬编码颜色 / 间距 / 字号 → 阻断级**；重复颜色字面量（≥3 处）→ **建议级候选**；其余建议级 |
+| C3 | 样式方案与 token | 工程依据选中的样式/token `PATTERN-*` | 默认建议级；违反已冻结 token 声明或已造成可观察错误时升阻断 |
 | C4 | 请求与错误处理 | 工程依据选中的请求/错误 `PATTERN-*` | 建议级；导致已冻结基线某条不成立时 → 阻断级 |
 | C5 | 公共能力复用 | 工程依据选中的公共能力 `PATTERN-*` | **建议级** |
-| C6 | 类型定义与检查抑制 | 工程依据选中的类型/编码 `PATTERN-*` | **无理由的检查抑制 → 阻断级**；类型错误 → 阻断级；其余建议级 |
+| C6 | 类型定义与检查抑制 | 工程依据选中的类型/编码 `PATTERN-*` | 默认建议级；已选命令确证失败或抑制使验收声明失真时升阻断 |
 | C7 | 国际化与文案机制 | 工程依据选中的国际化 `PATTERN-*`；未选择则不作为仓内规则判违规 | 建议级 |
 
-C3 与 C5 的级别差异是刻意的，C4 默认建议级也是刻意的，理由见 `<skill-dir>/references/review-dimensions.md`。**不要自行调整这三条的级别。**
+所有维度的升级依据统一取 `<skill-dir>/references/review-dimensions.md`：阻断级必须落到已冻结声明或确证错误结果，不按问题类型自动升级。
 
 **两条压过默认值的规则，完整口径以 `<skill-dir>/references/review-dimensions.md` 第二节为准：**
 
@@ -91,19 +92,19 @@ C3 与 C5 的级别差异是刻意的，C4 默认建议级也是刻意的，理�
 
 对照的是所选 `PATTERN-*` 的工程入口与使用方式。**仓内多种写法并存时，只以 REPO-3 已确认的范式为准**；REPO-3 没有判定主流的，不判违规，记建议级并说明并存现状。
 
-### C3 — 样式方案一致性与硬编码
+### C3 — 样式方案与 token
 
 三部分：
 
 **（一）样式落地方式是否与仓内一致** — 从 `REPO-3` 读该仓实际用的方案（自定义属性 / 预处理器 / 原子化工具类 / CSS-in-JS / 全局样式 / 组件库覆盖），判本 Story 选的是不是那一套；覆盖组件库样式时用的是不是仓内认可的写法。各方案的硬编码信号见 stack-antipatterns 的「样式方案」一节。默认建议级。
 
-**（二）硬编码 → 阻断级。** 本 Story 新增或修改的样式里，凡是本可以用 token 却写了字面量的：
+**（二）硬编码是风险信号。** 本 Story 新增或修改的样式里，凡是本可以用 token 却写了字面量的：
 
 - 颜色：十六进制、`rgb()` / `hsl()` 等函数式取值、颜色关键字
 - 间距：外边距 / 内边距 / 间隙 / 定位偏移的像素字面量
 - 字号与行高、圆角、阴影、层级值
 
-逐条给出：字面量原值、所在文件与行号、**应当替换成的 token 名**（取自工程依据引用的样式/token `PATTERN-*`）。
+逐条给出：字面量原值、所在文件与行号、**应当替换成的 token 名**（取自工程依据引用的样式/token `PATTERN-*`）。默认记建议级；只有它违反已冻结 token 验收声明或能复现具体错误视觉结果时升阻断。
 
 **找不到对应 token 的不算硬编码违规**——那是基准缺失，记建议级并在 Open Question 里问是否要补 token。栅格计算式、`1px` 描边、组件库要求的字面量参数这类不适用 token 的，不报，但要在维度小节写明你排除了哪些。
 
@@ -139,9 +140,9 @@ C3 与 C5 的级别差异是刻意的，C4 默认建议级也是刻意的，理�
 - 类型定义位置与命名是否跟随仓内约定
 - 接口响应类型的来源是否跟随仓内做法（手写还是生成）
 - **检查抑制手段**——一切让类型检查或 lint 闭嘴的写法，具体关键字按栈查 stack-antipatterns。逐个列出，判断有没有写明理由，以及仓内既有范式是不是本来就这么做
-  - 无理由 → **阻断级**
+  - 无理由 → **建议级**；若它实际遮蔽已选命令失败或让验收声明失真，升阻断
   - 有理由且理由成立（仓内范式如此、第三方类型确有缺陷并注明）→ 建议级，注明理由出处
-- 检视中撞见的**编译期类型错误 → 阻断级**，不论落在哪个维度。仓内没有类型检查环节（`REPO-2` 无 typecheck 类命令）时，本条写「不适用」
+- 只把**已选 typecheck / build 命令确证的编译期类型错误**升为阻断；未选命令不为凑证据自行加跑。
 
 ### C7 — 国际化与文案机制
 
@@ -156,10 +157,10 @@ C3 与 C5 的级别差异是刻意的，C4 默认建议级也是刻意的，理�
 正常完成时，先完整读取 `<skill-dir>/references/review-result-contract.md`，然后只回传一个符合该契约的 JSON object；不得加 Markdown fence、标题、寒暄或过程说明。
 
 - `role` 固定为 `review-convention`；`evidence_epoch` 与 `code_fingerprint` 取路径变量表和共享证据。
-- `coverage` 必须恰好覆盖 `C1`–`C7`。`scope` 写实际 diff 文件范围，`evidence_ids` 引用行号、`PATTERN-*` / `REQ-DEC-*` 或命令证据。
+- `status=executed` 时，`coverage` 必须恰好覆盖 `validation_portfolio.review_dimensions.review-convention` 分配的维度。`scope` 写实际 diff 文件范围，`evidence_ids` 引用行号、`PATTERN-*` / `REQ-DEC-*` 或命令证据。前置条件在派发后失效时改为 `unexecuted`，coverage 留空并写 `known_gaps`。
 - 每条 finding 仍按本提示词的仓内基准和分级填写；`canonical_key` 用代码位置与违规机制组成，不含角色名或级别。
-- 本角色不复跑浏览器或全量质量命令；没有浏览器证据时 `evidence_reused / evidence_added` 可为空数组。
-- 无发现时只保留七条 coverage，其他数组为空；不适用与查不动的内容写入对应 coverage scope 或 `known_gaps`。
+- 本角色不复跑浏览器或验证组合已执行的质量命令；没有浏览器证据时 `evidence_reused / evidence_added` 可为空数组。
+- 无发现时只保留已分配维度的 coverage，其他数组为空；查不动的内容写入对应 coverage scope 或 `known_gaps`，未分配维度不生成占位。
 
 ## 五、证据要求
 

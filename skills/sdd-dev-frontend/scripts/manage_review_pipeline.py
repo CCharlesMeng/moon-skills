@@ -20,7 +20,6 @@ ROLE_DIMENSIONS = {
     "review-convention": {f"C{index}" for index in range(1, 8)},
     "review-quality": {f"Q{index}" for index in range(1, 9)},
 }
-SELF_TEST_FAMILIES = {"F1", "F2", "F3", "F4", "REG"}
 JUDGMENT_KEYS = {
     "finding", "findings", "verdict", "conclusion", "level", "severity",
     "passed", "pass", "failed", "result", "open_questions",
@@ -334,12 +333,15 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
     questions = require_list(result.get("open_questions"), f"{role}.open_questions")
     deferred = require_list(result.get("deferred_candidates"), f"{role}.deferred_candidates")
     gaps = require_list(result.get("known_gaps"), f"{role}.known_gaps")
-    require_list(result.get("evidence_reused"), f"{role}.evidence_reused")
+    evidence_reused = require_list(result.get("evidence_reused"), f"{role}.evidence_reused")
     evidence_added = require_list(result.get("evidence_added"), f"{role}.evidence_added")
     for index, addition in enumerate(evidence_added):
         validate_evidence_addition(addition, f"{role}.evidence_added[{index}]")
     if status != "executed":
-        if coverage or findings or questions or deferred or not gaps:
+        if (
+            coverage or findings or questions or deferred
+            or evidence_reused or evidence_added or not gaps
+        ):
             raise ReviewPipelineError(f"{role} non-executed result must only explain known_gaps")
         return result
 
@@ -354,16 +356,11 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
         require_list(item.get("evidence_ids"), f"{role}.coverage[{index}].evidence_ids")
         if item.get("result") not in {"clear", "finding", "unrun"}:
             raise ReviewPipelineError(f"invalid coverage result {role}:{dimension}")
-    if role in ROLE_DIMENSIONS and dimensions != ROLE_DIMENSIONS[role]:
-        missing = sorted(ROLE_DIMENSIONS[role] - dimensions)
+    if role in ROLE_DIMENSIONS and not dimensions <= ROLE_DIMENSIONS[role]:
         extra = sorted(dimensions - ROLE_DIMENSIONS[role])
-        raise ReviewPipelineError(f"{role} coverage mismatch; missing={missing}, extra={extra}")
-    if role == "self-test":
-        families = {dimension.split("-", 1)[0] for dimension in dimensions}
-        if not SELF_TEST_FAMILIES.issubset(families):
-            raise ReviewPipelineError(
-                f"self-test coverage missing families: {sorted(SELF_TEST_FAMILIES - families)}"
-            )
+        raise ReviewPipelineError(f"{role} coverage contains unknown dimensions: {extra}")
+    if role == "self-test" and not dimensions:
+        raise ReviewPipelineError("self-test executed result must cover assigned claim dimensions")
 
     ids: set[str] = set()
     for index, raw_finding in enumerate(findings):
@@ -514,17 +511,67 @@ def merge_evidence_additions(
     return output, rewritten
 
 
-def aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
-    if len(results) != len(ROLES):
-        raise ReviewPipelineError("aggregate requires exactly four role results")
+def aggregate_results(
+    results: list[dict[str, Any]],
+    expected_roles: list[str] | tuple[str, ...] | None = None,
+    expected_dimensions: dict[str, list[str] | tuple[str, ...] | set[str]] | None = None,
+    evidence_epoch: str | None = None,
+    code_fingerprint: str | None = None,
+) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     by_role = {item["role"]: item for item in validated}
-    if set(by_role) != set(ROLES):
-        raise ReviewPipelineError(f"aggregate roles mismatch: {sorted(by_role)}")
+    if len(by_role) != len(validated):
+        raise ReviewPipelineError("aggregate contains duplicate role results")
+    expected = list(by_role) if expected_roles is None else list(expected_roles)
+    if len(set(expected)) != len(expected) or any(role not in ROLES for role in expected):
+        raise ReviewPipelineError(f"invalid expected review roles: {sorted(expected)}")
+    if set(by_role) != set(expected):
+        raise ReviewPipelineError(
+            f"aggregate roles mismatch: expected={sorted(expected)}, actual={sorted(by_role)}"
+        )
+    if expected_dimensions is not None:
+        if set(expected_dimensions) != set(expected):
+            raise ReviewPipelineError(
+                "review dimension assignments must match expected review roles"
+            )
+        for role in expected:
+            assigned_values = list(expected_dimensions[role])
+            assigned = set(assigned_values)
+            if not assigned or len(assigned) != len(assigned_values):
+                raise ReviewPipelineError(
+                    f"{role} review dimension assignment must be non-empty and unique"
+                )
+            if role in ROLE_DIMENSIONS and not assigned <= ROLE_DIMENSIONS[role]:
+                extra = sorted(assigned - ROLE_DIMENSIONS[role])
+                raise ReviewPipelineError(
+                    f"{role} assignment contains unknown dimensions: {extra}"
+                )
+            actual = {item["dimension"] for item in by_role[role]["coverage"]}
+            # A selected review can still fail its execution precondition after
+            # dispatch. Keep the assignment for claim-to-gap mapping, but accept
+            # the honest non-executed result instead of demanding fake coverage.
+            if by_role[role]["status"] != "executed":
+                continue
+            if actual != assigned:
+                missing = sorted(assigned - actual)
+                extra = sorted(actual - assigned)
+                raise ReviewPipelineError(
+                    f"{role} coverage mismatch; missing={missing}, extra={extra}"
+                )
     epochs = {item["evidence_epoch"] for item in validated}
     fingerprints = {item["code_fingerprint"] for item in validated}
-    if len(epochs) != 1 or len(fingerprints) != 1:
+    if len(epochs) > 1 or len(fingerprints) > 1:
         raise ReviewPipelineError("all review results must share evidence_epoch and code_fingerprint")
+    resolved_epoch = next(iter(epochs), evidence_epoch)
+    resolved_fingerprint = next(iter(fingerprints), code_fingerprint)
+    if not resolved_epoch or not resolved_fingerprint:
+        raise ReviewPipelineError(
+            "zero-role aggregate requires evidence_epoch and code_fingerprint"
+        )
+    if evidence_epoch and resolved_epoch != evidence_epoch:
+        raise ReviewPipelineError("review results do not match evidence_epoch")
+    if code_fingerprint and resolved_fingerprint != code_fingerprint:
+        raise ReviewPipelineError("review results do not match code_fingerprint")
     global_ids: dict[str, str] = {}
     for result in validated:
         for field in ("findings", "open_questions", "deferred_candidates"):
@@ -552,11 +599,11 @@ def aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     return {
         "schema_version": SCHEMA_VERSION,
-        "evidence_epoch": epochs.pop(),
-        "code_fingerprint": fingerprints.pop(),
-        "roles": {role: by_role[role]["status"] for role in ROLES},
-        "known_gaps": {role: by_role[role]["known_gaps"] for role in ROLES},
-        "coverage": {role: by_role[role]["coverage"] for role in ROLES},
+        "evidence_epoch": resolved_epoch,
+        "code_fingerprint": resolved_fingerprint,
+        "roles": {role: by_role[role]["status"] for role in expected},
+        "known_gaps": {role: by_role[role]["known_gaps"] for role in expected},
+        "coverage": {role: by_role[role]["coverage"] for role in expected},
         "findings": findings,
         "open_questions": questions,
         "deferred_candidates": deferred,
@@ -610,7 +657,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     lines = [
         "# Dev Review", "",
         "## 给人的摘要", "",
-        f"四份独立检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，Open Question {counts['open_question']} 条，Deferred 候选 {counts['deferred']} 条。",
+        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，Open Question {counts['open_question']} 条，Deferred 候选 {counts['deferred']} 条。",
         "## 检视基准", "",
         f"- evidence epoch: `{aggregate['evidence_epoch']}`", f"- code fingerprint: `{aggregate['code_fingerprint']}`",
     ]
@@ -626,6 +673,11 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         gaps = aggregate["known_gaps"][role]
         detail = f"（{'；'.join(str(item) for item in gaps)}）" if gaps else ""
         lines.append(f"- {role}: {status}{detail}")
+    portfolio = aggregate.get("validation_portfolio")
+    if isinstance(portfolio, dict):
+        triggers = "、".join(str(item) for item in portfolio.get("risk_triggers", [])) or "无"
+        modules = "、".join(str(item) for item in portfolio.get("modules", [])) or "无"
+        lines += [f"- risk triggers: {triggers}", f"- validation modules: {modules}"]
     lines += ["", "## 覆盖矩阵", ""]
     coverage_rows = []
     for role, rows in aggregate["coverage"].items():
@@ -673,10 +725,50 @@ def command_scenarios(args: argparse.Namespace) -> None:
 def command_aggregate(args: argparse.Namespace) -> None:
     results = [read_json(Path(path)) for path in args.result]
     evidence_path = Path(args.review_evidence)
-    evidence, results = merge_evidence_additions(
-        require_dict(read_json(evidence_path), "review_evidence"), results
+    source_evidence = require_dict(read_json(evidence_path), "review_evidence")
+    portfolio = require_dict(
+        source_evidence.get("validation_portfolio"),
+        "review_evidence.validation_portfolio",
     )
-    aggregate = attach_evidence_artifacts(aggregate_results(results), evidence)
+    expected_roles = require_list(
+        portfolio.get("review_roles"),
+        "review_evidence.validation_portfolio.review_roles",
+    )
+    expected_roles = [
+        require_text(role, f"review_evidence.validation_portfolio.review_roles[{index}]")
+        for index, role in enumerate(expected_roles)
+    ]
+    raw_dimensions = require_dict(
+        portfolio.get("review_dimensions"),
+        "review_evidence.validation_portfolio.review_dimensions",
+    )
+    if set(raw_dimensions) != set(expected_roles):
+        raise ReviewPipelineError(
+            "review_evidence.validation_portfolio.review_dimensions must match review_roles"
+        )
+    expected_dimensions = {
+        role: [
+            require_text(item, f"review_evidence.validation_portfolio.review_dimensions.{role}[{index}]")
+            for index, item in enumerate(require_list(
+                raw_dimensions[role],
+                f"review_evidence.validation_portfolio.review_dimensions.{role}",
+            ))
+        ]
+        for role in expected_roles
+    }
+    evidence, results = merge_evidence_additions(
+        source_evidence, results
+    )
+    code = require_dict(evidence.get("code"), "review_evidence.code")
+    aggregate = aggregate_results(
+        results,
+        expected_roles=expected_roles,
+        expected_dimensions=expected_dimensions,
+        evidence_epoch=require_text(evidence.get("evidence_epoch"), "review_evidence.evidence_epoch"),
+        code_fingerprint=require_text(code.get("code_fingerprint"), "review_evidence.code.code_fingerprint"),
+    )
+    aggregate["validation_portfolio"] = portfolio
+    aggregate = attach_evidence_artifacts(aggregate, evidence)
     atomic_write_json(evidence_path, evidence)
     atomic_write_json(Path(args.output_json), aggregate)
     atomic_write(Path(args.output_markdown), render_markdown(aggregate))
@@ -714,7 +806,7 @@ def parser() -> argparse.ArgumentParser:
     merge_additions.add_argument("--output-result", required=True)
     merge_additions.set_defaults(handler=command_merge_additions)
     aggregate = subparsers.add_parser("aggregate")
-    aggregate.add_argument("--result", action="append", required=True)
+    aggregate.add_argument("--result", action="append", default=[])
     aggregate.add_argument("--review-evidence", required=True)
     aggregate.add_argument("--output-json", required=True)
     aggregate.add_argument("--output-markdown", required=True)
@@ -725,8 +817,6 @@ def parser() -> argparse.ArgumentParser:
 def main() -> int:
     try:
         arguments = parser().parse_args()
-        if arguments.command == "aggregate" and len(arguments.result) != len(ROLES):
-            raise ReviewPipelineError("--result must be supplied exactly four times")
         arguments.handler(arguments)
         return 0
     except ReviewPipelineError as error:

@@ -23,12 +23,10 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" status \
 | --- | --- |
 | baseline 缺失、`DRAFT`、section 失效 | 完整读取 `<init-skill-dir>/SKILL.md` 和其 baseline contract，执行 `sdd-init-frontend`；完成后回到本门 |
 | `BLOCKED` | 尝试按 onboarding report 的解除动作继续初始化；仍需外部输入时停在本门 |
-| `READY_WITH_LIMITS` | 对照当前 Story 的页面、视觉、接口和质量需求；任一 limit 命中则回初始化解除，否则记录影响后继续 |
+| `READY_WITH_LIMITS` | 先分类：会让实现本身不安全/不可执行、或让仓库事实源不可信的 limit 回初始化解除；只影响某种验证动作的 limit 记为候选能力缺口，继续到 Phase 0，由验证组合把依赖声明标 `UNVERIFIED`；未命中当前组合的不探测 |
 | `READY` | 继续 Phase 0 |
 
-4. 按 [浏览器驱动](../SKILL.md#浏览器驱动) 三档确定 `<browser-driver>`，取到第 1 或第 2 档时实际打开一次目标路由验证，不只看 `REPO-1` 的声明（硬门禁 15）。
-
-完成后分别追加 `phase-1.status` 与 `phase-1.browser-probe` telemetry；若 `<story-dir>` 尚未唯一定位，先保留真实起止时间，Phase 0 第 1 步定位后立即 flush。初始化往返与浏览器重试用递增 attempt 保留，不能覆盖或估算。
+完成后追加 `phase-1.status` telemetry；若 `<story-dir>` 尚未唯一定位，先保留真实起止时间，Phase 0 第 1 步定位后立即 flush。初始化往返用递增 attempt 保留，不能覆盖或估算。浏览器能力是否需要探测由 Phase 0 的初始验证组合决定，不在仓库接入门固定执行。
 
 路由返回后再次运行 `status` 与 `validate`。未通过不得进入 Phase 0，也不得把仓库未就绪登记成 Story 降级。
 
@@ -105,51 +103,56 @@ python3 "<init-skill-dir>/scripts/manage_repo_baseline.py" show \
 - Story 范围、目标页面与路由；
 - Git `base-ref`、起点 SHA、工作区初始状态；
 - 本次账号、角色、租户、fixture、API/mock 模式；
-- `<browser-driver>` 取到哪一档，目标路由能否打开、截图与结构化采集能否使用。
+- 若验证组合选择浏览器相关模块：`<browser-driver>` 取到哪一档，目标路由能否打开、截图与结构化采集能否使用；未选择时记 `not-selected`，不探测。
 
 事实能从仓库或上游读出就直接记录；多个场景都合理且会改变验收结果时才按 P7 请用户决定。
 
 ##### 上游接缝字段（`sdd-task-frontend` 产出时才有）
 
-`tasks.md` 的 TaskPacket 头可能带 `baseline_source` / `prototype_dir` / `reference_route` / `affected_routes` / `required_states` / `restore_tasks`。它们由 `sdd-task-frontend` 写入，**全部可选：缺席即按本文既有方式自行判定，不是降级项、不进「已知缺口」**。
+`tasks.md` 的 TaskPacket 头可能带 `baseline_source` / `prototype_dir` / `reference_route` / `affected_routes` / `required_states` / `restore_tasks` / `risk_triggers`。它们由 `sdd-task-frontend` 写入，**全部是候选输入：缺席不代表低风险，也不是降级项**。
 
 | 字段 | 怎么用 |
 | --- | --- |
 | `baseline_source` | 作为 [基线源](../SKILL.md#基线源没有-html-原型时) 三档判定的**候选答案**，省掉一轮探测 |
 | `prototype_dir` | 作为 `<prototype-dir>` 的候选值，唯一命中则不占提问位 |
 | `reference_route` | 第 2 档时作为参照页**候选**交给 `recon-codebase` 与确认门 |
-| `affected_routes` | 目标页面与路由、以及下方影响面分级的输入 |
-| `required_states` | Phase B 场景矩阵的必测状态，与 Step ④ 已知约束核销的输入 |
+| `affected_routes` | 目标页面、路由与风险闭包输入 |
+| `required_states` | 候选验证组合的状态输入，不表示逐 Task 执行 |
 | `restore_tasks` | 还原轮索引，供 Phase B 少猜形态 |
+| `risk_triggers` | 上游从计划事实识别出的候选风险触发器 |
 
 三条约束，缺一条这些字段就会变成第二个真相源：
 
 - **验证，不采信。** 按 `baseline_source` 行动前必须核实：声明 `prototype`（或给了 `prototype_dir`）时，该目录要真的存在且含 HTML。核不上就按本文既有方式重新判档，并在执行起点记一行「上游声明 `<值>`，实测不成立，改判 `<档>`」。**判错的后果是整个 Phase A1 被错误跳过**（判据见 [Phase A 细则](./phase-spec.md)），这个核实很便宜，不得省。
 - **不替代确认门。** `baseline_source` 与 `reference_route` 进的是 Phase A2 确认门的输入，**不是冻结结果**。参照页收集候选属事实、选哪一个仍属决策，照原规则进确认门——用户确认的不只是期望值，还有本次拿什么当基线。
-- **Task 内容优先。** 任一字段与 `tasks.md` 正文冲突时以正文为准（典型：`restore_tasks` 说是还原轮，但该 Task 文件清单里没有样式文件）。字段只是索引，不是判据。
+- **Task 内容优先，最终 diff 收口。** 字段与正文冲突时以正文为准；实现后的风险触发器再与最终 diff 取并集。字段只是索引，不冻结验证组合。
 
-再按下表从 `tasks.md` 事实定出**影响面分级**，记入执行起点。分级只影响明示引用它的条款（布局与响应式检视的页面范围等），**不改变任何门禁语义**；拿不准时取更大的一档。
+完整读取 [声明驱动的验证策略](./validation-policy.md)，从 AC/AT、Task 文件范围、`affected_routes`、`required_states`、上游 `risk_triggers` 与仓库 baseline 编译**初始验证组合**。拿不准依赖闭包时加入 `unknown-deps`，不按 Task 数或文件数猜低风险。
 
-| 级 | 判据 |
-| --- | --- |
-| S | 同时满足：Task ≤ 2、无新增页面 / 路由、涉及区块 ≤ 2 |
-| L | 任一满足：新增页面 / 路由、Task ≥ 5、改动仓库公共组件或公共样式 |
-| M | 其余 |
+把以下内容写入 `dev-baseline.md / 验证组合`：
 
-完成路径、场景、工作区与 Impact 定级后追加 `phase-0.context` telemetry。
+- 验收声明列表，初始状态均为 `UNVERIFIED`；
+- 风险触发器及其证据来源；
+- 每条声明需要的验证模块；
+- 初始 `review_roles`；
+- 因能力缺失暂时无法执行的模块及受影响声明。
+
+若初始组合含 `render`、`journey`、`review-layout` 或需要浏览器的 `self-test`，此时按 [浏览器驱动](../SKILL.md#浏览器驱动) 三档解析并实际打开目标路由；失败只让依赖模块未执行、相关声明保持 `UNVERIFIED`。组合未选择浏览器模块时写 `browser-driver: not-selected`，不启动页面、不生成探测记录。Phase C 因最终 diff 新增浏览器模块时再走同一解析。
+
+完成路径、场景、工作区与初始组合后追加 `phase-0.context` telemetry。
 
 #### 5. 提取或精确复用开工失败集合
 
-按 [起点质量证据复用与执行 telemetry](./preflight-and-telemetry.md) 先执行 `probe`。命令选择仍以 `REPO-2` 为准；上游明确要求但 `REPO-2` 没有对应能力时回 Phase -1 补齐，不在 Story 中写“未提供”。
+只为初始验证组合选中的 `targeted-quality` / `regression` 命令取得起点失败集合。命令入口来自 `REPO-2`；组合未选择命令模块时跳过本节，不生成空表。选中时按 [起点质量证据复用与执行 telemetry](./preflight-and-telemetry.md) 执行 `probe`。
 
 | probe | 动作 |
 | --- | --- |
 | `HIT` | 不再执行同一组命令；复用缓存里的逐命令退出码、耗时和**具体失败集合**，在起点质量表注明 `复用`、状态指纹、来源、记录时间与缓存路径 |
-| `MISS` | 实跑全部适用命令，记录命令、范围、退出码、耗时和**具体失败集合**；用同一 snapshot + 紧凑结果 `record --source phase-0`，并在起点质量表注明 `实跑` 与 miss 原因 |
+| `MISS` | 实跑组合选中的命令，记录范围、退出码、耗时和具体失败集合；用同一 snapshot + 紧凑结果 `record --source phase-0` |
 
 不存在的类别不生成表格行。任何网络 / 外部 / 时变命令使整组证据固定 `MISS`，不得只复用其中一部分后拼出一套新结果。
 
-这组结果属于 `DEMAND-2`，与状态指纹绑定。`REPO-2` 只说明命令怎么跑，不保存这组失败；`<preflight-cache>` 也不是仓库事实源。无论 HIT / MISS 都追加 `phase-0.quality-gate` telemetry。**这里只允许替代 Phase 0 起点门；不得据此跳过 Phase C 候选全量门或最终代码指纹需要的 Phase D 最终门。**
+这组结果属于 `DEMAND-2`，与状态指纹和命令 scope 绑定。Phase C 按最终 diff 重编译组合：相同命令若证据仍新鲜可复用；新增模块只补相应命令。只有 `regression` 升级到全量时才执行 REPO-2 全套。
 
 #### 6. 设计事实预检
 

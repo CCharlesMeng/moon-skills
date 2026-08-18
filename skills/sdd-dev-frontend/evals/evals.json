@@ -172,14 +172,14 @@
     },
     {
       "id": 14,
-      "name": "impact-s-suggestions-do-not-trigger-code-changes",
+      "name": "suggestions-do-not-expand-validation-or-trigger-code-changes",
       "target": "references/phase-review-closeout.md",
-      "prompt": "一个 Impact S Story 的四份检视均为 0 阻断级，候选全量门已通过。Q1-1 指出 Drawer.tsx 为 354 行，建议后续拆小，但 AC、空态/复制/实时同步/关闭、键盘主流程与数据展示均通过；C5-1 指出本 Story 新写的 formatLabel 与公共 helper 有 6 行重复，但两者语义相同且当前输出正确。两项都没有冻结基线失败或错误复现。修改它们很容易。请完成 Phase D 与收口。",
+      "prompt": "最终验证组合只触发 review-quality/Q1 与 review-convention/C5，两份检视均为 0 阻断级。Q1-1 指出 Drawer.tsx 为 354 行，建议后续拆小，但 AC、键盘主流程与数据展示均已有新鲜证据；C5-1 指出 formatLabel 与公共 helper 重复，但当前输出正确。两项都没有冻结声明失败或错误复现。修改它们很容易。请收口。",
       "expected_output": "先按冻结标准与核心可用性重新分级；仍属建议级时不再改代码、不增加修复轮，只写入 dev-review.md 的 Handoff 清单并在最终会话交付。",
       "expectations": [
         "逐条对照冻结 AC/QA、核心流程、核心可访问性和数据正确性重新判断级别",
         "如果两项仍为建议级，即使修改容易也不得为它们改产品代码",
-        "不因建议级额外触发全量门、浏览器复验或四份检视重跑",
+        "不因建议级额外触发命令、浏览器复验、未分配维度或其他检视角色",
         "把建议级写入 dev-review.md 的结构化 Handoff 清单，并在三行索引后用人话交付"
       ]
     },
@@ -211,27 +211,27 @@
     },
     {
       "id": 17,
-      "name": "four-reviews-complete-with-three-child-slots",
+      "name": "applicable-reviews-complete-with-limited-child-slots",
       "target": "references/phase-review-closeout.md",
-      "prompt": "运行环境总共四个 agent 槽位，主 agent 占一个，因此同一时刻只能启动三个检视子代理；Phase C 仍要求规范、质量、布局、功能自测试四份独立判断。请安排派发。",
-      "expected_output": "在同一证据纪元内先填满三个槽位，任一角色完成且 JSON 预校验通过就立即动态补位第四份；这属于合法完成，不合并规范与质量角色，也不把无法四份同时运行判为失败。",
+      "prompt": "最终验证组合触发了三个检视角色，分配分别是 layout=[L2,L3]、quality=[Q5,Q6]、self-test=[F2-1,F3-2]。主 agent 之外同时只有两个 agent 槽位。请安排派发。",
+      "expected_output": "在同一证据纪元内先填满两个槽位，任一角色完成且 JSON 预校验通过就立即动态补位第三份；每份只覆盖分配维度，未触发的 convention 不派发。",
       "expectations": [
         "先固定共同的 review-evidence 路径、evidence_epoch 与代码指纹",
-        "初始不超过三个子代理；任一份完成并释放槽位后立即派剩余角色，不等待另外两份",
-        "四个角色仍各自产出独立结果，尤其不得合并规范检视和质量检视",
+        "初始不超过两个子代理；任一份完成并释放槽位后立即派剩余角色",
+        "三个角色各自产出独立结果，coverage 精确等于各自分配集；未触发角色无占位结果",
         "不同启动时刻只共享原始事实，不把先完成角色的判断交给后一角色"
       ]
     },
     {
       "id": 18,
-      "name": "repair-loop-targets-checks-before-one-final-full-gate",
+      "name": "repair-loop-reruns-only-invalidated-portfolio-modules",
       "target": "references/phase-review-closeout.md",
-      "prompt": "候选代码在 Phase C 已跑过一次全量质量门；之后发现一个阻断级逻辑错误，连续两次小修才稳定，另有建议级仍未处理。请给出 Phase D 的验证顺序和全量门次数。",
-      "expected_output": "修复未稳定时只跑与改动对应的定向检查和受影响检视；阻断清零、代码稳定后，如果指纹相对候选门发生变化，只补一次最终全量门，并在它之后补采受影响浏览器证据。本情境全流程全量门共 2 次：Phase C 候选门 1 次、Phase D 最终门 1 次。",
+      "prompt": "候选组合只选了 causal、targeted-quality（drawer reducer 测试）与 self-test/F2-1，没有 regression 或全仓命令。之后发现一个阻断逻辑错误，连续两次小修才稳定，另有建议级未处理。请给出 Phase D 验证顺序。",
+      "expected_output": "每轮小修只重跑依赖命中的 reducer 测试与 F2-1 场景/判断；修复未引入新风险触发器，所以不新增全量门或其他检视。阻断清零后将 F2-1 标为 PROVEN，建议级进 handoff。",
       "expectations": [
-        "两次小修期间使用定向测试、类型检查或受影响场景，不为每次小修跑全量门",
+        "两次小修期间只使用已选且依赖命中的测试与场景",
         "只失效和复验受改动影响的证据与检视维度",
-        "阻断级清零且源码稳定后，因代码指纹变化只执行一次最终全量 test/check/build；连同既有候选门，全流程全量门总数明确为 2",
+        "修复未引入新风险触发器时，代码指纹变化也不自动触发未在组合里的全量 test/check/build",
         "最终质量命令先于浏览器证据采集；建议级不触发额外修改或验证轮"
       ]
     },
@@ -250,15 +250,15 @@
     },
     {
       "id": 20,
-      "name": "impact-s-compression-preserves-correctness-contracts",
+      "name": "claim-driven-scaling-preserves-honesty-contracts",
       "target": "SKILL.md",
-      "prompt": "一个 Impact S Story 希望降低文档、检视和验证成本。请说明哪些内容可以压缩，哪些正确性门禁仍不得缩减；同时区分『Phase C 候选门的代码指纹与最终指纹相同』和『Phase D 修复后指纹变化』两种情况。",
-      "expected_output": "压缩无发现项的人类呈现并引用完整机器工件，同时保持 QA 基线冻结、RED/GREEN/YELLOW、AC 可追溯、阻断清零、稳定源码的最终全量门，以及规范与质量判断独立。",
+      "prompt": "一个只修改私有纯函数的 Story 希望降低文档、检视和验证成本。请说明哪些可以根据风险裁掉，哪些声明诚信约束仍不得缩减；Phase D 又改了该函数时如何处理。",
+      "expected_output": "可以省略不适用 R/F 表、浏览器场景、全仓命令与所有未触发检视；但声明的来源、状态、证据新鲜度与确证缺陷必须真实。Phase D 只失效该函数依赖的 causal/targeted-quality 证据，不因全局指纹变化自动扩大组合。",
       "expectations": [
-        "允许用覆盖矩阵和机器工件引用压缩 Impact S 的无发现项，不复制原始步骤和空表",
-        "仍冻结 QA 基线并保留 RED/GREEN/YELLOW 语义与 AC 到证据的追溯",
-        "退出前仍要求阻断级清零和稳定最终代码指纹上的全量质量门；指纹未变可复用候选门，指纹变化才补一次最终门",
-        "规范检视与质量检视仍由不同角色独立判断；共享原始证据不能变成共享结论"
+        "不适用分类、未触发模块和未触发角色不生成空表或占位结果",
+        "每条验收声明仍有外部来源与 PROVEN/UNVERIFIED/DEFERRED 之一；PROVEN 证据必须充分且新鲜",
+        "确证阻断只限受影响声明，不得被建议级或缺证据伪装成通过",
+        "Phase D 只按 depends_on 失效已选证据；只有实际出现新风险触发器才扩展组合"
       ],
       "note": "这是经济性改写的正向护栏；原有 1–13 仍需作为完整回归套件继续通过。"
     },
@@ -266,13 +266,13 @@
       "id": 21,
       "name": "exact-final-quality-evidence-is-reused-at-next-story-start",
       "target": "references/preflight-and-telemetry.md",
-      "prompt": "上一个 Story 的 Phase D 最终全量门记录于 2 小时前，source=phase-d。当前 Story 起点的 HEAD、staged diff、unstaged diff、全部 untracked 路径与内容、REPO-2 指纹、按顺序排列的三条质量命令及 scope、Node/pnpm 版本、OS/arch 与 CI mode 都逐项相同；缓存中的每条命令都有 exit_code、duration_ms 和 failures[]。请完成 Phase 0 起点质量并说明后续质量门。",
-      "expected_output": "精确判定 cache HIT，Phase 0 复用完整失败集合而不重跑同一命令；记录来源、指纹与 telemetry，但仍在候选代码稳定后执行 Phase C 全量门，必要时按最终指纹执行 Phase D 最终门。",
+      "prompt": "上一个 Story 的一组已选命令记录于 2 小时前，source=phase-d。当前 Story 初始验证组合也选中这三条命令；HEAD、三类工作区、REPO-2、命令与 scope、toolchain/runtime 都逐项相同，每条缓存有 exit_code、duration_ms 和 failures[]。请完成 Phase 0 并说明后续怎么处理。",
+      "expected_output": "精确判定 cache HIT，Phase 0 复用完整失败集合而不重跑同一命令；后续按最终 diff 重编译验证组合，只执行它选中且无新鲜证据的命令，不固定加一次 Phase C/D 全量门。",
       "expectations": [
         "通过脚本逐项校验 HEAD、三类工作区状态、REPO-2、命令、toolchain、runtime 和 24h TTL，不凭主观判断命中",
         "Phase 0 不再执行这三条命令，而是把缓存的逐命令退出码、耗时和具体失败集合写入 dev-baseline.md",
         "dev-baseline.md 标明获取方式=复用、状态指纹、source=phase-d、记录时间与 Git metadata 缓存路径；telemetry 记录 result=reuse",
-        "明确缓存只替代 Phase 0，不能跳过 Phase C 候选全量门；Phase D 是否补门仍由最终代码指纹决定"
+        "明确 Phase C/D 的命令集由最终风险组合与证据新鲜度决定，不因阶段存在就固定全量执行"
       ],
       "note": "正确行为正例：复用已经证明过的完全相同起点事实。"
     },
@@ -305,12 +305,12 @@
     },
     {
       "id": 24,
-      "name": "impact-s-lite-code-recon-uses-unique-existing-patterns",
+      "name": "lite-code-recon-uses-unique-existing-patterns",
       "target": "references/phase-spec.md",
-      "prompt": "Impact S Story：1 个 Task，只改现有页面的两个私有文件，基线源为原型；tasks 文件清单完整，无 TBD。Requirement 明确沿用仓库默认，工程需要是状态持久化与样式 token，并显式给出 PATTERN-STATE-1、PATTERN-TOKEN-1。REPO-3 validation 与指纹当前，两张范式卡各自的证据路径和 locator 仍存在，不需新路由、公共组件、schema 或新决策。请完成代码侧勘察。",
-      "expected_output": "九项全部满足，主 agent 走 lite：只按两个 PATTERN ID 精确读取并机械核验证据，不派 recon-codebase；仍写同结构工程依据、完整 REPO-3 指纹与 telemetry。",
+      "prompt": "一个 Story 只改现有页面的两个私有文件，tasks 文件清单完整。Requirement 明确沿用仓库默认，工程需要是状态持久化与样式 token，并显式给出 PATTERN-STATE-1、PATTERN-TOKEN-1。REPO-3 当前，两张范式卡的证据和 locator 仍存在，未命中 shared-boundary、new-pattern、spec-gap 或 unknown-deps。请完成代码侧勘察。",
+      "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确读取并机械核验证据，不派 recon-codebase；仍写同结构工程依据、完整 REPO-3 指纹与 telemetry。",
       "expectations": [
-        "逐项核对九个 lite 条件，而不是仅凭 Impact S 就跳过完整勘察",
+        "逐项核对 lite 适用条件，而不是用 Task 数或文件数当风险代理",
         "只运行 show --pattern-id 精确读取两个范式，并为每个范式核验至少一个声明 locator",
         "不开放式搜索相邻源码、不派 recon-codebase，也不创建 Story 范式正文或 codebase-brief.md",
         "dev-baseline.md 标记勘察模式=lite，保留 Story 需要到 PATTERN/REQ-DEC 的映射与完整 REPO-3 指纹；telemetry 记录 lite 及选择/核验数量"
@@ -321,10 +321,10 @@
       "id": 25,
       "name": "lite-code-recon-falls-back-on-ambiguity-or-public-boundary",
       "target": "references/phase-spec.md",
-      "prompt": "一个 Story 虽被初步分为 Impact S，但要修改公共 Drawer 组件；同时 persistence tag 在 REPO-3 命中两个 PATTERN。另一个变体基线源为参照页，需要找候选路由。请决定代码侧勘察模式与失败处理。",
+      "prompt": "一个 Story 要修改公共 Drawer 组件，同时 persistence tag 在 REPO-3 命中两个 PATTERN。另一个变体基线源为参照页，需要找候选路由。请决定代码侧勘察模式与失败处理。",
       "expected_output": "两种情况都不得 lite：公共边界、tag 多结果和参照页任一项都强制 full；派 recon-codebase 完整勘察并记录回退原因，不猜选 PATTERN，也不把回退当流程失败。",
       "expectations": [
-        "公共组件变更使 lite 第 5 条失败，tag 多结果使唯一映射条件失败",
+        "公共组件变更命中 shared-boundary，tag 多结果使唯一映射条件失败",
         "参照页固定 full，因为完整勘察必须收集候选路由与结构化事实",
         "派 agents/recon-codebase.md 并按其完整输出、校验和重试规则执行",
         "telemetry 记录 fallback-to-full 的具体原因；不得猜一个 PATTERN 或自行决定参照页来强保 lite"
@@ -334,12 +334,12 @@
       "id": 26,
       "name": "front-phase-telemetry-separates-actions-reuse-retries-and-human-wait",
       "target": "references/preflight-and-telemetry.md",
-      "prompt": "本轮 Phase -1 status 实跑一次、browser probe 重试一次；Phase 0 起点质量精确复用；A1 设计抽取命中缓存、区块规格跳过、代码侧 lite；A2 recon-spec 第一次回传不合格后重跑成功，随后等待用户确认 8 分钟，冻结与契约编译又用 40 秒。Phase D 要生成执行量账本。",
+      "prompt": "本轮 Phase -1 status 实跑一次；初始验证组合选择 render，所以 Phase 0 browser probe 重试一次，起点质量精确复用；A1 设计抽取命中缓存、区块规格跳过、代码侧 lite；A2 recon-spec 第一次回传不合格后重跑成功，随后等待用户确认 8 分钟，冻结与契约编译又用 40 秒。Phase D 要生成执行量账本。",
       "expected_output": "逐动作增量记录稳定 ID 和 attempt，run/reuse/skip 分明；8 分钟只属于 human_wait，40 秒另属 agent；Phase D 从 JSON 机械生成子步骤与汇总，不靠 LOC、回忆或估算。",
       "expectations": [
-        "至少记录 phase-1.status、phase-1.browser-probe、phase-0.context/quality-gate、phase-a1.extract/block-specs/recon-codebase、phase-a2.recon-spec/merge-validate 和 human.qa-confirmation",
+        "至少记录 phase-1.status、phase-0.browser-probe、phase-0.context/quality-gate、phase-a1.extract/block-specs/recon-codebase、phase-a2.recon-spec/merge-validate 和 human.qa-confirmation",
         "browser probe 与 recon-spec 的重试用递增 attempt 追加，不能覆盖失败轮",
-        "质量门记 result=reuse，抽取记 reuse，区块规格记 skip，代码勘察 note=lite；各类数量可机械汇总",
+        "已选命令模块记 result=reuse，抽取记 reuse，区块规格记 skip，代码勘察 note=lite；各类数量可机械汇总",
         "用户等待单独记 kind=human_wait；冻结/编译 40 秒作为 phase-a2.merge-validate 的 agent attempt，最终账本不把两者混合，也不估算缺失时间"
       ]
     },
@@ -347,7 +347,7 @@
       "id": 27,
       "name": "phase-b-browser-facts-stay-fresh-without-rerun",
       "target": "scripts/manage_review_pipeline.py",
-      "prompt": "Phase B Step ④ 已在 /drawer、fixture=temp-page、1200px 与 720px 下采集加载、复制、焦点返回和实时同步原始事实，并已带 source: \"phase-b\" 入包，记录了 runtime 与每个 depends_on 文件哈希。Phase C 候选全量门后只改了一个与这些页面无关的测试说明文件，全局 code_fingerprint 已变化；浏览器、fixture、步骤和依赖文件内容均未变。请建立共享证据。",
+      "prompt": "Phase B Step ④ 已在 /drawer、fixture=temp-page、1200px 与 720px 下采集加载、复制、焦点返回和实时同步原始事实，并已带 source: \"phase-b\" 入包，记录了 runtime 与每个 depends_on 文件哈希。Phase C 执行已选命令后只改了一个与这些页面无关的测试说明文件，全局 code_fingerprint 已变化；浏览器、fixture、步骤和依赖文件内容均未变。请建立共享证据。",
       "expected_output": "不带 --add 跑一次 scenarios 做纯新鲜度核对：逐文件依赖与 runtime 都未变，四条场景回报 fresh，一条不重采、包内容不被改写；随后只规划仍未覆盖的缺口。",
       "expectations": [
         "不以全局 code_fingerprint 变化为由整包失效，而是比较 captured_dependency_hashes 与当前逐文件哈希",
@@ -371,48 +371,49 @@
     },
     {
       "id": 29,
-      "name": "three-slots-refill-four-reviews-without-judgment-leakage",
+      "name": "slots-refill-applicable-reviews-without-judgment-leakage",
       "target": "references/phase-review-closeout.md",
-      "prompt": "主 agent 之外只有 3 个子代理槽位，Phase C 有四份适用检视。前三份在 t=0 启动；其中代码规范检视在 t=3 完成，另两份要到 t=8 才完成。请调度第四份并说明它能收到什么。",
-      "expected_output": "t=3 一旦规范检视 JSON 通过预校验，就立即用释放槽位启动第四份，不等到 t=8；第四份继续使用同一 evidence_epoch 与代码指纹，只收到共享原始证据，不收到已完成检视的判断。",
+      "prompt": "主 agent 之外只有 2 个子代理槽位，Phase C 有三份适用检视。前两份在 t=0 启动；代码规范检视在 t=3 完成，另一份要到 t=8 才完成。请调度第三份并说明它能收到什么。",
+      "expected_output": "t=3 一旦规范检视 JSON 通过预校验，就立即用释放槽位启动第三份，不等到 t=8；后启动角色继续使用同一 evidence_epoch 与代码指纹，只收到共享原始证据与自己的分配维度，不收到已完成检视的判断。",
       "expectations": [
         "初始填满 3 个槽位，任一完成即动态补位，不以整波全部完成作为启动条件",
-        "第四份与前三份引用同一 evidence_epoch、code_fingerprint 和冻结基线",
+        "后启动角色与前两份引用同一 evidence_epoch、code_fingerprint 和冻结基线",
         "先完成角色的 findings/级别/建议不传给后启动角色；只可合并其补采的原始 scenario",
         "telemetry 记录各 role start/complete 与 phase-c.review-refill，不把合法的非同时并发判失败"
       ]
     },
     {
       "id": 30,
-      "name": "review-json-contract-rejects-missing-dimension-or-markdown",
+      "name": "review-json-contract-distinguishes-invalid-coverage-from-honest-nonexecution",
       "target": "references/review-result-contract.md",
-      "prompt": "review-quality 返回一份带 Markdown 标题和表格的长报告，且只写 Q1、Q2、Q5；另一个变体返回 JSON，但 evidence_epoch 与其余三份不同，并缺 Q8 coverage。请汇总。",
-      "expected_output": "两个变体都拒绝聚合，只退回 review-quality 一份重跑：正常回传必须是裸 JSON、覆盖 Q1–Q8，并与其余角色共享证据纪元和代码指纹；主 agent 不手工补 Q3/Q4/Q6–Q8。",
+      "prompt": "validation_portfolio 给 review-quality 分配 [Q5,Q6]。该角色返回一份带 Markdown 标题的报告；另一变体返回 JSON，但 evidence_epoch 与其他适用角色不同，并只有 Q5；第三变体返回 Q5/Q6/Q8；第四变体因依赖的运行环境在派发后失效，返回 status=unexecuted、空 coverage 和具体 known_gaps。请汇总。",
+      "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。",
       "expectations": [
         "正常检视不接受 Markdown fence、标题或第二份正文，只接受 schema v1 JSON object",
-        "静态角色覆盖集合必须恰好完整；缺任何 Q 维度都判 schema/coverage 不合格",
+        "status=executed 时 coverage 集合必须恰好等于 review_dimensions 分配集；少 Q6 或多 Q8 都不合格",
         "evidence_epoch 或 code_fingerprint 不一致时拒绝把新旧判断拼接",
-        "只重跑失败角色一次，主 agent 不编造缺失 coverage 或 finding"
+        "只重跑失败角色一次，主 agent 不编造缺失 coverage 或 finding",
+        "派发后前置失效可返回 unexecuted：coverage 必须为空、known_gaps 必须具体，原分配维度对应声明保持 UNVERIFIED"
       ]
     },
     {
       "id": 31,
       "name": "deterministic-review-aggregation-and-zero-findings-fast-path",
       "target": "scripts/manage_review_pipeline.py",
-      "prompt": "四份 JSON 同纪元同指纹：规范与质量用相同 canonical_key 报了同一问题，前者 suggestion、后者 blocker；另有 1 条建议、1 个 Open Question、1 个 Deferred 候选。再分别考虑两个变体：A 四份均无发现；B 相同 canonical_key 的两条 finding 具有不同 user_visible_text 与 location。请生成 dev-review 与 handoff。",
+      "prompt": "三份适用 JSON 同纪元同指纹：规范与质量用相同 canonical_key 报了同一问题，前者 suggestion、后者 blocker；另有 1 条建议、1 个 Open Question、1 个 Deferred 候选。再分别考虑三个变体：A 三份均无发现；B 相同 canonical_key 的两条 finding 具有不同 user_visible_text 与 location；C 验证组合没有触发任何检视角色。请生成 dev-review 与 handoff。",
       "expected_output": "主场景对同 key 去重取 blocker、合并来源与证据，Handoff 三类计数精确；A 生成紧凑覆盖、空 Handoff 与收口占位；B 因核心文本冲突拒绝静默聚合，交主 agent 基于原始证据消歧。",
       "expectations": [
         "同 canonical_key 去重取高级别，不把 blocker 放进建议 Handoff，也不擅自改角色级别",
         "Handoff 条数严格等于 suggestion + Open Question + Deferred，保存用户可见文本和是否需决定",
         "相同 key 的现象、定位或用户可见文本冲突时拒绝静默合并，由主 agent 消歧",
-        "零发现仍保留四份执行状态、覆盖矩阵、Handoff=无与收口占位，但省略空的逐维度长表"
+        "零发现只保留适用角色的执行状态、已分配 coverage、Handoff=无与收口占位；零角色同样合法，不生成占位 JSON"
       ]
     },
     {
       "id": 32,
       "name": "same-task-restore-and-logic-use-two-channel-waves",
       "target": "references/phase-implementation.md",
-      "prompt": "Impact M 的 T3 同时含还原轮与逻辑轮。QA、契约和测试入口都已冻结；还原契约会因抽屉缺失得到明确 RED，逻辑测试能直接调用 reducer 并因状态迁移缺失得到独立 RED，两边由同一组 Drawer.tsx/useDrawer.ts 改动共同满足，没有 YELLOW、外部状态或待决策项。请执行 T3。",
+      "prompt": "T3 同时含还原轮与逻辑轮。QA、契约和测试入口都已冻结；还原契约会因抽屉缺失得到明确 RED，逻辑测试能直接调用 reducer 并因状态迁移缺失得到独立 RED，两边由同一组 Drawer.tsx/useDrawer.ts 改动共同满足，没有 YELLOW、外部状态或待决策项。请执行 T3。",
       "expected_output": "走双通道快路径：先分别取得并核验两个 RED，再做一次最小产品实现，分别验证契约与逻辑测试 GREEN，最后只重构一次并按依赖复验；两轮 6 步、证据编号、checkbox 与 AC 映射仍独立。",
       "expectations": [
         "在改产品代码前分别完成还原 ①② 与逻辑 ①②，并确认两个 RED 的失败原因互不冒充",
@@ -424,15 +425,15 @@
     },
     {
       "id": 33,
-      "name": "compatible-tasks-reuse-one-directed-check-execution",
+      "name": "compatible-claims-reuse-one-selected-command-execution",
       "target": "references/phase-implementation.md",
-      "prompt": "Impact M 有相邻 T1、T2，都改 packages/dashboard 内的私有文件，使用相同 pnpm、Node、包级回归、typecheck 和 lint 命令；两个 Task 不跨公共组件/API、schema、路由、权限或外部状态。T1 和 T2 各自新增的行为测试已经在各自 Step ④ GREEN。请安排剩余 Phase B 定向检查。",
-      "expected_output": "T2 的 Step ④ 直接引用 T1 那次执行：完整命令、scope、toolchain/runtime 与代码指纹都相同，新鲜度键未变，不重跑。逐 Task 行为 GREEN 仍各自落账，Phase C 最终全量门保留。",
+      "prompt": "T1、T2 都改 packages/dashboard 内的私有文件，两条声明的 causal 测试已各自 GREEN。候选组合为这两条声明选中同一条包级 targeted-quality 命令；它们的命令、scope、toolchain/runtime 与当前代码指纹完全一致，且未触发 regression。请安排。",
+      "expected_output": "只执行一次该 targeted-quality 命令，T1/T2 声明共同引用它；各自 causal 证据仍分开落账。未触发 regression，不再附加全量门。",
       "expectations": [
         "先逐 Task 保留各自新增/修改行为测试的 GREEN，不把行为证明推迟到某次共享执行",
-        "复用条件是新鲜度键四要素全同（完整命令 + scope + toolchain/runtime + 代码指纹），不以 Impact 档位或相邻 Task 数为上限",
+        "复用条件是新鲜度键四要素全同（完整命令 + scope + toolchain/runtime + 代码指纹），不以 Task 数或文件数为上限",
         "T2 引用 T1 那次执行的原始结果并只摘取自己关心的失败项，不复制整份命令输出，也不为留痕重跑一次",
-        "相对 DEMAND-2 无新增失败后才进 Phase C，候选全量门照常执行",
+        "已选命令结果可以被多条声明引用，未触发 regression 不产生额外命令",
         "不新增批次 / 意图 / 收据编号；被引用的执行就用命令加代码指纹标识"
       ]
     },
@@ -451,15 +452,16 @@
     },
     {
       "id": 35,
-      "name": "impact-s-single-logic-task-keeps-red-green-and-final-full-gate",
+      "name": "single-private-logic-claim-keeps-causal-proof-without-fixed-full-gate",
       "target": "references/phase-implementation.md",
-      "prompt": "Impact S 只有一个逻辑 Task，改一个私有组件和一个 20 行测试；没有还原轮，也没有可合并的相邻 Task。请给出最短合法验证路径。",
-      "expected_output": "只走一轮逻辑 6 步：RED 与 GREEN 因实现边界不能合成一次执行，各自保留 assertion 与结果；Phase B 跳过额外包级回归/typecheck/lint，不伪造第二消费者或空批次。候选稳定后 Phase C 仍跑 REPO-2 中全部适用的全量命令。",
+      "prompt": "只有一个逻辑 Task，改一个私有纯函数和一个 20 行测试；没有还原轮、路由、公共边界、副作用或不明依赖。请给出最短合法验证路径。",
+      "expected_output": "只走一轮逻辑 6 步，用该声明的 causal RED/GREEN 证据闭环；最终组合可只含 causal 与覆盖该文件的最窄 targeted-quality。不派浏览器、回归或独立检视，也不固定跑 REPO-2 全部命令。",
       "expectations": [
-        "逻辑测试仍须先按预期 RED 后 GREEN，不能因 Impact S 跳过行为证明",
+        "逻辑测试仍须先按预期 RED 后 GREEN，保留行为因果证明",
         "没有第二通道就不套双通道；单 intent 可以形成实际执行批次，但不得伪造多个消费者，RED/GREEN 以不同因果边界执行",
-        "Phase B 可按 Impact S 规则跳过更宽包级回归、作用域 typecheck 与 lint",
-        "源码稳定后仍执行 Phase C 候选全量门，命令集合取 REPO-2 中全部适用项（例如 test/check/build）；最终代码指纹变化时才按 Phase D 规则补一次最终门"
+        "没有触发器就不新增更宽包级回归、浏览器或检视",
+        "组合没有浏览器相关模块，因此 browser-driver 记 not-selected，不做启动探针，也不把浏览器缺席写成降级",
+        "候选稳定后按最终 diff 重编译组合；不以 Phase C/D 存在为理由自动加全量门"
       ]
     },
     {
@@ -478,16 +480,16 @@
     },
     {
       "id": 37,
-      "name": "single-task-browser-matrix-is-planned-before-execution",
+      "name": "browser-portfolio-is-compiled-from-claims-before-execution",
       "target": "references/phase-implementation.md",
-      "prompt": "一个 T1 工作台要验证空态、1/4/5 行、Enter、Shift+Enter、IME、停止与错误态，并覆盖 1440/1280/900 三个视口。页面、fixture、账号、浏览器和 reset 策略相同，所有状态都能在内存中复位。请安排浏览器验证。",
-      "expected_output": "先列全场景矩阵，再按共同页面、fixture、runtime 与 reset 边界一次连接/打开，连续切状态和视口，逐场景记录原始事实，不按断言临场调用浏览器。",
+      "prompt": "T1 的候选状态有空态、1/4/5 行、Enter、Shift+Enter、IME、停止与错误态，候选视口是 1440/1280/900。但最终 diff 只改了 IME 输入组合与错误态；基线只有 F2-3、F3-2 与 R6-1(900px) 相关，其他候选未被 AC、设计输入或风险命中。页面、fixture、runtime 与 reset 相同。请安排浏览器验证。",
+      "expected_output": "先从声明与风险编译只含 IME、错误态与 900px 的验证组合，不扩成全候选矩阵；再按共同边界一次连接并逐场景记录原始事实。",
       "expectations": [
-        "执行前先列完整场景矩阵，不发现一个事实就调用一次",
-        "viewport、状态和步骤差异在同一次连接内连续跑，不把它们误当成必须重连的边界",
+        "执行前先从验收声明与风险闭包编译实际场景，不把候选状态做笛卡积",
+        "只选 900px，不为未触发 1440/1280 生成 N/A 或实跑；已选状态在同一次连接内连续跑",
         "能用 Runtime.evaluate 或 e2e runner 连续采集的场景一次注入；IME 等真实事件只拆成少量连续调用，仍在同一次连接内",
         "逐场景保存原始观察与实际 browser_calls / retries；一个总体 pass 不合格",
-        "场景直接写进 review-evidence.json 并带 source: \"phase-b\"，不另存第二份可提升事实，也不把通过 / 不通过判断写进共享原始证据"
+        "场景直接写进 review-evidence.json，不另存第二份事实，也不把通过 / 不通过判断写进共享原始证据"
       ]
     },
     {
@@ -526,19 +528,19 @@
         "鉴权 / 权限、真实数据写入与不可复位状态必须单独跑",
         "同一 Task 也可以拆成多次连接，不为降低调用数破坏隔离",
         "单独跑的场景仍逐事实留原始观察并披露测试数据清理情况",
-        "Impact 档位、页面相同或浏览器相同都不能覆盖风险边界"
+        "Task 或页面相同、浏览器相同都不能覆盖风险边界"
       ]
     },
     {
       "id": 41,
       "name": "phase-c-collects-all-gaps-before-browser-batch",
       "target": "references/review-evidence.md",
-      "prompt": "Phase C 提升后，布局检视缺 900px 溢出场景，功能自测缺错误态和停止态；三项共用页面、fixture、runtime 与 reset 策略。主 agent 尚未派四份检视。请补证。",
-      "expected_output": "主 agent 先从两份检视范围取缺口并集，把三项登记成 validation intents，编译一个 browser batch 后一次进入页面连续采集，再把原始事实写入 review evidence；之后才派检视角色独立判断。",
+      "prompt": "Phase C 重编译组合后，布局检视分配的 L2 缺 900px 溢出场景，功能自测分配的 F3-2/F3-3 缺错误态和停止态；三项共用页面、fixture、runtime 与 reset 策略。主 agent 尚未派两份适用检视。请补证。",
+      "expected_output": "主 agent 先从两份检视范围取缺口并集，把三项并入验证组合的已选场景，在同一可复位执行边界内一次进入页面连续采集，再把原始事实写入 review evidence；之后才派检视角色独立判断。",
       "expectations": [
         "先提升新鲜 Phase B 事实，再计算真正缺口，不重复有效场景",
         "布局与功能缺口共享执行但不共享判断，逐场景保留消费者与原始 observations",
-        "质量命令 batch 在前、browser batch 在后，避免反复重载页面",
+        "已选质量命令先执行，再合并执行已选浏览器场景，避免反复重载页面",
         "检视角色若后来发现额外缺口，也必须先收齐本角色缺口再按执行边界合批，不逐 coverage 行调用"
       ]
     }

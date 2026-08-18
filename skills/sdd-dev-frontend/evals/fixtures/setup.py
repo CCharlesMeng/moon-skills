@@ -171,6 +171,17 @@ def build_review_evidence(repo: Path, story_dir: Path, base_ref: str, changed: l
     path.write_text(json.dumps({
         "schema_version": 1,
         "evidence_epoch": "fixture-review-1",
+        "validation_portfolio": {
+            "risk_triggers": ["visual", "shared-boundary", "async-state"],
+            "modules": ["review-layout", "review-convention", "review-quality"],
+            "review_roles": ["review-layout", "review-convention", "review-quality"],
+            "review_dimensions": {
+                "review-layout": [f"L{index}" for index in range(1, 7)],
+                "review-convention": [f"C{index}" for index in range(1, 8)],
+                "review-quality": [f"Q{index}" for index in range(1, 9)],
+            },
+            "claims": [],
+        },
         "code": code,
         "quality_gate": {"code_fingerprint": code["code_fingerprint"], "commands": []},
         "runtime": {"driver": "fixture-static-only", "browser": "unavailable"},

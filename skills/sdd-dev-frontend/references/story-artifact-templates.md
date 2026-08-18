@@ -1,6 +1,6 @@
 # Story 产物模板
 
-主 agent 在三个时刻读本文件：**Phase 0 第 2 步起草缺失的 `tasks.md` 等三份产物**时、**Phase 0 新建 `dev-baseline.md`** 时、**Phase C 生成并在 Phase D 收口 `dev-review.md`** 时。Phase C 的正文由 `manage_review_pipeline.py aggregate` 从四份 JSON 确定性生成，主 agent 不手抄长报告；Phase D 只补收口与执行量账本。
+主 agent 在三个时刻读本文件：**Phase 0 第 2 步起草缺失的 `tasks.md` 等三份产物**时、**Phase 0 新建 `dev-baseline.md`** 时、**Phase C 生成并在 Phase D 收口 `dev-review.md`** 时。Phase C 的正文由 `manage_review_pipeline.py aggregate` 从 0–4 份适用结果确定性生成，主 agent 不手抄长报告；Phase D 只补收口与执行量账本。
 
 `dev-baseline.md` 的「工程依据」「功能理解」「QA 基线」「已知缺口」四节由 Phase A2 追加，字段以 [qa-baseline-template.md](./qa-baseline-template.md) 为准，本文件不重复。
 
@@ -27,11 +27,11 @@
 | `<repo-root>` / `<story-dir>` / `<requirement-dir>` | `<取值>` | 自动命中 / 用户确认 |
 | `<prototype-dir>` / `<design-spec-dir>` | `<取值>` | 自动命中 / 推导 |
 | Story 范围与目标路由 | `<取值>` | tasks / AC |
-| 影响面分级 | S / M / L | `tasks.md` 的 Task 数、新增页面与区块范围（Phase 0 第 4 步的分级表） |
+| 初始风险触发器 | `<risk_triggers>` | `tasks.md` + 仓库事实；不用 Task 或文件数代替风险事实 |
 | `base-ref` / 起点 SHA / 工作区 | `<取值>` | git 只读命令 |
 | 账号 / 角色 / 租户 | `<取值>` | REPO-1 + 本次选择 |
 | fixture / API 模式 | `<取值>` | REPO-1 + 本次选择 |
-| `<browser-driver>` | 会话内工具 / 仓内 e2e 框架 / 无 | Phase -1 第 4 步的实际打开结果 |
+| `<browser-driver>` | not-selected / 会话内工具 / 仓内 e2e 框架 / 无 | 验证组合选择浏览器模块后的实际探测；未选择则不探测 |
 | 起页面 | 可 / 不可（原因） | 路由 + 健康检查 |
 | 截图 / 结构化采集 | 可 / 不可（原因） | onboarding 实证 + 本次复核 |
 | 原型形态 | 格式化 / 单行导出件 / 不适用 | 行数与平均行长 |
@@ -45,6 +45,15 @@
 | 类别 | 命令 | 结果 | 证据 |
 | --- | --- | --- | --- |
 | `<仅列 REPO-2 中实际存在且本次适用的类别>` | `<命令>` | 通过 / 失败集合 | 退出码、耗时、失败项 |
+
+## 验证组合（初始）
+
+| 项 | 值 |
+| --- | --- |
+| 风险触发器 | `<risk_triggers>` |
+| 证据模块 | `<modules>` |
+| 独立检视 | `<review_roles 与 review_dimensions；无则写无>` |
+| 声明映射 | `<claim → modules → 当前状态>` |
 
 ## 指纹附录（机器校验用，不需要人读）
 
@@ -61,7 +70,7 @@
 
 - **完整哈希只出现在「指纹附录」一处。** 正文任何行需要引用指纹时写「见指纹附录」；把 64 位哈希铺进正文表格是把人读的文件变成机器转储。检视子代理与仓库接入门做指纹比对时，以本附录为准。
 
-- **只有 Story 特有、且初始化阶段无法预先消除的限制才能进入「降级项」。** 页面或 `<browser-driver>` 等仓库必需能力失效时回 Phase -1，不得直接降级。
+- **只有 Story 特有、且会影响已选模块的限制才能进入「降级项」。** 未选择的能力不探测、不登记；已选页面或 `<browser-driver>` 失效时，记录模块未执行并把依赖声明标 `UNVERIFIED`，不影响无关声明。
 - **「起点质量」不生成 `REPO-2` 里不存在的类别的表格行。** 上游明确要求但 `REPO-2` 没有对应能力时回 Phase -1 补齐，不在 Story 中写「未提供」。复用时仍逐命令保留失败集合；获取方式、状态指纹与缓存来源不得省略。
 
 ## 二、`dev-review.md`
@@ -84,12 +93,10 @@
 | 检视时间 | `<YYYY-MM-DD>` |
 | diff 范围 | `<取法与提交区间，改动文件数>` |
 | 共享证据 | `<story-dir>/review-evidence.json` · `<evidence_epoch>` · `<code_fingerprint>` |
-| 结构化聚合 | `<story-dir>/review-results.json` · 四份结果 schema v1 |
-| 布局与响应式检视 | 已执行 / **未执行（原因）** |
-| 代码规范检视 | 已执行 / **未执行（原因）** |
-| 质量检视 | 已执行 / **未执行（原因）** |
-| 功能自测试 | 已执行 / 已执行（降级：无截图能力）/ **未执行（原因）** |
-| 还原 YELLOW 放行 | 无 / `<逐条列出规则编号与缺的能力>` |
+| 结构化聚合 | `<story-dir>/review-results.json` · 0–4 份适用结果 schema v1 |
+| 最终验证组合 | `<risk_triggers / modules / review_dimensions>` |
+| 适用检视 | `<role: executed / unexecuted（原因）>`；未触发角色不列 |
+| 还原 YELLOW | 无 / `<规则编号 → UNVERIFIED / DEFERRED 与原因>` |
 | 截图归档目录 | `<story-dir>/evidence/review/` |
 
 ## 结论汇总
@@ -123,7 +130,7 @@
 
 ## 收口结论
 
-<由 Phase D 填写：四份检视的执行状态（未执行的写原因）、阻断级清零情况、未验收项清单>
+<由 Phase D 填写：验证组合的实际执行状态、受影响声明的阻断清零情况、全部 UNVERIFIED / DEFERRED 清单>
 
 ## 执行量账本
 
@@ -131,19 +138,18 @@
 
 | 子步骤 / Phase | agent 主动时间 | 人工等待 | 结果 | 动作计数 / 证据 |
 | --- | ---: | ---: | --- | --- |
-| `<按 telemetry 的稳定 ID 机械生成；前半程至少拆到 -1 status/browser、0 context/quality、A1 extract/blocks/code recon、A2 spec/merge、QA confirmation>` | | | run / reuse / skip / blocked | |
+| `<按 telemetry 的稳定 ID 机械生成；前半程至少拆到 -1 status、0 context/按需 browser/quality、A1 extract/blocks/code recon、A2 spec/merge、QA confirmation>` | | | run / reuse / skip / blocked | |
 
 | 汇总项 | 数量 |
 | --- | ---: |
-| 全量门（run / reuse 分列） | |
-| 定向检查（run / reuse 分列） | |
+| 已选命令模块（run / reuse 分列） | |
 | 浏览器调用 / 重试 / 场景（run / reuse / stale） | |
 | 子代理启动 / 动态补位 / 重试 | |
 ```
 
 **建议级不等于可以不写。** 它的定义是「不阻断收口」，不是「不进报告」。
 
-所有影响面档位都用结构化聚合减少文书重复：检视基准、覆盖矩阵、实际发现、Handoff、收口与执行量账本保留；无发现维度的空表、浏览器步骤、命令输出、逐规则机器报告不复制，统一引用 `review-results.json` / `review-evidence.json` / `restore-report-*.json` / `execution-telemetry.json`。Impact S 另外收窄场景范围；QA 基线确认对象与 AC 映射不受此条影响。
+所有 Story 都用结构化聚合减少文书重复：只保留最终验证组合、实际 coverage、发现、Handoff、声明状态与收口；未触发维度、浏览器步骤、命令输出、逐规则机器报告不复制，统一引用 `review-results.json` / `review-evidence.json` / `restore-report-*.json` / `execution-telemetry.json`。
 
 ## 三、`tasks.md` 等三份产物的最小起草模板
 
@@ -168,10 +174,14 @@
 | Tech Stack | <框架 + 语言 + 样式方案，如 React + TS + Vite + CSS Modules> |
 | project | <repo-root 的路径或名称> |
 | project_type | frontend |
+| test_framework | <仓库已探明的前端测试框架> |
 | 归属 Story | <Story 编号 · 名称> |
 | frontend_design_path | <story-delta-frontend-design.md 的路径> |
 | baseline_source | prototype / reference_page / text_spec / none |
+| affected_routes | <受影响路由；无则留空> |
+| required_states | <计划事实明确要求的状态；无则留空> |
 | restore_tasks | <还原轮的 Task 编号；本 Story 无静态呈现时留空> |
+| risk_triggers | <计划事实能直接支持的规范 token；下游会按仓库事实与最终 diff 校正> |
 
 ## 项目边界
 
@@ -196,18 +206,19 @@
 
 ## 执行规则
 
-**TDD Iron Law**：没有失败证据就不写实现。失败证据有两种形态：
+**因果证据纪律**：没有能暴露本次声明缺口的因果证据，就不写实现。计划只写证据意图，不选择执行动作。证据有三种形态：
 
-- **逻辑类工作**：失败的单元测试或单接口集成测试。
-- **前端还原类工作**：运行已冻结的外部设计契约；机器报告至少一项明确 RED 才进入实现，无 RED、无 YELLOW 才是 GREEN。
+- **逻辑类工作**：行为缺口、关键断言与候选测试位置。
+- **前端还原类工作**：视觉来源、页面/区块与预期差异；契约由执行侧冻结。
+- **机械类工作**：类型、构建或引用缺口，且没有行为分支。
 
-除这两种形态之外，没有失败证据不写实现。
+命令、浏览器场景、状态矩阵、回归和独立检视由执行侧根据风险触发器与最终 diff 编译，不写进计划。
 
 **No Placeholders 铁规**：禁止 TBD / TODO / "类似任务 N" / 无代码步骤。
 
 **不越界铁规**：Step ③ 只写「改哪个文件 + 达成什么可观测行为」，禁止对象字面量、模板片段、完整函数体、内部 helper 名、指定 API 调用、具体 px / 色值 / 字号。判据是「改掉这个细节，AC 或测试断言会不会变」——不会变就属实现自由度。**越界与占位符同为计划缺陷**：只禁占位符时，起草会一路滑向写实现代码。
 
-每步 2-5 分钟一个动作，「写失败证据」和「运行确认失败」是两步，不可合并。**一个 Task 内允许出现多轮 6 步**：还原与逻辑各走一轮，默认先还原、后逻辑，每轮独立编号并标注形态。只有两边能在产品实现前得到原因独立的 RED、由同一组产品改动共同满足且无 YELLOW / fixture 冲突时，才标注「双通道候选」；执行侧可锁步推进，但不得合并两套 RED/GREEN、checkbox 或 AC 证据链。
+**一个 Task 内允许出现多轮 6 步**：还原与逻辑各走一轮，默认先还原、后逻辑，每轮独立编号并标注形态。计划不预排双通道、并行或证据复用策略。
 
 ## Task List
 
@@ -224,10 +235,10 @@
 
 6 步（形态：还原）：
 
-- [ ] ① RED（还原）—— 运行冻结契约，生成 RED / YELLOW / GREEN 报告；至少一项明确 RED 才进入实现
-- [ ] ② 验 RED —— 核对 RED 的外部出处与实现定位
-- [ ] ③ GREEN —— 只修报告里的 RED
-- [ ] ④ 验 GREEN —— 重跑同一契约，无 RED、无 YELLOW；执行或登记适用的 Phase B 定向质量检查
+- [ ] ① 暴露缺口（还原）—— 受影响声明：<AT-/AC>；视觉来源与页面/区块：<...>；预期差异：<...>
+- [ ] ② 确认原因 —— <什么现象才算差异来自未实现，而非基线/工具/环境问题>
+- [ ] ③ 最小实现 —— 改 `<path>`，达成 <可观察行为>
+- [ ] ④ 证明声明 —— <AT-/AC> 应变成 `PROVEN`；最小可观察结果：<...>
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -239,10 +250,10 @@
 
 6 步（形态：逻辑）：
 
-- [ ] ① RED（逻辑）—— 写失败的单元测试或接口集成测试，给出完整代码
-- [ ] ② 验 RED —— 运行测试，确认按预期失败
-- [ ] ③ GREEN —— 最小实现让测试转绿
-- [ ] ④ 验 GREEN —— 本 Task 行为测试逐 assertion 转绿；定向检查按新鲜度键复用或补跑（全量对账仍在 Phase C）
+- [ ] ① 暴露缺口（逻辑）—— 受影响声明：<AT-/AC>；行为缺口、关键断言与候选测试位置：<...>
+- [ ] ② 确认原因 —— <什么现象才算因正确原因失败>
+- [ ] ③ 最小实现 —— 改 `<path>`，达成 <可观察行为>
+- [ ] ④ 证明声明 —— <AT-/AC> 应变成 `PROVEN`；最小可观察结果：<...>
 - [ ] ⑤ REFACTOR —— 按需
 - [ ] ⑥ 记录证据并提交
 
@@ -253,9 +264,10 @@
 - [ ] 越界扫描：Step ③ 无对象字面量、模板片段、函数体、内部 helper 名、指定 API 调用、`#` 色值 / `px`
 - [ ] 类型一致性：涉及的接口字段类型与 `story-delta-frontend-design.md` 一致
 - [ ] 前端行另查 1：组件树 / 界面清单是否已烘焙（首个 Story 可写「无，暂无复用组件」）
-- [ ] 前端行另查 2：每个前端 Task 的每一轮 6 步，Step ① 是否明确标注了失败证据形态
+- [ ] 前端行另查 2：每个前端 Task 是否引用受影响 AT-/AC 并写明因果证据意图；全文是否没有精确命令、全量回归、浏览器矩阵与独立检视安排
 - [ ] 前端行另查 3：每个页面的样式是否集中在一个还原 Task 内；逻辑 Task 文件清单是否不含样式文件
 - [ ] 前端行另查 4：有无「样式微调」「统一优化」这类没有原型对照范围的 Task
+- [ ] 前端行另查 5：`risk_triggers` 是否只含计划事实能支持的规范 token，且明显风险事实无漏标
 
 ## 风险与回滚
 

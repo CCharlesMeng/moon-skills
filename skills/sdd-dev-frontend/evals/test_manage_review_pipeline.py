@@ -170,11 +170,19 @@ class AggregateTests(unittest.TestCase):
             review("self-test", ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"]),
         ]
 
-    def test_requires_full_role_coverage_and_same_epoch(self):
+    def test_requires_assigned_coverage_and_same_epoch(self):
         results = self.base_results()
         results[0]["coverage"].pop()
         with self.assertRaisesRegex(MODULE.ReviewPipelineError, "coverage mismatch"):
-            MODULE.aggregate_results(results)
+            MODULE.aggregate_results(
+                results,
+                expected_dimensions={
+                    "review-layout": [f"L{i}" for i in range(1, 7)],
+                    "review-convention": [f"C{i}" for i in range(1, 8)],
+                    "review-quality": [f"Q{i}" for i in range(1, 9)],
+                    "self-test": ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"],
+                },
+            )
         results = self.base_results()
         results[3]["evidence_epoch"] = "review-2"
         with self.assertRaisesRegex(MODULE.ReviewPipelineError, "share evidence_epoch"):
@@ -206,6 +214,61 @@ class AggregateTests(unittest.TestCase):
         self.assertLess(len(markdown.splitlines()), 70)
         self.assertIn("阻断级 0 条", markdown)
         self.assertIn("## Handoff 清单\n\n无。", markdown)
+
+    def test_accepts_selected_roles_and_zero_role_portfolio(self):
+        selected = [review("review-layout", ["L2", "L3"])]
+        aggregate = MODULE.aggregate_results(
+            selected,
+            expected_roles=["review-layout"],
+            expected_dimensions={"review-layout": ["L2", "L3"]},
+            evidence_epoch="review-1",
+            code_fingerprint="fp",
+        )
+        self.assertEqual(aggregate["roles"], {"review-layout": "executed"})
+        empty = MODULE.aggregate_results(
+            [], expected_roles=[], expected_dimensions={}, evidence_epoch="review-1", code_fingerprint="fp"
+        )
+        self.assertEqual(empty["roles"], {})
+        self.assertEqual(empty["counts"]["blocker"], 0)
+
+    def test_selected_role_can_report_unexecuted_without_fake_coverage(self):
+        result = review(
+            "review-layout",
+            ["L2", "L3"],
+            status="unexecuted",
+        )
+        result["known_gaps"] = ["browser driver unavailable after dispatch"]
+        aggregate = MODULE.aggregate_results(
+            [result],
+            expected_roles=["review-layout"],
+            expected_dimensions={"review-layout": ["L2", "L3"]},
+            evidence_epoch="review-1",
+            code_fingerprint="fp",
+        )
+        self.assertEqual(aggregate["roles"], {"review-layout": "unexecuted"})
+        self.assertEqual(aggregate["coverage"], {"review-layout": []})
+        self.assertEqual(
+            aggregate["known_gaps"],
+            {"review-layout": ["browser driver unavailable after dispatch"]},
+        )
+
+    def test_unexecuted_role_rejects_fake_evidence_and_invalid_assignment(self):
+        result = review("review-layout", ["L2"], status="unexecuted")
+        result["evidence_reused"] = ["BE-1"]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "only explain known_gaps"):
+            MODULE.aggregate_results(
+                [result],
+                expected_roles=["review-layout"],
+                expected_dimensions={"review-layout": ["L2"]},
+            )
+
+        result["evidence_reused"] = []
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unknown dimensions"):
+            MODULE.aggregate_results(
+                [result],
+                expected_roles=["review-layout"],
+                expected_dimensions={"review-layout": ["L9"]},
+            )
 
     def test_raw_reviewer_addition_is_merged_and_references_are_rewritten(self):
         results = self.base_results()

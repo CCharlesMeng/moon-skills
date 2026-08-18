@@ -1,5 +1,7 @@
 # 上游 `sdd-task` 前端 Task 切分要求（已落地，现为设计依据）
 
+> **当前边界：** 本文的“按形态切 Task、样式归属单一、还原先于同页逻辑”仍是切分设计依据；涉及精确验证动作、双通道候选、固定回归或证据调度的段落已被新契约取代。当前计划写法以 `sdd-task-frontend/SKILL.md` 为准，执行动作以 [validation-policy.md](./validation-policy.md) 为准。
+
 > **现状：本文的要求已经执行完了，不要再带到上游。**
 >
 > 落地位置是 `skills/sdd-task-frontend/references/task-split.md`。`sdd-task` 的 Step 2.4 会把 `type=frontend` 的行整行路由给 `sdd-task-frontend`，前端 `tasks.md` 不再由公共主干生成，所以下面那句「下游改不到上游」已经不成立。
