@@ -87,7 +87,7 @@
 
 | 命中后不许做 | 只能做 |
 | --- | --- |
-| 改实现去迎合字符串 | 按 [CONTEXT.md 的问题分流](../CONTEXT.md#设计稿链路的问题分流) 定位到「比对器等价」层，把该形态补进 `verify_restore_contract.py` 的 normalize / canonicalize 函数族与 `collect_restore_facts.js` 的同源别名表 |
+| 改实现去迎合字符串 | 把该形态补进 `verify_restore_contract.py` 的 normalize / canonicalize 函数族与 `collect_restore_facts.js` 的同源别名表后重跑同一契约；补不了时按 P7 上报工具缺口 |
 | 为它新增豁免（**硬门禁 16**） | 补不了或形态存疑时按 P7 上报为工具等价缺口，附 `rule_id` 与两侧原值 |
 | 把它算进「同一报错修 3 次」的计数 | 补完归一化后重跑同一契约；两端映射必须同步改 |
 

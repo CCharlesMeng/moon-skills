@@ -1,147 +1,39 @@
-# 起点质量证据复用与执行 telemetry
+# 起点证据缓存与可选 telemetry
 
-主 agent 在验证组合选择命令模块时读取本文件。这里定义命令证据的精确复用，不新增 QA 标准，也不强制全量门。
+只在初始验证组合选择命令模块，或本次明确需要流程优化取数时读取对应小节。
 
-## 一、起点质量证据的所有权
+## 一、起点命令缓存
 
-`REPO-2` 只保存“当前 app 的规范质量命令是什么”；某次执行的命令结果仍属于 Story 的 `DEMAND-2`。为了让相同仓库状态复用上一轮已经跑过的结果，缓存写在目标仓的 Git metadata：
+`<preflight-cache>` 是本机 Git metadata 缓存，不是 Story 工件。每条命令记录 command、scope、toolchain/runtime、代码状态、exit code、duration 与 failures。
 
-```bash
-git -C "<repo-root>" rev-parse --git-path sdd-dev-frontend/preflight-quality.json
-```
+缓存命中必须同时满足：
 
-这个缓存：
+- 24 小时内；
+- base/HEAD、暂存、未暂存、未跟踪文件及相关内容哈希一致；
+- REPO-2 指纹、实际 command、scope、toolchain/runtime 一致；
+- 记录含完整退出码和失败集合。
 
-- 不是仓库 baseline，不得写入 `<repo-baseline-dir>`；
-- 不是正式 Story 工件，不得提交进 `<repo-root>`；
-- 只保存紧凑机器事实，`dev-baseline.md` 仍记录本 Story 实际采用的失败集合、缓存指纹、来源与命中状态；
-- 不可读取、记录或哈希 token、密码、cookie、账号凭据等秘密。
+任一字段缺失或不同即 MISS。HIT 复用整条失败集合，不重跑；MISS 只执行验证组合选中的命令并覆盖对应键。不同命令独立判定，不因一条 MISS 让全部失效。
 
-非 Git 仓、Git metadata 不可写或缓存损坏时按普通 `MISS` 处理，实跑组合选中的命令；不得把缓存能力本身变成开工阻断。
+Phase C/D 若同一命令键仍新鲜可继续复用；最终组合没有命令模块时不补“最终全量门”。
 
-## 二、精确命中条件
+## 二、执行 telemetry（可选）
 
-用 `<skill-dir>/scripts/manage_execution_evidence.py probe` 计算状态。只有下列各项**全部逐字一致**且记录不超过 24 小时，才是 `HIT`：
+默认不创建 `<execution-telemetry>`。只有用户或本次任务明确要评估流程成本时才开启；缺席不是降级，也不进入门禁。
 
-1. `<repo-root>` 的规范绝对路径；
-2. `HEAD`；
-3. staged diff 的二进制补丁哈希；
-4. unstaged diff 的二进制补丁哈希；
-5. 每个 untracked 文件的相对路径、类型与内容哈希；
-6. `repo-baseline.md` Section 表中的 `REPO-2` 指纹；
-7. 本次选中的质量命令及 scope，保持顺序和完整命令字符串；
-8. 这些命令实际使用的 toolchain 名称与版本；
-9. 会影响结果的非秘密运行模式，例如 package-manager mode、CI mode、OS/arch。
-
-任一项变化、TTL 超时、结果文件不完整，或本次命令依赖网络 / 外部服务 / 时变数据，都是 `MISS`。命令若依赖 `.gitignore` 排除的本机配置、秘密或其他不能安全进入指纹的状态，也必须标成不可缓存；**不允许为了命中去读取或哈希秘密**。`MISS` 是正常分支，必须把具体原因写进 telemetry；不得凭“看起来没变”手工判命中。
-
-命令：
-
-```bash
-python3 "<skill-dir>/scripts/manage_execution_evidence.py" probe \
-  --repo-root "<repo-root>" \
-  --repo2-fingerprint "<REPO-2 指纹>" \
-  --quality-command "<scope>::<完整命令>" \
-  --toolchain "<name>=<version>" \
-  --runtime "<key>=<非秘密值>" \
-  --snapshot-out "<临时目录>/preflight-snapshot.json"
-```
-
-`probe` 的 JSON 输出只有 `HIT` / `MISS`，并给出 `unstaged-diff-changed`、`quality-commands-changed` 等具体原因。存在任何不可缓存命令时，它仍要作为 `--quality-command` 传入，并额外用完全相同的字符串追加 `--uncacheable-command "<scope>::<完整命令>"`；本轮固定 `MISS` 并实跑全部选中命令，不做部分复用。
-
-### HIT
-
-- 不再执行 Phase 0 的同一组质量命令；
-- 从缓存复用逐命令退出码、耗时与具体失败集合；
-- `dev-baseline.md / 起点质量` 写 `复用`、状态指纹、缓存来源（`phase-0` / `phase-c` / `phase-d`）、记录时间和缓存路径；
-- telemetry 的 `phase-0.quality-gate` 写 `result: reuse`；
-- Phase C 重编译验证组合后，命令、scope、状态与环境仍相同才继续复用；变化时只补失效命令。
-
-### MISS
-
-- 实跑验证组合选中的规范命令，记录逐命令结果与具体失败集合；
-- `dev-baseline.md / 起点质量` 写 `实跑` 与 miss 原因；
-- telemetry 的 `phase-0.quality-gate` 写 `result: run`；
-- 执行结束后用同一份 snapshot 与紧凑结果更新缓存：
-
-```bash
-python3 "<skill-dir>/scripts/manage_execution_evidence.py" record \
-  --snapshot "<临时目录>/preflight-snapshot.json" \
-  --quality-result "<临时目录>/quality-result.json" \
-  --source phase-0
-```
-
-`quality-result.json` 至少含 `commands[]`；每项含与 snapshot 完全相同的 `spec`、`exit_code`、`duration_ms`、`failures[]`。`record` 会拒绝命令集合不一致、字段缺失或带不可缓存命令的记录。
-
-Phase C / D 实际执行命令模块后，用对应最终状态 snapshot 与紧凑结果调用 `record --source phase-c|phase-d`。未执行命令模块时不写空记录。下一 Story 在仓库状态、命令、scope 和环境完全相同时可复用。
-
-## 三、执行 telemetry（可选）
-
-**默认不开。** telemetry 是流程自身的度量工具，不是交付判据：任何门禁都不因它缺失而拦截，`dev-review.md` 也不因此少一条结论。只有用户明确要求本 Story 记执行量、或正在排查某段流程为什么慢时才开；开了就整段按本节记满，不开就整段不写，不留空文件和半张表。
-
-`<execution-telemetry>` 恒为 `<story-dir>/execution-telemetry.json`。它是紧凑机器账本，由主 agent 在动作完成时增量追加；不保存命令 stdout/stderr、原文报告或推测时间。
-
-Phase -1 开始时 `<story-dir>` 可能尚未唯一定位：此时只把 `phase-1.status` 的真实起止时间暂存在主 agent 当前上下文或临时目录，Phase 0 第 1 步定位成功后立即原样 flush；不得因此丢掉，也不得事后估算时间。浏览器探针只在验证组合选择相关模块时记录：初始组合用 `phase-0.browser-probe`，最终 diff 新触发时用 `phase-c.browser-probe`。
+每个动作追加紧凑记录：
 
 ```json
 {
-  "schema_version": 1,
-  "story": "<Story ID>",
-  "steps": [
-    {
-      "id": "phase-0.quality-gate",
-      "attempt": 1,
-      "kind": "agent",
-      "started_at": "<ISO-8601>",
-      "ended_at": "<ISO-8601>",
-      "duration_ms": 1234,
-      "result": "run",
-      "counts": {"commands": 3},
-      "evidence": ["dev-baseline.md#起点质量"],
-      "note": "cache MISS: unstaged-diff-changed"
-    }
-  ]
+  "id": "phase.action",
+  "attempt": 1,
+  "result": "run | reuse | skip",
+  "started_at": "<ISO-8601>",
+  "duration_ms": 0,
+  "human_wait_ms": 0,
+  "input_fingerprint": "<sha256>",
+  "output": "<path or short fact>"
 }
 ```
 
-`result` 只用 `run` / `reuse` / `skip` / `blocked`；重试追加新行并递增 `attempt`，不得覆盖前一轮。`kind` 只用 `agent` / `human_wait`，用户等待必须单独记，不能并入 agent 主动执行时间。
-
-前半程最少记录这些稳定 ID：
-
-| ID | 记录边界 |
-| --- | --- |
-| `phase-1.status` | baseline `status` + `validate` 路由 |
-| `phase-0.context` | 路径、场景、base-ref、初始风险触发器 |
-| `phase-0.browser-probe` | 初始组合选择浏览器模块时的 driver 能力与启动探针；未选择不生成 |
-| `phase-0.quality-gate` | 初始验证组合已选命令的 run / reuse 与 miss 原因 |
-| `phase-a1.extract` | 设计事实抽取 / 哈希复用 |
-| `phase-a1.block-specs` | 切分与区块规格生成 / 复用 |
-| `phase-a1.recon-codebase` | `lite` / `full` / `skip` 及回退原因 |
-| `phase-a2.recon-spec` | 规格侧勘察与重试 |
-| `phase-a2.merge-validate` | 跨份校验、落盘与契约编译前准备 |
-| `human.qa-confirmation` | 等待 QA 基线确认，`kind: human_wait` |
-| `phase-c.browser-probe` | 最终 diff 首次触发浏览器模块时的按需探针；否则不生成 |
-| `phase-b.task.<task>.<channel>.red` | 还原 / 逻辑通道的 RED；双通道时各写一行，counts 记 commands，不因共享波次合并 |
-| `phase-b.task.<task>.<channel>.green` | 对应通道的 GREEN 与受影响重跑；counts 记 commands / reused_results |
-| `phase-b.directed-check` | 定向检查的 run / reuse / blocked；counts 记 commands / browser_calls / retries / reused_results |
-| `phase-b.browser-evidence` | Step ④ 场景直接写入 `review-evidence.json`；counts 记 capture / update |
-| `phase-c.quality-gate` | 最终验证组合已选命令的 run / reuse |
-| `phase-c.browser-evidence` | Phase B 场景仍有效 / stale 与缺口 run / reuse |
-| `phase-c.review.<role>` | 每个角色独立的 start / complete / retry；attempt 递增 |
-| `phase-c.review-refill` | 任一槽位释放后启动下一待派角色；counts 记 refill |
-| `phase-c.aggregate` | 0–4 份适用 JSON 与分配维度校验、确定性聚合 |
-
-追加动作使用：
-
-```bash
-python3 "<skill-dir>/scripts/manage_execution_evidence.py" telemetry \
-  --file "<execution-telemetry>" --story "<Story ID>" \
-  --id phase-0.quality-gate --attempt 1 --kind agent \
-  --started-at "<ISO-8601>" --ended-at "<ISO-8601>" --result reuse \
-  --count commands=3 --evidence "dev-baseline.md#起点质量" \
-  --note "cache HIT: <state_fingerprint>"
-```
-
-双通道共享一次产品实现时，两条 RED 与两条 GREEN telemetry 仍分别存在，`note` 可引用同一个 implementation fingerprint；不要伪造成一个通道。定向检查按新鲜度键复用时用 `result: reuse`，在 `evidence` 引用被复用的那次执行（完整命令 + 代码指纹，或场景记录号），并用 `counts` 区分 `commands`、`browser_calls`、`retries` 与 `reused_results`。浏览器场景只记实际 browser tool calls，不把场景数冒充调用数。代码变化导致失效时追加新 attempt 和失效原因，不覆盖旧行。
-
-开了 telemetry 就 Phase B / C / D 都按上述稳定边界续记：已选命令模块、因果证据、浏览器场景 run / reuse / stale、适用角色启动 / 动态补位 / 重试要能从 `steps[]` 的 ID / `counts` 机械汇总。Phase D 只从这份 JSON 生成 `dev-review.md / 执行量账本`，没有记录就写“未记录”，禁止凭 LOC 或回忆估算。
+重试追加新 attempt，不覆盖历史；用户等待只记入 `human_wait_ms`，不混入 agent 执行时间。Phase D 从 JSON 机械汇总动作次数、运行/复用/跳过与耗时，不用 LOC、回忆或估算。

@@ -40,7 +40,6 @@
 
 | 文档 | 主题 | 现在的定位 |
 | --- | --- | --- |
-| `skills/sdd-dev-frontend/references/sdd-task-amendments.md` | `tasks.md` Step ① 失败证据扩展为两种形态 | 设计依据；执行落在 `sdd-task-frontend` Step 7 |
-| `skills/sdd-dev-frontend/references/sdd-task-frontend-split.md` | 前端 Story 的任务拆分口径 | 设计依据；执行落在 `sdd-task-frontend` Step 6 |
+| `docs/skills/frontend-sdd/执行契约.md` | 前端 Task 的验收声明、六步因果意图与切分口径 | 共享运行契约；执行落在 `sdd-task-frontend` |
 
 **不要再为前端规则写新的上游说明书。** 前端专有规则直接进 `sdd-task-frontend`。只有需要改动通用主干（后端行、CLI、命名、提交规范）时才走上游说明书这条路。
