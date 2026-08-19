@@ -1,39 +1,52 @@
 # 起点证据缓存与可选 telemetry
 
-只在初始验证组合选择命令模块，或本次明确需要流程优化取数时读取对应小节。
+只在初始验证组合选择命令模块，或本次明确需要流程优化取数时读取对应小节。两节的判据都由 `<skill-dir>/scripts/manage_execution_evidence.py` 计算或校验，不在本文件手工比对。
 
 ## 一、起点命令缓存
 
-`<preflight-cache>` 是本机 Git metadata 缓存，不是 Story 工件。每条命令记录 command、scope、toolchain/runtime、代码状态、exit code、duration 与 failures。
+`<preflight-cache>` 是本机 Git metadata 缓存，不是 Story 工件：不写入 `<repo-baseline-dir>`、不提交进 `<repo-root>`、不记录或哈希 token、密码、cookie 等秘密。非 Git 仓、metadata 不可写或缓存损坏时按普通 `MISS` 处理，不让缓存能力本身变成开工阻断。
 
-缓存命中必须同时满足：
+命中判定只由 `probe` 给出，**不得凭「看起来没变」手工判命中**：
 
-- 24 小时内；
-- base/HEAD、暂存、未暂存、未跟踪文件及相关内容哈希一致；
-- REPO-2 指纹、实际 command、scope、toolchain/runtime 一致；
-- 记录含完整退出码和失败集合。
+```bash
+python3 "<skill-dir>/scripts/manage_execution_evidence.py" probe \
+  --repo-root "<repo-root>" \
+  --repo2-fingerprint "<REPO-2 指纹>" \
+  --quality-command "<scope>::<完整命令>" \
+  --toolchain "<name>=<version>" \
+  --runtime "<key>=<非秘密值>" \
+  --snapshot-out "<临时目录>/preflight-snapshot.json"
+```
 
-任一字段缺失或不同即 MISS。HIT 复用整条失败集合，不重跑；MISS 只执行验证组合选中的命令并覆盖对应键。不同命令独立判定，不因一条 MISS 让全部失效。
+脚本比对仓库状态、`REPO-2` 指纹、命令与 scope、toolchain 和运行模式并施加 TTL，输出 `HIT` / `MISS` 加具体原因。依赖网络、外部服务、时变数据或不能安全进入指纹的本机状态的命令，用完全相同的字符串额外传 `--uncacheable-command`；本轮固定 `MISS`，实跑全部选中命令，不做部分复用。
 
-Phase C/D 若同一命令键仍新鲜可继续复用；最终组合没有命令模块时不补“最终全量门”。
+| 结果 | 动作 |
+| --- | --- |
+| `HIT` | 不再执行同一组命令，复用逐命令退出码、耗时与失败集合；`dev-baseline.md / 起点质量` 写 `复用`、状态指纹与缓存来源 |
+| `MISS` | 只实跑验证组合选中的命令；`dev-baseline.md` 写 `实跑` 与 miss 原因，随后按下方 `record` 覆盖对应键 |
+
+```bash
+python3 "<skill-dir>/scripts/manage_execution_evidence.py" record \
+  --snapshot "<临时目录>/preflight-snapshot.json" \
+  --quality-result "<临时目录>/quality-result.json" \
+  --source phase-0
+```
+
+`quality-result.json` 的 `commands[]` 每项含与 snapshot 相同的 `spec`、`exit_code`、`duration_ms`、`failures[]`；命令集合不一致、字段缺失或含不可缓存命令时 `record` 会拒绝。Phase C / D 实际执行命令模块后用 `--source phase-c|phase-d` 记录；未执行命令模块时不写空记录。不同命令独立判定，不因一条 `MISS` 让全部失效。
 
 ## 二、执行 telemetry（可选）
 
-默认不创建 `<execution-telemetry>`。只有用户或本次任务明确要评估流程成本时才开启；缺席不是降级，也不进入门禁。
+默认不创建 `<execution-telemetry>`。只有用户或本次任务明确要评估流程成本时才开启；缺席不是降级，也不进入门禁。开了就整段记满，不留空文件和半张表。
 
-每个动作追加紧凑记录：
+每个动作完成时追加一行，ID 用 `<phase>.<action>` 稳定命名：
 
-```json
-{
-  "id": "phase.action",
-  "attempt": 1,
-  "result": "run | reuse | skip",
-  "started_at": "<ISO-8601>",
-  "duration_ms": 0,
-  "human_wait_ms": 0,
-  "input_fingerprint": "<sha256>",
-  "output": "<path or short fact>"
-}
+```bash
+python3 "<skill-dir>/scripts/manage_execution_evidence.py" telemetry \
+  --file "<execution-telemetry>" --story "<Story ID>" \
+  --id phase-0.quality-gate --attempt 1 --kind agent \
+  --started-at "<ISO-8601>" --ended-at "<ISO-8601>" --result reuse \
+  --count commands=3 --evidence "dev-baseline.md#起点质量" \
+  --note "cache HIT: <state_fingerprint>"
 ```
 
-重试追加新 attempt，不覆盖历史；用户等待只记入 `human_wait_ms`，不混入 agent 执行时间。Phase D 从 JSON 机械汇总动作次数、运行/复用/跳过与耗时，不用 LOC、回忆或估算。
+`result` 只用 `run` / `reuse` / `skip` / `blocked`；重试追加新 `attempt`，不覆盖历史。用户等待单独记 `--kind human_wait`，不并入 agent 执行时间。浏览器探针只在验证组合选择相关模块时记录。Phase D 只从这份 JSON 机械汇总动作次数与耗时，没有记录就写「未记录」，不用 LOC、回忆或估算补。

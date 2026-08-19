@@ -41,7 +41,7 @@ Step 1/2 只取得能证明预期缺口存在且原因正确的最窄事实；St
 每个 Task 的 Step 6：
 
 - 在 `alpha-tests.md` 回填声明、状态、证据 ID/路径、环境和相关依赖；还原记录按 [alpha-tests-restore.md](./alpha-tests-restore.md)。
-- 只有证据覆盖、环境正确、依赖新鲜且无阻断时写 `PROVEN`；否则写 `UNVERIFIED` 或符合条件的 `DEFERRED`。
+- 状态按 [共享执行契约的状态表](../../../docs/skills/frontend-sdd/执行契约.md#声明与状态)判定，本文件不复制判据。
 - 勾选已实际完成的 checkbox；验证结果不替代实现进度。
 - 同一动作可被多条声明引用，不复制输出。依赖文件变化时只失效命中的证据。
 

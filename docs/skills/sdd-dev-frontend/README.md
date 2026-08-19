@@ -226,7 +226,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 | --- | --- | --- |
 | 完整 `dev-baseline.md` | `<story-dir>/dev-baseline.md` | 已确认的 QA 基线、豁免、环境能力，以及 `PATTERN-*` / `REQ-DEC-*` 工程依据引用 |
 
-QA 基线固定为十个维度，不能增删：
+QA 基线的分类法固定为下面十个维度，不能增删；但它们是**候选分类**，每个 Story 只生成 AC、设计输入或风险触发器实际要求的行，不适用的分类直接省略：
 
 | 还原侧 | 功能侧 |
 | --- | --- |

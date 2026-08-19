@@ -136,11 +136,9 @@ Phase B 的行为结论（RED/GREEN、逐项失败集合）仍只在 `alpha-test
 
 ## 六、命令证据
 
-- Phase 0 只为初始验证组合选中的命令取得起点事实。
-- Phase B 只跑因果证明直接需要的命令。
-- Phase C 按最终组合执行 `targeted-quality` 或 `regression`；只有组合升级时才跑全量门。
-- Phase D 只重跑依赖命中的命令；没有全量模块就不补“最终全量门”。
-- 每条命令保存完整 command、scope、toolchain/runtime 与相关代码状态；相同键复用，变化时只失效该命令。
+各 Phase 该跑多宽只定义在 [validation-policy.md 的执行时机](./validation-policy.md#五执行时机)，本文件不复制一份分阶段清单。
+
+这里只定义命令的**记录形状**：每条命令保存完整 command、scope、toolchain/runtime 与相关代码状态；相同键复用，变化时只失效该命令。
 
 ## 七、呈现预算
 

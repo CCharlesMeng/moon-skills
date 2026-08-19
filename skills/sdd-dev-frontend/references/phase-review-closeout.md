@@ -11,7 +11,7 @@
 5. 角色前置缺失或回传不合格时只退回一次；仍失败则生成 `unexecuted` 结果与 known gap，不伪造 coverage。
 6. 若角色补采场景，先校验 raw scenario，再由主 agent 合并进证据包。只归档被结论引用的截图。
 7. 用 `<skill-dir>/scripts/manage_review_pipeline.py` 校验、聚合 0–4 份适用 JSON，生成 `review-results.json` 和 `dev-review.md`。
-8. 逐声明初判：证据充分且新鲜、无阻断为 `PROVEN`；做得到但未证为 `UNVERIFIED`；只有外部依赖未就绪为 `DEFERRED`。
+8. 逐声明初判，判据用 [共享执行契约的状态表](../../../docs/skills/frontend-sdd/执行契约.md#声明与状态)。
 
 ## Phase D — 收口
 

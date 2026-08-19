@@ -523,6 +523,8 @@ const OWNED_SCRIPTS = [
   "verify_restore_contract.py",
   "collect_restore_facts.js",
   "manage_repo_baseline.py",
+  "manage_execution_evidence.py",
+  "manage_review_pipeline.py",
 ];
 
 function walkMarkdown(dir) {
@@ -818,6 +820,69 @@ function checkFrontendScriptPaths(files) {
   }
 }
 
+// 一份脚本没有任何提示词再调用它，等于判据从确定性退回散文，而脚本和它的单测
+// 还在绿着——瘦身时真出过一次：preflight 缓存的四处调用点被删，命中判据变成
+// 提示词里让主 agent 手工比对的一段话。
+function checkFrontendScriptOwners(files) {
+  // 只认 skills/ 下的提示词与 references：治理文档（docs/skills/frontend-sdd/）列脚本名
+  // 是清单，不是调用点。把清单算作调用者，这条检查就永远不会失败了。
+  const prose = files
+    .filter((file) => file.startsWith(SKILLS_DIR))
+    .map((file) => readFileSync(file, "utf-8"))
+    .join("\n");
+  let failed = 0;
+  let count = 0;
+
+  for (const root of FRONTEND_ROOTS) {
+    const dir = join(root, "scripts");
+    if (!existsSync(dir)) continue;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      if (!/\.(py|js|mjs|sh)$/.test(entry.name)) continue;
+      count++;
+      if (!prose.includes(entry.name)) {
+        report(
+          "fail",
+          "fe-script-owner",
+          `${rel(join(dir, entry.name))} is never invoked from any chain Markdown — ` +
+            `wire it back into the phase/reference that needs it, or delete script + tests`
+        );
+        failed++;
+      }
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-script-owner", `${count} scripts all have a calling doc`);
+  }
+}
+
+// 注册表指向一份已删除的文件时，fe-link 抓不到（写成行内 code 而不是链接），
+// 而 fe-id-prefix 现读这张表，等于把一个已下线的前缀继续算作已批准。
+function checkFrontendRegistryTargets() {
+  const content = readFileSync(ID_REGISTRY_PATH, "utf-8");
+  const roots = [...FRONTEND_ROOTS, ROOT];
+  let failed = 0;
+  let count = 0;
+
+  for (const match of content.matchAll(
+    /`((?:references|agents|scripts|evals|tests)\/[^`*\s]+\.[a-z]{2,4})`/g
+  )) {
+    const target = match[1];
+    count++;
+    if (!roots.some((root) => existsSync(join(root, target)))) {
+      report(
+        "fail",
+        "fe-registry-target",
+        `${ID_REGISTRY} names "${target}" but no such file exists under the chain roots`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-registry-target", `${count} registry file references all resolve`);
+  }
+}
+
 function checkFrontendChain() {
   console.log("\n── 9. Frontend SDD Chain ──");
 
@@ -837,6 +902,8 @@ function checkFrontendChain() {
   checkFrontendIdPrefixes(files);
   checkFrontendAgentStructure();
   checkFrontendScriptPaths(files);
+  checkFrontendScriptOwners(files);
+  checkFrontendRegistryTargets();
 }
 
 // ── Run all checks ─────────────────────────────────────────────────
