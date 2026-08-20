@@ -159,6 +159,7 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 | `fe_change` | `<iterative-version>/<requirement-id>-<requirement-name>` |
 | `story_dir` | `codebase/<project>/codespec/changes/<requirement-id>-<requirement-name>/<us-id>-<us-name>/` |
 | `project` / `project_type` | 本行 `归属微服务` / 固定 `frontend` |
+| `search_paths` | 本 Story 允许改动的仓内路径（与 backend 行同一口径） |
 | `schema_tasks` / `schema_alpha_tests` | Step 2 的 2) 取到的 `codespec instructions` 原文 |
 | 需求侧路径 | `story-delta-spec.md`、`story-delta-design.md`、`story-delta-frontend-design.md`、包根 `requirement-frontend-design.md`（缺失的逐项注明「未见」） |
 | 知识底座结果 | 「读取范围」第 7 项 consume 的 `entries[].id` 与 `gaps` |
@@ -167,7 +168,7 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 
 返回后本 Skill 只做一件事：把它落盘的 `tasks.md` / `alpha-tests.md` 路径并入 Step 3 汇总，**不复核前端内容、不改写前端 Task**。前端行的产物质量由 `sdd-task-frontend` 自己的完成标准负责。
 
-**兜底**：`sdd-task-frontend` 不可用时，按 Step 2.5～2.6 与 Step 4 的既有内联前端路径处理本行，并在 `tasks.md` 标注 `⚠️ 降级：未经 sdd-task-frontend`。降级产出不含前端切分规则与基线源声明，下游 `sdd-dev-frontend` 会退回「一个 Task 内多轮 6 步」执行。
+**兜底**：`sdd-task-frontend` 不可用时，按 Step 2.5～2.6 与 Step 4 的既有内联前端路径处理本行，并在 `tasks.md` 标注 `⚠️ 降级：未经 sdd-task-frontend`。降级产出不含前端切分规则与基线源声明，下游 `sdd-dev-frontend` 会退回「一个 Task 内多轮」执行，并自行按形态判定每轮步骤。
 
 ### Step 2.5: 前端烘焙（仅 `type=frontend` 且 Step 2.4 走兜底）
 

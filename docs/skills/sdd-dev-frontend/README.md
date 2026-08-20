@@ -532,7 +532,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - [样式还原验证改造计划.md](./样式还原验证改造计划.md)：V2 契约化还原的已实施计划
 - [ADR](./adr/)：关键架构决策记录
 - [QA 基线模板](../../../skills/sdd-dev-frontend/references/qa-baseline-template.md)：十个固定维度
-- [前端 Task 切分与六步形状](../frontend-sdd/执行契约.md#task-切分与六步形状)：还原 Task、样式文件归属与计划边界
+- [前端 Task 切分与步骤形状](../frontend-sdd/执行契约.md#task-切分与步骤形状)：还原 Task、样式文件归属与计划边界
 - [还原契约与机器报告](../../../skills/sdd-dev-frontend/references/restore-contract.md)：V2 JSON 工件、命令和三色语义
 - [`alpha-tests.md` 还原证据扩容](../../../skills/sdd-dev-frontend/references/alpha-tests-restore.md)：还原证据和 AC 映射
 - [检视维度与分级](../../../skills/sdd-dev-frontend/references/review-dimensions.md)：四份检视的统一判级口径
