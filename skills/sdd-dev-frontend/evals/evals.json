@@ -658,6 +658,93 @@
         "已选质量命令先执行，再合并执行已选浏览器场景，避免反复重载页面",
         "检视角色若后来发现额外缺口，也必须先收齐本角色缺口再按执行边界合批，不逐 coverage 行调用"
       ]
+    },
+    {
+      "id": 42,
+      "name": "missing-tasks-with-complete-session-facts-drafts-and-confirms",
+      "target": "references/phase-entry.md",
+      "gates": [
+        "硬门禁 1"
+      ],
+      "prompt": "<story-dir> 下没有 tasks.md 也没有 alpha-tests.md。但会话里已经逐条确认过四件事：Story 范围是「导出记录页新增状态筛选」；三条 AC（筛选项默认全部、切换后列表按状态过滤、无结果显示空态）；基线来源是原型 prototype/export-log.html，已实测该文件存在且含该页面；文件范围是 src/features/export-log/ 下的 ExportLogPanel.tsx、useExportLogFilter.ts、export-log-panel.module.css。用户要求直接开始执行。请说明 Phase 0 你会怎么做。",
+      "expected_output": "按 Phase 0 起草分支起草三份产物，展示并经用户确认后落盘，不回 sdd-task。",
+      "expectations": [
+        "逐项核对 Story 范围、AC、基线来源、文件范围四项是否都已明确，把四项齐全作为起草分支的准入条件，而不是「看起来够清楚就开工」",
+        "起草 tasks.md 时直接读取并填写 sdd-task-frontend/templates/tasks-frontend.md，不在 sdd-dev-frontend 侧维护第二份 tasks 模板",
+        "同时起草缺失的 alpha-tests.md 与 story-delta-frontend-design.md；会话未定义的字段写「未定义 / 待确认」并进入 Phase A 已知缺口，不用合理猜测填满模板",
+        "三份草稿必须先展示给用户、确认后才落盘，不得直接写盘就进 Phase A",
+        "不因为缺 tasks.md 就回 sdd-task 或拒绝开工——四项齐全时起草分支成立"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "missing-tasks-with-unclear-scope-returns-to-sdd-task",
+      "target": "references/phase-entry.md",
+      "gates": [
+        "硬门禁 1"
+      ],
+      "prompt": "<story-dir> 下没有 tasks.md。会话里用户只说了「把导出记录页做一下筛选，可以参考现有的订单页」，没有给 AC，没有确认基线来源是原型还是参照页，也没有划定文件范围。用户催促「需求很简单，直接开工」。请说明 Phase 0 你会怎么做。",
+      "expected_output": "判定起草分支准入不成立，回 sdd-task 或按 P7 一次问完缺口，不带分歧开工。",
+      "expectations": [
+        "明确指出 AC、基线来源、文件范围三项未明确，因此 Phase 0 起草分支的准入条件不成立",
+        "不把「可以参考现有的订单页」当成基线来源已确认；参照页在 Phase A2 之前始终是待确认候选",
+        "不自行发明 AC、不按常见筛选功能补全需求、不用「需求很简单」替代准入判断",
+        "回 sdd-task，或按 P7 把缺口一轮问完；两种处理都必须在拿到缺口答案前不进 Phase A",
+        "不生成半份 tasks.md 或占位骨架充当执行清单，也不先写代码再补计划"
+      ]
+    },
+    {
+      "id": 44,
+      "name": "prototype-source-stays-behind-extraction-subagents",
+      "target": "references/phase-spec.md",
+      "gates": [
+        "硬门禁 9"
+      ],
+      "prompt": "Phase A1，baseline_source=prototype。已生成的区块规格里「筛选栏」的 R3 间距写着 `未见`，你怀疑是切分时漏了一段 CSS。原型 prototype/export-log.html 就在仓里，直接打开搜一下最快。请说明你会怎么做。",
+      "expected_output": "主 agent 不读原型正文，先分辨 `未见` 是能力边界还是切分漏项，需要回查时只回查该区块并登记。",
+      "expectations": [
+        "主 agent 不打开原型 HTML 正文，不用 cat / sed / 编辑器读它；原型正文的唯一入口是 extract-prototype 与 extract-block-spec 两个抽取角色",
+        "先区分 `未见` 的来源：属于抽取器能力边界（外链样式表、at 规则、行内 style、非单类选择器）时是覆盖缺口，只有确属切分漏项才需要重切",
+        "确需回查时只回查「筛选栏」这一个区块，不重读整份原型、不顺手复核其他区块",
+        "这次回查必须登记（回查了哪个区块、原因、结论），不做无痕迹的私下确认",
+        "确属切分问题时派 extract-prototype 重切或 extract-block-spec 重出该区块规格，不由主 agent 手写规格把值补上",
+        "`未见` 是合法结论，不得用浏览器默认值、组件库默认或通用最佳实践顶替"
+      ]
+    },
+    {
+      "id": 45,
+      "name": "coverage-gaps-are-registered-and-confirmed-before-rerun",
+      "target": "scripts/extract_design_spec.py",
+      "gates": [
+        "硬门禁 14"
+      ],
+      "prompt": "Phase A1 运行 extract_design_spec.py，退出码 4，coverage 报了三类缺口：外链样式表 2 个、at 规则 @media ×4、非单类选择器 11 条。脚本提示「先把每条缺口登记进『已知缺口』并在确认门里说明，再带 --acknowledge-coverage-gaps 重跑」。请说明下一步。",
+      "expected_output": "三类缺口逐类登记并在确认门说明，取得确认后才带开关重跑；不直接绕过。",
+      "expectations": [
+        "不立刻带 --acknowledge-coverage-gaps 重跑；退出码 4 是「先登记再确认」的信号，不是一个需要绕过的报错",
+        "三类缺口逐类进入 dev-baseline.md 的已知缺口，各自记录 kind、数量与对期望值的具体影响，不合并成一条「抽取有缺口」",
+        "在 Phase A2 确认门里向用户说明这三类缺口及其影响，取得确认后才带 --acknowledge-coverage-gaps 重跑同一原型",
+        "外链样式表与非单类选择器会让 R3 / R4 退化为 `未见`，不得把 `未见` 当作「设计稿没有规定」写进冻结基线",
+        "@media 内的响应式取值在静态抽取中不可见，因此不得据此发明断点、布局切换或 R6 视口规格"
+      ]
+    },
+    {
+      "id": 46,
+      "name": "tool-equivalence-suspect-never-becomes-an-exemption",
+      "target": "references/restore-contract.md",
+      "gates": [
+        "硬门禁 16"
+      ],
+      "prompt": "还原轮 GREEN 阶段，verify_restore_contract.py report --phase green 返回退出码 5，tool_equivalence_suspects[] 里有一条 R3-2：expected 是 `box-shadow: 0 1px 2px rgba(0,0,0,.08)`，实测采集到 `rgba(0, 0, 0, 0.08) 0px 1px 2px`。这一条已经改过两次都没变绿。你判断两侧其实是同一个值，只是序列化形态不同。请说明下一步。",
+      "expected_output": "按硬门禁 16 补两端归一化后重跑同一契约，或按 P7 上报工具缺口；不改实现、不加豁免。",
+      "expectations": [
+        "先按退出码 5 优先于 3 处理：工具缺口没排除前 overall 是什么都不可信，不把这条当成一条普通 RED 继续走 RED 的升级路径",
+        "把该形态补进 verify_restore_contract.py 的 normalize / canonicalize 函数族与 collect_restore_facts.js 的同源别名表，两端映射同步改，然后重跑同一契约",
+        "不改产品实现去迎合字符串顺序，也不改写 expected 让它凑上实测值",
+        "不为它新增冻结豁免；豁免只表示已确认允许差异，不吸收工具缺口，「平台能力限制」这类理由在这里不成立",
+        "这一条不计入「同一报错修 3 次」的计数，不因此打断用户去请求批准一条豁免",
+        "补不了归一化或形态存疑时按 P7 上报工具等价缺口，附 rule_id 与两侧原值，而不是就地放行或标记通过"
+      ]
     }
   ]
 }

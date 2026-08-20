@@ -858,14 +858,9 @@ function checkFrontendScriptOwners(files) {
 
 // 22 条门禁全是散文，脚本一条都不引用，所以「门禁被遵守了吗」本来无法机械测量。
 // evals.json 的 gates 字段建立这条链接：每条门禁至少要有一条情景题断言它。
-// KNOWN_UNCOVERED 是棘轮——只许变短。补了用例就从这里删掉，想加进来必须先说明
-// 为什么这条门禁不值得测（那通常意味着它不该占一个编号）。
-const KNOWN_UNCOVERED_GATES = new Map([
-  ["硬门禁 1", "执行清单存在：缺 tasks.md 的两条分支（Phase 0 起草 / 回 sdd-task）没有情景题"],
-  ["硬门禁 9", "原型隔离：谁可以读原型源码，无用例；ADR-0003 记的上下文爆掉就是这条失守"],
-  ["硬门禁 14", "抽取缺口先登记：extract_design_spec 退出码 4 的登记—确认—重跑回路无用例"],
-  ["硬门禁 16", "工具缺口不变豁免：退出码 5 无用例，而它是热路径唯一按编号被引用的门禁"],
-]);
+// KNOWN_UNCOVERED 是棘轮——只许变短。**当前已空，22/22 全覆盖。** 想往里加必须先说明
+// 为什么这条门禁不值得测；答不出来通常意味着它根本不该占一个编号。
+const KNOWN_UNCOVERED_GATES = new Map([]);
 
 function checkFrontendGateCoverage() {
   const skillPath = join(SKILLS_DIR, "sdd-dev-frontend", "SKILL.md");
