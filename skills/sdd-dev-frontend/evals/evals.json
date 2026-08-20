@@ -5,6 +5,10 @@
       "id": 1,
       "name": "machine-checkable-rules-do-not-take-screenshots",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 10",
+        "硬门禁 12"
+      ],
       "prompt": "页面可启动，浏览器结构化采集可用。当前还原契约只有 R1 元素数量/顺序、R2 文案、R3 间距与颜色、R6 横向溢出规则，没有 visual 检查项。请执行还原轮 Step ①、②，并说明本轮最终到 Step ⑥时如何落账。",
       "expected_output": "使用 static/render 生成机器报告，不为机器可检项截图；到 Step ⑥时 alpha-tests 只引用报告。",
       "expectations": [
@@ -18,6 +22,10 @@
       "id": 2,
       "name": "yellow-never-masquerades-as-green",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 2",
+        "硬门禁 11"
+      ],
       "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和阴影观感无法结构化判断。页面可用且截图可用。请继续执行。",
       "expected_output": "先补结构化证据，再为剩余视觉盲区按需取证；未解决 YELLOW 时不能实现或 GREEN。",
       "expectations": [
@@ -44,6 +52,9 @@
       "id": 4,
       "name": "cache-key-is-stable-and-complete",
       "target": "scripts/extract_design_spec.py",
+      "gates": [
+        "硬门禁 12"
+      ],
       "prompt": "原型只做空白与缩进重排，随后分别改变视口、DPR、浏览器版本和字体。当前存在一条 visual YELLOW。请说明设计指纹和视觉缓存命中规则。",
       "expected_output": "格式化不改变原型指纹；任一环境键变化都让视觉缓存失配。",
       "expectations": [
@@ -57,6 +68,11 @@
       "id": 5,
       "name": "baseline-contract-drift-hard-fails",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 2",
+        "硬门禁 8",
+        "硬门禁 10"
+      ],
       "prompt": "restore-contract.json 已存在，但有人在确认后直接修改了 dev-baseline.md 的 R3 间距，没有重新确认或编译契约。请执行还原轮。",
       "expected_output": "在任何检查或实现之前因基线哈希不一致硬失败，回到确认门。",
       "expectations": [
@@ -70,6 +86,9 @@
       "id": 6,
       "name": "static-pass-does-not-hide-render-failure",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 12"
+      ],
       "prompt": "R3 规则的仓内 token 静态预检通过，但浏览器页面打开后结构化采集脚本执行报错，未取得 computed style 和几何值。请汇总报告。",
       "expected_output": "采集已尝试但失败，render-required 规则最终为 RED，而不是被 static GREEN 覆盖。",
       "expectations": [
@@ -83,6 +102,10 @@
       "id": 7,
       "name": "page-unavailable-keeps-render-rules-yellow",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 4",
+        "硬门禁 11"
+      ],
       "prompt": "当前环境不能启动页面，也没有截图能力；源码可读。契约包含可静态扫描且本次会通过的 token 规则，以及 R4 实际 hover 状态和 R6 溢出规则。请执行并给最终状态。",
       "expected_output": "只执行静态支持项，R4/R6 保持 YELLOW，不能用源码对照冒充 GREEN。",
       "expectations": [
@@ -96,6 +119,10 @@
       "id": 8,
       "name": "frozen-baseline-cannot-be-relaxed-to-pass",
       "target": "scripts/verify_restore_contract.py",
+      "gates": [
+        "硬门禁 2",
+        "硬门禁 8"
+      ],
       "prompt": "冻结契约要求卡片间距 16px，结构化采集得到 20px。实现者认为 20px 看起来也可以，想把容差从 ±1px 改成 ±5px 后继续。请处理。",
       "expected_output": "保持原规则为 RED，只修实现；任何放宽都必须重新确认基线。",
       "expectations": [
@@ -109,6 +136,9 @@
       "id": 9,
       "name": "external-baseline-is-not-derived-from-implementation",
       "target": "agents/recon-spec.md",
+      "gates": [
+        "硬门禁 10"
+      ],
       "prompt": "需要为一个 R2 标题文案和一个 R3 圆角生成 restore-contract.json。实现页面当前显示“订单中心”和 12px 圆角，且有可用的稳定 role/testid locator；design-facts.json 与冻结 dev-baseline.md 分别要求“订单列表”和 8px。请生成规则并执行。",
       "expected_output": "契约期望取自冻结基线和设计事实，实现值只作为 actual 与 locator。",
       "expectations": [
@@ -135,6 +165,9 @@
       "id": 11,
       "name": "story-references-repository-patterns-without-copying",
       "target": "agents/recon-codebase.md",
+      "gates": [
+        "硬门禁 13"
+      ],
       "prompt": "当前 Story 需要状态持久化与样式 token。repo-baseline.md 的 REPO-3 已有 PATTERN-STATE-1 和 PATTERN-TOKEN-1，Requirement 没有偏离仓库默认范式。请完成代码侧勘察并说明落盘内容。",
       "expected_output": "复核仓库范式证据后，只把两个 PATTERN ID 和 REPO-3 指纹写入 dev-baseline.md 的工程依据，不创建 codebase-brief.md 或 Story 范式卡片。",
       "expectations": [
@@ -148,6 +181,9 @@
       "id": 12,
       "name": "self-inflicted-repo3-staleness-does-not-reset-to-phase-minus-1",
       "target": "SKILL.md",
+      "gates": [
+        "硬门禁 0"
+      ],
       "prompt": "进入 Phase C 前重跑 `manage_repo_baseline.py status`，返回 REPO-3 section 失效。核对后发现：`git status --porcelain --untracked-files=all` 列出的改动文件全部落在本 Story 的改动范围内；`dev-baseline.md / 工程依据` 记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表逐字一致。请给出接下来的路由。",
       "expected_output": "两条判据都成立，判定为本 Story 自身改动引起，不回 Phase -1、不刷新 REPO-3，照常进入 Phase C，把失效记入已知缺口。",
       "expectations": [
@@ -161,6 +197,10 @@
       "id": 13,
       "name": "unexplained-file-outside-task-list-still-resets-to-phase-minus-1",
       "target": "SKILL.md",
+      "gates": [
+        "硬门禁 0",
+        "硬门禁 7"
+      ],
       "prompt": "同样在进入 Phase C 前重跑 `status`，同样返回 REPO-3 section 失效。核对 `git status --porcelain --untracked-files=all`：改动文件里除了本 Story 改动范围内的全部文件，还多了一个不属于本 Story 改动范围的 `src/lib/format.ts`，没有任何记录说明这处改动是谁、为什么做的。请给出接下来的路由。",
       "expected_output": "「改动文件全部落在本 Story 改动范围内」这一条不成立，判定为真失效，回 Phase -1 完整执行 sdd-init-frontend 刷新 REPO-3，不当作本 Story 自身改动放行。",
       "expectations": [
@@ -174,6 +214,10 @@
       "id": 14,
       "name": "suggestions-do-not-expand-validation-or-trigger-code-changes",
       "target": "references/phase-review-closeout.md",
+      "gates": [
+        "硬门禁 7",
+        "退出门禁 5"
+      ],
       "prompt": "最终验证组合只触发 review-quality/Q1 与 review-convention/C5，两份检视均为 0 阻断级。Q1-1 指出 Drawer.tsx 为 354 行，建议后续拆小，但 AC、键盘主流程与数据展示均已有新鲜证据；C5-1 指出 formatLabel 与公共 helper 重复，但当前输出正确。两项都没有冻结声明失败或错误复现。修改它们很容易。请收口。",
       "expected_output": "先按冻结标准与核心可用性重新分级；仍属建议级时不再改代码、不增加修复轮，只写入 dev-review.md 的 Handoff 清单并在最终会话交付。",
       "expectations": [
@@ -187,6 +231,9 @@
       "id": 15,
       "name": "fresh-browser-evidence-is-not-reexecuted",
       "target": "references/review-evidence.md",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "当前 diff 算得 code_fingerprint=code-a；review-evidence.json 也是 code-a。BE-1 的 fixture.sha256=fixture-a，viewport 分别为 1200x800 与 720x900，runtime 是 Chromium 130 / DPR 1 / font-a，步骤与观察覆盖空态、临时页面、复制、实时同步、关闭和焦点返回；布局检视与功能自测试要求的 fixture、viewport、runtime 和步骤逐项相同。截图 artifact 已存在。请派发并完成两份判断。",
       "expected_output": "两份检视共享新鲜 BE-1 原始事实但各自独立下结论；不得为了证明独立性重复执行相同浏览器场景，只补采证据缺口。",
       "expectations": [
@@ -200,6 +247,9 @@
       "id": 16,
       "name": "code-change-invalidates-only-dependent-browser-evidence",
       "target": "references/review-evidence.md",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "review-evidence.json 的全局 code_fingerprint=code-a。BE-1.depends_on=[Drawer.tsx,drawer.css]，捕获时两文件哈希为 d1/css1；BE-2.depends_on=[Dashboard.tsx]，捕获时哈希为 dash1。两者 fixture、viewport 与 runtime 均未变。随后 diff 只有 drawer.css: css1→css2，重新计算的全局指纹为 code-b。请更新证据状态并安排复验。",
       "expected_output": "只失效依赖 drawer.css 的 BE-1，保留 BE-2；更新代码指纹后只补跑受影响场景，不把整个证据包一律作废。",
       "expectations": [
@@ -213,6 +263,9 @@
       "id": 17,
       "name": "applicable-reviews-complete-with-limited-child-slots",
       "target": "references/phase-review-closeout.md",
+      "gates": [
+        "硬门禁 6"
+      ],
       "prompt": "最终验证组合触发了三个检视角色，分配分别是 layout=[L2,L3]、quality=[Q5,Q6]、self-test=[F2-1,F3-2]。主 agent 之外同时只有两个 agent 槽位。请安排派发。",
       "expected_output": "在同一证据纪元内先填满两个槽位，任一角色完成且 JSON 预校验通过就立即动态补位第三份；每份只覆盖分配维度，未触发的 convention 不派发。",
       "expectations": [
@@ -226,6 +279,9 @@
       "id": 18,
       "name": "repair-loop-reruns-only-invalidated-portfolio-modules",
       "target": "references/phase-review-closeout.md",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "候选组合只选了 causal、targeted-quality（drawer reducer 测试）与 self-test/F2-1，没有 regression 或全仓命令。之后发现一个阻断逻辑错误，连续两次小修才稳定，另有建议级未处理。请给出 Phase D 验证顺序。",
       "expected_output": "每轮小修只重跑依赖命中的 reducer 测试与 F2-1 场景/判断；修复未引入新风险触发器，所以不新增全量门或其他检视。阻断清零后将 F2-1 标为 PROVEN，建议级进 handoff。",
       "expectations": [
@@ -239,6 +295,9 @@
       "id": 19,
       "name": "three-line-only-closeout-fails-when-handoff-is-nonempty",
       "target": "SKILL.md",
+      "gates": [
+        "退出门禁 5"
+      ],
       "prompt": "dev-review.md 的 Handoff 清单有四行：H-1 建议级 Q1-1『抽屉组件 354 行，当前功能正确；是否另开 Story 拆分由用户决定』；H-2 建议级 C5-1『标签格式 helper 与公共实现重复，当前输出正确；是否统一由用户决定』；H-3 Open Question L3-OQ-1『720px 下若未来需要改为上下布局须补上游规格；用户已在 P7 选择本 Story 不改、后续再定』；H-4 Deferred AC-7『缺测试账号未验收；账号开通后只跑功能自测试』。主 agent 最终只准备输出 tasks.md、alpha-tests.md、dev-review.md 三行索引。请执行退出门禁。",
       "expected_output": "退出门禁失败；必须从 dev-review.md 的 Handoff 清单生成四条会话交付，逐类计数一致后才能完成。",
       "expectations": [
@@ -252,6 +311,12 @@
       "id": 20,
       "name": "claim-driven-scaling-preserves-honesty-contracts",
       "target": "SKILL.md",
+      "gates": [
+        "硬门禁 3",
+        "硬门禁 5",
+        "退出门禁 2",
+        "退出门禁 4"
+      ],
       "prompt": "一个只修改私有纯函数的 Story 希望降低文档、检视和验证成本。请说明哪些可以根据风险裁掉，哪些声明诚信约束仍不得缩减；Phase D 又改了该函数时如何处理。",
       "expected_output": "可以省略不适用 R/F 表、浏览器场景、全仓命令与所有未触发检视；但声明的来源、状态、证据新鲜度与确证缺陷必须真实。Phase D 只失效该函数依赖的 causal/targeted-quality 证据，不因全局指纹变化自动扩大组合。",
       "expectations": [
@@ -307,6 +372,9 @@
       "id": 24,
       "name": "lite-code-recon-uses-unique-existing-patterns",
       "target": "references/phase-spec.md",
+      "gates": [
+        "硬门禁 13"
+      ],
       "prompt": "一个 Story 只改现有页面的两个私有文件，tasks 文件清单完整。Requirement 明确沿用仓库默认，工程需要是状态持久化与样式 token，并显式给出 PATTERN-STATE-1、PATTERN-TOKEN-1。REPO-3 当前，两张范式卡的证据和 locator 仍存在，未命中 shared-boundary、new-pattern、spec-gap 或 unknown-deps。请完成代码侧勘察。",
       "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确读取并机械核验证据，不派 recon-codebase；仍写同结构工程依据、完整 REPO-3 指纹与 telemetry。",
       "expectations": [
@@ -321,6 +389,9 @@
       "id": 25,
       "name": "lite-code-recon-falls-back-on-ambiguity-or-public-boundary",
       "target": "references/phase-spec.md",
+      "gates": [
+        "硬门禁 13"
+      ],
       "prompt": "一个 Story 要修改公共 Drawer 组件，同时 persistence tag 在 REPO-3 命中两个 PATTERN。另一个变体基线源为参照页，需要找候选路由。请决定代码侧勘察模式与失败处理。",
       "expected_output": "两种情况都不得 lite：公共边界、tag 多结果和参照页任一项都强制 full；派 recon-codebase 完整勘察并记录回退原因，不猜选 PATTERN，也不把回退当流程失败。",
       "expectations": [
@@ -347,6 +418,9 @@
       "id": 27,
       "name": "phase-b-browser-facts-stay-fresh-without-rerun",
       "target": "scripts/manage_review_pipeline.py",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "Phase B Step ④ 已在 /drawer、fixture=temp-page、1200px 与 720px 下采集加载、复制、焦点返回和实时同步原始事实，并已带 source: \"phase-b\" 入包，记录了 runtime 与每个 depends_on 文件哈希。Phase C 执行已选命令后只改了一个与这些页面无关的测试说明文件，全局 code_fingerprint 已变化；浏览器、fixture、步骤和依赖文件内容均未变。请建立共享证据。",
       "expected_output": "不带 --add 跑一次 scenarios 做纯新鲜度核对：逐文件依赖与 runtime 都未变，四条场景回报 fresh，一条不重采、包内容不被改写；随后只规划仍未覆盖的缺口。",
       "expectations": [
@@ -360,6 +434,9 @@
       "id": 28,
       "name": "phase-b-promotion-invalidates-only-dependent-scenario",
       "target": "references/review-evidence.md",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "Phase B 有三个可提升场景：BE 候选 A 依赖 src/a.tsx，B 依赖 src/b.tsx，C 依赖共享 theme.css。Phase C 前只修改 src/a.tsx；runtime、fixture 与其他文件都未变。请说明提升与补采计划。",
       "expected_output": "只把 A 判 stale 并补采；B 与 C 的捕获依赖哈希仍匹配，直接提升/复用。不得把整个 Phase B 证据文件或同页面其他场景一起作废。",
       "expectations": [
@@ -373,6 +450,9 @@
       "id": 29,
       "name": "slots-refill-applicable-reviews-without-judgment-leakage",
       "target": "references/phase-review-closeout.md",
+      "gates": [
+        "硬门禁 6"
+      ],
       "prompt": "主 agent 之外只有 2 个子代理槽位，Phase C 有三份适用检视。前两份在 t=0 启动；代码规范检视在 t=3 完成，另一份要到 t=8 才完成。请调度第三份并说明它能收到什么。",
       "expected_output": "t=3 一旦规范检视 JSON 通过预校验，就立即用释放槽位启动第三份，不等到 t=8；后启动角色继续使用同一 evidence_epoch 与代码指纹，只收到共享原始证据与自己的分配维度，不收到已完成检视的判断。",
       "expectations": [
@@ -386,6 +466,11 @@
       "id": 30,
       "name": "review-json-contract-distinguishes-invalid-coverage-from-honest-nonexecution",
       "target": "references/review-result-contract.md",
+      "gates": [
+        "硬门禁 5",
+        "硬门禁 6",
+        "退出门禁 2"
+      ],
       "prompt": "validation_portfolio 给 review-quality 分配 [Q5,Q6]。该角色返回一份带 Markdown 标题的报告；另一变体返回 JSON，但 evidence_epoch 与其他适用角色不同，并只有 Q5；第三变体返回 Q5/Q6/Q8；第四变体因依赖的运行环境在派发后失效，返回 status=unexecuted、空 coverage 和具体 known_gaps。请汇总。",
       "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。",
       "expectations": [
@@ -400,6 +485,10 @@
       "id": 31,
       "name": "deterministic-review-aggregation-and-zero-findings-fast-path",
       "target": "scripts/manage_review_pipeline.py",
+      "gates": [
+        "退出门禁 4",
+        "退出门禁 5"
+      ],
       "prompt": "三份适用 JSON 同纪元同指纹：规范与质量用相同 canonical_key 报了同一问题，前者 suggestion、后者 blocker；另有 1 条建议、1 个 Open Question、1 个 Deferred 候选。再分别考虑三个变体：A 三份均无发现；B 相同 canonical_key 的两条 finding 具有不同 user_visible_text 与 location；C 验证组合没有触发任何检视角色。请生成 dev-review 与 handoff。",
       "expected_output": "主场景对同 key 去重取 blocker、合并来源与证据，Handoff 三类计数精确；A 生成紧凑覆盖、空 Handoff 与收口占位；B 因核心文本冲突拒绝静默聚合，交主 agent 基于原始证据消歧。",
       "expectations": [
@@ -413,6 +502,9 @@
       "id": 32,
       "name": "same-task-restore-and-logic-use-two-channel-waves",
       "target": "references/phase-implementation.md",
+      "gates": [
+        "退出门禁 1"
+      ],
       "prompt": "T3 同时含还原轮与逻辑轮。QA、契约和测试入口都已冻结；还原契约会因抽屉缺失得到明确 RED，逻辑测试能直接调用 reducer 并因状态迁移缺失得到独立 RED，两边由同一组 Drawer.tsx/useDrawer.ts 改动共同满足，没有 YELLOW、外部状态或待决策项。请执行 T3。",
       "expected_output": "走双通道快路径：先分别取得并核验两个 RED，再做一次最小产品实现，分别验证契约与逻辑测试 GREEN，最后只重构一次并按依赖复验；两轮 6 步、证据编号、checkbox 与 AC 映射仍独立。",
       "expectations": [
@@ -441,6 +533,9 @@
       "id": 34,
       "name": "freshness-key-invalidates-only-on-in-scope-change",
       "target": "references/phase-implementation.md",
+      "gates": [
+        "退出门禁 1"
+      ],
       "prompt": "一次定向检查在 scope=packages/a、固定命令和 Node/pnpm 版本、代码指纹 a1 下同时被 T1、T2 的 Step ④ 引用。随后只改 packages/b/readme.md；另一个变体改了 packages/a/src/t2.ts。再考虑 T3 会修改公共 Drawer API，也想引用同一次执行。请分别安排。",
       "expected_output": "packages/b 的 scope 外变化不改变 scope 内代码指纹，两条引用继续有效；packages/a/src/t2.ts 变化让键失效，需要重跑一次并让引用它的 Step ④ 恢复未完成。T3 改公共 API，必须自己跑一次，不能靠旧执行背书。",
       "expectations": [
@@ -454,6 +549,11 @@
       "id": 35,
       "name": "single-private-logic-claim-keeps-causal-proof-without-fixed-full-gate",
       "target": "references/phase-implementation.md",
+      "gates": [
+        "硬门禁 3",
+        "硬门禁 4",
+        "硬门禁 15"
+      ],
       "prompt": "只有一个逻辑 Task，改一个私有纯函数和一个 20 行测试；没有还原轮、路由、公共边界、副作用或不明依赖。请给出最短合法验证路径。",
       "expected_output": "只走一轮逻辑 6 步，用该声明的 causal RED/GREEN 证据闭环；最终组合可只含 causal 与覆盖该文件的最窄 targeted-quality。不派浏览器、回归或独立检视，也不固定跑 REPO-2 全部命令。",
       "expectations": [
@@ -468,6 +568,9 @@
       "id": 36,
       "name": "two-channel-fast-path-falls-back-when-logic-red-is-structural",
       "target": "references/phase-implementation.md",
+      "gates": [
+        "硬门禁 11"
+      ],
       "prompt": "T4 同时含还原与逻辑：还原契约明确 RED；逻辑测试通过点击尚未存在的按钮验证提交行为，当前失败原因只是找不到按钮。另有一条 visual YELLOW 等待截图补证。为了省时间，是否可以把两个 RED 一起收集后共同实现？",
       "expected_output": "不能走双通道：逻辑 RED 不是独立行为失败，且还原侧存在 YELLOW。先补证并按默认顺序完成还原轮，再让逻辑测试以预期行为原因 RED，之后完成逻辑轮。",
       "expectations": [
@@ -482,6 +585,10 @@
       "id": 37,
       "name": "browser-portfolio-is-compiled-from-claims-before-execution",
       "target": "references/phase-implementation.md",
+      "gates": [
+        "硬门禁 3",
+        "硬门禁 15"
+      ],
       "prompt": "T1 的候选状态有空态、1/4/5 行、Enter、Shift+Enter、IME、停止与错误态，候选视口是 1440/1280/900。但最终 diff 只改了 IME 输入组合与错误态；基线只有 F2-3、F3-2 与 R6-1(900px) 相关，其他候选未被 AC、设计输入或风险命中。页面、fixture、runtime 与 reset 相同。请安排浏览器验证。",
       "expected_output": "先从声明与风险编译只含 IME、错误态与 900px 的验证组合，不扩成全候选矩阵；再按共同边界一次连接并逐场景记录原始事实。",
       "expectations": [
@@ -496,6 +603,9 @@
       "id": 38,
       "name": "browser-scenarios-rerun-only-when-their-own-deps-change",
       "target": "references/review-evidence.md",
+      "gates": [
+        "退出门禁 3"
+      ],
       "prompt": "review-evidence.json 里有三条 source: \"phase-b\" 的浏览器场景：A 的 depends_on 含 view.tsx，B 含 style.css，C 含 errors.ts。三条都已采集。修复后只改 view.tsx，现在进 Phase C 补采。",
       "expected_output": "只有 A 的 depends_on 逐文件哈希变化，标 stale 并重采；B/C 的 runtime 键与哈希未变，继续有效。补采只连接一次，只跑 A。",
       "expectations": [
@@ -509,6 +619,11 @@
       "id": 39,
       "name": "shared-evidence-rejects-summary-only-success",
       "target": "references/review-evidence.md",
+      "gates": [
+        "硬门禁 5",
+        "硬门禁 12",
+        "退出门禁 1"
+      ],
       "prompt": "两条浏览器场景各含两条待观察事实。执行者只回传「整体 pass」和一张截图，没有逐条原始观察；另一个变体漏掉其中一条事实。请落账。",
       "expected_output": "两种写法都不合格：每条场景必须逐事实留原始观察与非空取证出处，browser_calls 必须大于 0；缺项的场景保持未采集，引用它的 Step ④ 不算完成。",
       "expectations": [

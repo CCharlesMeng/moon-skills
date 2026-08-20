@@ -856,6 +856,73 @@ function checkFrontendScriptOwners(files) {
   }
 }
 
+// 22 条门禁全是散文，脚本一条都不引用，所以「门禁被遵守了吗」本来无法机械测量。
+// evals.json 的 gates 字段建立这条链接：每条门禁至少要有一条情景题断言它。
+// KNOWN_UNCOVERED 是棘轮——只许变短。补了用例就从这里删掉，想加进来必须先说明
+// 为什么这条门禁不值得测（那通常意味着它不该占一个编号）。
+const KNOWN_UNCOVERED_GATES = new Map([
+  ["硬门禁 1", "执行清单存在：缺 tasks.md 的两条分支（Phase 0 起草 / 回 sdd-task）没有情景题"],
+  ["硬门禁 9", "原型隔离：谁可以读原型源码，无用例；ADR-0003 记的上下文爆掉就是这条失守"],
+  ["硬门禁 14", "抽取缺口先登记：extract_design_spec 退出码 4 的登记—确认—重跑回路无用例"],
+  ["硬门禁 16", "工具缺口不变豁免：退出码 5 无用例，而它是热路径唯一按编号被引用的门禁"],
+]);
+
+function checkFrontendGateCoverage() {
+  const skillPath = join(SKILLS_DIR, "sdd-dev-frontend", "SKILL.md");
+  const skill = readFileSync(skillPath, "utf-8");
+
+  const hard = [...skill.matchAll(/^(\d+)\.\s+\*\*/gm)].map((m) => `硬门禁 ${m[1]}`);
+  const exitSection = skill.split("## 退出门禁")[1]?.split("\n## ")[0] ?? "";
+  const exits = [...exitSection.matchAll(/^\|\s*(\d)\s*\|/gm)].map((m) => `退出门禁 ${m[1]}`);
+  const gates = [...hard, ...exits];
+
+  if (hard.length === 0 || exits.length === 0) {
+    report("fail", "fe-gate-coverage", "无法从 SKILL.md 解析出门禁清单，检查两节的结构");
+    return;
+  }
+
+  const evalsPath = join(SKILLS_DIR, "sdd-dev-frontend", "evals", "evals.json");
+  const cases = JSON.parse(readFileSync(evalsPath, "utf-8")).evals ?? [];
+  const covered = new Set(cases.flatMap((c) => c.gates ?? []));
+
+  let failed = 0;
+  for (const gate of gates) {
+    if (covered.has(gate)) continue;
+    if (KNOWN_UNCOVERED_GATES.has(gate)) continue;
+    report(
+      "fail",
+      "fe-gate-coverage",
+      `${gate} 没有任何 evals 用例断言它 — 补一条情景题并标 gates，` +
+        `或判定它不值得占一个编号、降级成所在章节的散文`
+    );
+    failed++;
+  }
+
+  // 棘轮反向：已经补上用例的门禁必须从豁免表里删掉，否则豁免表会变成摆设。
+  for (const [gate, why] of KNOWN_UNCOVERED_GATES) {
+    if (!gates.includes(gate)) {
+      report("fail", "fe-gate-coverage", `KNOWN_UNCOVERED 里的 ${gate} 已不存在，删掉这条`);
+      failed++;
+    } else if (covered.has(gate)) {
+      report(
+        "fail",
+        "fe-gate-coverage",
+        `${gate} 已有用例覆盖（${why}），把它从 KNOWN_UNCOVERED 删掉`
+      );
+      failed++;
+    }
+  }
+
+  if (failed === 0) {
+    report(
+      "pass",
+      "fe-gate-coverage",
+      `${covered.size}/${gates.length} gates covered by evals, ` +
+        `${KNOWN_UNCOVERED_GATES.size} known-uncovered`
+    );
+  }
+}
+
 // 注册表指向一份已删除的文件时，fe-link 抓不到（写成行内 code 而不是链接），
 // 而 fe-id-prefix 现读这张表，等于把一个已下线的前缀继续算作已批准。
 function checkFrontendRegistryTargets() {
@@ -904,6 +971,7 @@ function checkFrontendChain() {
   checkFrontendScriptPaths(files);
   checkFrontendScriptOwners(files);
   checkFrontendRegistryTargets();
+  checkFrontendGateCoverage();
 }
 
 // ── Run all checks ─────────────────────────────────────────────────
