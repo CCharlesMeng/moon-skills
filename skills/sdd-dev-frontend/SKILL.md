@@ -74,6 +74,7 @@ disable-model-invocation: true
 | `<design-spec-dir>` | `<requirement-dir>/design-spec/` |
 | `<skill-dir>` | 本 skill 目录 |
 | `<init-skill-dir>` | `<skill-dir>/../sdd-init-frontend/` |
+| `<review-pack-dir>` | `<skill-dir>/../sdd-review-frontend/` |
 | `<base-ref>` | 可选 Story 起点 git 引用 |
 | `<browser-driver>` | 被选浏览器能力及已验证启动方式 |
 | `<review-evidence>` | `<story-dir>/review-evidence.json` |
@@ -98,7 +99,7 @@ disable-model-invocation: true
 | 规格 / 代码勘察 | `recon-spec` / 风险触发时的 `recon-codebase` |
 | 独立检视 | 只派验证组合选中的 `review-layout`、`review-convention`、`review-quality`、`self-test` |
 
-Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的原始事实，但按 [review-dimensions.md](./references/review-dimensions.md) 独立判断，并以 [review-result-contract.md](./references/review-result-contract.md) 的裸 JSON 回传。并发槽位不足时完成一份立即补派下一份，不等待整波。
+Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的原始事实；检查项、定级与回传契约都不在本 Skill，按 [review-pack-adapter.md](./references/review-pack-adapter.md) 读 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
 
 ## 工件管理
 

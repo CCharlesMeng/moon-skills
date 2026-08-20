@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Frontend Review"
+  short_description: "按 restore / layout / convention / quality / test 五格独立检视前端改动"
+  default_prompt: "Use $sdd-review-frontend to review this frontend diff against the applicable lenses."

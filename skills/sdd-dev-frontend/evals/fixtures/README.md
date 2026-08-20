@@ -59,7 +59,7 @@ python3 setup.py --case convention-01
 
 一个新增「客户风险简报」面板的 Story，改动 4 个文件，里面预埋了 14 条应当被报出的缺陷、6 条不得报出的诱饵。答案在 [`cases/convention-01/ground-truth.md`](./cases/convention-01/ground-truth.md)，四项分（命中率 / 误报率 / 级别正确率 / 格式合规）的算法也在那里。
 
-**派发子代理时不要把 ground truth 给它。** 给它的是提示词正文 + `setup.py` 打印的取值表。正常回传必须是 `review-result-contract.md` 的裸 JSON；ground truth 的格式分按 coverage / findings / OQ / gaps 字段判，不再按 Markdown 小节判。
+**派发子代理时不要把 ground truth 给它。** 给它的是提示词正文 + `setup.py` 打印的取值表。正常回传必须是 `sdd-review-frontend/references/role-result.md` 的裸 JSON；ground truth 的格式分按 coverage / findings / OQ / gaps 字段判，不再按 Markdown 小节判。
 
 诱饵是有意设计的，专挑三类容易判错的情形：仓内没有对应 token 的字面量（不得判阻断）、没有基线行覆盖的范式偏离（不得升级）、以及本 Story 未改动过的历史违规（不得报）。
 

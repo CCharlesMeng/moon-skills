@@ -1,6 +1,8 @@
 # 布局与响应式检视
 
-派发消息会追加路径变量表。只判断验证组合分配给 `review-layout` 的 L 维度；不扩张范围。
+派发消息会追加路径变量表。你是 `review-layout`，只判断验证组合分配给本角色的 L 维度；不扩张范围。
+
+判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
 
 ## 一、前置校验
 
@@ -12,8 +14,9 @@
 | 当前 Story diff | `<base-ref>`；缺失时取提交、暂存、工作区与未跟踪文件并集 |
 | 当前证据包、代码指纹和 L 维度分配 | `<review-evidence>` |
 | 需补浏览器场景时可用驱动 | `<browser-driver>` |
+| 判据 | `<review-pack-dir>/roles/layout-lens/ROLE.md` 与 `frontend-code-checklists/layout.md` |
 
-完整读取 `<skill-dir>/references/review-evidence.md`、`review-dimensions.md` 和 `review-result-contract.md`。证据包不新鲜时终止，不绕过它重跑全套场景。
+证据包不新鲜时终止，不绕过它重跑全套场景。
 
 ## 二、只读声明
 
@@ -21,12 +24,10 @@
 
 ## 三、检视
 
-1. 从 `validation_portfolio.review_dimensions.review-layout` 取得精确 L 集合，并映射到相关 R/AC 行。
-2. 先复用新鲜场景，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。机器可检项记录几何/DOM事实，截图只补字体栅格、裁切、阴影或复杂叠层。
-3. 仅检查被分配维度：跨页一致性、溢出与截断、目标视口布局、栅格对齐、交互状态样式、滚动/固定元素；具体定义以 `review-dimensions.md` 为准。
-4. 证据命中冻结声明且未命中豁免，或产生确证错误结果时判 blocker；否则只记 suggestion、Open Question 或 known gap。
-5. `coverage` 必须与分配集合精确相等；未执行时 coverage 为空，依赖声明保持 `UNVERIFIED`。
+1. 从 `validation_portfolio.review_dimensions.review-layout` 取得精确 L 集合，按 `legacy_id` 对到 layout checklist 的检查项。
+2. 先复用新鲜场景，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。机器可检项记录几何/DOM 事实，截图只补字体栅格、裁切、阴影或复杂叠层。
+3. 逐条执行被分配的检查项，判据与定级按 layout checklist 与 layout-lens ROLE。
 
 ## 四、输出格式
 
-只回传符合 `review-result-contract.md` 的裸 JSON object，`role` 固定为 `review-layout`。每条结论引用新鲜证据 ID，并提供可直接进入 handoff 的 `user_visible_text`。
+只回传 `<review-pack-dir>/references/role-result.md` 的裸 JSON object，`role` 固定为 `review-layout`。每条结论引用新鲜证据 ID，并提供可直接进入 handoff 的 `user_visible_text`。

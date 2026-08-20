@@ -465,17 +465,18 @@
     {
       "id": 30,
       "name": "review-json-contract-distinguishes-invalid-coverage-from-honest-nonexecution",
-      "target": "references/review-result-contract.md",
+      "target": "../sdd-review-frontend/references/role-result.md",
       "gates": [
         "硬门禁 5",
         "硬门禁 6",
         "退出门禁 2"
       ],
-      "prompt": "validation_portfolio 给 review-quality 分配 [Q5,Q6]。该角色返回一份带 Markdown 标题的报告；另一变体返回 JSON，但 evidence_epoch 与其他适用角色不同，并只有 Q5；第三变体返回 Q5/Q6/Q8；第四变体因依赖的运行环境在派发后失效，返回 status=unexecuted、空 coverage 和具体 known_gaps。请汇总。",
-      "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。",
+      "prompt": "validation_portfolio 给 review-quality 分配 [Q5,Q6]。该角色返回一份带 Markdown 标题的报告；另一变体返回 JSON，但 evidence_epoch 与其他适用角色不同，并只有 Q5；第三变体返回 Q5/Q6/Q8；第四变体因依赖的运行环境在派发后失效，返回 status=unexecuted、空 coverage 和具体 known_gaps；第五变体只 coverage Q5，Q6 进 skipped 并引用 skip_when 说明 diff 未触碰该面。请汇总。",
+      "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 与 skipped 合起来恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。第五个变体可聚合，Q6 进 dev-review.md 的「判定不适用」节。",
       "expectations": [
         "正常检视不接受 Markdown fence、标题或第二份正文，只接受 schema v1 JSON object",
-        "status=executed 时 coverage 集合必须恰好等于 review_dimensions 分配集；少 Q6 或多 Q8 都不合格",
+        "status=executed 时 coverage ∪ skipped 必须恰好等于 review_dimensions 分配集；少 Q6 或多 Q8 都不合格",
+        "带 reason 的 skipped 可以顶替 coverage 满足分配集，但无 reason、或同一维度既 coverage 又 skipped 时拒绝聚合",
         "evidence_epoch 或 code_fingerprint 不一致时拒绝把新旧判断拼接",
         "只重跑失败角色一次，主 agent 不编造缺失 coverage 或 finding",
         "派发后前置失效可返回 unexecuted：coverage 必须为空、known_gaps 必须具体，原分配维度对应声明保持 UNVERIFIED"

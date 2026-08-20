@@ -243,6 +243,7 @@ def main() -> int:
     print(f"| `<repo-baseline-dir>` | `{baseline_dir}` |")
     print(f"| `<story-dir>` | `{story_dir}` |")
     print(f"| `<skill-dir>` | `{SKILL_DIR}` |")
+    print(f"| `<review-pack-dir>` | `{SKILL_DIR.parent / 'sdd-review-frontend'}` |")
     print(f"| `<base-ref>` | `{base_ref}` |")
     print(f"| `<review-evidence>` | `{review_evidence}` |")
     print("| `evidence_epoch` | `fixture-review-1` |")

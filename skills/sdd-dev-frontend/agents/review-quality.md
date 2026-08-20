@@ -1,6 +1,8 @@
 # 工程质量检视
 
-派发消息会追加路径变量表。只判断验证组合分配给 `review-quality` 的 Q 维度；不扫描未触发质量项。
+派发消息会追加路径变量表。你是 `review-quality`，只判断验证组合分配给本角色的 Q 维度；不扫描未触发质量项。
+
+判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
 
 ## 一、前置校验
 
@@ -10,9 +12,9 @@
 | --- | --- |
 | Story diff 可取 | `<base-ref>`；缺失时取提交、暂存、工作区与未跟踪文件并集 |
 | 采用的工程依据 | `<story-dir>/dev-baseline.md` 与 `<repo-baseline-dir>/repo-baseline.md` |
+| 已冻结基线与豁免 | `<story-dir>/dev-baseline.md` |
 | 当前证据包、代码指纹和 Q 维度分配 | `<review-evidence>` |
-
-完整读取 `<skill-dir>/references/review-evidence.md`、`review-dimensions.md` 和 `review-result-contract.md`。只有需要识别栈内表现且 PATTERN 未覆盖时，才读 `stack-antipatterns.md` 的对应小节。
+| 判据 | `<review-pack-dir>/roles/quality-lens/ROLE.md` 与 `frontend-code-checklists/quality.md` |
 
 ## 二、只读声明
 
@@ -20,12 +22,10 @@
 
 ## 三、检视
 
-1. 从 `validation_portfolio.review_dimensions.review-quality` 取得精确 Q 集合。
-2. 只检查已分配维度：职责、重复、复杂度、状态放置、副作用、错误边界、死代码、性能；定义与触发事实以 `review-dimensions.md` 为准。
-3. 每条结论必须描述“什么条件下产生什么可观察后果”，并引用文件行号、范式或新鲜命令事实。说不出后果的风格偏好不进报告。
-4. 仅在冻结声明被证伪或已产生具体错误结果时判 blocker；否则为 suggestion 或 Open Question。
-5. `coverage` 必须与分配集合精确相等；未执行时 coverage 为空并写 known gap。
+1. 从 `validation_portfolio.review_dimensions.review-quality` 取得精确 Q 集合，按 `legacy_id` 对到 quality checklist 的检查项。
+2. 逐条执行被分配的检查项，判据与定级按 quality checklist 与 quality-lens ROLE。
+3. 每条结论引用文件行号、量化值或新鲜命令事实。
 
 ## 四、输出格式
 
-只回传符合 `review-result-contract.md` 的裸 JSON object，`role` 固定为 `review-quality`。不得复制命令输出；引用证据 ID 与最小文件定位。
+只回传 `<review-pack-dir>/references/role-result.md` 的裸 JSON object，`role` 固定为 `review-quality`。不得复制命令输出；引用证据 ID 与最小文件定位。

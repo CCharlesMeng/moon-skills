@@ -203,7 +203,10 @@ class AggregateTests(unittest.TestCase):
             "evidence_ids": ["BE-1"],
         }]
         aggregate = MODULE.aggregate_results(results)
-        self.assertEqual(aggregate["counts"], {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "handoff": 3})
+        self.assertEqual(
+            aggregate["counts"],
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "handoff": 3, "skipped": 0},
+        )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
         self.assertEqual(len(aggregate["handoff"]), 3)
@@ -269,6 +272,46 @@ class AggregateTests(unittest.TestCase):
                 expected_roles=["review-layout"],
                 expected_dimensions={"review-layout": ["L9"]},
             )
+
+    def test_skipped_dimension_satisfies_assignment_and_reaches_the_report(self):
+        result = review("review-layout", ["L2"])
+        result["skipped"] = [{"dimension": "L3", "reason": "无 sticky / fixed 改动，命中 skip_when"}]
+        aggregate = MODULE.aggregate_results(
+            [result],
+            expected_roles=["review-layout"],
+            expected_dimensions={"review-layout": ["L2", "L3"]},
+        )
+        self.assertEqual(aggregate["counts"]["skipped"], 1)
+        markdown = MODULE.render_markdown(aggregate)
+        self.assertIn("## 判定不适用", markdown)
+        self.assertIn("命中 skip_when", markdown)
+        self.assertIn("判定不适用 1 条", markdown)
+
+    def test_skipped_cannot_replace_a_reason_or_double_count_a_dimension(self):
+        silent = review("review-layout", ["L2"])
+        silent["skipped"] = [{"dimension": "L3"}]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, r"skipped\[0\].reason"):
+            MODULE.aggregate_results([silent], expected_roles=["review-layout"])
+
+        both = review("review-layout", ["L2", "L3"])
+        both["skipped"] = [{"dimension": "L3", "reason": "命中 skip_when"}]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "both covered and skipped"):
+            MODULE.aggregate_results([both], expected_roles=["review-layout"])
+
+        unassigned = review("review-layout", ["L2"])
+        unassigned["skipped"] = [{"dimension": "L4", "reason": "命中 skip_when"}]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "coverage mismatch"):
+            MODULE.aggregate_results(
+                [unassigned],
+                expected_roles=["review-layout"],
+                expected_dimensions={"review-layout": ["L2", "L3"]},
+            )
+
+    def test_unexecuted_role_cannot_smuggle_skipped_dimensions(self):
+        result = review("review-layout", ["L2"], status="unexecuted")
+        result["skipped"] = [{"dimension": "L2", "reason": "命中 skip_when"}]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "only explain known_gaps"):
+            MODULE.aggregate_results([result], expected_roles=["review-layout"])
 
     def test_raw_reviewer_addition_is_merged_and_references_are_rewritten(self):
         results = self.base_results()

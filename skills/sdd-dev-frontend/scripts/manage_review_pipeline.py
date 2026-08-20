@@ -329,6 +329,7 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
     if status not in {"executed", "not_applicable", "unexecuted"}:
         raise ReviewPipelineError(f"{role}.status is invalid")
     coverage = require_list(result.get("coverage"), f"{role}.coverage")
+    skipped = require_list(result.get("skipped", []), f"{role}.skipped")
     findings = require_list(result.get("findings"), f"{role}.findings")
     questions = require_list(result.get("open_questions"), f"{role}.open_questions")
     deferred = require_list(result.get("deferred_candidates"), f"{role}.deferred_candidates")
@@ -339,7 +340,7 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
         validate_evidence_addition(addition, f"{role}.evidence_added[{index}]")
     if status != "executed":
         if (
-            coverage or findings or questions or deferred
+            coverage or skipped or findings or questions or deferred
             or evidence_reused or evidence_added or not gaps
         ):
             raise ReviewPipelineError(f"{role} non-executed result must only explain known_gaps")
@@ -359,7 +360,24 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
     if role in ROLE_DIMENSIONS and not dimensions <= ROLE_DIMENSIONS[role]:
         extra = sorted(dimensions - ROLE_DIMENSIONS[role])
         raise ReviewPipelineError(f"{role} coverage contains unknown dimensions: {extra}")
-    if role == "self-test" and not dimensions:
+
+    # A dimension that hits skip_when was looked at and ruled out; that is a
+    # different fact from `unrun`, and the human needs to see it. It still has
+    # to be one of the assigned dimensions, and it cannot also claim coverage.
+    skipped_dimensions: set[str] = set()
+    for index, raw_skip in enumerate(skipped):
+        item = require_dict(raw_skip, f"{role}.skipped[{index}]")
+        dimension = require_text(item.get("dimension"), f"{role}.skipped[{index}].dimension")
+        require_text(item.get("reason"), f"{role}.skipped[{index}].reason")
+        if dimension in skipped_dimensions:
+            raise ReviewPipelineError(f"duplicate skipped dimension {role}:{dimension}")
+        if dimension in dimensions:
+            raise ReviewPipelineError(f"{role} reports {dimension} as both covered and skipped")
+        skipped_dimensions.add(dimension)
+    if role in ROLE_DIMENSIONS and not skipped_dimensions <= ROLE_DIMENSIONS[role]:
+        extra = sorted(skipped_dimensions - ROLE_DIMENSIONS[role])
+        raise ReviewPipelineError(f"{role} skipped contains unknown dimensions: {extra}")
+    if role == "self-test" and not dimensions and not skipped_dimensions:
         raise ReviewPipelineError("self-test executed result must cover assigned claim dimensions")
 
     ids: set[str] = set()
@@ -547,14 +565,15 @@ def aggregate_results(
                     f"{role} assignment contains unknown dimensions: {extra}"
                 )
             actual = {item["dimension"] for item in by_role[role]["coverage"]}
+            skipped = {item["dimension"] for item in by_role[role].get("skipped", [])}
             # A selected review can still fail its execution precondition after
             # dispatch. Keep the assignment for claim-to-gap mapping, but accept
             # the honest non-executed result instead of demanding fake coverage.
             if by_role[role]["status"] != "executed":
                 continue
-            if actual != assigned:
-                missing = sorted(assigned - actual)
-                extra = sorted(actual - assigned)
+            if actual | skipped != assigned:
+                missing = sorted(assigned - actual - skipped)
+                extra = sorted((actual | skipped) - assigned)
                 raise ReviewPipelineError(
                     f"{role} coverage mismatch; missing={missing}, extra={extra}"
                 )
@@ -604,6 +623,7 @@ def aggregate_results(
         "roles": {role: by_role[role]["status"] for role in expected},
         "known_gaps": {role: by_role[role]["known_gaps"] for role in expected},
         "coverage": {role: by_role[role]["coverage"] for role in expected},
+        "skipped": {role: by_role[role].get("skipped", []) for role in expected},
         "findings": findings,
         "open_questions": questions,
         "deferred_candidates": deferred,
@@ -614,6 +634,7 @@ def aggregate_results(
             "open_question": len(questions),
             "deferred": len(deferred),
             "handoff": len(handoff),
+            "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
         },
     }
 
@@ -657,7 +678,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     lines = [
         "# Dev Review", "",
         "## 给人的摘要", "",
-        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，Open Question {counts['open_question']} 条，Deferred 候选 {counts['deferred']} 条。",
+        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，Open Question {counts['open_question']} 条，Deferred 候选 {counts['deferred']} 条，判定不适用 {counts.get('skipped', 0)} 条。",
         "## 检视基准", "",
         f"- evidence epoch: `{aggregate['evidence_epoch']}`", f"- code fingerprint: `{aggregate['code_fingerprint']}`",
     ]
@@ -684,6 +705,14 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         for row in rows:
             coverage_rows.append({"role": role, **row})
     lines += markdown_table(coverage_rows, [("角色", "role"), ("维度", "dimension"), ("范围", "scope"), ("证据", "evidence_ids"), ("结果", "result")])
+    skipped_rows = [
+        {"role": role, **row}
+        for role, rows in aggregate.get("skipped", {}).items()
+        for row in rows
+    ]
+    if skipped_rows:
+        lines += ["", "## 判定不适用", ""]
+        lines += markdown_table(skipped_rows, [("角色", "role"), ("维度", "dimension"), ("理由", "reason")])
     blockers = [item for item in aggregate["findings"] if item["level"] == "blocker"]
     suggestions = [item for item in aggregate["findings"] if item["level"] == "suggestion"]
     for title, items in (("阻断级", blockers), ("建议级", suggestions)):

@@ -483,6 +483,7 @@ const FRONTEND_ROOTS = [
   join(SKILLS_DIR, "sdd-dev-frontend"),
   join(SKILLS_DIR, "sdd-init-frontend"),
   join(SKILLS_DIR, "sdd-task-frontend"),
+  join(SKILLS_DIR, "sdd-review-frontend"),
   join(ROOT, "docs", "skills", "frontend-sdd"),
 ];
 
@@ -675,8 +676,8 @@ function checkFrontendGateNumbers(files) {
 const ID_COLUMN_HEADERS = ["#", "ID", "编号"];
 
 // A row names a dimension only when its table declares an id column and a
-// 「维度」column. Tables like stack-antipatterns' `| 维度 | 具体表现 |` put the
-// id itself under 「维度」and must not be read as name declarations.
+// 「维度」column. Tables shaped `| 维度 | 具体表现 |` put the id itself under
+// 「维度」and must not be read as name declarations.
 function dimensionNamesInTables(content) {
   const found = [];
   const lines = content.split("\n");

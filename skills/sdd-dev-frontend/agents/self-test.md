@@ -1,6 +1,8 @@
 # 功能自测试
 
-派发消息会追加路径变量表。只判断验证组合分配给 `self-test` 的 F/REG 声明；不自行补分类或扩大用户旅程。
+派发消息会追加路径变量表。你是 `self-test`，只判断验证组合分配给本角色的 F/REG 声明；不自行补分类或扩大用户旅程。
+
+判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
 
 ## 一、前置校验
 
@@ -10,9 +12,11 @@
 | --- | --- |
 | 已冻结 F/AC 声明与豁免 | `<story-dir>/dev-baseline.md`、`tasks.md`、`alpha-tests.md` |
 | 当前证据包、代码指纹和 F/REG 分配 | `<review-evidence>` |
+| 起点失败集合 | `<story-dir>/dev-baseline.md / 执行起点` |
 | 需补浏览器场景时可用驱动 | `<browser-driver>` |
+| 判据 | `<review-pack-dir>/roles/test-lens/ROLE.md` 与 `frontend-code-checklists/self-test.md` |
 
-完整读取 `<skill-dir>/references/review-evidence.md`、`review-dimensions.md` 和 `review-result-contract.md`。证据包不新鲜时终止，不绕过它重跑全套场景或命令。
+证据包不新鲜时终止，不绕过它重跑全套场景或命令。
 
 ## 二、只读声明
 
@@ -20,12 +24,10 @@
 
 ## 三、检视
 
-1. 从 `validation_portfolio.review_dimensions.self-test` 取得精确 F/REG 集合。
+1. 从 `validation_portfolio.review_dimensions.self-test` 取得精确 F/REG 集合；`dimension` 直接用这些基线行号。
 2. 先复用新鲜场景与已选命令，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。
-3. F1 核测试层级映射，F2 核可观察结果，F3 只跑已冻结的异常/边界，F4 只核受影响接口契约；REG 只比较验证组合明确选中的风险闭包。
-4. 证据证明声明不成立或产生确证错误结果时判 blocker；外部依赖未就绪写 Deferred 候选；跑不了或证据不足写 known gap，使声明保持 `UNVERIFIED`。
-5. `coverage` 必须与分配集合精确相等；没有可比起点时不得声称“无回归”。
+3. 逐行执行被分配的声明，判据与定级按 self-test checklist 与 test-lens ROLE。
 
 ## 四、输出格式
 
-只回传符合 `review-result-contract.md` 的裸 JSON object，`role` 固定为 `self-test`。每条结论引用新鲜证据 ID，并提供可直接进入 handoff 的 `user_visible_text`。
+只回传 `<review-pack-dir>/references/role-result.md` 的裸 JSON object，`role` 固定为 `self-test`。每条结论引用新鲜证据 ID，并提供可直接进入 handoff 的 `user_visible_text`。

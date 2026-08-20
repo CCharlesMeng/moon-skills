@@ -535,4 +535,4 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - [前端 Task 切分与步骤形状](../frontend-sdd/执行契约.md#task-切分与步骤形状)：还原 Task、样式文件归属与计划边界
 - [还原契约与机器报告](../../../skills/sdd-dev-frontend/references/restore-contract.md)：V2 JSON 工件、命令和三色语义
 - [`alpha-tests.md` 还原证据扩容](../../../skills/sdd-dev-frontend/references/alpha-tests-restore.md)：还原证据和 AC 映射
-- [检视维度与分级](../../../skills/sdd-dev-frontend/references/review-dimensions.md)：四份检视的统一判级口径
+- [检视包接线](../../../skills/sdd-dev-frontend/references/review-pack-adapter.md)：角色 ↔ lens 映射；检查项、定级与回传契约都在 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)
