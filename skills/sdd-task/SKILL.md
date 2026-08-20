@@ -1,4 +1,3 @@
-````
 ---
 name: sdd-task
 description: 基于 requirement-design.md 的「关联 Story 设计」表格,逐个代码仓创建 Story 级单仓实现计划（tasks.md，含框架感知 TDD 任务清单）与 alpha-tests.md（GWT 功能用例 + 红绿灯证据账本）。Use when creating codebase project codespec/changes entries from a confirmed StoryPacket.
@@ -152,27 +151,17 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 
 **路由前 Step 2 的 1)～3) 必须已完成**：`<fe-change>` 已锁定、`codespec instructions tasks|alpha-tests` 已取到 schema、`codespec new change` 已建好 Story 工作目录。**`codespec` CLI 的全部调用留在本 Skill**，`sdd-task-frontend` 不碰 CLI，只按交接载荷生成内容并落盘。
 
-交接载荷（逐项传给 `sdd-task-frontend`，缺一项即 Stop）：
-
-| 项 | 值 |
-|------|------|
-| `fe_change` | `<iterative-version>/<requirement-id>-<requirement-name>` |
-| `story_dir` | `codebase/<project>/codespec/changes/<requirement-id>-<requirement-name>/<us-id>-<us-name>/` |
-| `project` / `project_type` | 本行 `归属微服务` / 固定 `frontend` |
-| `search_paths` | 本 Story 允许改动的仓内路径（与 backend 行同一口径） |
-| `schema_tasks` / `schema_alpha_tests` | Step 2 的 2) 取到的 `codespec instructions` 原文 |
-| 需求侧路径 | `story-delta-spec.md`、`story-delta-design.md`、`story-delta-frontend-design.md`、包根 `requirement-frontend-design.md`（缺失的逐项注明「未见」） |
-| 知识底座结果 | 「读取范围」第 7 项 consume 的 `entries[].id` 与 `gaps` |
-| `detection_ref` | `references/test-framework-detection.md`（本 Skill 目录内，单一来源，**不复制正文**） |
-| `extraction_ref` | `references/acceptance-criteria-extraction.md`（同上） |
+交接载荷：把 Step 0-2 的 CLI 产出（fe_change、story_dir、project、schema 原文）、读取范围内收集的需求侧路径与知识底座结果、以及 `references/` 内两个 ref 文件路径，传给 `sdd-task-frontend`。agent 按"使下游无需 CLI 即可工作"的原则自行推导具体项。
 
 返回后本 Skill 只做一件事：把它落盘的 `tasks.md` / `alpha-tests.md` 路径并入 Step 3 汇总，**不复核前端内容、不改写前端 Task**。前端行的产物质量由 `sdd-task-frontend` 自己的完成标准负责。
 
-**兜底**：`sdd-task-frontend` 不可用时，按 Step 2.5～2.6 与 Step 4 的既有内联前端路径处理本行，并在 `tasks.md` 标注 `⚠️ 降级：未经 sdd-task-frontend`。降级产出不含前端切分规则与基线源声明，下游 `sdd-dev-frontend` 会退回「一个 Task 内多轮」执行，并自行按形态判定每轮步骤。
+路由成功后，在 `tasks.md` TaskPacket 头写入 `routed=sdd-task-frontend`。后续 Step 2.5/2.6/4 通过读取此变量判断是否跳过，不依赖上下文记忆。
+
+**兜底**：`sdd-task-frontend` 不可用时，按 Step 2.5～2.6 与 Step 4 的既有内联前端路径处理本行，在 TaskPacket 头写 `routed=inline-fallback`，并在 `tasks.md` 标注 `⚠️ 降级：未经 sdd-task-frontend`。降级产出不含前端切分规则与基线源声明，下游 `sdd-dev-frontend` 会退回「一个 Task 内多轮 6 步」执行。
 
 ### Step 2.5: 前端烘焙（仅 `type=frontend` 且 Step 2.4 走兜底）
 
-> **已路由到 `sdd-task-frontend` 的行跳过本步。** 本步仅在 Step 2.4 的兜底分支下执行。
+> **TaskPacket `routed=sdd-task-frontend` 的行跳过本步。** 本步仅在 `routed=inline-fallback` 时执行。
 
 将变更包内前端设计**固化进本仓 `tasks.md`**，使 Dev 无需再读变更包前端文档：
 
@@ -185,7 +174,7 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 
 ### Step 2.6: 测试框架探测（新增，所有 project_type）
 
-> 已按 Step 2.4 路由的前端行**跳过本步**：`sdd-task-frontend` 用同一份 `references/test-framework-detection.md` 自行探测并填 `test_framework`。判据只有这一份，不得两处各存一套。
+> TaskPacket `routed=sdd-task-frontend` 的行跳过本步。
 
 对当前 `(Story, 代码仓)` 组合，执行测试框架探测：
 
@@ -198,7 +187,7 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 
 ### Step 4: 验收用例提炼与 alpha-tests.md 生成（新增）
 
-> 已按 Step 2.4 路由的前端行**跳过本步**：`sdd-task-frontend` 用同一份 `references/acceptance-criteria-extraction.md` 提炼 mock 集成级 AT- 用例并落盘 `alpha-tests.md`。
+> TaskPacket `routed=sdd-task-frontend` 的行跳过本步。
 
 对当前 `(Story, 代码仓)` 组合，按 `references/acceptance-criteria-extraction.md`：
 
@@ -381,6 +370,5 @@ git commit -m "【问题单号 Defect】{work_item_id}
 - `alpha-tests.md`（SC-/BR- → AT- 用例）与 `tasks.md`（AT- 用例 → Task）追溯视角互补、零重复；AT- 与 Task 双向可追溯。
 - Execution Handoff 已完成，TaskPacket 含 `execution_mode`。
 - 未依赖外部流程组件,未跳过 Stop If。
-- **frontend 行**：已按 Step 2.4 路由 `sdd-task-frontend` 并收到其落盘路径；本 Skill 未改写前端 Task 内容。走兜底时 `tasks.md` 已烘焙组件树/IFC（或已显式降级标注）、TaskPacket 含 `frontend_design_path`（有产物时），并带 `⚠️ 降级：未经 sdd-task-frontend` 标注。
+- **frontend 行**：TaskPacket `routed=sdd-task-frontend`（路由成功）或 `routed=inline-fallback`（兜底）。路由成功时本 Skill 收到 `sdd-task-frontend` 落盘路径，未改写前端 Task 内容；兜底时 `tasks.md` 已烘焙组件树/IFC（或已显式降级标注）、TaskPacket 含 `frontend_design_path`（有产物时），并带 `⚠️ 降级：未经 sdd-task-frontend` 标注。
 - **backend 行**：`tasks.md` 不含前端设计正文，未引用 `*frontend-design*`；产出与本次路由改动前逐字一致。
-````
