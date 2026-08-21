@@ -14,7 +14,7 @@ flowchart LR
     A2 --> G{"你确认 QA 基线"}
     G -->|确认| B["Phase B<br/>逐 Task 实现"]
     G -->|修改| A2
-    B --> C["Phase C<br/>四路并行检视"]
+    B --> C["Phase C<br/>并行检视"]
     C --> D["Phase D<br/>修复与收口"]
     D --> O["可追溯的代码与证据"]
 ```
@@ -141,7 +141,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 ### Phase -1：仓库接入门
 
-先校验 `REPO-1` 环境与运行、`REPO-2` 工程质量、`REPO-3` 工程范式。缺失或失效时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture、浏览器和质量命令准备，再返回当前 Story。
+走一道极轻的门：仓库 baseline 的八份文件在不在、`structure.md` 的栈签名读不读得出一个具名的栈。全缺或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。单条结论不成立不是就绪问题，读到时就地修。
 
 仓库 baseline 保存在 `<project-sdd-dir>/frontend-baselines/<repo-id>/`，不会每个 Story 重抽。
 
@@ -290,7 +290,7 @@ QA 基线的分类法固定为下面十个维度，不能增删；但它们是**
 
 ### Phase B：逐 Task 实现
 
-主 agent 按 `tasks.md` 原顺序执行，不重排 Task。每个 Task 动手前先读 `dev-baseline.md / 工程依据`，按 ID 回读仓库唯一 REPO-3，优先复用仓内已有 token、方法、hooks、请求封装和代码范式。
+主 agent 按 `tasks.md` 原顺序执行，不重排 Task。每个 Task 动手前先读 `dev-baseline.md / 工程依据`，按 ID 回读仓库 baseline 里那条唯一正文，优先复用仓内已有 token、方法、hooks、请求封装和代码规范。
 
 上游已按形态切分时，页面还原 Task 只跑还原轮，后续逻辑 Task 只跑逻辑轮。只有上游没有切开，或样式确实由运行时状态计算、没有独立静态形态时，一个 Task 才包含多轮 6 步；顺序固定为先还原、后逻辑。
 
@@ -322,16 +322,11 @@ QA 基线的分类法固定为下面十个维度，不能增删；但它们是**
 - 不使用无理由的 `any`、`@ts-ignore`、`eslint-disable` 绕过问题；
 - 同一报错连续修 3 次不成就停止并向你升级。
 
-### Phase C：四路并行检视
+### Phase C：并行检视
 
 全部 Task GREEN、证据完整、QA 基线已冻结后，才进入检视。
 
-| 检视 | 主要关注点 | 典型证据 |
-| --- | --- | --- |
-| 布局与响应式 | 跨页一致性、真实数据溢出、目标视口“不破”、对齐、交互态、滚动与固定元素 | 页面、路由、视口、复现路径、截图 |
-| 代码规范 | 命名、组件范式、样式 token、请求封装、公共方法复用、类型逃逸、国际化 | diff 位置 + 工程依据选中的 `PATTERN-*` / `REQ-DEC-*` |
-| 质量 | 职责、重复、复杂度、状态、副作用、边界、遗留、性能 | 文件行号、量化值、触发条件和可观察后果 |
-| 功能自测试 | F1–F4 逐行实测 + 既有主路径回归 | 操作路径、实际结果、请求响应、截图、命令输出 |
+派哪几路由本次验证组合决定，**不是每个 Story 都跑满**：没触发的角色不派、也不生成占位结果。每一路检查什么、怎么定级，全部来自 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)；本 skill 只负责选角色、备证据和汇总。
 
 每条结论只有两级：
 
@@ -344,7 +339,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 | 产物 | 写入位置 | 交给下一步什么信息 |
 | --- | --- | --- |
-| `dev-review.md` | `<story-dir>/dev-review.md` | 四份检视的执行状态、阻断级、建议级、Open Question、Deferred 候选 |
+| `dev-review.md` | `<story-dir>/dev-review.md` | 各路检视的执行状态、阻断级、建议级、Open Question、Deferred 候选 |
 | 检视截图 | `<story-dir>/evidence/review/` | 被报告引用的布局与功能证据 |
 
 如果某份检视因为已知环境限制无法执行，它不会被静默跳过：执行状态、收口结论和最终状态都会显式注明。
@@ -355,17 +350,17 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 处理方式：
 
-1. 主 agent 按编号逐条修复阻断级；
-2. 一轮修复完成后，重新运行四份检视；
-3. 最多进行两轮“修复 → 全量检视”；
-4. 仍修不掉、需要越界、存在 Open Question 或 Deferred 待判时，一次性向你提问；
+1. 主 agent 按编号逐条修复确证的阻断级；
+2. 修复后按依赖精确失效：只作废依赖被改文件的证据与判断，未受影响的继续复用；
+3. 同一阻断连续三次修不掉、需要越界改动、或会改变冻结期望时停下；
+4. 仍修不掉、存在 Open Question 或 Deferred 待判时，一次性向你提问；
 5. 所有门禁通过后，才宣告完成。
 
 **交接产物**
 
 | 产物 | 最终更新内容 |
 | --- | --- |
-| `dev-review.md` | 阻断项的修复状态、复跑结论、四份检视状态、未验收项 |
+| `dev-review.md` | 阻断项的修复状态、复跑结论、各路检视状态、未验收项 |
 | `alpha-tests.md` | 功能自测试实测结果、AC 最终状态、Deferred 原因与解除条件 |
 | `dev-baseline.md` | 如收口期间调整过基线，保留变更记录和再次确认结果 |
 | `<story-dir>/evidence/review/` | 最终报告引用的可复核截图 |
@@ -408,8 +403,9 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 ```text
 <project-sdd-dir>/frontend-baselines/
 └── <repo-id>/
-    ├── repo-baseline.md
-    └── onboarding-report.md
+    ├── index.md
+    ├── structure.md / runtime.md / components.md
+    └── api.md / data.md / styling.md / testing.md
 
 <requirement-dir>/
 ├── requirement-frontend-design.md
@@ -485,10 +481,10 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 - `tasks.md` checkbox 是唯一进度真相，从第一个未完成 Task 继续；
 - `alpha-tests.md` 中已有的 RED / GREEN 报告引用不会被无故覆盖；
-- Story 未变化且 REPO-3 指纹一致时复用 `dev-baseline.md` 的工程依据；指纹变化只重选 ID，不复制范式正文；
+- Story 未变化时复用 `dev-baseline.md` 的工程依据；仓库规范有变动时只重选 ID，不复制正文；
 - 已冻结且内容未变的 QA 基线不会要求你重复确认；
 - 设计规格按区块内容哈希复用；原型指纹覆盖 DOM/CSS 与资源内容/缺失状态，视觉缓存按完整环境键只读复用；
-- `dev-review.md` 的旧检视结论不复用，代码变化后四份检视重新运行。
+- `dev-review.md` 的检视结论按依赖失效：代码变化只作废依赖被改文件的那部分，未受影响的继续复用。
 
 如果上游修改了 `tasks.md` 或 Story 设计文档，视为 Story 已变化：勘察、QA 基线和确认门都需要重来。
 
@@ -509,7 +505,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 | “重跑代码规范检视” | 只更新代码规范检视部分 |
 | “重跑质量检视” | 只更新质量检视部分 |
 | “只跑功能自测试” | 只更新功能自测试结果 |
-| “重跑全部检视”或“重新收口” | 四份检视并行执行，再进入 Phase D |
+| “重跑全部检视”或“重新收口” | 按当前验证组合重新派出全部适用检视，再进入 Phase D |
 
 单步入口不会绕过前置条件。例如 QA 基线未冻结时，不能直接运行功能自测试；单跑一份检视也不等于整个 Story 已完成。
 

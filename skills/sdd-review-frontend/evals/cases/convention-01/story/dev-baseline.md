@@ -3,7 +3,7 @@
 | 字段 | 值 |
 | --- | --- |
 | Story | `S3 · 客户风险简报概览面板` |
-| 仓库 baseline | `{{BASELINE_DIR}}/repo-baseline.md` |
+| 仓库 baseline | `{{BASELINE_DIR}}`（八份，入口 `index.md`） |
 | 工程依据 | 见下方「工程依据」 |
 | 执行起点 | 见下方「执行起点（环境）」 |
 | 基线源 | `文字规格`（`tasks.md / 文字规格`） |
@@ -26,13 +26,12 @@
 
 | Story 需要 | 采用依据 |
 | --- | --- |
-| 样式与 token | `PATTERN-TOKEN-1` |
-| 后端取数 | `PATTERN-REQUEST-1` |
-| 取数三态与取消 | `PATTERN-ASYNC-1` |
-| 数值展示 | `PATTERN-FORMAT-1` |
-| 组件写法与命名 | `PATTERN-COMPONENT-1` |
-| 类型与检查抑制 | `PATTERN-TYPING-1` |
-| REPO-3 指纹 | `{{REPO3_FINGERPRINT}}` |
+| 样式与 token | `PATTERN-STYLE-1` |
+| 后端取数 | `PATTERN-API-1` |
+| 取数三态与取消 | `PATTERN-DATA-1` |
+| 数值展示 | `PATTERN-COMP-2` |
+| 组件写法与命名 | `PATTERN-COMP-1` |
+| 类型与检查抑制 | `PATTERN-STRUCT-1` |
 
 ## QA 基线
 
@@ -107,7 +106,7 @@
 
 | 编号 | 接口 | 请求参数期望 | 字段映射 | 错误码处理 |
 | --- | --- | --- | --- | --- |
-| F4-1 | `GET /api/risk-brief/summary` | 无查询参数；请求头须带 `Authorization` 与 `X-Tenant-Id`（由 `PATTERN-REQUEST-1` 统一注入） | `highRiskCount` → 第一张卡数值；`exposure` → 第二张卡数值（万元）；`hitRatio` → 第三张卡数值（一位小数百分比） | `UPSTREAM_TIMEOUT` → 见 F3-1；`TENANT_FORBIDDEN` → 见 F3-5；映射表以 `PATTERN-REQUEST-1` 的 `ERROR_MESSAGES` 为准 |
+| F4-1 | `GET /api/risk-brief/summary` | 无查询参数；请求头须带 `Authorization` 与 `X-Tenant-Id`（由 `PATTERN-API-1` 统一注入） | `highRiskCount` → 第一张卡数值；`exposure` → 第二张卡数值（万元）；`hitRatio` → 第三张卡数值（一位小数百分比） | `UPSTREAM_TIMEOUT` → 见 F3-1；`TENANT_FORBIDDEN` → 见 F3-5；映射表以 `API-2` 的 `ERROR_MESSAGES` 为准 |
 
 ### 豁免表
 

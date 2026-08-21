@@ -3,7 +3,7 @@
 | 字段 | 值 |
 | --- | --- |
 | Story | `S5 · 持仓明细表格` |
-| 仓库 baseline | `{{BASELINE_DIR}}/repo-baseline.md` |
+| 仓库 baseline | `{{BASELINE_DIR}}`（八份，入口 `index.md`） |
 | 工程依据 | 见下方「工程依据」 |
 | 执行起点 | 见下方「执行起点（环境）」 |
 | 基线源 | `文字规格`（`tasks.md / 文字规格`） |
@@ -26,11 +26,10 @@
 
 | Story 需要 | 采用依据 |
 | --- | --- |
-| 后端取数 | `PATTERN-REQUEST-1` |
-| 数值展示 | `PATTERN-FORMAT-1` |
-| REPO-3 指纹 | `{{REPO3_FINGERPRINT}}` |
+| 后端取数 | `PATTERN-API-1` |
+| 数值展示 | `PATTERN-COMP-2` |
 
-本 Story 只用于质量检视用例（`review-quality`），不搭配代码规范检视用例，因此工程依据只列质量检视会引用到的两条：`PATTERN-REQUEST-1` 用来判断「与规范检视重叠」的边界（取数封装是否到位不归质量检视管），`PATTERN-FORMAT-1` 用来判断一处看起来像重复代码、实际是 C5 地盘的写法（见 ground truth NG-1）。
+本 Story 只用于质量检视用例（`review-quality`），不搭配代码规范检视用例，因此工程依据只列质量检视会引用到的两条：`PATTERN-API-1` 用来判断「与规范检视重叠」的边界（取数封装是否到位不归质量检视管），`PATTERN-COMP-2` 用来判断一处看起来像重复代码、实际是 C5 地盘的写法（见 ground truth NG-1）。
 
 ## QA 基线
 
@@ -98,7 +97,7 @@
 
 | 编号 | 接口 | 请求参数期望 | 字段映射 | 错误码处理 |
 | --- | --- | --- | --- | --- |
-| F4-1 | `GET /api/holdings?region=<地区>` | 查询参数 `region`；请求头须带 `Authorization` 与 `X-Tenant-Id`（由 `PATTERN-REQUEST-1` 统一注入） | `id` / `region` / `amount` / `status` 逐字段映射到表格列 | 映射表以 `PATTERN-REQUEST-1` 的 `ERROR_MESSAGES` 为准 |
+| F4-1 | `GET /api/holdings?region=<地区>` | 查询参数 `region`；请求头须带 `Authorization` 与 `X-Tenant-Id`（由 `PATTERN-API-1` 统一注入） | `id` / `region` / `amount` / `status` 逐字段映射到表格列 | 映射表以 `API-2` 的 `ERROR_MESSAGES` 为准 |
 
 ### 豁免表
 

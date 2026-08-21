@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """把冻结的 fixture 源料展开成一个可跑的现场。
 
-现场里的东西全部是派生物，不进仓：目标业务仓、仓库 baseline、Story 产物、
-design-spec 都由本脚本从仓内源料确定性重建。源料只有四样：
-`repo/`、`baseline/repo-3-patterns.md`、`cases/<case>/`、以及 `evals/` 下的两份原型 HTML。
+现场里的东西全部是派生物，不进仓：目标业务仓、Story 产物、design-spec 都由本脚本
+从仓内源料确定性重建。源料只有四样：`repo/`、`baseline/`（冻结的八份仓库 baseline，
+原样拷贝）、`sdd-review-frontend/evals/cases/<case>/`，以及 `evals/` 下的两份原型 HTML。
 
     python3 setup.py --case convention-01
     python3 setup.py --case convention-01 --work-dir /tmp/fx --with-design-spec
@@ -27,12 +27,24 @@ from pathlib import Path
 FIXTURE_DIR = Path(__file__).resolve().parent
 EVAL_DIR = FIXTURE_DIR.parent
 SKILL_DIR = EVAL_DIR.parent
-INIT_SKILL_DIR = SKILL_DIR.parent / "sdd-init-frontend"
+REVIEW_PACK_DIR = SKILL_DIR.parent / "sdd-review-frontend"
+# 用例测的是 review 包里的 checklist，所以跟 checklist 走；本脚本只负责把现场搭起来。
+CASES_DIR = REVIEW_PACK_DIR / "evals" / "cases"
 
 REPO_ID = "risk-console"
 # 现场必须逐字节可复现，所以时间戳取 fixture 的冻结日期，不取当前时间。
 FREEZE_DATE = "2026-08-05"
 LIMIT = "依赖未安装，质量命令与浏览器采集均未实跑；本现场只支持静态判据类模块的评测"
+BASELINE_FILES = (
+    "index.md",
+    "structure.md",
+    "runtime.md",
+    "components.md",
+    "api.md",
+    "data.md",
+    "styling.md",
+    "testing.md",
+)
 PROTOTYPES = {
     "standard": EVAL_DIR / "设计稿原型-标准版.html",
     "risk-brief": EVAL_DIR / "原型-客户风险简报.html",
@@ -69,60 +81,20 @@ def build_repo(work_dir: Path) -> tuple[Path, str]:
     return repo, base_ref
 
 
-def build_baseline(repo: Path, work_dir: Path) -> tuple[Path, str]:
-    """扫描 → 注入人工维护范式 → 重扫（把范式声明的文件并入输入）→ finalize。"""
-    baseline_dir = work_dir / "frontend-baselines" / REPO_ID
-    scanner = INIT_SKILL_DIR / "scripts" / "manage_repo_baseline.py"
-    scan = [
-        sys.executable, str(scanner), "scan",
-        "--repo-root", str(repo),
-        "--baseline-dir", str(baseline_dir),
-        "--repo-id", REPO_ID,
-    ]
-    run(scan)
+def build_baseline(work_dir: Path) -> Path:
+    """把冻结的八份 baseline 原样拷进现场。
 
-    baseline_file = baseline_dir / "repo-baseline.md"
-    patterns = (FIXTURE_DIR / "baseline" / "repo-3-patterns.md").read_text(encoding="utf-8")
-    body = baseline_file.read_text(encoding="utf-8")
-    marker = "\n## 新鲜度账本"
-    if marker not in body:
-        raise SystemExit("baseline 缺少「新鲜度账本」节，无法定位人工维护段的插入点")
-    head, tail = body.split(marker, 1)
-    baseline_file.write_text(f"{head.rstrip()}\n\n{patterns.strip()}\n{marker}{tail}", encoding="utf-8")
-
-    run(scan)
-    write_onboarding_report(baseline_dir)
-    run([
-        sys.executable, str(scanner), "finalize",
-        "--repo-root", str(repo),
-        "--baseline-dir", str(baseline_dir),
-        "--status", "READY_WITH_LIMITS",
-        "--limit", LIMIT,
-    ])
-
-    fingerprint = read_repo3_fingerprint(baseline_file)
-    return baseline_dir, fingerprint
-
-
-def write_onboarding_report(baseline_dir: Path) -> None:
-    """把 scan 生成的草稿报告改写成如实的实证记录，好让 finalize 能收口。
-
-    仓库路径与 Section 指纹沿用草稿里机器生成的那几行，只替换执行时间与草稿正文。
+    这里没有扫描、没有注入、没有指纹回填：baseline 全部用仓内相对路径指路，
+    不含绝对路径也不含哈希，所以源料本身就是最终产物，逐字节可复现。
     """
-    report_path = baseline_dir / "onboarding-report.md"
-    draft = report_path.read_text(encoding="utf-8")
-    head = draft.split("\n## 下一步", 1)[0]
-    head = head.replace("| 执行时间 | 待执行 |", f"| 执行时间 | `{FREEZE_DATE}` |")
-    body = (FIXTURE_DIR / "baseline" / "onboarding-report-body.md").read_text(encoding="utf-8")
-    report_path.write_text(f"{head.rstrip()}\n\n{body.strip()}\n", encoding="utf-8")
+    baseline_dir = work_dir / "frontend-baselines" / REPO_ID
+    baseline_dir.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(FIXTURE_DIR / "baseline", baseline_dir)
 
-
-def read_repo3_fingerprint(baseline_file: Path) -> str:
-    for line in baseline_file.read_text(encoding="utf-8").splitlines():
-        if line.startswith("| `REPO-3`"):
-            cells = [cell.strip().strip("`") for cell in line.split("|")]
-            return cells[3]
-    raise SystemExit("baseline 的 Section 表里找不到 REPO-3 指纹")
+    missing = [name for name in BASELINE_FILES if not (baseline_dir / name).is_file()]
+    if missing:
+        raise SystemExit(f"baseline 源料缺文件：{missing}")
+    return baseline_dir
 
 
 def build_story(case_dir: Path, work_dir: Path, replacements: dict[str, str]) -> Path:
@@ -210,9 +182,9 @@ def main() -> int:
     parser.add_argument("--with-design-spec", action="store_true", help="额外由两份原型生成 design-spec/")
     args = parser.parse_args()
 
-    case_dir = FIXTURE_DIR / "cases" / args.case
+    case_dir = CASES_DIR / args.case
     if not case_dir.is_dir():
-        available = sorted(p.name for p in (FIXTURE_DIR / "cases").iterdir() if p.is_dir())
+        available = sorted(p.name for p in CASES_DIR.iterdir() if p.is_dir())
         raise SystemExit(f"没有这个用例：{args.case}；现有：{available}")
 
     work_dir = Path(args.work_dir).resolve() if args.work_dir else Path(tempfile.mkdtemp(prefix="sdd-fe-fixture-"))
@@ -221,12 +193,11 @@ def main() -> int:
     work_dir.mkdir(parents=True, exist_ok=True)
 
     repo, base_ref = build_repo(work_dir)
-    baseline_dir, fingerprint = build_baseline(repo, work_dir)
+    baseline_dir = build_baseline(work_dir)
     story_dir = build_story(case_dir, work_dir, {
         "BASELINE_DIR": str(baseline_dir),
         "STORY_DIR": str(work_dir / "story"),
         "BASE_REF": base_ref,
-        "REPO3_FINGERPRINT": fingerprint,
     })
     changed = apply_case(case_dir, repo)
     review_evidence = build_review_evidence(repo, story_dir, base_ref, changed)
@@ -243,13 +214,13 @@ def main() -> int:
     print(f"| `<repo-baseline-dir>` | `{baseline_dir}` |")
     print(f"| `<story-dir>` | `{story_dir}` |")
     print(f"| `<skill-dir>` | `{SKILL_DIR}` |")
-    print(f"| `<review-pack-dir>` | `{SKILL_DIR.parent / 'sdd-review-frontend'}` |")
+    print(f"| `<review-pack-dir>` | `{REVIEW_PACK_DIR}` |")
     print(f"| `<base-ref>` | `{base_ref}` |")
     print(f"| `<review-evidence>` | `{review_evidence}` |")
     print("| `evidence_epoch` | `fixture-review-1` |")
     if design_spec is not None:
         print(f"| `<design-spec-dir>` | `{design_spec}/risk-brief` |")
-    print(f"\nREPO-3 指纹：{fingerprint}")
+    print(f"\n仓库 baseline：{len(BASELINE_FILES)} 份（{', '.join(BASELINE_FILES)}）")
     print(f"待检视改动（{len(changed)} 个文件）：")
     for item in dirty:
         print(f"  {item}")

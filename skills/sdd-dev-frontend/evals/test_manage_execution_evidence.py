@@ -47,7 +47,7 @@ def initialized_repo(root: Path) -> Path:
 
 def snapshot(repo: Path, **overrides):
     values = {
-        "repo2_fingerprint": "a" * 64,
+        "quality_version": "3",
         "quality_commands": ["test::npm test", "check::npm run check"],
         "uncacheable_commands": [],
         "toolchains": {"node": "24.1.0", "npm": "11.0.0"},
@@ -137,7 +137,7 @@ class PreflightEvidenceTests(unittest.TestCase):
             MODULE.atomic_write_json(path, cache)
 
             variants = [
-                (snapshot(repo, repo2_fingerprint="b" * 64), "repo2-changed"),
+                (snapshot(repo, quality_version="4"), "quality-version-changed"),
                 (
                     snapshot(repo, quality_commands=["test::npm test -- --runInBand"]),
                     "quality-commands-changed",

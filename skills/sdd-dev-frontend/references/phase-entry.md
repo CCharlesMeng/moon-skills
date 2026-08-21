@@ -5,17 +5,18 @@
 ## Phase -1 — 仓库接入
 
 1. 解析 `<repo-root>`、`<project-sdd-dir>`、`<repo-id>`、`<repo-baseline-dir>`。
-2. 运行 `<init-skill-dir>/scripts/manage_repo_baseline.py status`。按脚本输出处理：
+2. 走**极轻的门**，只查两件事：
 
-| readiness | 动作 |
+| 判据 | 不满足时 |
 | --- | --- |
-| `READY` | 继续 Phase 0 |
-| `READY_WITH_LIMITS` | 影响实现安全/事实可信的 limit 回 `sdd-init-frontend`；仅影响验证能力的 limit 留给组合逐声明处理 |
-| `DRAFT/BLOCKED`、缺失或不可解析 | 完整执行 `sdd-init-frontend` 后重跑 status |
+| `<repo-baseline-dir>` 下八份 baseline 文件在不在 | 全缺或大面积缺 → 完整执行 `sdd-init-frontend` |
+| `structure.md` 的栈签名读不读得出一个具名的栈 | 读不出 → 完整执行 `sdd-init-frontend` |
 
-Phase C/D 重查时，REPO-3 失效只有同时满足以下两条才按“本 Story 自身改动”放行：当前全部改动文件均在 Story 范围内；`dev-baseline.md` 记录的原 REPO-3 section 指纹仍与 baseline 表一致。任一不满足就回 Phase -1 刷新，不把真失效伪装成 Story 降级。
+**这道门刻意不精确。** 「本 Story 需要的那几条查得到吗」在 Phase -1 还没有信息可判——`tasks.md` 要到 Phase 0 才读。所以这里只拦住「baseline 根本不存在」这一种情况；具体某条结论不成立由消费点自证并就地修，不在这里预判。
 
-退出：readiness 可安全实现，相关限制已分类。
+**不查 readiness、不查指纹、不查 stale。** 这三样已随仓库 baseline 改版整体取消：内容指纹只能告诉你文件变了，永远不能告诉你结论变了，为这点信噪比要养账本、stale 状态、readiness 回退和一条「本 Story 自身改动放行」的例外。现在的跟进方式是消费点自证 + 就地修，Phase C/D 重查时**没有任何 baseline 失效需要放行或路由**。
+
+退出：baseline 存在且栈可判。
 
 ## Phase 0 — 执行起点
 
@@ -38,7 +39,9 @@ Phase C/D 重查时，REPO-3 失效只有同时满足以下两条才按“本 St
 
 ### 4. 建立执行上下文
 
-记录 `<base-ref>`、Story 文件范围、REPO section 指纹、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制仓库 baseline。
+记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制仓库 baseline，也不记录任何 baseline 指纹。
+
+按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `dev-review.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
 
 ### 5. 编译初始验证组合
 
@@ -48,6 +51,6 @@ Phase C/D 重查时，REPO-3 失效只有同时满足以下两条才按“本 St
 
 ### 6. 写 `dev-baseline.md`
 
-按 [story-artifact-templates.md](./story-artifact-templates.md) 第一节写执行起点、初始组合和指纹。若本次明确要为流程优化取数，再读取 telemetry 节并开启 `<execution-telemetry>`；默认关闭。
+按 [story-artifact-templates.md](./story-artifact-templates.md) 第一节写执行起点与初始组合。若本次明确要为流程优化取数，再读取 telemetry 节并开启 `<execution-telemetry>`；默认关闭。
 
 退出：路径唯一、上游事实已核、初始组合与执行起点已落盘。

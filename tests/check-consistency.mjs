@@ -523,7 +523,6 @@ const OWNED_SCRIPTS = [
   "extract_design_spec.py",
   "verify_restore_contract.py",
   "collect_restore_facts.js",
-  "manage_repo_baseline.py",
   "manage_execution_evidence.py",
   "manage_review_pipeline.py",
 ];
@@ -946,6 +945,61 @@ function checkFrontendRegistryTargets() {
   }
 }
 
+// 检视职责会慢慢漂回去：判据被复制进调用方的设计文档后独立变旧，包里又被写死
+// 只有调用方才知道的阶段与概念，最后没人说得清该改哪一份。两条机械边界钉住它。
+//
+// 判据面 = SKILL.md + roles/ + frontend-code-checklists/ + references/。
+// evals/ 不算：那是某个调用方 Story 的样本数据，本来就该有 <story-dir> 这类东西。
+const REVIEW_PACK_JUDGMENT_SURFACE = ["SKILL.md", "roles", "frontend-code-checklists", "references"];
+const CALLER_ONLY_TERMS = ["<story-dir>", "验证组合", "Phase C", "sdd-dev"];
+// 只抓「赋值」形态。dev 侧散文里提到字段名是正常的——review-request.md 就要说清
+// 这三个字段不归它管；抓 `字段:` 才能区分「在定级」和「在说别在这里定级」。
+const SEVERITY_FIELD_ASSIGNMENT = /^\s*-?\s*(default_severity|max_severity|normative_level)\s*:/m;
+
+function checkFrontendReviewOwnership(files) {
+  const packDir = join(SKILLS_DIR, "sdd-review-frontend");
+  const devDir = join(SKILLS_DIR, "sdd-dev-frontend");
+  let failed = 0;
+  let count = 0;
+
+  for (const file of files) {
+    if (file.startsWith(packDir)) {
+      const tail = file.slice(packDir.length + 1);
+      if (!REVIEW_PACK_JUDGMENT_SURFACE.some((part) => tail === part || tail.startsWith(`${part}/`))) {
+        continue;
+      }
+      count++;
+      const content = readFileSync(file, "utf-8");
+      for (const term of CALLER_ONLY_TERMS) {
+        if (!content.includes(term)) continue;
+        report(
+          "fail",
+          "fe-review-ownership",
+          `${rel(file)} 写死了调用方概念 "${term}" — 包只做判断，` +
+            `调用方的阶段、路径与规划概念改由请求参数传入`
+        );
+        failed++;
+      }
+    } else if (file.startsWith(devDir)) {
+      count++;
+      const content = readFileSync(file, "utf-8");
+      if (SEVERITY_FIELD_ASSIGNMENT.test(content)) {
+        report(
+          "fail",
+          "fe-review-ownership",
+          `${rel(file)} 在给检查项定级 — 默认级别只在 sdd-review-frontend 的 checklist，` +
+            `本 Story 要更严格就写进冻结声明，让升级规则自然触发`
+        );
+        failed++;
+      }
+    }
+  }
+
+  if (failed === 0) {
+    report("pass", "fe-review-ownership", `${count} files respect the review/dev ownership split`);
+  }
+}
+
 function checkFrontendChain() {
   console.log("\n── 9. Frontend SDD Chain ──");
 
@@ -968,6 +1022,7 @@ function checkFrontendChain() {
   checkFrontendScriptOwners(files);
   checkFrontendRegistryTargets();
   checkFrontendGateCoverage();
+  checkFrontendReviewOwnership(files);
 }
 
 // ── Run all checks ─────────────────────────────────────────────────

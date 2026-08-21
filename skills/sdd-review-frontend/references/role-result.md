@@ -1,6 +1,6 @@
 # RoleResult@v2
 
-五格共用的唯一输出契约。`sdd-dev-frontend` 的聚合器 `manage_review_pipeline.py` 现读本契约，线上字段名以本文件为准。
+五格共用的唯一输出契约。调用方的聚合器现读本契约，线上字段名以本文件为准。
 
 只回传一个 JSON object：不得包 Markdown fence、寒暄、过程说明或第二份报告。缺终止级前置时改为纯文本 `前置缺失：<清单>`。
 
@@ -50,7 +50,7 @@
 
 ## 字段
 
-- `role`：调用方的角色名。`sdd-dev-frontend` Phase C 用 `review-layout` / `review-convention` / `review-quality` / `self-test`；独立调用本包用 lens id。
+- `role`：调用方在请求里给出的角色标识，原样回填。调用方没给时用 lens id。本包不规定它的取值。
 - `dimension`：该检查项的 `legacy_id`（checklist 每条列出，如 `L1`、`C5`、`Q8`）。`self-test` 用分配的冻结基线行号（`F2-1`、`REG-2`）。coverage 与 findings 都用这个值，不写 kebab-case 检查项名。
 - `level`：只有 `blocker`、`suggestion`。由 [SKILL.md 定级](../SKILL.md#定级) 的 P 级映射：P0 / P1 → `blocker`，P2 / P3 → `suggestion`。
 - `status`：`executed` | `unexecuted`（`not_applicable` 仅为旧工件兼容）。

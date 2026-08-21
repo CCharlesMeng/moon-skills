@@ -3,62 +3,116 @@
   "evals": [
     {
       "id": 1,
-      "name": "omit-non-applicable-absence",
-      "target": "scripts/manage_repo_baseline.py",
-      "prompt": "为一个只有 dev 脚本、没有 engines、env 模板、质量命令、UI/state/request 依赖的最小 Svelte 前端仓生成仓库 baseline。说明你会如何用 repo-baseline.md 和 onboarding-report.md 同时服务人和机器。",
-      "expected_output": "repo-baseline.md 是唯一仓库事实源；固定 Markdown 标题与表格供机器消费，同时省略不适用的空项。",
+      "name": "point-not-copy",
+      "target": "references/baseline-contract.md",
+      "prompt": "仓内 src/lib/request.ts 导出了 get/post/put/del 四个方法，签名都带泛型；src/styles/tokens.css 定义了 6 档间距变量和 4 档字号变量。请写出对应的 api.md 与 styling.md 清单条目。",
+      "expected_output": "两处都只写指路加一句何时用，不抄方法签名、不抄档位数值；规则部分写代码里读不到的归纳结论。",
       "expectations": [
-        "明确不生成 manifest.json、repo-baseline.json 或嵌入式 JSON/YAML sidecar",
-        "repo-baseline.md 不展示 Node 未声明、环境变量 0 个、空质量类别或空依赖类别，也不把这些可选缺失项改写成待处理动作",
-        "最终报告不生成内容为无的限制、阻断或进程交接章节"
+        "api.md 条目不列出 get/post/put/del 的方法名与签名，只指到 src/lib/ 的 request 实例",
+        "styling.md 条目不写任何具体像素或字号数值，只指到文件加统一命名前缀",
+        "写出的规范条目是归纳结论（所有请求必须走统一出口、间距只能取仓内 scale），不是对代码的转述"
       ]
     },
     {
       "id": 2,
-      "name": "guide-required-missing-capability",
+      "name": "no-unified-practice-is-a-first-class-entry",
       "target": "SKILL.md",
-      "prompt": "目标前端 app 有 build 脚本和框架依赖，但没有 dev/start/serve/preview，用户要求完成 baseline 初始化。说明产物和状态应该怎样处理。",
-      "expected_output": "把缺失启动能力当成需要处理的开发缺口，先尝试确认或准备，仍缺失时给具体补齐动作，而不是静态写未见。",
+      "prompt": "扫描发现这个仓 pages/ 平铺、状态全留在发起请求的组件里、12 处调用点各自裸用 axios、样式全是字面量没有任何 token。请说明 structure.md、api.md、data.md、styling.md 分别写什么。",
+      "expected_output": "四份文件都非空，把「无统一做法」写成显式规范，并指出它对下游意味着什么，而不是留空或省略整节。",
       "expectations": [
-        "识别启动命令是当前开发必需能力而非可静默省略的可选项",
-        "先引导确认或补齐 package.json 中的启动方式，再根据结果定级",
-        "不使用启动命令未见或未声明作为最终结论"
+        "不把这四份文件写成空文件，也不用「无」「未见」「未声明」填版面",
+        "api.md 显式写出无统一请求出口，并指明检视不得据此判「绕过统一实例」",
+        "styling.md 显式写出无 token 全硬编码，并指明检视不得判硬编码违规",
+        "不把仓库描述成它应该有的分层或应该有的 store，只写实测形态"
       ]
     },
     {
       "id": 3,
-      "name": "retain-positive-repository-facts",
-      "target": "scripts/manage_repo_baseline.py",
-      "prompt": "仓库明确声明 Node >=20、pnpm lockfile、两个环境变量模板键、dev/test/check/build 命令，并使用 React、Zustand、Axios、Vitest。说明唯一 repo-baseline.md 应该保留什么。",
-      "expected_output": "repo-baseline.md 保留这些可复用的正向事实，同时不补写仓库没有的类别。",
+      "name": "structural-criteria-not-filename-guessing",
+      "target": "references/discovery-rules.md",
+      "prompt": "一个 React 仓有这些文件：src/components/StatCard/StatCard.tsx、src/features/portfolio/usePortfolioSummary.ts、src/lib/format.ts、src/lib/request.ts、src/styles/tokens.css、src/features/portfolio/PortfolioPanel.tsx。请说明你怎么判定每个文件该进哪份 baseline，以及依据是什么。",
+      "expected_output": "逐个文件按结构判据定位：导出什么、被谁引用、内部调用什么；六个文件都被正确归位，不因为文件名里没有 hook/util/component 这类词而漏掉。",
       "expectations": [
-        "保留已声明的 Node、包管理器与 lockfile、安装和启动命令",
-        "只记录环境变量键和 has_template_default 这类布尔标记，不记录真实值或模板默认值文本",
-        "只展示实际存在的质量命令和依赖类别"
+        "StatCard 按「导出返回视图的符号」判为构件，不因为判据词表里没有「组件」而漏掉",
+        "usePortfolioSummary 按「既调用框架状态原语又经请求出口」判为数据 hook，不要求路径含 hook 字样",
+        "format.ts 按「导出纯函数且被构件引用」判为渲染辅助，不要求路径含 util 字样",
+        "tokens.css 按「声明自定义属性」判为 token 集，不靠对文件名分词匹配",
+        "PortfolioPanel 只被一个特性引用，因此只进业务路由索引而不进通用构件详表"
       ]
     },
     {
       "id": 4,
-      "name": "report-only-real-limits",
-      "target": "scripts/manage_repo_baseline.py",
-      "prompt": "一次 baseline 验证全部通过，没有限制、阻断，也没有需要保留的进程；另一次验证只有一个不阻断开发的字体限制。分别说明最终报告结构。",
-      "expected_output": "全通过报告省略三个空章节；有限制的报告只增加真实限制及其影响和解除条件。",
+      "name": "coverage-declaration-vs-absence",
+      "target": "references/baseline-contract.md",
+      "prompt": "大仓首扫只覆盖了 src/components/、src/shared/ 与本次涉及的 src/features/checkout/。下游计划期要找一个通用表格构件，在 components.md 里查不到。请说明它应该怎么判断，以及本次首扫要留下什么才让这个判断成立。",
+      "expected_output": "清单节头部的覆盖声明让消费者区分「仓里确实没有」与「没扫过」；覆盖范围内查不到即确实没有，范围外自行勘察并追加单条同时更新覆盖声明。",
       "expectations": [
-        "READY 报告不生成空的限制、阻断或进程交接章节",
-        "READY_WITH_LIMITS 只生成实际限制，不生成空阻断章节",
-        "限制同时写明影响范围与解除条件"
+        "每个清单节头部都有覆盖声明，写明扫过哪些目录与日期",
+        "覆盖范围内查不到判为确实没有；范围外判为未扫过并自行勘察",
+        "下游追加清单条目时必须同步更新该节覆盖声明",
+        "不使用内容指纹、不写 readiness 字段、不引入 stale 状态来表达这件事"
       ]
     },
     {
       "id": 5,
-      "name": "repository-patterns-have-one-owner",
+      "name": "evidence-stays-out-of-baselines",
       "target": "SKILL.md",
-      "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的状态管理与请求封装。说明 REPO-3、Requirement 和 Story 分别保存什么。",
-      "expected_output": "范式正文只在仓库 REPO-3；Requirement 仅在有跨 Story 决策时引用范式 ID；Story 只记录采用的 ID 和 REPO-3 指纹。",
+      "prompt": "两个场景：一是用户直接调用本 skill 初始化仓库，没有任何 Story；二是 sdd-dev-frontend 开工前路由过来，有 story 目录。两次都实跑了 lint 与 test，一条通过一条失败。请说明这些运行结果分别写到哪里。",
+      "expected_output": "跨需求契约与本次实证分居：baselines 目录只放契约，实证按有无 Story 目录决定落进 Story 还是只回话。",
       "expectations": [
-        "不为每个 Story 生成范式卡片或 codebase-brief.md",
-        "Requirement 不复制仓库范式正文，完全沿用默认范式时连决策章节也省略",
-        "跨 Requirement 可复用的新惯例直接提升到仓库 REPO-3，不长期维护候选清单"
+        "两个场景都不把退出码、耗时或失败摘要写进 baselines 目录",
+        "有 story 目录时写进 story 目录",
+        "独立调用时只回话不落盘",
+        "runtime.md 只保留命令的 script 名、适用范围、前置条件与质量命令节的整数版本号"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "api-file-is-not-an-interface-catalog",
+      "target": "SKILL.md",
+      "prompt": "本次接入时手上正好有一份需求的接口设计，列了 9 个端点的 URL、请求响应字段和两个枚举。请说明 api.md 写什么、不写什么。",
+      "expected_output": "api.md 只装跨需求稳定的通信约定；具体端点的 URL、字段与枚举属于 Story 级契约，事实源在上游设计文档，不复制进 baseline。",
+      "expectations": [
+        "不把 9 个端点的 URL、请求响应字段或枚举写进 api.md",
+        "写的是请求出口、拦截器、鉴权注入、错误码到前端错误对象的翻译、mock 约定、分页排序参数的仓内惯例",
+        "点明理由是会产生第二事实源并必然漂移，不只是「篇幅太长」"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "cross-concern-asset-has-one-home",
+      "target": "references/baseline-contract.md",
+      "prompt": "仓内表单用了一个表单库，校验规则写成集中的 schema 文件，校验在失焦时触发，错误消息用一个共享的错误提示构件展示。请说明这四件事分别记在哪份文件，并说明为什么不建一份 forms.md。",
+      "expected_output": "表单是跨关注点的场景而不是关注点：库选择与校验时机归 data.md、错误展示构件归 components.md、schema 写在哪个层归 structure.md，检索靠 index.md 的场景索引。",
+      "expectations": [
+        "四件事分别落到 data.md、components.md、structure.md，没有任何一件重复定义在两处",
+        "不新建 forms.md，理由是场景无穷且互相重叠，只能做索引不能做切分维度",
+        "index.md 的场景索引把这几条串起来，且只写指向 ID 的行"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "no-junk-drawer",
+      "target": "references/baseline-contract.md",
+      "prompt": "有人提议在 baselines 目录下加一份 inventory.md，用一个「类型」列把组件、hook、工具函数、请求实例、token 集统一列成一张表，理由是「一次扫完就能找到所有可复用资产」。请评价并给出处理。",
+      "expected_output": "拒绝：需要靠类型列区分内部条目的表，说明它应该被那个类型列切开；这些资产按消费者问句已各有归属，合并会同时破坏成员判据与唯一事实源。",
+      "expectations": [
+        "用「需要类型列就该被切开」这条判据明确否决",
+        "指出这几类资产已分别归属 components.md、data.md、api.md、styling.md，合并会造成同一条事实出现在两处",
+        "指出「一次扫完找复用」的需求由 index.md 的场景索引承担，不需要靠合并成一张表"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "pattern-body-lives-only-at-repo-level",
+      "target": "SKILL.md",
+      "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的取数封装与样式 token。另外本次勘察还发现两处看起来像新惯例、但只有一个样例支持。请说明仓库级、Requirement 级、Story 级分别保存什么。",
+      "expected_output": "规范正文只在仓库级八份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
+      "expectations": [
+        "不为每个 Story 生成范式卡片或额外的勘察文档",
+        "Requirement 不复制仓库规范正文，完全沿用时连工程决策章节也省略",
+        "Story 的工程依据只写 ID，不记录任何指纹",
+        "只有一个样例支持的候选不写进 baseline，也不长期维护候选清单"
       ]
     }
   ]

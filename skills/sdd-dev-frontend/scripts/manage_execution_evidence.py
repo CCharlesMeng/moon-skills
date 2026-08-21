@@ -189,14 +189,14 @@ def repository_state(repo_root: Path) -> dict[str, Any]:
 
 def build_snapshot(
     repo_root: Path,
-    repo2_fingerprint: str,
+    quality_version: str,
     quality_commands: list[str],
     uncacheable_commands: list[str],
     toolchains: dict[str, str],
     runtime: dict[str, str],
 ) -> dict[str, Any]:
-    if not re.fullmatch(r"[0-9a-fA-F]{8,64}", repo2_fingerprint):
-        raise EvidenceError("--repo2-fingerprint must be an 8-64 character hex digest")
+    if not re.fullmatch(r"[0-9]{1,9}", quality_version):
+        raise EvidenceError("--quality-version must be a non-negative integer")
     unknown_uncacheable = [
         command for command in uncacheable_commands if command not in quality_commands
     ]
@@ -212,7 +212,7 @@ def build_snapshot(
     state_inputs = {
         "repo_root": str(resolved),
         "repository": repository_state(resolved),
-        "repo2_fingerprint": repo2_fingerprint.lower(),
+        "quality_version": quality_version,
         "quality_commands": quality_commands,
         "uncacheable_commands": uncacheable_commands,
         "toolchains": toolchains,
@@ -229,7 +229,7 @@ def build_snapshot(
 def refresh_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
     return build_snapshot(
         Path(required_string(snapshot, "repo_root")),
-        required_string(snapshot, "repo2_fingerprint"),
+        required_string(snapshot, "quality_version"),
         required_string_list(snapshot, "quality_commands"),
         required_string_list(snapshot, "uncacheable_commands"),
         required_string_map(snapshot, "toolchains"),
@@ -349,7 +349,7 @@ def fingerprint_miss_reason(cached: dict[str, Any], current: dict[str, Any]) -> 
             return reason
     other_fields = (
         ("repo_root", "repo-root-changed"),
-        ("repo2_fingerprint", "repo2-changed"),
+        ("quality_version", "quality-version-changed"),
         ("quality_commands", "quality-commands-changed"),
         ("uncacheable_commands", "uncacheable-commands-changed"),
         ("toolchains", "toolchains-changed"),
@@ -369,7 +369,7 @@ def command_probe(arguments: argparse.Namespace) -> int:
         )
         snapshot = build_snapshot(
             Path(arguments.repo_root),
-            arguments.repo2_fingerprint,
+            arguments.quality_version,
             commands,
             uncacheable,
             parse_key_values(arguments.toolchain, "toolchain"),
@@ -498,7 +498,7 @@ def parser() -> argparse.ArgumentParser:
 
     probe = commands.add_parser("probe", help="compute exact repository state and probe cache")
     probe.add_argument("--repo-root", required=True)
-    probe.add_argument("--repo2-fingerprint", required=True)
+    probe.add_argument("--quality-version", required=True)
     probe.add_argument("--quality-command", action="append", required=True)
     probe.add_argument("--uncacheable-command", action="append", default=[])
     probe.add_argument("--toolchain", action="append", required=True)

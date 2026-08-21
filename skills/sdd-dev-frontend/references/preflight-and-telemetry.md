@@ -11,14 +11,14 @@
 ```bash
 python3 "<skill-dir>/scripts/manage_execution_evidence.py" probe \
   --repo-root "<repo-root>" \
-  --repo2-fingerprint "<REPO-2 指纹>" \
+  --quality-version "<runtime.md 质量命令节的版本号>" \
   --quality-command "<scope>::<完整命令>" \
   --toolchain "<name>=<version>" \
   --runtime "<key>=<非秘密值>" \
   --snapshot-out "<临时目录>/preflight-snapshot.json"
 ```
 
-脚本比对仓库状态、`REPO-2` 指纹、命令与 scope、toolchain 和运行模式并施加 TTL，输出 `HIT` / `MISS` 加具体原因。依赖网络、外部服务、时变数据或不能安全进入指纹的本机状态的命令，用完全相同的字符串额外传 `--uncacheable-command`；本轮固定 `MISS`，实跑全部选中命令，不做部分复用。
+脚本比对仓库状态、质量命令版本号、命令与 scope、toolchain 和运行模式并施加 TTL，输出 `HIT` / `MISS` 加具体原因。版本号是 `runtime.md` 质量命令节的整数，命令有实质变动时由 `sdd-init-frontend` 手动加一；它不是内容哈希，人和 agent 都能看出是第几版。依赖网络、外部服务、时变数据或不能安全进入指纹的本机状态的命令，用完全相同的字符串额外传 `--uncacheable-command`；本轮固定 `MISS`，实跑全部选中命令，不做部分复用。
 
 | 结果 | 动作 |
 | --- | --- |

@@ -168,46 +168,45 @@
       "gates": [
         "硬门禁 13"
       ],
-      "prompt": "当前 Story 需要状态持久化与样式 token。repo-baseline.md 的 REPO-3 已有 PATTERN-STATE-1 和 PATTERN-TOKEN-1，Requirement 没有偏离仓库默认范式。请完成代码侧勘察并说明落盘内容。",
-      "expected_output": "复核仓库范式证据后，只把两个 PATTERN ID 和 REPO-3 指纹写入 dev-baseline.md 的工程依据，不创建 codebase-brief.md 或 Story 范式卡片。",
+      "prompt": "当前 Story 需要取数三态与样式 token。仓库 baseline 的 data.md 有 PATTERN-DATA-1、styling.md 有 PATTERN-STYLE-1，Requirement 没有偏离仓库默认规范。请完成代码侧勘察并说明落盘内容。",
+      "expected_output": "复核两条规范的依据清单条目后，只把两个 PATTERN ID 写入 dev-baseline.md 的工程依据，不写指纹，不创建 codebase-brief.md 或 Story 范式卡片。",
       "expectations": [
-        "Requirement 完全沿用仓库默认范式时不制造 Requirement 工程决策",
-        "逐个复核被选 PATTERN 的声明证据，但不把源码片段或范式正文复制进 Story",
-        "dev-baseline.md 只保存 Story 需要到 PATTERN ID 的映射和完整 REPO-3 指纹",
-        "实现与检视通过 ID 回读 repo-baseline.md 的唯一范式正文"
+        "Requirement 完全沿用仓库默认规范时不制造 Requirement 工程决策",
+        "顺着每条规范的依据清单条目复核证据，但不把源码片段或规范正文复制进 Story",
+        "dev-baseline.md 只保存 Story 需要到 PATTERN ID 的映射，不记录任何 baseline 指纹",
+        "实现与检视通过 ID 回读 data.md / styling.md 的唯一正文"
       ]
     },
     {
       "id": 12,
-      "name": "self-inflicted-repo3-staleness-does-not-reset-to-phase-minus-1",
-      "target": "SKILL.md",
+      "name": "phase-minus-1-gate-is-deliberately-coarse",
+      "target": "references/phase-entry.md",
       "gates": [
         "硬门禁 0"
       ],
-      "prompt": "进入 Phase C 前重跑 `manage_repo_baseline.py status`，返回 REPO-3 section 失效。核对后发现：`git status --porcelain --untracked-files=all` 列出的改动文件全部落在本 Story 的改动范围内；`dev-baseline.md / 工程依据` 记录的 REPO-3 指纹与 `repo-baseline.md` 的 `## Section` 表逐字一致。请给出接下来的路由。",
-      "expected_output": "两条判据都成立，判定为本 Story 自身改动引起，不回 Phase -1、不刷新 REPO-3，照常进入 Phase C，把失效记入已知缺口。",
+      "prompt": "Phase -1 检查仓库 baseline：八份文件都在，structure.md 能读出这是 Vue。但你注意到 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
+      "expected_output": "两条判据都成立，继续 Phase 0，不路由 sdd-init-frontend；覆盖缺口留给 Phase 0 之后的消费点自行勘察并追加单条。",
       "expectations": [
-        "逐条核对两条判据：改动文件是否全部落在本 Story 改动范围内、REPO-3 指纹两处是否逐字一致",
-        "两条都成立时不触发硬门禁 0 的仓库回置，也不把它写成 Story 降级项",
-        "不为了让 status 变绿去跑 sdd-init-frontend 刷新 REPO-3",
-        "继续 Phase C，并在检视结论或已知缺口里显式记录失效由本 Story 自身改动引起"
+        "只按两条判据判定：八份文件是否存在、栈签名是否读得出一个具名的栈",
+        "不因为覆盖声明没包含本次模块就整体重跑 sdd-init-frontend",
+        "指出「本 Story 需要的条目查得到吗」在 Phase -1 还没有信息可判，tasks.md 要到 Phase 0 才读",
+        "不检查 readiness、不检查指纹、不检查 stale"
       ]
     },
     {
       "id": 13,
-      "name": "unexplained-file-outside-task-list-still-resets-to-phase-minus-1",
-      "target": "SKILL.md",
+      "name": "stale-locator-is-fixed-in-place-while-broken-rule-is-batched",
+      "target": "agents/recon-codebase.md",
       "gates": [
-        "硬门禁 0",
-        "硬门禁 7"
+        "硬门禁 13"
       ],
-      "prompt": "同样在进入 Phase C 前重跑 `status`，同样返回 REPO-3 section 失效。核对 `git status --porcelain --untracked-files=all`：改动文件里除了本 Story 改动范围内的全部文件，还多了一个不属于本 Story 改动范围的 `src/lib/format.ts`，没有任何记录说明这处改动是谁、为什么做的。请给出接下来的路由。",
-      "expected_output": "「改动文件全部落在本 Story 改动范围内」这一条不成立，判定为真失效，回 Phase -1 完整执行 sdd-init-frontend 刷新 REPO-3，不当作本 Story 自身改动放行。",
+      "prompt": "代码侧勘察时发现两件事：一是 api.md 的 API-1 指到 src/lib/request.ts，但该文件已被移动到 src/shared/http/client.ts，封装本身没变；二是 PATTERN-API-1 声称所有请求都走统一出口，实际在两个特性目录里各有一处新的裸 axios 调用。请分别给出处理。",
+      "expected_output": "第一件是清单指路失效，就地修那一条并随本 Story 提交、不阻塞不路由；第二件是规范可能不成立，攒进 dev-review.md 由 Story 收口时确认，不自行改规范、也不据此放宽检视。",
       "expectations": [
-        "明确指出 `src/lib/format.ts` 不属于本 Story 改动范围，据此判定第一条判据不成立",
-        "不因为其余改动都在改动范围内、只多了一个文件，就整体判成自身改动引起",
-        "回 Phase -1，按硬门禁 0 完整执行 sdd-init-frontend，不满足 status/validate 之前不进 Phase 0",
-        "不把这处未解释的改动当作可以继续开工的 Story 降级项，也不静默忽略它"
+        "分界线说成「看一眼代码就能验」还是「要看多个样本才能判」，不是按严重程度分",
+        "指路失效就地改单条清单条目，不路由 sdd-init-frontend、不阻塞任何 Task",
+        "规范异议只回传并攒批，不修改规范节——规范节只有 sdd-init-frontend 能改",
+        "不因为发现两处反例就当场判定「本仓无统一出口」并放宽检视基准"
       ]
     },
     {
@@ -331,10 +330,10 @@
       "id": 21,
       "name": "exact-final-quality-evidence-is-reused-at-next-story-start",
       "target": "references/preflight-and-telemetry.md",
-      "prompt": "上一个 Story 的一组已选命令记录于 2 小时前，source=phase-d。当前 Story 初始验证组合也选中这三条命令；HEAD、三类工作区、REPO-2、命令与 scope、toolchain/runtime 都逐项相同，每条缓存有 exit_code、duration_ms 和 failures[]。请完成 Phase 0 并说明后续怎么处理。",
+      "prompt": "上一个 Story 的一组已选命令记录于 2 小时前，source=phase-d。当前 Story 初始验证组合也选中这三条命令；HEAD、三类工作区、质量命令版本号、命令与 scope、toolchain/runtime 都逐项相同，每条缓存有 exit_code、duration_ms 和 failures[]。请完成 Phase 0 并说明后续怎么处理。",
       "expected_output": "精确判定 cache HIT，Phase 0 复用完整失败集合而不重跑同一命令；后续按最终 diff 重编译验证组合，只执行它选中且无新鲜证据的命令，不固定加一次 Phase C/D 全量门。",
       "expectations": [
-        "通过脚本逐项校验 HEAD、三类工作区状态、REPO-2、命令、toolchain、runtime 和 24h TTL，不凭主观判断命中",
+        "通过脚本逐项校验 HEAD、三类工作区状态、质量命令版本号、命令、toolchain、runtime 和 24h TTL，不凭主观判断命中",
         "Phase 0 不再执行这三条命令，而是把缓存的逐命令退出码、耗时和具体失败集合写入 dev-baseline.md",
         "dev-baseline.md 标明获取方式=复用、状态指纹、source=phase-d、记录时间与 Git metadata 缓存路径；telemetry 记录 result=reuse",
         "明确 Phase C/D 的命令集由最终风险组合与证据新鲜度决定，不因阶段存在就固定全量执行"
@@ -359,7 +358,7 @@
       "id": 23,
       "name": "external-or-expired-quality-evidence-never-partially-reuses",
       "target": "references/preflight-and-telemetry.md",
-      "prompt": "REPO-2 本次适用三条命令，其中两条是确定性本地 test/check，一条会调用外部测试服务；缓存已有前两条结果。另一个场景三条都是本地命令，但缓存已 25 小时。请决定起点门。",
+      "prompt": "runtime.md 本次适用三条质量命令，其中两条是确定性本地 test/check，一条会调用外部测试服务；缓存已有前两条结果。另一个场景三条都是本地命令，但缓存已 25 小时。请决定起点门。",
       "expected_output": "两个场景都是整组 MISS：有外部时变命令不做部分拼接，TTL 超 24h 也不命中；实跑完整命令集合并记录原因，外部命令使本轮结果不进入可复用缓存。",
       "expectations": [
         "外部、网络或时变命令通过 uncacheable-command 明示，整组固定 MISS",
@@ -375,13 +374,13 @@
       "gates": [
         "硬门禁 13"
       ],
-      "prompt": "一个 Story 只改现有页面的两个私有文件，tasks 文件清单完整。Requirement 明确沿用仓库默认，工程需要是状态持久化与样式 token，并显式给出 PATTERN-STATE-1、PATTERN-TOKEN-1。REPO-3 当前，两张范式卡的证据和 locator 仍存在，未命中 shared-boundary、new-pattern、spec-gap 或 unknown-deps。请完成代码侧勘察。",
-      "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确读取并机械核验证据，不派 recon-codebase；仍写同结构工程依据、完整 REPO-3 指纹与 telemetry。",
+      "prompt": "一个 Story 只改现有页面的两个私有文件，tasks 文件清单完整。Requirement 明确沿用仓库默认，工程需要是取数三态与样式 token，并显式给出 PATTERN-DATA-1、PATTERN-STYLE-1。两条规范的依据清单条目指路仍有效，未命中 shared-boundary、new-pattern、spec-gap 或 unknown-deps。请完成代码侧勘察。",
+      "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确回读并机械核验证据，不派 recon-codebase；仍写同结构工程依据与 telemetry，不写指纹。",
       "expectations": [
         "逐项核对 lite 适用条件，而不是用 Task 数或文件数当风险代理",
-        "只运行 show --pattern-id 精确读取两个范式，并为每个范式核验至少一个声明 locator",
+        "只 grep 两个 PATTERN ID 精确回读，并为每条规范核验至少一个依据清单条目的指路",
         "不开放式搜索相邻源码、不派 recon-codebase，也不创建 Story 范式正文或 codebase-brief.md",
-        "dev-baseline.md 标记勘察模式=lite，保留 Story 需要到 PATTERN/REQ-DEC 的映射与完整 REPO-3 指纹；telemetry 记录 lite 及选择/核验数量"
+        "dev-baseline.md 标记勘察模式=lite，保留 Story 需要到 PATTERN/REQ-DEC 的映射，不写 baseline 指纹；telemetry 记录 lite 及选择/核验数量"
       ],
       "note": "正确行为正例：小范围且工程依据已经唯一时消除开放式重复勘察。"
     },
@@ -392,7 +391,7 @@
       "gates": [
         "硬门禁 13"
       ],
-      "prompt": "一个 Story 要修改公共 Drawer 组件，同时 persistence tag 在 REPO-3 命中两个 PATTERN。另一个变体基线源为参照页，需要找候选路由。请决定代码侧勘察模式与失败处理。",
+      "prompt": "一个 Story 要修改公共 Drawer 组件，同时「状态持有」这个需要在 data.md 命中两条 PATTERN。另一个变体基线源为参照页，需要找候选路由。请决定代码侧勘察模式与失败处理。",
       "expected_output": "两种情况都不得 lite：公共边界、tag 多结果和参照页任一项都强制 full；派 recon-codebase 完整勘察并记录回退原因，不猜选 PATTERN，也不把回退当流程失败。",
       "expectations": [
         "公共组件变更命中 shared-boundary，tag 多结果使唯一映射条件失败",
@@ -556,7 +555,7 @@
         "硬门禁 15"
       ],
       "prompt": "只有一个逻辑 Task，改一个私有纯函数和一个 20 行测试；没有还原轮、路由、公共边界、副作用或不明依赖。请给出最短合法验证路径。",
-      "expected_output": "只走一轮逻辑 6 步，用该声明的 causal RED/GREEN 证据闭环；最终组合可只含 causal 与覆盖该文件的最窄 targeted-quality。不派浏览器、回归或独立检视，也不固定跑 REPO-2 全部命令。",
+      "expected_output": "只走一轮逻辑 6 步，用该声明的 causal RED/GREEN 证据闭环；最终组合可只含 causal 与覆盖该文件的最窄 targeted-quality。不派浏览器、回归或独立检视，也不固定跑 runtime.md 的全部质量命令。",
       "expectations": [
         "逻辑测试仍须先按预期 RED 后 GREEN，保留行为因果证明",
         "没有第二通道就不套双通道；单 intent 可以形成实际执行批次，但不得伪造多个消费者，RED/GREEN 以不同因果边界执行",

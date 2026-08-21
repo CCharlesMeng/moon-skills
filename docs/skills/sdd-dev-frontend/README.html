@@ -2003,7 +2003,7 @@
           </div>
           <div class="evidence-node review">
             <strong><code>dev-review.md</code></strong>
-            <span>四路检视、阻断项与收口结论</span>
+            <span>各路检视、阻断项与收口结论</span>
           </div>
           <div class="evidence-node ac">
             <strong>验收状态</strong>
@@ -2018,11 +2018,11 @@
         <div class="section-head">
           <div>
             <p class="section-kicker">Phase C → D</p>
-            <h2>四个独立视角汇总后，阻断级必须清零</h2>
+            <h2>独立视角汇总后，阻断级必须清零</h2>
           </div>
           <p class="section-intro">
-            检视全部只读、同轮并行。主 agent 汇总、去重并保留证据；
-            代码发生修复后旧结论作废，四份检视重新运行。
+            检视全部只读、同轮并行，派哪几路由本次验证组合决定。
+            检查项与定级来自 sdd-review-frontend；本 skill 只选角色、备证据、汇总去重并保留证据。
           </p>
         </div>
 
@@ -2030,22 +2030,22 @@
           <article class="review-lane">
             <small>L1–L6</small>
             <h3>布局与响应式</h3>
-            <p>真实数据、多视口、跨页一致性、状态样式、滚动与固定元素。</p>
+            <p>layout-lens · CODE-LAYOUT</p>
           </article>
           <article class="review-lane">
             <small>C1–C7</small>
             <h3>代码规范</h3>
-            <p>对照仓内 M / S / H / P 事实，检查命名、token、封装和类型逃逸。</p>
+            <p>convention-lens · CODE-CONVENTION</p>
           </article>
           <article class="review-lane">
             <small>Q1–Q8</small>
             <h3>工程质量</h3>
-            <p>职责、重复、复杂度、状态、副作用、边界、遗留与性能。</p>
+            <p>quality-lens · CODE-QUALITY</p>
           </article>
           <article class="review-lane">
             <small>F1–F4 + REG</small>
             <h3>功能自测试</h3>
-            <p>逐行实跑冻结基线，并对比 Phase 0 的既有回归基线。</p>
+            <p>test-lens · CODE-TEST</p>
           </article>
         </div>
 
@@ -2058,13 +2058,13 @@
           </div>
           <div class="loop-arrow" aria-hidden="true">→</div>
           <div class="closure-node">
-            <strong>② 四份检视全量重跑</strong>
-            <span>修复者不自行判断“只波及哪一份”，旧结论全部作废。</span>
+            <strong>② 按依赖精确失效</strong>
+            <span>只作废依赖被改文件的证据与判断，未受影响的继续复用。</span>
           </div>
           <div class="loop-arrow" aria-hidden="true">→</div>
           <div class="closure-node">
             <strong>③ 清零或交回决定权</strong>
-            <span>最多两轮；仍有阻断、越界、Open Question 或 Deferred 时询问你。</span>
+            <span>同一阻断连续三次修不掉，或需越界、改冻结期望时询问你。</span>
           </div>
         </div>
       </div>
@@ -2296,11 +2296,11 @@
           </div>
           <div class="exit-item">
             <b>3</b>
-            <div><strong>阻断级为 0</strong><span>修复后四份检视已经重跑。</span></div>
+            <div><strong>阻断级为 0</strong><span>修复后失效的检视判断已经重跑。</span></div>
           </div>
           <div class="exit-item">
             <b>4</b>
-            <div><strong>没有门禁兜底项</strong><span>无占位、类型错误、硬编码、调试语句或无理由逃逸。</span></div>
+            <div><strong>未清零阻断不牵连无关声明</strong><span>它只把自己命中的那条声明保持未验证。</span></div>
           </div>
           <div class="exit-item">
             <b>5</b>
@@ -2396,11 +2396,11 @@
         },
         c: {
           code: "PHASE C",
-          title: "四个独立视角并行检视",
-          purpose: "布局、代码规范、工程质量和功能自测试同轮进行；结论只分阻断级与建议级，Open Question 单列。",
+          title: "独立视角并行检视",
+          purpose: "由验证组合选中的检视角色同轮进行；检查项与定级来自 sdd-review-frontend，结论只分阻断级与建议级，Open Question 单列。",
           handoff: "dev-review.md + evidence/review/",
           outputs: [
-            "四份检视执行状态",
+            "各路检视执行状态",
             "阻断级与建议级结论",
             "Open Question 与 Deferred 候选",
             "可复现定位和归档截图"
@@ -2409,8 +2409,8 @@
         },
         d: {
           code: "PHASE D",
-          title: "修复、全量复跑，再决定能否收口",
-          purpose: "逐条清零阻断级；代码变更后四份检视全部重跑。最多两轮，仍无法解决时把决定权交回给你。",
+          title: "修复、精确复跑，再决定能否收口",
+          purpose: "逐条清零确证的阻断级；代码变更后只失效依赖被改文件的证据与判断。同一阻断连续三次修不掉时把决定权交回给你。",
           handoff: "最终 dev-review.md 与三行索引",
           outputs: [
             "阻断项修复状态",

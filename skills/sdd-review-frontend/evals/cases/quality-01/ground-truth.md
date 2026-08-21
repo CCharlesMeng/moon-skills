@@ -1,6 +1,6 @@
 # quality-01 · ground truth
 
-被测模块：`agents/review-quality.md`。评分口径见 [模块与评测.md 第三节](../../../../../../docs/skills/frontend-sdd/模块与评测.md)。
+被测对象：[quality checklist](../../../frontend-code-checklists/quality.md)。派发走 `sdd-dev-frontend/agents/review-quality.md`，它只影响格式合规那一项。评分口径见 [模块与评测.md 第三节](../../../../../docs/skills/frontend-sdd/模块与评测.md)。
 
 这是 `review-quality` 的第一条种子缺陷用例，复用 `convention-01`/`convention-02` 同一套 `repo/` 与 `baseline/` 源料，只换了一份专为 Q1–Q8 设计的 Story 改动——`review-quality` 与 `review-convention` 判据完全不同（前者没有仓内基准，后者靠 `PATTERN-*`），混着用同一份代码规范用例的诱饵会两边串味，所以单独开一个 Story。
 
@@ -34,8 +34,8 @@
 
 | # | 位置 | 为什么不得报 |
 | --- | --- | --- |
-| NG-1 | `HoldingsTable.tsx` L7–L12 `toAmountLabel` 判为 Q2 重复代码 | 与工程依据的 `PATTERN-FORMAT-1`（`formatAmount`）语义等价（同为万元单位、非有限数返回 `--`），提示词明文规定"与工程依据所选公共能力 `PATTERN-*` 重复的不在这里报，那是代码规范检视 C5 的地盘"。标注 `可能与规范检视重叠` 提及不计误报，判成 Q2 违规才计误报 |
-| NG-2 | `useHoldings.ts` 或 `HoldingsTable.tsx` 判出 Q6 「403 权限」类问题 | `request()` 已经把 `TENANT_FORBIDDEN` 等错误码统一映射进 `error` 字段并交给 `error` 分支渲染（`PATTERN-REQUEST-1`），本 Story 没有额外引入权限缺口；`dev-baseline.md` 也没有权限相关的 F3 行 |
+| NG-1 | `HoldingsTable.tsx` L7–L12 `toAmountLabel` 判为 Q2 重复代码 | 与工程依据的 `PATTERN-COMP-2`（`formatAmount`）语义等价（同为万元单位、非有限数返回 `--`），提示词明文规定"与工程依据所选公共能力 `PATTERN-*` 重复的不在这里报，那是代码规范检视 C5 的地盘"。标注 `可能与规范检视重叠` 提及不计误报，判成 Q2 违规才计误报 |
+| NG-2 | `useHoldings.ts` 或 `HoldingsTable.tsx` 判出 Q6 「403 权限」类问题 | `request()` 已经把 `TENANT_FORBIDDEN` 等错误码统一映射进 `error` 字段并交给 `error` 分支渲染（`PATTERN-API-1`），本 Story 没有额外引入权限缺口；`dev-baseline.md` 也没有权限相关的 F3 行 |
 
 ## 三、可报可不报项（不计入任何分母）
 
@@ -43,14 +43,14 @@
 | --- | --- | --- |
 | OPT-1 | `useHoldings.ts` 整份文件缺少取消（`AbortController`） | 与 GT-2 同源——缺取消是竞态的根因之一。单独作为 Q5「清理」子项报出、不单独计分；判成阻断级理由若只写"没清理"而没给出 GT-2 的具体触发序列，不满足 Q5 阻断级"确证"要求，应判建议级 |
 | OPT-2 | `HoldingsTable.tsx` L5 `REGIONS` 数组每次模块加载只创建一次（模块级常量），不在渲染路径内 | 提及"这不是性能问题"是正确的范围说明，不计误报也不计命中 |
-| OPT-3 | `<story-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
+| OPT-3 | `<story-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
 | OPT-4 | Open Question 里问「500 条持仓要不要虚拟化」 | 呼应 GT-6，属于加分的范围说明，不是必须项 |
 
 ## 四、必须出现的行为（格式合规，6 项）
 
 逐项通过才算格式合规满分。
 
-- [ ] **没有以「前置缺失」终止。** `dev-baseline.md`、`tasks.md` 均存在且可读；本现场的 `status` 会报 `REPO-3` 失效，那是本 Story 新增源码文件造成的，不是仓库事实过期
+- [ ] **没有以「前置缺失」终止。** `dev-baseline.md`、`tasks.md` 与八份仓库 baseline 均存在且可读；本 Story 新增的源码文件不构成任何 baseline 失效
 - [ ] 回传是 schema v1 裸 JSON，`role=review-quality`，coverage 恰好包含 Q1–Q8；无发现维度用 `result=clear` 并给出 scope
 - [ ] **不把 NG-1 判成 Q2 违规**；提及时标注 `可能与规范检视重叠`
 - [ ] **Q5（GT-2）给出具体触发操作序列**（两次切换筛选的顺序与快慢关系），不是泛泛写"可能有竞态"
@@ -74,4 +74,4 @@
 
 **GT-6 是这份用例里目前唯一观察到不稳定的一条。** 两次跑里，第一次（旧版 4 层嵌套时）同时报出了虚拟化（对应 GT-7 之外的 Q8-1）与排序未缓存两条 Q8 发现；第二次只报了虚拟化，漏了排序未缓存那条。这条暂时判定为提示词侧的真实漏检风险（"逐条穷尽，不得找到几条就收敛"在 Q8 内部也适用——找到一条大的性能问题后容易漏掉同一维度里较小的第二条），不是 ground truth 的问题：两次跑的代码逐字节相同。留意它是否在后续跑里持续复发。
 
-历史分数记在 [基线分数.md](../../../../../../docs/skills/frontend-sdd/基线分数.md)。
+历史分数记在 [基线分数.md](../../../../../docs/skills/frontend-sdd/基线分数.md)。

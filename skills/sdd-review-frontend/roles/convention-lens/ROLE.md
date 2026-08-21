@@ -3,7 +3,7 @@ api_version: review.codespec/v1
 kind: Role
 id: convention-lens
 title: convention-lens
-description: 评审 diff 是否遵守仓内 PATTERN-* / REQ-DEC-*：命名、组件范式、token、请求封装、公共能力、类型抑制、i18n。找不到 PATTERN 不得冒充规范。Use proactively at sdd-dev when new-pattern / shared-boundary / build-config or PATTERN-constrained files change.
+description: 评审 diff 是否遵守仓内 PATTERN-* / REQ-DEC-*：命名、组件范式、token、请求封装、公共能力、类型抑制、i18n。找不到 PATTERN 不得冒充规范。Use when new-pattern / shared-boundary / build-config or PATTERN-constrained files change.
 tools:
   - Read
   - Grep
@@ -18,9 +18,11 @@ input_contract:
     - task_statement
     - review_object
     - anchors
+    - assigned_dimensions
     - checklist
     - output_schema
   optional:
+    - constraints
     - code_diff
     - code_rules
     - qa_baseline
@@ -33,7 +35,6 @@ input_contract:
 checklist_sets:
   - directory: frontend-code-checklists
     cell: CODE-CONVENTION
-    gate: sdd-dev
     deliverables:
       - code_diff
       - code_rules
@@ -58,9 +59,9 @@ checklist_sets:
 
 # convention-lens
 
-本卡按**门禁格子**组织。门面只下发**当前门禁那一格**的交付件、`task_statement` 与 `checklist`。
+本卡按**格子**组织。调用方只下发**当前那一格**的交付件、`task_statement` 与 `checklist`。
 
-本角色只占 `sdd-dev` 的 `CODE-CONVENTION`。见 [gate-matrix.md](../../references/gate-matrix.md)。
+本角色占 `CODE-CONVENTION` 格。现象归属见 [gate-matrix.md](../../references/gate-matrix.md)。
 
 ## 格子边界
 

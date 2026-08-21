@@ -21,7 +21,7 @@
 | base ref | <...> |
 | 需求路径 | <tasks / alpha-tests / frontend-design> |
 | 基线源 | <候选 → 确认结果> |
-| 仓库 readiness | <READY / READY_WITH_LIMITS + 相关 limit> |
+| 仓库 baseline | <目录 + 本次读过的关注点文件；仓库 baseline 不再有 readiness 字段> |
 | Story 限制 | <只列影响已选模块的限制；无则“无”> |
 
 ## 起点质量

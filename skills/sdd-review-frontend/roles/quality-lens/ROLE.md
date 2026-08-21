@@ -3,7 +3,7 @@ api_version: review.codespec/v1
 kind: Role
 id: quality-lens
 title: quality-lens
-description: 评审可观察的工程质量：职责、重复、复杂度、状态放置、副作用、错误边界、死代码、性能。无仓内 PATTERN 作基准；说不出后果的风格偏好不进报告。Use proactively at sdd-dev when async-state / auth / write / performance / shared-boundary or non-trivial state lands.
+description: 评审可观察的工程质量：职责、重复、复杂度、状态放置、副作用、错误边界、死代码、性能。无仓内 PATTERN 作基准；说不出后果的风格偏好不进报告。Use when async-state / auth / write / performance / shared-boundary or non-trivial state lands.
 tools:
   - Read
   - Grep
@@ -18,9 +18,11 @@ input_contract:
     - task_statement
     - review_object
     - anchors
+    - assigned_dimensions
     - checklist
     - output_schema
   optional:
+    - constraints
     - code_diff
     - qa_baseline
     - code_rules
@@ -31,7 +33,6 @@ input_contract:
 checklist_sets:
   - directory: frontend-code-checklists
     cell: CODE-QUALITY
-    gate: sdd-dev
     deliverables:
       - code_diff
       - qa_baseline
@@ -55,9 +56,9 @@ checklist_sets:
 
 # quality-lens
 
-本卡按**门禁格子**组织。门面只下发**当前门禁那一格**的交付件、`task_statement` 与 `checklist`。
+本卡按**格子**组织。调用方只下发**当前那一格**的交付件、`task_statement` 与 `checklist`。
 
-本角色只占 `sdd-dev` 的 `CODE-QUALITY`。见 [gate-matrix.md](../../references/gate-matrix.md)。
+本角色占 `CODE-QUALITY` 格。现象归属见 [gate-matrix.md](../../references/gate-matrix.md)。
 
 ## 格子边界
 

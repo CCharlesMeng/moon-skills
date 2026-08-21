@@ -1,21 +1,12 @@
-# 门禁矩阵
+# 格子边界
 
-本包只在 `sdd-dev` 派格。`sdd-prd` / `sdd-design` 不派前端代码格；`sdd-archive-workspace` 是 rollup 门禁，不派任何格子。
+本包定义五个格子，格子清单与对应清单见 [SKILL.md](../SKILL.md#五格)。
 
-| Gate | 本包格子 | 角色 |
-| --- | --- | --- |
-| sdd-prd | — | — |
-| sdd-design | — | — |
-| sdd-dev | CODE-RESTORE | restore-lens |
-| sdd-dev | CODE-LAYOUT | layout-lens |
-| sdd-dev | CODE-CONVENTION | convention-lens |
-| sdd-dev | CODE-QUALITY | quality-lens |
-| sdd-dev | CODE-TEST | test-lens |
-| sdd-archive-workspace | — | — |
+**派哪几格由调用方决定。** 调用方按自己的风险规则选格，在请求里给出 `gate` 标识；本包不枚举有哪些 gate，也不规定某个 gate 该派哪几格。未派的格不是「未执行」，也不生成占位结果。
 
-调用方可以只派风险命中的格子。未派的格不是「未执行」，也不生成占位结果。
+本文件只回答一件事：**同一个现象归哪一格。**
 
-## 格子边界（不得跨格重判）
+## 现象归属（不得跨格重判）
 
 | 现象 | 归属 |
 | --- | --- |
@@ -26,3 +17,5 @@
 | 冻结 F 行与已选 REG 行是否成立 | CODE-TEST |
 
 `PATTERN-*` 语义等价的重复实现走 CODE-CONVENTION 的 `shared-capability-reuse`，不走 CODE-QUALITY 的 `duplicated-code`。
+
+各 `ROLE.md` 的「格子边界」只写自己那侧的例外，不复述本表。

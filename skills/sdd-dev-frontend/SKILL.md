@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 一次只处理一个前端仓 × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](../../docs/skills/frontend-sdd/执行契约.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
 
-`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 的 `REPO-1～3`；本 skill 只产生当前需求的 `DEMAND-1～3`。
+`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 产出的八份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 
 ## 工作流
 
@@ -42,7 +42,7 @@ disable-model-invocation: true
 
 这些门禁保护来源、所有权和状态诚信；它们本身不触发固定验证动作。
 
-0. **仓库事实就绪。** baseline 缺失、失效或让实现不安全时先完成 `sdd-init-frontend`；仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。本 Story 自身改动造成的 REPO-3 失效按 Phase -1 判据放行。
+0. **仓库事实就绪。** baseline 八份文件全缺或栈签名读不出时先完成 `sdd-init-frontend`；仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。单条结论不成立不是就绪问题，按消费点自证就地修。
 1. **执行清单存在。** 没有 `tasks.md` 时，仅在会话已明确 Story、AC、基线和文件范围时按 Phase 0 起草并确认；否则回 `sdd-task`。
 2. **期望先冻结。** QA 基线未经用户确认不得进入 Phase B。
 3. **声明按需生成。** R/F 是分类表；只生成需求与风险实际要求的行，不造 N/A 空壳。
@@ -55,7 +55,7 @@ disable-model-invocation: true
 10. **哈希一致。** `dev-baseline.md` 与 `restore-contract.json` 哈希不一致时拒绝执行，不从当前实现反推期望。
 11. **三色真实。** 还原报告只用 RED/YELLOW/GREEN；YELLOW 不能改写为 GREEN。
 12. **证据分层。** 机器可检项用结构化事实；截图只补机器无法可靠判断的视觉项。
-13. **范式单一所有者。** `PATTERN-*` 正文只在 `repo-baseline.md / REPO-3`；Story 只保存采用的 ID 与指纹。
+13. **规范单一所有者。** `PATTERN-*` 正文只在仓库 baseline，且规范节只有 `sdd-init-frontend` 能改；Story 只保存采用的 ID，不记录 baseline 指纹。清单条目指路失效可就地修单条。
 14. **抽取缺口先登记。** 抽取器退出码 4 的每类覆盖缺口先进入已知缺口，再显式确认重跑。
 15. **浏览器按需解析。** 组合首次选择浏览器模块时才确定并实测 `<browser-driver>`；不可用只影响依赖声明。
 16. **工具缺口不变豁免。** `suspected-tool-equivalence` 退出码 5 只补比对器或上报工具缺口，不改产品实现、不加冻结豁免。
@@ -97,16 +97,16 @@ disable-model-invocation: true
 | --- | --- |
 | 原型切分 / 区块规格 | `extract-prototype` / `extract-block-spec` |
 | 规格 / 代码勘察 | `recon-spec` / 风险触发时的 `recon-codebase` |
-| 独立检视 | 只派验证组合选中的 `review-layout`、`review-convention`、`review-quality`、`self-test` |
+| 独立检视 | 只派验证组合选中的 `review-restore`、`review-layout`、`review-convention`、`review-quality`、`self-test` |
 
-Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的原始事实；检查项、定级与回传契约都不在本 Skill，按 [review-pack-adapter.md](./references/review-pack-adapter.md) 读 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
+Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的原始事实；参数按 [review-request.md](./references/review-request.md) 组装，检查项、定级与回传契约都不在本 Skill，按 [review-pack-adapter.md](./references/review-pack-adapter.md) 读 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
 
 ## 工件管理
 
 | 工件 | 所有权与生命周期 |
 | --- | --- |
-| `repo-baseline.md` | `sdd-init-frontend` 所有；本 skill 校验并按 ID 选读 |
-| `dev-baseline.md` | Phase 0 写执行起点，A2 追加冻结 QA 基线与指纹 |
+| 八份仓库 baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
+| `dev-baseline.md` | Phase 0 写执行起点，A2 追加冻结 QA 基线 |
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |
 | `review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |

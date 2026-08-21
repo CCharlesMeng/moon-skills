@@ -14,8 +14,17 @@ from typing import Any
 
 
 SCHEMA_VERSION = 1
-ROLES = ("review-layout", "review-convention", "review-quality", "self-test")
+ROLES = (
+    "review-restore",
+    "review-layout",
+    "review-convention",
+    "review-quality",
+    "self-test",
+)
+# self-test 不在这里：它的 dimension 是分配到的冻结基线行号（F2-1 / REG-2），
+# 没有固定集合，只能靠 aggregate 的 assignment 比对。
 ROLE_DIMENSIONS = {
+    "review-restore": {f"R{index}" for index in range(1, 7)},
     "review-layout": {f"L{index}" for index in range(1, 7)},
     "review-convention": {f"C{index}" for index in range(1, 8)},
     "review-quality": {f"Q{index}" for index in range(1, 9)},

@@ -22,14 +22,16 @@ inputs:
 
 # 功能自测
 
-只跑验证组合分配的 F/REG。先对账 F1，再实跑 F2–F4 与 REG。coverage 的 `dimension` 用基线行号（如 `F2-1`），本清单条目是检查类，不是行号本身。
+只跑调用方分配的 F/REG。先对账 F1，再实跑 F2–F4 与 REG。coverage 的 `dimension` 用基线行号（如 `F2-1`），本清单条目是检查类，不是行号本身。
+
+`skip_when` 判的是**被分配之后才发现不适用**：未分配的行不出现在 coverage，也不出现在 `skipped`。
 
 ## `ac-test-layer-mapping`
 
 - normative_level: MUST
 - default_severity: P1
 - max_severity: P1
-- skip_when: 验证组合未分配任何 F1 行时记 `skipped`。
+- skip_when: 被分配的行在冻结基线中标为不适用，或其 AC 已被冻结 `EX-n` 豁免时记 `skipped`。
 - legacy_id: F1
 
 **AC ↔ 测试层级映射**：每条已分配 AC 是否写明最小测试层级，以及该层级为什么能观察结果；声明的层级是否真有对应测试或等价证据。
@@ -42,7 +44,7 @@ inputs:
 - normative_level: MUST
 - default_severity: P1
 - max_severity: P0
-- skip_when: 验证组合未分配任何 F2 行时记 `skipped`。
+- skip_when: 被分配的行在冻结基线中标为不适用，或其 AC 已被冻结 `EX-n` 豁免时记 `skipped`。
 - legacy_id: F2
 
 **每条 AC 的可观察判定**：Given / When / Then、页面或状态、成功与失败结果是否在真实运行时可判定。
@@ -55,7 +57,7 @@ inputs:
 - normative_level: MUST
 - default_severity: P1
 - max_severity: P0
-- skip_when: 验证组合未分配任何 F3 行时记 `skipped`。
+- skip_when: 被分配的分支命中已冻结 `EX-n`，或在冻结基线中标为不适用时记 `skipped`。
 - legacy_id: F3
 
 **必测异常与边界**：只跑基线或风险实际列出的错误、空值、超时、重复操作等分支。
@@ -68,7 +70,7 @@ inputs:
 - normative_level: MUST
 - default_severity: P1
 - max_severity: P0
-- skip_when: 验证组合未分配任何 F4 行时记 `skipped`。
+- skip_when: 被分配的接口在冻结基线中标为不适用，或命中已冻结 `EX-n` 时记 `skipped`。
 - legacy_id: F4
 
 **数据与接口契约**：受影响方法、URL、字段、状态码、权限或副作用是否与冻结 F4 一致。
@@ -81,10 +83,10 @@ inputs:
 - normative_level: MUST
 - default_severity: P1
 - max_severity: P0
-- skip_when: 验证组合未选 `regression` / 未分配 REG 行时记 `skipped`。
+- skip_when: 被分配的 REG 行覆盖的入口不在本次风险闭包内时记 `skipped`；没有可比起点属 `unrun`，不记 `skipped`。
 - legacy_id: REG
 
-**既有主路径回归**：只比较验证组合明确选中的风险闭包；判据是 `DEMAND-2` 起点失败集合。
+**既有主路径回归**：只比较调用方明确给出的风险闭包；判据是 `DEMAND-2` 起点失败集合。
    - 相对可比起点新增失败 → **P0**。
    - 没有可比起点 → 不得声称「无回归」；`unrun` + `known_gaps`。
    - 起点已失败、本次未变差 → 不作为本 Story 新增回归。

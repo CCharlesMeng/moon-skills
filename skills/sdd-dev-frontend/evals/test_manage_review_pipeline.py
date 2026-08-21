@@ -168,6 +168,7 @@ class AggregateTests(unittest.TestCase):
             review("review-convention", [f"C{i}" for i in range(1, 8)]),
             review("review-quality", [f"Q{i}" for i in range(1, 9)]),
             review("self-test", ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"]),
+            review("review-restore", [f"R{i}" for i in range(1, 7)]),
         ]
 
     def test_requires_assigned_coverage_and_same_epoch(self):
@@ -181,6 +182,7 @@ class AggregateTests(unittest.TestCase):
                     "review-convention": [f"C{i}" for i in range(1, 8)],
                     "review-quality": [f"Q{i}" for i in range(1, 9)],
                     "self-test": ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"],
+                    "review-restore": [f"R{i}" for i in range(1, 7)],
                 },
             )
         results = self.base_results()
@@ -306,6 +308,42 @@ class AggregateTests(unittest.TestCase):
                 expected_roles=["review-layout"],
                 expected_dimensions={"review-layout": ["L2", "L3"]},
             )
+
+    def test_restore_role_is_aggregated_and_bounded_to_its_dimensions(self):
+        selected = [review("review-restore", ["R1", "R5"])]
+        aggregate = MODULE.aggregate_results(
+            selected,
+            expected_roles=["review-restore"],
+            expected_dimensions={"review-restore": ["R1", "R5"]},
+        )
+        self.assertEqual(aggregate["roles"], {"review-restore": "executed"})
+        self.assertIn("review-restore", MODULE.render_markdown(aggregate))
+
+        # R 维度只有 R1–R6；越界必须被拒，否则 restore 格可以借编号扩张判据。
+        out_of_range = review("review-restore", ["R7"])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unknown dimensions"):
+            MODULE.aggregate_results([out_of_range], expected_roles=["review-restore"])
+
+        # 借用别格的维度号同样越界：restore 不得判 L/C/Q。
+        borrowed = review("review-restore", ["L3"])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unknown dimensions"):
+            MODULE.aggregate_results([borrowed], expected_roles=["review-restore"])
+
+    def test_restore_and_layout_reporting_one_issue_merge_into_one_finding(self):
+        # 同一 canonical_key 出现在两格，说明跨格了；聚合取高级别并保留两个来源，
+        # 让人能回原始证据判断该删掉哪一条，而不是在报告里出现两次。
+        restore = review("review-restore", ["R6"])
+        restore["findings"] = [finding("R6-1", "route:/orders|viewport:1280|overflow", "blocker")]
+        layout = review("review-layout", ["L3"])
+        layout["findings"] = [finding("L3-1", "route:/orders|viewport:1280|overflow")]
+        aggregate = MODULE.aggregate_results(
+            [restore, layout],
+            expected_roles=["review-restore", "review-layout"],
+            expected_dimensions={"review-restore": ["R6"], "review-layout": ["L3"]},
+        )
+        self.assertEqual(aggregate["counts"]["blocker"], 1)
+        self.assertEqual(aggregate["counts"]["suggestion"], 0)
+        self.assertEqual(aggregate["findings"][0]["roles"], ["review-layout", "review-restore"])
 
     def test_unexecuted_role_cannot_smuggle_skipped_dimensions(self):
         result = review("review-layout", ["L2"], status="unexecuted")

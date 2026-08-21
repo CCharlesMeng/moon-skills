@@ -3,7 +3,7 @@ api_version: review.codespec/v1
 kind: Role
 id: layout-lens
 title: layout-lens
-description: 评审跨页一致性、真实数据溢出、目标视口不破、栅格、交互态与滚动/固定。不重判单区块冻结契约。Use proactively at sdd-dev when visual 且跨页/跨视口/overflow。
+description: 评审跨页一致性、真实数据溢出、目标视口不破、栅格、交互态与滚动/固定。不重判单区块冻结契约。Use when visual 改动且风险跨页 / 跨视口 / overflow。
 tools:
   - Read
   - Grep
@@ -18,9 +18,11 @@ input_contract:
     - task_statement
     - review_object
     - anchors
+    - assigned_dimensions
     - checklist
     - output_schema
   optional:
+    - constraints
     - qa_baseline
     - code_diff
     - browser_evidence
@@ -33,7 +35,6 @@ input_contract:
 checklist_sets:
   - directory: frontend-code-checklists
     cell: CODE-LAYOUT
-    gate: sdd-dev
     deliverables:
       - code_diff
       - qa_baseline
@@ -61,9 +62,9 @@ checklist_sets:
 
 # layout-lens
 
-本卡按**门禁格子**组织。门面只下发**当前门禁那一格**的交付件、`task_statement` 与 `checklist`。
+本卡按**格子**组织。调用方只下发**当前那一格**的交付件、`task_statement` 与 `checklist`。
 
-本角色只占 `sdd-dev` 的 `CODE-LAYOUT`。见 [gate-matrix.md](../../references/gate-matrix.md)。
+本角色占 `CODE-LAYOUT` 格。现象归属见 [gate-matrix.md](../../references/gate-matrix.md)。
 
 ## 格子边界
 

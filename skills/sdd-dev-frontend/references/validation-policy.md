@@ -64,19 +64,22 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 | `render` | `visual` | 变更区块的冻结契约；只执行规则要求的 static/render 层，视觉盲区才截图 |
 | `journey` | `interaction` / `navigation` / `auth` / `write`，且自动化 causal 证据不足以覆盖真实运行时 | 合并后的最短用户操作序列，覆盖受影响 AC 与必要异常路径 |
 | `targeted-quality` | 改产品代码 | 覆盖改动依赖闭包的最窄 test/typecheck/lint/build 子集；仓库没有可安全收窄的入口时升级 |
-| `regression` | `shared-boundary` / `navigation` / `auth` / `write` / `unknown-deps` / `build-config` | 受影响入口与下游消费者的回归；依赖闭包不可靠时运行 REPO-2 全量门 |
+| `regression` | `shared-boundary` / `navigation` / `auth` / `write` / `unknown-deps` / `build-config` | 受影响入口与下游消费者的回归；依赖闭包不可靠时运行 `runtime.md` 记录的全部质量命令 |
+| `review-restore` | `visual` 且存在冻结 R 行 | 按最终 diff 重跑**全部已冻结区块**的契约，再从 R1–R6 中分配这些区块涉及的维度 |
 | `review-layout` | `visual` 且跨页、跨视口、共享样式或 `required_states` 含 overflow | 从 L1–L6 中只分配命中风险的维度，页面范围只覆盖风险闭包 |
 | `review-convention` | `new-pattern`、`shared-boundary`、`build-config`，或 diff 触碰 PATTERN 约束且没有确定性检查覆盖 | 从 C1–C7 中只分配 diff 真正触碰的 PATTERN 维度 |
 | `review-quality` | `async-state` / `auth` / `write` / `performance` / `shared-boundary`，或实现引入非平凡状态与副作用 | 从 Q1–Q8 中只分配实际风险维度 |
 | `self-test` | `journey` 存在且现有自动化证据不能直接证明全部受影响声明 | 独立判断对应 F/REG 行；只覆盖验证组合列出的声明 |
 
-同一原始动作只执行一次。多个模块可引用同一条命令或浏览器场景，但各自保留判断。独立判断只在对应 review 模块被触发时成立，不要求四个角色成套出现，也不要求一个角色扫完它的全部分类。
+同一原始动作只执行一次。多个模块可引用同一条命令或浏览器场景，但各自保留判断。独立判断只在对应 review 模块被触发时成立，不要求五个角色成套出现，也不要求一个角色扫完它的全部分类。
+
+`render` 与 `review-restore` 跑的是同一套契约，范围不同：`render` 在 Phase B 只跑当前变更区块，`review-restore` 在 Phase C 按最终 diff 重跑全部已冻结区块。后来的 Task 改了公共样式时，先前区块的 GREEN 只有在这里才会被推翻。
 
 ## 五、执行时机
 
 - Phase B 只取得当前 Task 的 `causal` 证据；`render` 只跑当前变更区块的契约。把状态矩阵、跨页检查和宽回归留给候选阶段。
 - Phase B 修复中只运行失败定位所需的最窄动作，不执行候选级全量门。
-- Phase C 按最终 diff 重编译验证组合；新增触发器只能增加模块。批量执行候选模块，先命令、后浏览器，再派适用的独立检视。
+- Phase C 按最终 diff 重编译验证组合；新增触发器只能增加模块。批量执行候选模块，先命令、后浏览器，再派适用的独立检视。`review-restore` 被选中时，重跑契约属于主 agent 的取证动作，在派发前完成。
 - Phase D 只失效依赖命中的证据和判断。修复引入新触发器时把对应模块加入组合；无触发器不得扩大重跑。最终组合没有全量模块时不补「最终全量门」；命令键仍新鲜就继续复用，不为收尾重跑一遍。
 
 ## 六、升级与收口

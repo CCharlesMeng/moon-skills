@@ -11,7 +11,7 @@
 | 前置 | 来源 |
 | --- | --- |
 | Story diff 可取 | `<base-ref>`；缺失时取提交、暂存、工作区与未跟踪文件并集 |
-| 采用的 `PATTERN-*` / `REQ-DEC-*` 与 REPO-3 指纹 | `<story-dir>/dev-baseline.md`、`<repo-baseline-dir>/repo-baseline.md` |
+| 采用的 `PATTERN-*` / `REQ-DEC-*` | `<story-dir>/dev-baseline.md` 的 ID，正文按 ID 回读 `<repo-baseline-dir>` 对应文件 |
 | 已冻结基线与豁免 | `<story-dir>/dev-baseline.md` |
 | 当前证据包、代码指纹和 C 维度分配 | `<review-evidence>` |
 | 判据 | `<review-pack-dir>/roles/convention-lens/ROLE.md` 与 `frontend-code-checklists/convention.md` |

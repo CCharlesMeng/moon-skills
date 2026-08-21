@@ -3,7 +3,7 @@ api_version: review.codespec/v1
 kind: Role
 id: restore-lens
 title: restore-lens
-description: 评审变更区块是否满足冻结的还原声明 R1–R6。判据是 restore 契约与三色报告，不是跨页或真实数据。Use proactively at sdd-dev when visual restore evidence exists.
+description: 评审变更区块是否满足冻结的还原声明 R1–R6。判据是 restore 契约与三色报告，不是跨页或真实数据。Use when 冻结 R 契约与三色报告存在。
 tools:
   - Read
   - Grep
@@ -18,9 +18,11 @@ input_contract:
     - task_statement
     - review_object
     - anchors
+    - assigned_dimensions
     - checklist
     - output_schema
   optional:
+    - constraints
     - qa_baseline
     - restore_contract
     - restore_report
@@ -33,7 +35,6 @@ input_contract:
 checklist_sets:
   - directory: frontend-code-checklists
     cell: CODE-RESTORE
-    gate: sdd-dev
     deliverables:
       - restore_contract
       - restore_report
@@ -62,9 +63,9 @@ checklist_sets:
 
 # restore-lens
 
-本卡按**门禁格子**组织。门面只下发**当前门禁那一格**的交付件、`task_statement` 与 `checklist`。
+本卡按**格子**组织。调用方只下发**当前那一格**的交付件、`task_statement` 与 `checklist`。
 
-本角色只占 `sdd-dev` 的 `CODE-RESTORE`。`sdd-archive-workspace` 是 rollup 门禁，不派格子（见 [gate-matrix.md](../../references/gate-matrix.md)）。
+本角色占 `CODE-RESTORE` 格。现象归属见 [gate-matrix.md](../../references/gate-matrix.md)。
 
 ## 格子边界
 
