@@ -311,7 +311,15 @@ const REFERENCE_CHECKS = [
   },
   {
     skill: "session-optimize",
-    files: ["references/failure-map.md", "references/learnings-ledger.md"],
+    files: [
+      "references/failure-map.md",
+      "references/handoff-prompt.md",
+      "references/learnings-ledger.md",
+    ],
+  },
+  {
+    skill: "refine-skill",
+    files: ["references/evaluation.md", "references/skill-ledger.md"],
   },
 ];
 

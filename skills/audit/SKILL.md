@@ -97,6 +97,7 @@ description: 用于周期性审查 `.project-context` 下的仓库上下文、�
 - `.project-context/candidates/`
 - `.github/workflows/context-check.yml`
 - `.project-context/impact-rules.yaml`
+- `.learnings/ledger.md`（`session-optimize` 的复盘台账）——衰减规则与 `immune-registry.yaml` 同一套思路：`Last-Seen` 距今超过 90 天的条目标 `needs-review` 并降低置信度，只看是否还在复发，不看条目有多老。台账不在 `.project-context/` 下，因为它必须零设置就能写
 
 如果这次是 post-ship reflect，也要读取本轮确定性证据：
 

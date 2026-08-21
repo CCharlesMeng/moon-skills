@@ -1,15 +1,19 @@
-# 复盘台账：`.learnings/LEARNINGS.md`
+# 复盘台账：`.learnings/ledger.md`
 
 台账存在的唯一理由是让复发可数。没有它，每次复盘都从 n=1 开始，永远只能提"下次注意"，`SKILL.md` 第 5 节的固化门槛也无从判断。
 
+这份台账记的是**项目作用域**的复发：症状是这个仓库的事实，跨仓库累加没有意义。判据是去向而不是类别——去向指向"移交某个 skill 的维护者"的问题不在这里计数，它会在用到那个 skill 的每个仓库里各自复发，计数器挂在项目上就永远偏低（详见下面的固化门槛一节）。
+
 ## 位置与初始化
 
-项目根的 `.learnings/LEARNINGS.md`，单文件。不存在时创建：
+项目根的 `.learnings/ledger.md`，单文件。不存在时创建：
 
 ```bash
 mkdir -p .learnings
-[ -f .learnings/LEARNINGS.md ] || printf '# Learnings\n\n复盘台账：按 Pattern-Key 去重，按 Recurrence-Count 计数。格式见 session-optimize/references/learnings-ledger.md。\n\n---\n' > .learnings/LEARNINGS.md
+[ -f .learnings/ledger.md ] || printf '# 复盘台账（session-optimize）\n\n按 Pattern-Key 去重，按 Recurrence-Count 计数。格式见 session-optimize/references/learnings-ledger.md。\n\n本文件独立于同目录下其他工具的 LEARNINGS.md / ERRORS.md 等文件，清理那些文件时不要连带删除本文件。\n\n---\n' > .learnings/ledger.md
 ```
+
+`.learnings/` 是个公共目录，别的工具也会往里写自己的文件，所以表头要写明归属——有些工具的卸载说明会让人"删除前先检视 `.learnings/`"，那一刻靠的就是这句话。
 
 台账要进版本库。放进 `.gitignore` 会让计数只在本机累积，跨会话、跨机器的复发就再也数不出来。
 
@@ -18,7 +22,7 @@ mkdir -p .learnings
 这是本 skill 唯一免批准的写入，边界要窄：
 
 - **允许**：追加新条目；更新已有条目的 `Recurrence-Count`、`Last-Seen`、`Status`、`See Also`、`Resolution`。
-- **不允许**：删除或重写历史条目的事实内容；改 `.learnings/` 下的其他文件；顺手整理格式；用台账写入替代任何需要批准的项目修改。
+- **不允许**：删除或重写历史条目的事实内容；改 `.learnings/` 下的其他文件（包括旧台账 `LEARNINGS.md` 和别的工具的文件，它们一律只读）；顺手整理格式；用台账写入替代任何需要批准的项目修改。
 - **不记**：凭据、令牌、私钥、环境变量值、个人信息、完整日志或完整源文件。证据用短摘要或脱敏摘录，不贴原始输出。
 - 子代理不得写台账，只有主 Agent 写。
 
@@ -27,7 +31,7 @@ mkdir -p .learnings
 ## 条目格式
 
 ```markdown
-## [LRN-20260806-001] decision.unverified-claim
+## [RETRO-20260806-001] decision.unverified-claim
 
 **类别**: 流程/决策（L2）
 **严重程度**: 高
@@ -57,7 +61,7 @@ mkdir -p .learnings
 
 | 字段 | 取值 | 说明 |
 | --- | --- | --- |
-| ID | `LRN-YYYYMMDD-XXX` | XXX 为当日序号或 3 位随机字符 |
+| ID | `RETRO-YYYYMMDD-XXX` | XXX 为当日序号或 3 位随机字符。前缀不用 `LRN-`：`.learnings/` 是公共目录，别的工具也用 `LRN-YYYYMMDD-XXX`，同一天会撞号，`See Also` 也会指向歧义 |
 | `类别` | 八类之一 + 层号 | 取自 `SKILL.md` 第 2 节地图，一条只有一个主类别 |
 | `严重程度` | `高` / `中` / `低` | 与主报告一致 |
 | `Status` | 见下表 | 条目的生命周期状态 |
@@ -80,18 +84,28 @@ mkdir -p .learnings
 
 ## 查重与计数
 
-记账前必须先查重，否则计数不可信：
+记账前必须先查重，否则计数不可信。查重要同时看现台账和同目录的旧台账 `LEARNINGS.md`：
 
 ```bash
-grep -n "Pattern-Key: <类别>.<症状>" .learnings/LEARNINGS.md
+grep -n '\*\*Pattern-Key\*\*: <类别>\.<症状>' .learnings/ledger.md .learnings/LEARNINGS.md 2>/dev/null
 ```
 
-1. **命中**：更新那条已有条目——`Recurrence-Count` +1、刷新 `Last-Seen`、把本次证据要点追加进 `### 证据`（保留原有条目，不覆盖）。严重程度只上调不下调。
-2. **未命中但语义相近**：用 `grep -rh "Pattern-Key:" .learnings/LEARNINGS.md | sort -u` 复查一遍。同一问题换了说法时，复用旧键并在新证据里注明措辞差异，优于新造键。
-3. **确实是新问题**：新建条目，`Recurrence-Count: 1`，`First-Seen` = `Last-Seen` = 今天。
-4. **`Status` 为 `promoted` 或 `resolved` 的条目又复发**：不新建，改回 `pending` 并 +1，在证据里写明"固化后仍复发"——这是固化措施无效的直接信号，比新条目有价值得多。
+旧台账不存在时 `grep` 会以退出码 2 结束（有文件读不到），但对存在的那个文件的输出仍然是正确的——别把它当查重失败，看输出而不是退出码。
+
+**只认顶层加粗的 `**Pattern-Key**:`。** 旧台账里可能混着两种来源：本 skill 早期版本写的条目（要合并计数），和别的工具写的同名文件（不能合并——它有自己的类别词表，把它的条目算进来会让固化门槛提前触发）。区分依据是布局：本 skill 的 `Pattern-Key` 是条目顶层的加粗字段，其他工具通常写成 `### Metadata` 下的 `- Pattern-Key:` 列表项。上面的命令已经锚定加粗形式，不要为了"多找一点"放宽它。
+
+1. **命中现台账**：更新那条已有条目——`Recurrence-Count` +1、刷新 `Last-Seen`、把本次证据要点追加进 `### 证据`（保留原有条目，不覆盖）。严重程度只上调不下调。
+2. **只命中旧台账**：在 `ledger.md` 新建同键条目，`Recurrence-Count` 承接旧值加一，`First-Seen` 沿用旧条目的值，并在 `### 证据` 里注明"计数承接自旧台账 `<旧条目 ID>`"。旧文件保持只读——不改、不删、不搬运条目。同时在总体结论里报一句检测到旧台账，建议维护者迁移；不报的话，还没同步到新版本的其他副本会继续往旧文件写，计数静默分裂成两份，谁都到不了门槛。
+3. **未命中但语义相近**：用 `grep -h '\*\*Pattern-Key\*\*:' .learnings/ledger.md .learnings/LEARNINGS.md 2>/dev/null | sort -u` 复查一遍。同一问题换了说法时，复用旧键并在新证据里注明措辞差异，优于新造键。
+4. **确实是新问题**：新建条目，`Recurrence-Count: 1`，`First-Seen` = `Last-Seen` = 今天。
+5. **`Status` 为 `promoted` 或 `resolved` 的条目又复发**：不新建，改回 `pending` 并 +1，在证据里写明"固化后仍复发"——这是固化措施无效的直接信号，比新条目有价值得多。
+6. **一次会话只计一次**：同一个问题被主 Agent、子代理和用户各提一遍，仍然只是 1 次。计数数的是复发，不是有几个人说过；同一份证据的多次转述不构成多源佐证。计数虚高会让固化门槛提前触发，把一次会话的证据当成三次。
 
 ## 固化门槛与提升目标
+
+**计数器跟着去向走。** 一条只在这个仓库成立的问题记在这里；去向是"移交某个 skill 的维护者"的问题不在这里记账，因为它会在用到那个 skill 的每个仓库里各自复发，计数挂在项目上就永远偏低——它的计数由维护者在源仓用 `refine-skill` 累加（[handoff-prompt.md](handoff-prompt.md)）。卡片的**固化**一行写 `<Pattern-Key> | 移交计数 | 不在本台账记账`。
+
+同一个 skill 缺陷在这个仓库里被移交两次不算浪费：那正是维护者需要的第二个数据点。为了"避免重复移交"而在本地记一笔计数，反而会让门槛在项目侧提前触发，把一条该由维护者改的规则拉进项目文档——第 6 节要拦的就是这个。
 
 门槛见 `SKILL.md` 第 5 节。够门槛时，按主类别选提升目标：
 
@@ -100,10 +114,10 @@ grep -n "Pattern-Key: <类别>.<症状>" .learnings/LEARNINGS.md
 | `背景输入不足` | 项目约束文档或任务模板（写"开工前必须提供什么"） |
 | `知识缺口` | 出问题的那份文档本身；跨任务常用的写进常驻上下文文件（如 `AGENTS.md`、`rules/`） |
 | `使用方式` | 给用户的可复制使用说明；够门槛 → 该类任务的任务模板或开局清单 |
-| `流程/决策` | 属某个 skill 的承重规则 → 移交该 skill 维护者（`SKILL.md` 第 6 节）；只有不属于任何 skill 的流程问题才写项目流程文档 |
-| `工具使用` | 工具选择与调用契约；属某个 skill 的移交该 skill 维护者（`SKILL.md` 第 6 节） |
+| `流程/决策` | 不属于任何 skill 的流程问题在这里计数，提升目标是项目流程文档；属某个 skill 承重规则的按上面的移交处理，不在这里计数 |
+| `工具使用` | 不牵涉 skill 的调用失误在这里计数，提升目标是工具选择与调用契约；属某个 skill 契约的按上面的移交处理，不在这里计数 |
 | `项目实现` | 代码修复 + 回归测试；可复用防护资产走 `immune-debug` 登记 |
-| `工具本身` / `外部环境` | 不固化进规则，只在文档记"已知限制 + 可接受绕行"，并保留移交记录 |
+| `工具本身` / `外部环境` | 不固化进规则，只在文档记"已知限制 + 可接受绕行"，并保留移交记录；记账只为观察频率 |
 
 固化内容写成短的预防规则——下次动手前要做什么，不是事故复述。原条目改 `Status: promoted`，并在 `Resolution` 里写清写进了哪个文件。
 

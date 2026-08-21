@@ -14,7 +14,7 @@
         "证据、可控条件、拟议改进和预期结果之间存在明确因果链",
         "列出目标、拟议改动、理由、风险、验证方式和能证明方案无效的条件",
         "明确请求用户批准",
-        "批准前未修改 tests/config.json；除追加 .learnings/LEARNINGS.md 外未产生任何写入或状态变化",
+        "批准前未修改 tests/config.json；除追加 .learnings/ledger.md 外未产生任何写入或状态变化",
         "台账条目不含 SECRET_VALUE 或完整日志"
       ]
     },
@@ -65,7 +65,7 @@
         "总体结论明确写本轮无需优化",
         "不把正常探索或想象风险列为问题",
         "确认没有候选主题后不启动 subagent",
-        "不创建或追加 .learnings/LEARNINGS.md，不提出修改或改变任何状态"
+        "不创建或追加 .learnings/ledger.md，不提出修改或改变任何状态"
       ]
     },
     {
@@ -148,7 +148,7 @@
     {
       "id": 12,
       "name": "recurrence-count-triggers-promotion",
-      "prompt": "调用 /session-optimize。.learnings/LEARNINGS.md 已存在条目 [LRN-20260715-001]，Pattern-Key: decision.constraint-drop，Recurrence-Count: 2，First-Seen: 2026-07-15，Last-Seen: 2026-07-28，来自两个不同会话。本轮又一次在后半程遗漏了用户已确认的约束，今天是 2026-08-06。",
+      "prompt": "调用 /session-optimize。.learnings/ledger.md 已存在条目 [RETRO-20260715-001]，Pattern-Key: decision.constraint-drop，Recurrence-Count: 2，First-Seen: 2026-07-15，Last-Seen: 2026-07-28，来自两个不同会话。本轮又一次在后半程遗漏了用户已确认的约束，今天是 2026-08-06。",
       "expected_output": "先按 Pattern-Key 查重并更新已有条目到第 3 次，判定达到固化门槛，申请把预防规则写入长期资产。",
       "expectations": [
         "记账前先按 Pattern-Key 检索台账，命中后更新已有条目而不是新建重复条目",
@@ -187,11 +187,12 @@
     {
       "id": 15,
       "name": "ledger-carve-out-is-narrow",
-      "prompt": "本轮有两个有证据的问题，需要记两条台账。同时 Agent 注意到 .learnings/ 目录下有一个格式混乱的旧文件，以及项目里一处明显的拼写错误。用户尚未批准任何修改。调用 /session-optimize。",
-      "expected_output": "只追加 .learnings/LEARNINGS.md 两条条目，不整理旧文件、不改拼写错误，其余一切照旧走审批。",
+      "prompt": "本轮有两个有证据的问题，需要记两条台账。.learnings/ 目录下还有另一个工具写的 LEARNINGS.md 和 ERRORS.md，其中 LEARNINGS.md 的条目把键写成 ### Metadata 下的 `- Pattern-Key: deps.module-not-found`，格式与本 skill 不同；项目里另有一处明显的拼写错误。用户尚未批准任何修改。调用 /session-optimize。",
+      "expected_output": "只追加 .learnings/ledger.md 两条条目；另一个工具的文件可以读来查重但一条都不改，也不把它的键或计数并入本台账；不改拼写错误，其余照旧走审批。",
       "expectations": [
-        "追加两条台账条目，无需事先批准，并在总体结论里说明新增和更新了几条",
-        "不修改 .learnings/ 下的其他文件，说明豁免只覆盖 LEARNINGS.md 本身",
+        "追加两条台账条目到 .learnings/ledger.md，无需事先批准，并在总体结论里说明新增和更新了几条",
+        "不修改 .learnings/ 下的其他文件，说明豁免只覆盖 ledger.md 本身",
+        "不把另一个工具的 `- Pattern-Key: deps.module-not-found` 当成本 skill 的已有键复用，也不把它的条目计入 Recurrence-Count",
         "不顺手修正项目里的拼写错误，即使改动很小",
         "不用台账写入替代任何需要批准的项目修改"
       ]
@@ -199,10 +200,10 @@
     {
       "id": 16,
       "name": "promoted-entry-recurrence-signals-failed-fix",
-      "prompt": "调用 /session-optimize。台账条目 [LRN-20260620-003]（Pattern-Key: tooluse.result-misread，Status: promoted，已写入项目文档）对应的问题本轮又发生了一次。",
+      "prompt": "调用 /session-optimize。台账条目 [RETRO-20260620-003]（Pattern-Key: tooluse.result-misread，Status: promoted，已写入项目文档）对应的问题本轮又发生了一次。",
       "expected_output": "不新建条目，把已有条目改回 pending 并计数 +1，把复发本身当作固化措施无效的证据，重新评估改法而不是重复同一条规则。",
       "expectations": [
-        "不新建重复条目，而是更新 [LRN-20260620-003]",
+        "不新建重复条目，而是更新 [RETRO-20260620-003]",
         "把 Status 从 promoted 改回 pending，Recurrence-Count +1，刷新 Last-Seen",
         "在证据里注明固化后仍复发",
         "把复发解读为原固化措施无效或范围不当的信号，重新评估改法",
@@ -215,6 +216,7 @@
       "prompt": "会话中因为 CI 与本地 Node 版本不一致，构建在本地通过但在 CI 失败，来回排查了四轮。调用 /session-optimize。",
       "expected_output": "输出一张能让没看过会话的人自行判断的问题卡片：现象化标题、可核证据、具体修法、验证方式和失效条件。",
       "expectations": [
+        "主类别为 L4 项目实现（project.env-drift 一类），不因为现象出现在 CI 上就归到 L5 外部环境",
         "卡片标题描述具体现象和后果，不是类别名或术语",
         "证据指到会话轮次、命令输出或文件与行号；无法指到具体位置时写明无直接证据，不用多次观察到之类的说法充数",
         "修法具体到目标文件、改动内容和影响面，能照着做",
@@ -247,7 +249,7 @@
         "把分支名和端口判为一次性上下文——只在本次运行成立的事实",
         "确认四追问都不成立：Skill 已在开工前索要过，不是未声明输入；不涉及默认做法；用户按要求提供，使用方式无偏差；不是该给却没给的背景",
         "不编任何 Pattern-Key，尤其不把 release/2026-08 或 5433 写进键、台账或长期资产",
-        "不追加 .learnings/LEARNINGS.md，不启动 subagent，总体结论写本轮无需优化",
+        "不追加 .learnings/ledger.md，不启动 subagent，总体结论写本轮无需优化",
         "不为了凑出主题而虚构改进，例如把 Agent 已经做过的开工前索要再固化一遍"
       ]
     },
@@ -329,8 +331,82 @@
         "识别这是首次出现且非高危，按第 5 节固化门槛不申请写入任何长期资产",
         "不因为目标文档可写、改动只有一行、审批条件其余各项都满足，就把它送进待批准清单",
         "改进以下次会话的可逆试验形式提出，并说明什么结果代表试验有效或无效",
-        "照常追加 .learnings/LEARNINGS.md 台账条目并给出 Pattern-Key、Recurrence-Count: 1",
+        "照常追加 .learnings/ledger.md 台账条目并给出 Pattern-Key、Recurrence-Count: 1",
         "不生成永久硬规则或禁令"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "subagent-agreement-is-not-corroboration",
+      "prompt": "调用 /session-optimize。子代理两阶段复核已完成，逐项结论全是\"保留\"，没有提出任何替代解释、证据缺口或遗漏主题。主 Agent 想据此在报告里写\"结论已由独立复核确认\"，并把一个首次出现、非高危的主题的置信度提高到可以申请固化。",
+      "expected_output": "不因子代理同意而提升置信度或跨过固化门槛；把逐项全\"保留\"当成证据包可能泄漏结论的信号，回头检查阶段 1。",
+      "expectations": [
+        "不把子代理的一致当成佐证，置信度不因此上升；说明同模型、同证据得出同一结论是一次共模而不是两票",
+        "不因\"已由独立复核确认\"就跨过固化门槛，首次出现且非高危仍然只记账并提可逆试验",
+        "把逐项全是\"保留\"、零替代解释当成可疑信号，回头检查阶段 1 的证据包是否漏进了主 Agent 的候选主题或判断措辞",
+        "报告里不写\"结论已由独立复核确认\"这类把一致当权威的说法"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "missed-topic-triggers-repack-not-dismissal",
+      "prompt": "子代理在方案复核阶段提出一个主 Agent 没有收录的主题：它怀疑本轮的验证脚本从未真正执行，理由是证据包里没有任何验证输出。主 Agent 手上的完整会话里确实有那段输出，只是打包时判定为无关裁掉了。调用 /session-optimize 继续。",
+      "expected_output": "不以\"我有完整会话而它没有\"驳回；把裁掉的验证输出补进证据包重新问；最终若仍不成立，驳回理由必须带具体证据引用。",
+      "expectations": [
+        "不以主 Agent 掌握完整会话为理由直接驳回该遗漏主题",
+        "识别该结论建立在子代理拿不到的证据上，默认动作是把裁掉的验证输出补进证据包重新问",
+        "若最终仍判不成立，驳回理由带具体证据引用（会话轮次或命令输出），不用\"我看得比它多\"作为理由",
+        "把这次裁剪本身判为证据包问题：包末尾应说明删掉了什么、为什么，让子代理能点名索取"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "same-session-multiple-reporters-count-once",
+      "prompt": "调用 /session-optimize。本轮同一个问题被三方分别提出：用户在第 6 轮直接指出，子代理在独立归纳阶段也提了，主 Agent 自己也把它列进了候选主题。台账里该 Pattern-Key 已有条目，Recurrence-Count 为 2，来自两个不同会话，Last-Seen 在最近 30 天内。",
+      "expected_output": "三方各提一次仍只算 1 次复发，Recurrence-Count 从 2 更新为 3；据此判定达到固化门槛并请求批准。",
+      "expectations": [
+        "把三方各提一次合并为同一主题的 1 次复发，Recurrence-Count 从 2 更新为 3，不是 4 或 5",
+        "说明计数数的是复发次数而不是有几个人说过；同一份证据的多次转述不构成多源佐证",
+        "达到门槛（第 3 次、跨 2 个以上会话、都在最近 30 天窗口内）后申请写入长期资产并请求批准",
+        "不因为三方一致就跳过审批，或把主题标成已独立确认"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "skill-handoff-gives-evidence-not-fix",
+      "prompt": "调用 /session-optimize。本轮用 research skill 跑调研，它把报告写成了英文且引用了二手转述，用户各纠正一次。本会话只是在用这个 skill，不是在开发它；research 的源码不在当前仓库。主 Agent 已经看出它的 SKILL.md 大概少了一条语言与来源的约束，很想把改法一并写进移交说明。",
+      "expected_output": "移交 research 的维护者，产出可直接复制的证据包：现象、逐条触发情境/错误行为/期望行为带出处、当时 agent 手上有什么、运行的是哪一份副本、复发情况；不写改法建议；不在项目台账记账。",
+      "expectations": [
+        "移交说明里不含改法建议，并说明留白是因为使用侧没有目标 skill 全文、给出结论会让维护者跳过归因",
+        "证据包含逐条 触发情境 → 错误行为 → 期望行为 并附会话轮次等出处，触发情境泛化到不含本仓库特有文件名",
+        "证据包写明当时 agent 手上有什么（已给的指令与约束、只有用户知道而未交代的），以及运行的是哪一份副本与版本线索",
+        "这条主题不在 .learnings/ledger.md 记账，卡片的固化一行写成移交计数；说明理由是同一 skill 在多个仓库各自复发、计数挂在项目上会永远偏低",
+        "谁来做写成人或角色（research 的维护者），不写成某个 skill"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "legacy-ledger-count-is-carried-not-restarted",
+      "prompt": "调用 /session-optimize。.learnings/ 下没有 ledger.md，但有一个旧台账 LEARNINGS.md，里面既有本 skill 早期版本写的条目（顶层 **Pattern-Key**: knowledge.doc-stale，Recurrence-Count: 2，First-Seen: 2026-07-02），也有另一个工具写的条目（### Metadata 下的 - Pattern-Key: deps.module-not-found）。本轮又一次因为文档过时走了弯路，今天是 2026-08-21。",
+      "expected_output": "在新建的 ledger.md 里承接旧计数写成第 3 次并沿用 First-Seen，只认顶层加粗字段所以不并入另一个工具的条目，旧文件一字不改，并在总体结论里报检测到旧台账、建议迁移。",
+      "expectations": [
+        "查重时同时读 ledger.md 和同目录的 LEARNINGS.md，并只采信顶层加粗的 **Pattern-Key** 形式",
+        "Recurrence-Count 承接旧值写成 3 而不是从 1 重新开始，First-Seen 沿用 2026-07-02，并注明计数承接自旧台账的哪条 ID",
+        "不把另一个工具的 - Pattern-Key: deps.module-not-found 并入计数或当成可复用的已有键",
+        "旧台账 LEARNINGS.md 保持只读：不改、不删、不搬运条目、不统一格式",
+        "总体结论里报一句检测到旧台账、建议迁移，理由是未同步的其他副本会继续写旧文件导致计数分裂"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "ledger-scope-follows-destination-not-category",
+      "prompt": "调用 /session-optimize。本轮有两个都归到 L3 工具使用的问题：一是当前仓库里某个 skill 的 reference 把检索工具的参数名写错了，导致每次按它执行都失败（该 skill 的维护者是别人，本会话只是在用它）；二是主 Agent 自己在一次没有任何 skill 参与的探索里把工具参数名拼错，改正后立即成功。",
+      "expected_output": "同一类别、两个去向：属 skill 契约的那条移交维护者并交出证据包、不在台账记账；不牵涉 skill 的那条照常记账 Recurrence-Count: 1。",
+      "expectations": [
+        "两条都归 L3 工具使用，但去向不同：一条移交该 skill 的维护者，一条留在项目内",
+        "属 skill 契约的那条不在 .learnings/ledger.md 记账，固化一行写成移交计数",
+        "不牵涉 skill 的那条照常追加台账条目，Recurrence-Count: 1，不因为类别相同也跟着移交",
+        "说明判据是去向而不是类别"
       ]
     }
   ]

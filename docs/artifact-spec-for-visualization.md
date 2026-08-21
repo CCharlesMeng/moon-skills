@@ -30,6 +30,10 @@
     ├── manage_context.py                  ← initialize/sync-context 产出（可选）
     └── context_common.py                  ← initialize/sync-context 产出（可选）
 
+.learnings/                                ← 自改进层（零设置即可写，不依赖 initialize）
+├── ledger.md                              ← session-optimize 产出（项目作用域的复发计数）
+└── skills/<skill-name>.md                 ← refine-skill 产出，仅在 skill 源仓（跨仓库的 skill 缺陷计数）
+
 docs/specs/<topic>/                        ← 分析交付层（per-topic）
 ├── analysis-spec.md                       ← analysis-spec 产出
 ├── design-pack.md                         ← design-pack 产出（按需）
@@ -48,6 +52,7 @@ docs/specs/<topic>/                        ← 分析交付层（per-topic）
 | 类别 | 产物 | 特征 |
 |---|---|---|
 | **持久化资产** | profile.yaml, references.yaml, features/index.yaml, PROFILE.md, lenses, review-rules, immune-* | 跨 session 存在，随 sync-context/audit/immune-debug 演进 |
+| **自改进台账** | .learnings/ledger.md, .learnings/skills/*.md | 跨 session 计数复发，随 session-optimize/refine-skill 追加，由 audit 做新鲜度衰减；不在 `.project-context/` 下，因为它必须在没跑过 initialize 的项目里也能写 |
 | **需求级工件** | analysis-spec.md, design-pack.md, slice-plan.md | 随需求创建，交付后归档 |
 | **验证级工件** | code-review.md, verify.md, spec-check.md, reflect.md | 随 slice/需求完成后产出 |
 

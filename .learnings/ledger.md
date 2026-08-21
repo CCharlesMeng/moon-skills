@@ -1,10 +1,12 @@
-# Learnings
+# 复盘台账（session-optimize）
 
-复盘台账：按 Pattern-Key 去重，按 Recurrence-Count 计数。格式见 session-optimize/references/learnings-ledger.md。
+按 Pattern-Key 去重，按 Recurrence-Count 计数。格式见 session-optimize/references/learnings-ledger.md。
+
+本文件独立于同目录下其他工具的 LEARNINGS.md / ERRORS.md 等文件，清理那些文件时不要连带删除本文件。
 
 ---
 
-## [LRN-20260816-001] knowledge.doc-stale
+## [RETRO-20260816-001] knowledge.doc-stale
 
 **类别**: 知识缺口（L1）
 **严重程度**: 中
@@ -32,7 +34,7 @@
 - 相关文件: skills/sdd-dev-frontend/；DataDashboard/.agents/skills/sdd-dev-frontend/
 - See Also: —
 
-## [LRN-20260816-002] decision.constraint-drop
+## [RETRO-20260816-002] decision.constraint-drop
 
 **类别**: 流程/决策（L2）
 **严重程度**: 中
@@ -55,14 +57,14 @@ QA 基线已经冻结壳层 token 与统一运行时 token 分域，但首次 GR
 ### 处置
 对明确写成“必须经 token / 不得硬编码”的冻结约束，在首次 GREEN 前建立“约束 → 目标范围 → 定向断言或显式豁免”映射；不把所有色值扩成全局禁令。
 
-本次先把 ADR 冲突扫描和高风险 AC 的“原子断言 + 边界值 + 可采集性”作为可逆试验；18→16 的采集器缺陷另见 `LRN-20260817-003`，不把它归咎于冻结流程。
+本次先把 ADR 冲突扫描和高风险 AC 的“原子断言 + 边界值 + 可采集性”作为可逆试验；18→16 的采集器缺陷另见 `RETRO-20260817-003`，不把它归咎于冻结流程。
 
 ### Metadata
 - 去向: sdd-dev-frontend 维护者（建议在本仓用 refine-skill 处理）
 - 相关文件: skills/sdd-dev-frontend/agents/recon-spec.md；skills/sdd-dev-frontend/references/restore-contract.md；skills/sdd-dev-frontend/evals/evals.json
-- See Also: LRN-20260817-003
+- See Also: RETRO-20260817-003
 
-## [LRN-20260816-003] decision.scope-creep
+## [RETRO-20260816-003] decision.scope-creep
 
 **类别**: 流程/决策（L2）
 **严重程度**: 中
@@ -88,7 +90,7 @@ QA 基线已经冻结壳层 token 与统一运行时 token 分域，但首次 GR
 - 相关文件: skills/sdd-dev-frontend/references/phase-entry.md；skills/sdd-dev-frontend/agents/review-quality.md；skills/sdd-dev-frontend/agents/review-convention.md
 - See Also: —
 
-## [LRN-20260816-004] decision.silent-assumption
+## [RETRO-20260816-004] decision.silent-assumption
 
 **类别**: 流程/决策（L2）
 **严重程度**: 中
@@ -114,7 +116,7 @@ QA 基线已经冻结壳层 token 与统一运行时 token 分域，但首次 GR
 - 相关文件: skills/sdd-dev-frontend/references/review-evidence.md；skills/sdd-dev-frontend/references/phase-review-closeout.md
 - See Also: —
 
-## [LRN-20260817-001] decision.unverified-claim
+## [RETRO-20260817-001] decision.unverified-claim
 
 **类别**: 流程/决策（L2）
 **严重程度**: 高
@@ -138,9 +140,9 @@ QA 基线已经冻结壳层 token 与统一运行时 token 分域，但首次 GR
 ### Metadata
 - 去向: sdd-dev-frontend 维护者（待批准）
 - 相关文件: skills/sdd-dev-frontend/scripts/manage_review_pipeline.py；skills/sdd-dev-frontend/references/phase-review-closeout.md
-- See Also: LRN-20260816-004
+- See Also: RETRO-20260816-004
 
-## [LRN-20260817-002] decision.wrong-default
+## [RETRO-20260817-002] decision.wrong-default
 
 **类别**: 流程/决策（L2）
 **严重程度**: 高
@@ -166,7 +168,7 @@ QA 基线已经冻结壳层 token 与统一运行时 token 分域，但首次 GR
 - 相关文件: skills/sdd-dev-frontend/SKILL.md；skills/sdd-dev-frontend/references/phase-entry.md；skills/sdd-dev-frontend/references/validation-batches.md
 - See Also: —
 
-## [LRN-20260817-003] project.contract-collector-mismatch
+## [RETRO-20260817-003] project.contract-collector-mismatch
 
 **类别**: 项目实现（L4）
 **严重程度**: 中
