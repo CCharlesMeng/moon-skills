@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .worktrees/
+
+# 打包产物一律不进仓：内容不可 diff、不可复核，改一个字节整个文件重写。
+# 需要归档就用 git 自己的 tag 或 release，别把压缩包塞进历史。
+*.zip
