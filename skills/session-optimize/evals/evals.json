@@ -412,12 +412,12 @@
     {
       "id": 32,
       "name": "feedback-routes-by-source-location",
-      "prompt": "调用 /session-optimize。本轮只是在使用三个 skill，不是在开发它们，各发现一条承重规则缺陷：A. 领域 skill internal-lint，源码就在当前仓库内；B. 公共 skill research，源仓不在当前仓库，其目录下没有投递配置；C. 公共 skill audit，源仓不在当前仓库，其目录下有部署方提供的投递配置。用户已批准落盘与投递。",
-      "expected_output": "三条按源仓位置分流：A 写入当前仓 .learnings/skill-feedback/；B 只写用户级目录；C 先落本地再按配置提交 issue 并标已投递。都不在本会话接 refine-skill。",
+      "prompt": "调用 /session-optimize。本轮只是在使用三个 skill，不是在开发它们，各发现一条承重规则缺陷：A. 领域 skill internal-lint，源码就在当前仓库内；B. 公共 skill research，源仓不在当前仓库；C. 公共 skill commit-helper，源仓不在当前仓库。投递配置存在，白名单里只有 commit-helper。用户已批准落盘与投递。",
+      "expected_output": "三条按源仓位置与白名单分流：A 写入当前仓 .learnings/skill-feedback/；B 只写用户级目录并报该 skill 未纳入投递；C 先落本地再按配置提交 issue 并标已投递。都不在本会话接 refine-skill。",
       "expectations": [
         "A 写入当前仓库的 .learnings/skill-feedback/，不写用户级目录，也不提交 issue",
-        "B 写入 ~/.learnings/skill-feedback/，不提交 issue",
-        "C 先落一份本地文件，再按配置里的创建命令提交，成功后把本地那份标成已投递",
+        "B 写入 ~/.learnings/skill-feedback/，不提交 issue，报告写成该 skill 未纳入投递而不是未检测到投递配置",
+        "C 先落一份本地文件，再按配置里的创建命令提交（命令里的 skill 占位符替换成 commit-helper），成功后把本地那份标成已投递",
         "三条都不在本会话末尾接 refine-skill，移交对象是各 skill 的维护者"
       ]
     },
@@ -446,11 +446,11 @@
     {
       "id": 35,
       "name": "missing-sink-config-reported-as-local-only",
-      "prompt": "调用 /session-optimize。本轮使用公共 skill research，源仓不在当前仓库，skills/research/ 下没有投递配置。用户已批准落盘。",
-      "expected_output": "只把证据包写到用户级目录，报告明确说明没有投递配置、本次只落了本地文件。",
+      "prompt": "调用 /session-optimize。本轮使用公共 skill research，源仓不在当前仓库，投递配置文件 skills/session-optimize/.feedback-sink.md 不存在。用户已批准落盘。",
+      "expected_output": "只把证据包写到用户级目录，报告明确说明未检测到投递配置、本次只落了本地文件。",
       "expectations": [
         "证据包写入 ~/.learnings/skill-feedback/，不调用任何创建 issue 的命令",
-        "报告写明未检测到投递配置，并且本次只落了本地文件",
+        "报告写明未检测到投递配置（而不是写成该 skill 未纳入白名单），并且本次只落了本地文件",
         "不把这次写成已经投递或已经到达维护者"
       ]
     }

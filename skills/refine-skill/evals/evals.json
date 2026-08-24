@@ -179,12 +179,12 @@
     {
       "id": 16,
       "name": "intake-from-three-paths",
-      "prompt": "/refine-skill research\n\n本会话没有调试过 research。当前仓 .learnings/skill-feedback/ 有一份 pending 包，~/.learnings/skill-feedback/ 另有一份 pending 包，目标 skill 目录下有投递配置且列出命令返回一条未消费的 issue。另有一份本地文件已经标成已投递。",
+      "prompt": "/refine-skill research\n\n本会话没有调试过 research。当前仓 .learnings/skill-feedback/ 有一份 pending 包，~/.learnings/skill-feedback/ 另有一份 pending 包，投递配置的白名单里有 research 且列出命令返回一条未消费的 issue。另有一份本地文件已经标成已投递。",
       "expected_output": "从三条路径都收件，跳过已投递的本地文件，把三份未消费的包纳入纠正清单。",
       "expectations": [
         "读取当前仓 .learnings/skill-feedback/ 里尚未投递的本地文件",
         "读取 ~/.learnings/skill-feedback/ 里尚未投递的本地文件",
-        "按配置的列出命令读取平台上未消费的条目",
+        "按配置的列出命令读取平台上未消费的条目，命令里的 skill 占位符替换成 research，不把别的 skill 的包取回来",
         "跳过本地已标成已投递的文件，不把它再当一份新证据"
       ]
     },

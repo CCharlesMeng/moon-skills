@@ -23,15 +23,10 @@ cur_repo=$(git rev-parse --show-toplevel 2>/dev/null)
 | 路径 | 触发条件 | 落到哪 | git 归属 |
 | --- | --- | --- | --- |
 | 当前仓 | `$src_repo` 非空且 `= $cur_repo` | `<cur_repo>/.learnings/skill-feedback/` | 进 git，同事可见 |
-| 外部 issue | 源仓不在当前仓库内，且有投递配置 | issue 为权威副本，本地留一份在用户级目录 | issue 在平台上，本地副本不在任何仓库 |
-| 用户级 | 源仓不在当前仓库内，且无配置或投递失败 | `~/.learnings/skill-feedback/` | 不在任何仓库 |
+| 外部 issue | 源仓不在当前仓库内，且配置把该 skill 列进白名单 | issue 为权威副本，本地留一份在用户级目录 | issue 在平台上，本地副本不在任何仓库 |
+| 用户级 | 源仓不在当前仓库内，且无配置、不在白名单或投递失败 | `~/.learnings/skill-feedback/` | 不在任何仓库 |
 
-```bash
-mkdir -p "$(git rev-parse --show-toplevel)/.learnings/skill-feedback"   # 当前仓
-mkdir -p ~/.learnings/skill-feedback                                     # 用户级
-```
-
-一个包一个文件，文件名见 [handoff-prompt.md](handoff-prompt.md)。
+目录不存在就先建（`mkdir -p`）。一个包一个文件，文件名见 [handoff-prompt.md](handoff-prompt.md)。
 
 **永不跨仓库写入。** 探测解出了 `$src_repo` 的路径也不写进去——那个仓库不在本轮的批准范围里。报告里给出命令，由人自己执行：
 
@@ -55,37 +50,40 @@ front matter 的五个字段 `skill` / `status` / `created` / `pattern-key` / `s
 
 ## 部署方契约：`.feedback-sink.md`
 
-配置放 `skills/<skill-name>/.feedback-sink.md`，由部署方提供，不进 git（根 `.gitignore` 已有一条），打包分发时不包含它。
+配置是单一文件 `skills/session-optimize/.feedback-sink.md`，由部署方提供，不进 git（根 `.gitignore` 已有一条），打包分发时不包含它。一份管全仓：平台、仓库、CLI、认证对每个 skill 都一样，只有 label 随 skill 变，而这个差异由 `{{skill}}` 承担；按 skill 各配一份，改一次平台地址要改 N 处，漏掉的那几处只会在下一次使用时静默降级。收件侧读的是同一份，从 `refine-skill` 的目录看是 `../session-optimize/.feedback-sink.md`；两个 skill 没部署在同一个父目录下时这条相对路径断掉，那时按无配置处理。
+
+**白名单**：`## skills` 小节一行一个名字，声明哪些 skill 的反馈投到平台。在名单上走 issue 投递；不在名单上与"无配置"同样处理，只落用户级目录。默认不投、列进来才投——投递把内容送出本仓，而不是每个 skill 的维护者都在这个平台上收件。
 
 ### 四条命令
 
-`create` / `list` / `comment` / `label`，**没有 `close`**。投递方只调 `create`；收件方只调 `list`、`comment` 和打 `consumed` label，把 issue 留在打开状态——判据三要数复发次数，关闭等于把计数依据挪进另一个列表。
+`create` / `list` / `comment` / `label`，**没有 `close`**，全仓只写一份、所有白名单 skill 共用。投递方只调 `create`；收件方只调 `list`、`comment` 和打 `consumed` label，把 issue 留在打开状态——判据三要数复发次数，关闭等于把计数依据挪进另一个列表。
 
 | 命令 | 谁调用 | agent 替换的占位符 | 输出如何使用 |
 | --- | --- | --- | --- |
 | `create` | 投递方 | `{{skill}}`、`{{body_file}}` | stdout 最后一行是 `<sink>#<id>`，原样存进 `sink` |
-| `list` | 收件方 | 无 | stdout 是 JSON 数组，元素含 `id` / `title` / `created` / `url` / `body` |
+| `list` | 收件方 | `{{skill}}` | stdout 是 JSON 数组，元素含 `id` / `title` / `created` / `url` / `body` |
 | `comment` | 收件方 | `{{id}}`、`{{body_file}}` | 不解析，只看退出码 |
 | `label` | 收件方 | `{{id}}` | 不解析，只看退出码 |
 
 `list` 返回的 `id` 必须和 `create` 输出里 `#` 之后的部分处在同一个标识空间，否则 `{{id}}` 传不回去。
 
-占位符是"agent 可以替换哪些"的上限，不是"必须出现"：配置按 skill 分文件，把 skill 名写死、命令里不出现 `{{skill}}` 是合规的，遇不到就不替换。
+**`create` 和 `list` 必须带 `{{skill}}`**——命令共享之后它是区分 skill 的唯一手段。`create` 里少了它，所有 skill 的反馈挤进同一个标签，收件方分不出哪一份是自己的；`list` 里少了它，维护者会把别的 skill 的包取回来，按自己 skill 的判据归因，`Recurrence-Count` 加到错的台账上。
 
 某条命令缺失时，依赖它的那一侧按投递失败处理（投递方降级为只落本地，收件方报"该 sink 不可读"）。用别的命令代偿会在平台上多出一条看起来像新反馈的记录，把计数搞脏。
 
-### 配置文件结构
-
-四条命令各占一个二级小节，标题就是命令名，命令在小节的代码块里，一条一行。文件开头声明 `<sink>` 短标识。agent 按标题定位，不必理解平台。
+配置骨架如下：`sink` 短标识、白名单、四条命令各占一节，标题固定，命令在小节的代码块里一条一行。agent 按标题定位，不必理解平台。
 
 ````markdown
-# <skill-name> 的反馈投递配置
+# 反馈投递配置
 
 sink: <短标识，进 front matter 的 `sink` 字段>
 
+## skills
+- <skill-name>
+
 ## create
 ```bash
-<一行命令，正文以 {{body_file}} 传入>
+<一行命令，skill 以 {{skill}} 传入，正文以 {{body_file}} 传入>
 ```
 
 ## list
@@ -123,9 +121,9 @@ sink: <短标识，进 front matter 的 `sink` 字段>
 
 ## 失效可见
 
-配置缺失时，报告里必须明说：**未检测到投递配置，本次只落本地文件**，并说明用户级目录只在使用者自己机器上、不同人之间拿不到，仍需人工转交。
+降级有两种情形，报告里的说法必须分开：配置文件不存在，写**未检测到投递配置，本次只落本地文件**；配置在而目标 skill 不在白名单，写**该 skill 未纳入投递，本次只落本地文件**。两种都只落用户级目录，都要接一句：这个目录只在使用者自己机器上、不同人之间拿不到，仍需人工转交。
 
-这一句就是唯一的安全网，也够了：配置被同步覆盖或解包误删，都会在下一次使用时暴露，期间的反馈都还在本地 `pending`。少了它，使用者以为投出去了，维护者那边一直没有新 issue，两边都不会主动去查。
+分开写是因为两边要做的事不同：前者是配置被同步覆盖或解包误删，属故障，补回配置就恢复；后者是部署方的选择，属预期，要投就先把该 skill 加进名单。混成一句，使用者会去修一个没坏的东西，或者把故障当成"本来就不投"放过去。而这两句也就是唯一的安全网，且够了：两种情形都会在下一次使用时暴露，期间的反馈都还在本地 `pending`；少了它，使用者以为投出去了，维护者那边一直没有新 issue，两边都不会主动去查。
 
 ## 超期
 
