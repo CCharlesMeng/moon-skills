@@ -798,7 +798,7 @@ def aggregate_results(
             "kind": "norm_candidate",
             "id": item["id"],
             "user_visible_text": (
-                f"{item['kind']}：{item['claim']}"
+                f"{display(item['kind'])}：{item['claim']}"
                 + (f"（质疑 {item['target_id']}）" if item.get("target_id") else "")
                 + f"；依据样本 {len(item['samples'])} 处"
             ),
@@ -851,6 +851,86 @@ def attach_evidence_artifacts(
     return aggregate
 
 
+"""给人读的词表：只作用于 `dev-review.md` 的渲染，不改任何线上值。
+
+`dev-review.md` 的列头一直是中文，但单元格里印的是生的枚举值——「结果」列写 `clear`、
+「类型」列写 `norm_candidate`、风险触发器写 `shared-boundary`。读的人得先在脑子里翻译一遍，
+而这些词的英文形态对他没有任何用处：他不写 JSON，也不 grep 这份文件。
+
+**线上格式一个字不动**，所以脚本、单测、fixture、ground truth 与回传契约全不受影响。
+翻译只发生在渲染这一步。
+
+未登记的值按原样印出，不猜、不隐藏——新增一个枚举值却忘了配词条时，读的人会看到英文原文
+（一个可见的提示），而不是一个被悄悄吞掉或翻错的格子。`test_display_vocabulary_is_complete`
+守这一条：当前所有枚举值都必须在表里。
+"""
+DISPLAY = {
+    # 角色 / 格子
+    "review-restore": "还原检视",
+    "review-layout": "布局检视",
+    "review-convention": "规范检视",
+    "review-quality": "质量检视",
+    "self-test": "功能自测试",
+    # 角色执行状态
+    "executed": "已执行",
+    "not_applicable": "判定不适用",
+    "unexecuted": "未执行",
+    # coverage 结果
+    "clear": "无发现",
+    "finding": "有发现",
+    "unrun": "未执行",
+    "skipped": "判定不适用",
+    # 发现级别
+    "blocker": "阻断级",
+    "suggestion": "建议级",
+    # handoff 类型
+    "open_question": "未决问题",
+    "deferred": "暂缓候选",
+    "norm_candidate": "规范候选",
+    # 风险触发器
+    "visual": "视觉",
+    "interaction": "交互",
+    "navigation": "导航",
+    "auth": "鉴权",
+    "write": "写操作",
+    "async-state": "异步状态",
+    "shared-boundary": "共享边界",
+    "build-config": "构建配置",
+    "new-pattern": "新范式",
+    "spec-gap": "规格缺口",
+    "unknown-deps": "未知依赖",
+    "performance": "性能",
+    # 验证模块
+    "causal": "因果证据",
+    "render": "结构化渲染",
+    "journey": "用户路径",
+    "regression": "回归",
+    "targeted-quality": "定向质量",
+    # 规范候选类别
+    "broken": "规范不再成立",
+    "exemption-recurring": "豁免反复出现",
+    # 声明状态（与 docs/skills/frontend-sdd/执行契约.md 的状态表同一套词）
+    "PROVEN": "已验证",
+    "UNVERIFIED": "未验证",
+    "DEFERRED": "已暂缓",
+    # 布尔
+    True: "需要",
+    False: "不需要",
+}
+
+# 只有这些列装枚举值，才翻。自由文本（summary / reason / basis / scope）与标识符
+# （dimension / evidence_ids / source_ids / target_id / samples / 路径）一律原样——
+# 把翻译无差别套到所有格子上，会把「R1-1」「BE-2」这类锚点和人写的句子一起弄坏。
+TRANSLATED_KEYS = {"result", "kind", "level", "trigger", "needs_decision", "status", "role"}
+
+
+def display(value: Any) -> str:
+    """把一个线上值翻成人读的词；未登记的原样返回。"""
+    if isinstance(value, bool):
+        return DISPLAY[value]
+    return DISPLAY.get(value, str(value))
+
+
 def markdown_table(items: list[dict[str, Any]], columns: list[tuple[str, str]]) -> list[str]:
     if not items:
         return ["无。"]
@@ -859,7 +939,13 @@ def markdown_table(items: list[dict[str, Any]], columns: list[tuple[str, str]]) 
         values = []
         for _, key in columns:
             value = item.get(key, "")
-            if isinstance(value, list):
+            if key in TRANSLATED_KEYS:
+                value = (
+                    "、".join(display(part) for part in value)
+                    if isinstance(value, list)
+                    else display(value)
+                )
+            elif isinstance(value, list):
                 value = "、".join(str(part) for part in value)
             values.append(str(value).replace("|", "\\|"))
         lines.append("| " + " | ".join(values) + " |")
@@ -871,9 +957,9 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     lines = [
         "# Dev Review", "",
         "## 给人的摘要", "",
-        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，Open Question {counts['open_question']} 条，Deferred 候选 {counts['deferred']} 条，判定不适用 {counts.get('skipped', 0)} 条。",
+        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，未决问题 {counts['open_question']} 条，暂缓候选 {counts['deferred']} 条，规范候选 {counts.get('norm_candidate', 0)} 条，判定不适用 {counts.get('skipped', 0)} 条。",
         "## 检视基准", "",
-        f"- evidence epoch: `{aggregate['evidence_epoch']}`", f"- code fingerprint: `{aggregate['code_fingerprint']}`",
+        f"- 证据纪元：`{aggregate['evidence_epoch']}`", f"- 代码指纹：`{aggregate['code_fingerprint']}`",
     ]
     if aggregate["findings"]:
         summary_lines = [
@@ -886,12 +972,12 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     for role, status in aggregate["roles"].items():
         gaps = aggregate["known_gaps"][role]
         detail = f"（{'；'.join(str(item) for item in gaps)}）" if gaps else ""
-        lines.append(f"- {role}: {status}{detail}")
+        lines.append(f"- {display(role)}：{display(status)}{detail}")
     portfolio = aggregate.get("validation_portfolio")
     if isinstance(portfolio, dict):
-        triggers = "、".join(str(item) for item in portfolio.get("risk_triggers", [])) or "无"
-        modules = "、".join(str(item) for item in portfolio.get("modules", [])) or "无"
-        lines += [f"- risk triggers: {triggers}", f"- validation modules: {modules}"]
+        triggers = "、".join(display(item) for item in portfolio.get("risk_triggers", [])) or "无"
+        modules = "、".join(display(item) for item in portfolio.get("modules", [])) or "无"
+        lines += [f"- 风险触发器：{triggers}", f"- 验证模块：{modules}"]
     narrowed = aggregate.get("portfolio_narrowed")
     if narrowed:
         lines += ["", "## 组合收窄", ""]
@@ -917,18 +1003,18 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
             lines += ["", f"## {title}", ""]
             lines += markdown_table(items, [("来源", "source_ids"), ("发现", "summary"), ("定位", "location"), ("依据", "basis"), ("证据", "evidence_ids"), ("截图 / 工件", "artifacts")])
     if aggregate["open_questions"]:
-        lines += ["", "## Open Question", ""]
+        lines += ["", "## 未决问题", ""]
         lines += markdown_table(aggregate["open_questions"], [("来源", "source_ids"), ("问题", "summary"), ("证据", "evidence_ids")])
     if aggregate["deferred_candidates"]:
-        lines += ["", "## Deferred 候选", ""]
-        lines += markdown_table(aggregate["deferred_candidates"], [("来源", "source_ids"), ("AC", "ac"), ("原因", "reason"), ("解除条件", "resume_condition")])
+        lines += ["", "## 暂缓候选", ""]
+        lines += markdown_table(aggregate["deferred_candidates"], [("来源", "source_ids"), ("验收标准", "ac"), ("原因", "reason"), ("解除条件", "resume_condition")])
     if aggregate.get("norm_candidates"):
         lines += ["", "## 规范候选（交 sdd-init-frontend）", ""]
         lines += markdown_table(
             aggregate["norm_candidates"],
             [("编号", "id"), ("类别", "kind"), ("质疑对象", "target_id"), ("结论", "claim"), ("依据样本", "samples")],
         )
-    lines += ["", "## Handoff 清单", ""]
+    lines += ["", "## 交接清单", ""]
     lines += markdown_table(aggregate["handoff"], [("类型", "kind"), ("来源", "id"), ("用户可见文本", "user_visible_text"), ("需用户决定", "needs_decision")])
     lines += ["", "## 收口结论", "", "待 Phase D 填写。", ""]
     return "\n".join(lines)

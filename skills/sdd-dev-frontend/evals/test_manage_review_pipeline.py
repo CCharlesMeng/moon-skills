@@ -225,7 +225,7 @@ class AggregateTests(unittest.TestCase):
         markdown = MODULE.render_markdown(aggregate)
         self.assertLess(len(markdown.splitlines()), 70)
         self.assertIn("阻断级 0 条", markdown)
-        self.assertIn("## Handoff 清单\n\n无。", markdown)
+        self.assertIn("## 交接清单\n\n无。", markdown)
 
     def test_accepts_selected_roles_and_zero_role_portfolio(self):
         selected = [review("review-layout", ["L2", "L3"])]
@@ -323,8 +323,9 @@ class AggregateTests(unittest.TestCase):
             expected_roles=["review-restore"],
             expected_dimensions={"review-restore": ["R1", "R5"]},
         )
+        # 线上值保持 review-restore / executed；只有渲染出来的报告用中文词。
         self.assertEqual(aggregate["roles"], {"review-restore": "executed"})
-        self.assertIn("review-restore", MODULE.render_markdown(aggregate))
+        self.assertIn("还原检视", MODULE.render_markdown(aggregate))
 
         # R 维度只有 R1–R6；越界必须被拒，否则 restore 格可以借编号扩张判据。
         out_of_range = review("review-restore", ["R7"])
@@ -476,6 +477,70 @@ class FailureDirectionTests(unittest.TestCase):
             )
 
 
+class DisplayVocabularyTests(unittest.TestCase):
+    """`dev-review.md` 里给人读的格子必须是中文，而线上值一个字不动。
+
+    列头一直是中文，但单元格印的是生的枚举值（「结果」列 `clear`、「类型」列
+    `norm_candidate`）。读的人不写 JSON、也不 grep 这份文件，英文形态对他没用。
+    """
+
+    def test_display_vocabulary_is_complete(self):
+        """新增枚举值却忘了配词条时，这条会红。
+
+        未登记的值会按原样印出英文——不会崩、也不会翻错，但读的人就得自己翻译。
+        所以完整性要有人守，而这里是唯一守它的地方。
+        """
+        expected = (
+            set(MODULE.ROLES)
+            | {"executed", "not_applicable", "unexecuted"}
+            | {"clear", "finding", "unrun", "skipped"}
+            | {"blocker", "suggestion"}
+            | {"open_question", "deferred", "norm_candidate"}
+            | MODULE.NORM_CANDIDATE_KINDS
+            | {"PROVEN", "UNVERIFIED", "DEFERRED"}
+        )
+        missing = sorted(term for term in expected if term not in MODULE.DISPLAY)
+        self.assertEqual(missing, [], f"缺中文词条：{missing}")
+
+    def test_unmapped_value_falls_back_to_itself(self):
+        """兜底必须可见：印英文原文，不吞掉也不猜。"""
+        self.assertEqual(MODULE.display("brand-new-trigger"), "brand-new-trigger")
+
+    def test_identifiers_and_free_text_are_never_translated(self):
+        """维度号、证据 ID 与人写的句子不能被翻译碰到。"""
+        rows = markdown_table_rows(
+            [{"dimension": "Q4", "evidence_ids": ["BE-1"], "summary": "clear 这个词出现在句子里", "result": "clear"}],
+            [("维度", "dimension"), ("证据", "evidence_ids"), ("发现", "summary"), ("结果", "result")],
+        )
+        self.assertIn("Q4", rows)
+        self.assertIn("BE-1", rows)
+        self.assertIn("clear 这个词出现在句子里", rows)
+        self.assertIn("无发现", rows)
+
+    def test_rendered_report_has_no_raw_enum_values(self):
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            norm_candidates=[{
+                "id": "NC-1", "kind": "broken", "target_id": "PATTERN-API-1",
+                "claim": "出现第二个请求出口", "samples": ["src/a.ts:1"],
+            }],
+        )
+        aggregate["validation_portfolio"] = {
+            "risk_triggers": ["visual", "shared-boundary"],
+            "modules": ["render", "causal"],
+        }
+        body = MODULE.render_markdown(aggregate)
+        for raw in ("norm_candidate", "shared-boundary", "Open Question", "Handoff",
+                    "evidence epoch", "risk triggers"):
+            self.assertNotIn(raw, body, f"`{raw}` 仍以英文原样出现在给人读的报告里")
+        for zh in ("规范候选", "共享边界", "交接清单", "证据纪元", "风险触发器"):
+            self.assertIn(zh, body)
+
+
+def markdown_table_rows(items, columns) -> str:
+    return "\n".join(MODULE.markdown_table(items, columns))
+
+
 class NormCandidateTests(unittest.TestCase):
     """规范候选是 Dev → init 的回流通道。
 
@@ -547,7 +612,7 @@ class NormCandidateTests(unittest.TestCase):
             [], evidence_epoch="review-1", code_fingerprint="code-a"
         )
         self.assertEqual(aggregate["counts"]["norm_candidate"], 0)
-        self.assertNotIn("规范候选", MODULE.render_markdown(aggregate))
+        self.assertNotIn("## 规范候选", MODULE.render_markdown(aggregate))
 
 
 if __name__ == "__main__":

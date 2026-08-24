@@ -133,4 +133,6 @@ YELLOW 按原因转为补证、`UNVERIFIED`、`DEFERRED` 或真实 RED；不就�
 
 先输出三行：带验收限定的完成状态、`<story-dir>/dev-review.md`、唯一下一步。全部 `PROVEN` 时写“可验收”；有 `UNVERIFIED` 时写补验方式；有 `DEFERRED` 时写解除条件。
 
+**跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](../../docs/skills/frontend-sdd/执行契约.md#声明与状态)。
+
 `dev-review.md / Handoff` 非空时，再逐条输出 P8 人话条目；条数必须与建议级、Open Question、Deferred 清单一致。
