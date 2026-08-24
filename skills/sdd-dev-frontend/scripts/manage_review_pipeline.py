@@ -667,6 +667,32 @@ def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
     return validated
 
 
+def validate_unplanned_carry(raw: Any) -> list[dict[str, Any]]:
+    """校验计划外承接：Dev 直接承接的、计划文件清单之外的连带改动。
+
+    这条通道原先有个覆盖 bug：共享执行契约要求「在 `alpha-tests.md` 与 `acceptance.md`
+    登记」，而 `acceptance.md` 由聚合器 `atomic_write` **整文件覆盖**——Phase B 手写进去的
+    登记会被 Phase C 冲掉，Phase D 再跑一次 aggregate 又冲一次。两个写入者、一个文件、
+    没有裁决规则，和这个仓修过的「末步两次写入不是原子的」是同一类。
+
+    现在的分工：**`alpha-tests.md` 是权威登记**（agent 写、脚本从不碰），聚合器从同一批
+    数据渲染一份摘要进 `acceptance.md`。每个文件只有一个写入者，覆盖问题从构造上消失。
+
+    只要求契约明写的那两项（文件、原因）加模板已有的 Task。**不收「失效了哪些证据」**——
+    契约说「被承接的文件同样进入依赖闭包与失效判断」，那是 `depends_on` 算出来的，
+    再让人手填一份就是同一事实的第二个来源。
+    """
+    items = require_list(raw, "unplanned_carry")
+    validated: list[dict[str, Any]] = []
+    for index, entry in enumerate(items):
+        label = f"unplanned_carry[{index}]"
+        item = require_dict(entry, label)
+        for field in ("file", "task", "reason"):
+            require_text(item.get(field), f"{label}.{field}")
+        validated.append(item)
+    return validated
+
+
 def aggregate_results(
     results: list[dict[str, Any]],
     expected_roles: list[str] | tuple[str, ...] | None = None,
@@ -677,6 +703,7 @@ def aggregate_results(
     code_files: set[str] | None = None,
     skip_rebuttals: dict[str, list[Any]] | None = None,
     norm_candidates: list[dict[str, Any]] | None = None,
+    unplanned_carry: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     if skip_rebuttals:
@@ -819,6 +846,7 @@ def aggregate_results(
         "open_questions": questions,
         "deferred_candidates": deferred,
         "norm_candidates": list(norm_candidates or []),
+        "unplanned_carry": list(unplanned_carry or []),
         "handoff": handoff,
         "counts": {
             "blocker": sum(item["level"] == "blocker" for item in findings),
@@ -826,6 +854,7 @@ def aggregate_results(
             "open_question": len(questions),
             "deferred": len(deferred),
             "norm_candidate": len(norm_candidates or []),
+            "unplanned_carry": len(unplanned_carry or []),
             "handoff": len(handoff),
             "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
         },
@@ -1058,6 +1087,12 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
             [("验收标准", "ac"), ("为什么缓", "reason"), ("什么条件下解除", "resume_condition")],
         )
 
+    if aggregate.get("unplanned_carry"):
+        lines += ["", "## 顺带改到的文件（计划外承接）", ""]
+        lines += markdown_table(
+            aggregate["unplanned_carry"],
+            [("文件", "file"), ("属哪个 Task", "task"), ("为什么必须一并改", "reason")],
+        )
     if aggregate.get("norm_candidates"):
         # 这一节有 init 侧的读者，保留可被逐条对账的形状。
         lines += ["", "## 交 sdd-init-frontend 的规范候选", ""]
@@ -1072,7 +1107,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         "- 逐条声明与它的证据：`alpha-tests.md`",
         f"- 全部覆盖明细与结构化结论：`review-results.json`（共 {counts.get('handoff', 0)} 条交接项、"
         f"{counts.get('skipped', 0)} 条判定不适用）",
-        "", "## 收口结论", "", "待 Phase D 填写。", "",
+        "",
     ]
     return "\n".join(lines)
 
@@ -1153,6 +1188,11 @@ def command_aggregate(args: argparse.Namespace) -> None:
             if args.norm_candidates
             else []
         ),
+        unplanned_carry=(
+            validate_unplanned_carry(read_json(Path(args.unplanned_carry)))
+            if args.unplanned_carry
+            else []
+        ),
     )
     aggregate["validation_portfolio"] = portfolio
     aggregate["portfolio_narrowed"] = narrowed
@@ -1200,6 +1240,10 @@ def parser() -> argparse.ArgumentParser:
     aggregate.add_argument(
         "--norm-candidates",
         help="JSON array：Dev 发现的仓库级规范变化，回流给 sdd-init-frontend；无则省略",
+    )
+    aggregate.add_argument(
+        "--unplanned-carry",
+        help="JSON array：计划外承接的连带改动，权威登记在 alpha-tests.md；无则省略",
     )
     aggregate.add_argument("--output-json", required=True)
     aggregate.add_argument("--output-markdown", required=True)

@@ -214,7 +214,7 @@ class AggregateTests(unittest.TestCase):
         aggregate = MODULE.aggregate_results(results)
         self.assertEqual(
             aggregate["counts"],
-            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "handoff": 3, "skipped": 0},
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "handoff": 3, "skipped": 0},
         )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
@@ -479,6 +479,61 @@ class FailureDirectionTests(unittest.TestCase):
                 },
                 facts,
             )
+
+
+class UnplannedCarryTests(unittest.TestCase):
+    """计划外承接由聚合器渲染，而不是让人手写进一个会被覆盖的文件。
+
+    原先共享执行契约要求「在 alpha-tests.md 与 acceptance.md 登记」，而 acceptance.md
+    由聚合器整文件覆盖——Phase B 手写的登记会被 Phase C 冲掉，Phase D 再跑又冲一次。
+    """
+
+    ITEM = {
+        "file": "src/lib/format.ts",
+        "task": "T2",
+        "reason": "改了金额口径，调用方的类型签名必须同步，否则 typecheck 不过",
+    }
+
+    def test_accepts_a_well_formed_entry(self):
+        self.assertEqual(MODULE.validate_unplanned_carry([self.ITEM]), [self.ITEM])
+
+    def test_file_task_and_reason_are_all_mandatory(self):
+        """契约明写要登记「文件与原因」；缺任一项就不算登记过。"""
+        for field in ("file", "task", "reason"):
+            with self.subTest(field=field):
+                item = {k: v for k, v in self.ITEM.items() if k != field}
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, field):
+                    MODULE.validate_unplanned_carry([item])
+
+    def test_it_reaches_the_report_and_survives_a_second_aggregate(self):
+        """同一批数据再跑一次 aggregate，结果必须逐字节一致——这就是覆盖问题的反面。"""
+        def build():
+            agg = MODULE.aggregate_results(
+                [], evidence_epoch="review-1", code_fingerprint="code-a",
+                unplanned_carry=[self.ITEM],
+            )
+            return MODULE.render_markdown(agg)
+
+        first = build()
+        self.assertIn("顺带改到的文件（计划外承接）", first)
+        self.assertIn("src/lib/format.ts", first)
+        self.assertEqual(first, build())
+
+    def test_absent_carry_adds_no_section(self):
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a"
+        )
+        self.assertEqual(aggregate["counts"]["unplanned_carry"], 0)
+        self.assertNotIn("计划外承接", MODULE.render_markdown(aggregate))
+
+    def test_no_placeholder_section_is_emitted_for_humans_to_fill(self):
+        """聚合器不留「待 Phase D 填写」这类占位——它下一次重跑会把人写的内容冲掉。"""
+        body = MODULE.render_markdown(
+            MODULE.aggregate_results(
+                [], evidence_epoch="review-1", code_fingerprint="code-a"
+            )
+        )
+        self.assertNotIn("待 Phase D 填写", body)
 
 
 class DisplayVocabularyTests(unittest.TestCase):
