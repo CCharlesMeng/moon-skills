@@ -15,7 +15,7 @@ description: 在同一会话末尾复盘某个 skill 本次执行出的错,改�
 
 1. **纠正清单**,逐条记成 `触发情境 → 错误行为 → 用户想要的正确行为`。两种来源:
    - **本次会话**(默认):盘点本次会话的每次纠正与返工。
-   - **外部移交包**:使用者在别的会话、别的仓库遇到问题,按 `session-optimize` 的移交格式交来的证据。它也可以从三条路径收件(路径与字段见 [feedback-sink.md](../session-optimize/references/feedback-sink.md))；收件只读、评论、打 label,不关闭。它照样逐条过第二步的判据,但先做两件事。
+   - **外部移交包**:使用者在别的会话、别的仓库遇到问题,按 `session-optimize` 的移交格式交来的证据。它也可以从三条路径收件(路径、字段与命令见 [skill-ledger.md](references/skill-ledger.md) 的「收件与去重」)；收件只读、评论、打 label,不关闭。它照样逐条过第二步的判据,但先做两件事。
 2. **逐字通读目标 skill 全目录**:`SKILL.md`、`references/`、`scripts/`、`evals/`。
 
 拿到外部移交包时先做的两件事:

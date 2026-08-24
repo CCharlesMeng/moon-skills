@@ -11,7 +11,7 @@ description: 复盘当前会话中的真实失败，沿失败层地图定位最�
 
 ## 交互规范
 
-遵守 [Skill-User 交互黄金原则](../../PRINCIPLES.md)。
+输出格式逐字照 [interaction.md](references/interaction.md)：P2 结构优于散文、P4 门格式、P5 三行索引、P7 批量提问。
 
 | Phase | 用户可见内容 | 结束方式 |
 | --- | --- | --- |

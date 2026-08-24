@@ -114,4 +114,4 @@ refine-skill/
 
 台账不放在这个目录里,而在源仓的 `.learnings/skills/` 下:skill 会以符号链接或 vendored 副本两种形态部署,放在 skill 目录内会被 vendored 复制进每个消费仓库、各自分叉,跨仓库的复发就再也汇总不起来。
 
-投递配置是单一文件,由部署方放在 `session-optimize` 的目录下(从这里看是 `../session-optimize/.feedback-sink.md`),不进 git,打包时不含它。四条命令全仓只写一份,配置里的白名单声明哪些 skill 走平台,列出命令带 `{{skill}}` 只取目标 skill 的包——少了它会把别人的包取回来,按自己 skill 的判据归因。配置缺失、目标 skill 不在白名单、或两个 skill 没部署在同一个父目录下(相对路径断掉)时,都扫不到平台上的 issue,只收两条本地路径;投递侧会因此只落本地,并在报告里明说是哪一种。
+投递配置是单一文件 `.feedback-sink.md`,由部署方放在投递方 skill 的目录下,不进 git,打包时不含它;收件时在自己所在的 skill 安装根下按 `*/.feedback-sink.md` 搜,不写死哪个目录——两侧未必装在一起。命令全仓只写一份,配置里的白名单声明哪些 skill 走平台,列出命令带 `{{skill}}` 只取目标 skill 的包——少了它会把别人的包取回来,按自己 skill 的判据归因。搜不到配置、或目标 skill 不在白名单时,只收两条本地路径,收口那句里说明是哪一种。收件侧要知道的路径、字段、状态和命令都写在 `references/skill-ledger.md` 里,不依赖投递方随附。
