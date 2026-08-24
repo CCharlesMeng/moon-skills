@@ -133,7 +133,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 | 同一报错连续修 3 次不成 | 决定是否扩大改动范围或调整方案 |
 | 必须修改当前 Task 文件清单以外的文件 | 明确授权或拒绝越界改动 |
 | Phase D 存在阻断项、Open Question 或 Deferred 候选 | 决定处理方式或外部依赖归属 |
-| 全部完成 | 接收最终三行索引和 `dev-review.md` 路径 |
+| 全部完成 | 接收最终三行索引和 `acceptance.md` 路径 |
 
 最重要的一次交互是 **Phase A 确认门**。你确认的是具体、可判定的 QA 基线，而不是一句“按原型实现”。确认后基线会被冻结；后续如果要放宽任何标准，必须登记变更并再次请你确认。
 
@@ -339,7 +339,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 | 产物 | 写入位置 | 交给下一步什么信息 |
 | --- | --- | --- |
-| `dev-review.md` | `<story-dir>/dev-review.md` | 各路检视的执行状态、阻断级、建议级、Open Question、Deferred 候选 |
+| `acceptance.md` | `<story-dir>/acceptance.md` | 各路检视的执行状态、阻断级、建议级、Open Question、Deferred 候选 |
 | 检视截图 | `<story-dir>/evidence/review/` | 被报告引用的布局与功能证据 |
 
 如果某份检视因为已知环境限制无法执行，它不会被静默跳过：执行状态、收口结论和最终状态都会显式注明。
@@ -360,7 +360,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 | 产物 | 最终更新内容 |
 | --- | --- |
-| `dev-review.md` | 阻断项的修复状态、复跑结论、各路检视状态、未验收项 |
+| `acceptance.md` | 阻断项的修复状态、复跑结论、各路检视状态、未验收项 |
 | `alpha-tests.md` | 功能自测试实测结果、AC 最终状态、Deferred 原因与解除条件 |
 | `dev-baseline.md` | 如收口期间调整过基线，保留变更记录和再次确认结果 |
 | `<story-dir>/evidence/review/` | 最终报告引用的可复核截图 |
@@ -369,7 +369,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 ```text
 ✓ sdd-dev-frontend 完成
-产出：<story-dir>/dev-review.md
+产出：<story-dir>/acceptance.md
 下一步：<按当前状态给出的唯一动作>
 ```
 
@@ -395,7 +395,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 | `restore-report-*.json` | Story 级 | B | RED / GREEN 机器结果 |
 | `tasks.md` checkbox | Story 级 | B | 失败恢复、Phase C 前置检查 |
 | `alpha-tests.md` | Story 级 | B + D | AC 证据追溯、功能自测试、最终验收 |
-| `dev-review.md` | Story 级 | C + D | 最终收口与使用者验收 |
+| `acceptance.md` | Story 级 | C + D | 最终收口与使用者验收 |
 | `evidence/` | Story 级 | B + C | 视觉还原与检视证据 |
 
 典型目录布局：
@@ -430,7 +430,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
     ├── restore-adapter.json
     ├── restore-report-red.json
     ├── restore-report-green.json
-    ├── dev-review.md
+    ├── acceptance.md
     └── evidence/
         ├── <Task>-r<轮次>/
         └── review/
@@ -444,7 +444,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 - `tasks.md` 的 6 步 checkbox 全部完成；
 - 每个还原轮的最终机器报告都无 RED、无 YELLOW；未实际匹配项逐条命中冻结豁免；
-- `dev-review.md` 的阻断级为 0；
+- `acceptance.md` 的阻断级为 0；
 - 没有 AC 未覆盖、占位实现、类型错误、调试语句或无理由的类型逃逸；
 - test / typecheck / lint / build 相对 `DEMAND-2` 起点没有变差；
 - `alpha-tests.md` 中每条 AC 都有可追溯证据与状态；
@@ -484,7 +484,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - Story 未变化时复用 `dev-baseline.md` 的工程依据；仓库规范有变动时只重选 ID，不复制正文；
 - 已冻结且内容未变的 QA 基线不会要求你重复确认；
 - 设计规格按区块内容哈希复用；原型指纹覆盖 DOM/CSS 与资源内容/缺失状态，视觉缓存按完整环境键只读复用；
-- `dev-review.md` 的检视结论按依赖失效：代码变化只作废依赖被改文件的那部分，未受影响的继续复用。
+- `acceptance.md` 的检视结论按依赖失效：代码变化只作废依赖被改文件的那部分，未受影响的继续复用。
 
 如果上游修改了 `tasks.md` 或 Story 设计文档，视为 Story 已变化：勘察、QA 基线和确认门都需要重来。
 
@@ -501,7 +501,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 | “只做代码侧勘察” | 重出代码事实 |
 | “重跑还原契约” | 校验基线哈希，重跑 static / render / 按需 visual，更新同阶段报告 |
 | “补还原 YELLOW” | 按 `required_evidence` 补页面、状态 fixture、结构化采集或最后的视觉证据 |
-| “重跑布局检视” | 只更新 `dev-review.md` 的布局检视部分 |
+| “重跑布局检视” | 只更新 `acceptance.md` 的布局检视部分 |
 | “重跑代码规范检视” | 只更新代码规范检视部分 |
 | “重跑质量检视” | 只更新质量检视部分 |
 | “只跑功能自测试” | 只更新功能自测试结果 |
@@ -516,7 +516,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - 认真审阅 Phase A 的 QA 基线。它是后续所有 RED / GREEN、检视分级和收口判断的共同依据。
 - 不要把“接口还没好”写成豁免；应使用 Deferred，并提供可观察的解除条件。
 - 如果要改变响应式布局结构，先补上游规格。上游没有响应式规格时，本 skill 只承诺“不破”：无横向滚动、无重叠、无内容截断。
-- 验收时先看 `dev-review.md`，再沿其中的路径追到 `dev-baseline.md`、`restore-contract.json`、机器报告与 `alpha-tests.md`；只有报告引用 visual 项时才查看截图。
+- 验收时先看 `acceptance.md`，再沿其中的路径追到 `dev-baseline.md`、`restore-contract.json`、机器报告与 `alpha-tests.md`；只有报告引用 visual 项时才查看截图。
 
 ## 进一步阅读
 

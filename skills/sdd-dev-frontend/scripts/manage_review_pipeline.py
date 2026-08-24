@@ -625,7 +625,7 @@ def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
     """校验规范候选：Dev 发现的仓库级事实变化，回流给 `sdd-init-frontend`。
 
     这条通道此前只存在于散文里——`recon-codebase` 会回传「规范待确认」，规则说攒进
-    `dev-review.md` 由 init 重新归纳，但 `dev-review.md` 没有这一节、聚合器的 handoff
+    `acceptance.md` 由 init 重新归纳，但 `acceptance.md` 没有这一节、聚合器的 handoff
     也只有 suggestion / open_question / deferred 三类，装不下它。结果是一句「攒进
     handoff」到不了任何人手里。
 
@@ -851,9 +851,9 @@ def attach_evidence_artifacts(
     return aggregate
 
 
-"""给人读的词表：只作用于 `dev-review.md` 的渲染，不改任何线上值。
+"""给人读的词表：只作用于 `acceptance.md` 的渲染，不改任何线上值。
 
-`dev-review.md` 的列头一直是中文，但单元格里印的是生的枚举值——「结果」列写 `clear`、
+`acceptance.md` 的列头一直是中文，但单元格里印的是生的枚举值——「结果」列写 `clear`、
 「类型」列写 `norm_candidate`、风险触发器写 `shared-boundary`。读的人得先在脑子里翻译一遍，
 而这些词的英文形态对他没有任何用处：他不写 JSON，也不 grep 这份文件。
 

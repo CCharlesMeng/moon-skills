@@ -33,10 +33,10 @@ disable-model-invocation: true
 | P2 | 多项用表格/列表；散文摘要最多两句 |
 | P3 | 直接给结果，不播报阶段过程 |
 | P4 | 确认门写“Phase、产物一句话、请确认继续或指出修改” |
-| P5 | 最终先给状态、`dev-review.md` 路径、下一步三行；有遗留项必须继续输出 handoff |
+| P5 | 最终先给状态、`acceptance.md` 路径、下一步三行；有遗留项必须继续输出 handoff |
 | P6 | 无决策阶段静默衔接；结论意外时才单行告知 |
 | P7 | 同类问题一轮批量问；区分必须回答与带安全默认的推测 |
-| P8 | handoff 与 `dev-review.md` 清单逐条对账，以“现象 + 影响 + 是否需要用户处理”表达 |
+| P8 | handoff 与 `acceptance.md` 清单逐条对账，以“现象 + 影响 + 是否需要用户处理”表达 |
 
 ## 硬门禁
 
@@ -110,7 +110,7 @@ Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的�
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |
 | `review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |
-| `review-results.json` / `dev-review.md` | 适用角色聚合与给人的收口摘要 |
+| `review-results.json` / `acceptance.md` | 适用角色聚合与给人的收口摘要 |
 | `tasks.md` | 只勾 checkbox，不改验收内容 |
 | `alpha-tests.md` | 回填证据、声明状态与 Deferred |
 | `execution-telemetry.json` | 仅流程优化明确需要时开启；缺席不是降级 |
@@ -131,8 +131,8 @@ YELLOW 按原因转为补证、`UNVERIFIED`、`DEFERRED` 或真实 RED；不就�
 
 ## 最终输出
 
-先输出三行：带验收限定的完成状态、`<story-dir>/dev-review.md`、唯一下一步。全部 `PROVEN` 时写“可验收”；有 `UNVERIFIED` 时写补验方式；有 `DEFERRED` 时写解除条件。
+先输出三行：带验收限定的完成状态、`<story-dir>/acceptance.md`、唯一下一步。全部 `PROVEN` 时写“可验收”；有 `UNVERIFIED` 时写补验方式；有 `DEFERRED` 时写解除条件。
 
 **跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](../../docs/skills/frontend-sdd/执行契约.md#声明与状态)。
 
-`dev-review.md` 的「需要你处理」或「你该知道，但不用动」非空时，再逐条输出 P8 人话条目；条数必须与建议级、Open Question、Deferred、规范候选逐类一致。
+`acceptance.md` 的「需要你处理」或「你该知道，但不用动」非空时，再逐条输出 P8 人话条目；条数必须与建议级、Open Question、Deferred、规范候选逐类一致。

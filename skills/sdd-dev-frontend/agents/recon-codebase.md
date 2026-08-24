@@ -79,7 +79,7 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 | 漂移 | 处理 |
 | --- | --- |
 | **清单指路失效**（文件移动或改名，规则本身还成立） | 在 `search_paths` 内重新定位，回传新旧位置，列入“清单待就地修”。主 agent 改那一条并随本 Story 提交，**不阻塞、不路由** |
-| **规范不再成立**（出现第二个请求出口、约定已被普遍违反） | 列入“规范待确认”，写清看到几处反例。攒进 `dev-review.md`，Story 收口时一次确认，由 `sdd-init-frontend` 重新归纳 |
+| **规范不再成立**（出现第二个请求出口、约定已被普遍违反） | 列入“规范待确认”，写清看到几处反例。攒进 `acceptance.md`，Story 收口时一次确认，由 `sdd-init-frontend` 重新归纳 |
 
 分界线是「看一眼代码就能验」还是「要看多个样本才能判」。两种都不静默修改选择，也都不用 Story delta 覆盖仓库事实。
 
@@ -90,7 +90,7 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 | 只影响当前 Story | 不进入 baseline；由 tasks、代码与验证证据承载 |
 | 影响同一 Requirement 的多个 Story | 需要上游 Requirement 工程决策；本子代理不修改上游文档 |
 | 覆盖声明范围外发现的可复用资产 | 列入“清单待追加”，写清指路与被几处引用；主 agent 追加单条并同步该节覆盖声明 |
-| 已是跨 Requirement 的仓库惯例，但需要归纳多个样本 | 列入“规范待确认”，走 `dev-review.md` 攒批 |
+| 已是跨 Requirement 的仓库惯例，但需要归纳多个样本 | 列入“规范待确认”，走 `acceptance.md` 攒批 |
 | 仍只是候选 | 不落盘，不维护候选清单 |
 
 不得生成 Story 级范式卡片、`M-n/S-n/H-n/P-n` 编号或 Story delta。
@@ -139,7 +139,7 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 
 类别只有三个：`broken`（原规范不再成立）、`new-pattern`（已成惯例但需归纳多个样本）、`exemption-recurring`（同一类豁免在多个 Story 反复出现，应升为规范）。`broken` 与 `exemption-recurring` 必须写出质疑对象的 ID；**依据样本必填**，写清在哪几处看到——init 归纳规范要的就是这个，只说「不成立了」会让维护者从零重扫。
 
-主 agent 落盘时只把“Story 需要 → `REQ-DEC-*` / `PATTERN-*`”并入 `dev-baseline.md / 工程依据`，**不写指纹**；证据复核列与参照页候选不复制进 Story 资产。清单待改的就地改进 baseline 并随本 Story 提交；规范待确认的按本表形状交给 Phase C 的 `aggregate --norm-candidates`，由聚合器渲进 `dev-review.md` 的「规范候选」节。
+主 agent 落盘时只把“Story 需要 → `REQ-DEC-*` / `PATTERN-*`”并入 `dev-baseline.md / 工程依据`，**不写指纹**；证据复核列与参照页候选不复制进 Story 资产。清单待改的就地改进 baseline 并随本 Story 提交；规范待确认的按本表形状交给 Phase C 的 `aggregate --norm-candidates`，由聚合器渲进 `acceptance.md` 的「规范候选」节。
 
 ## 六、证据要求
 

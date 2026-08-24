@@ -14,7 +14,7 @@
 - 本 Story 改动文件的仓库相对路径与内容 SHA-256（含未跟踪文件），以及所有待提升 / 当前有效 scenario 的 `depends_on` 文件哈希；
 - 由上述字段确定性计算的 `code_fingerprint`。
 
-只记 `HEAD` 不合格：工作区与未跟踪文件可能还没提交；只列 diff 文件也不足以精确验证未改但被 scenario 依赖的公共文件。主 agent 把包写入 `<story-dir>/review-evidence.json`，机器细节只在这里保存，不复制进 `dev-review.md`。
+只记 `HEAD` 不合格：工作区与未跟踪文件可能还没提交；只列 diff 文件也不足以精确验证未改但被 scenario 依赖的公共文件。主 agent 把包写入 `<story-dir>/review-evidence.json`，机器细节只在这里保存，不复制进 `acceptance.md`。
 
 ## 二、最小结构
 
@@ -147,5 +147,5 @@ telemetry 开启时，每次连接、注入与截图各记一条 `browser_connec
 
 - 机器工件完整保存，human-facing 工件只引用路径、证据 ID 与摘要。
 - 适用检视逐维度判断；无发现维度只有 coverage，只有发现、Open Question 与 Deferred 候选展开。
-- 未触发模块不留空表；`dev-review.md` 不复制浏览器步骤、命令输出或逐规则报告。
+- 未触发模块不留空表；`acceptance.md` 不复制浏览器步骤、命令输出或逐规则报告。
 - AC ↔ 证据映射、`UNVERIFIED` / `DEFERRED`、确证阻断与 handoff 不压缩。

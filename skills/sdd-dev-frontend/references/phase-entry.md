@@ -45,7 +45,7 @@
 
 记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制仓库 baseline，也不记录任何 baseline 指纹。
 
-按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `dev-review.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
+按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `acceptance.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
 
 ### 5. 编译初始验证组合
 

@@ -57,7 +57,7 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 
 拿不准是否命中时加入触发器；不得用 Task 数量或文件数量代替风险事实。
 
-`visual` / `navigation` / `shared-boundary` / `build-config` 的下限由 `<skill-dir>/scripts/classify_diff.py --repo-root <repo-root> --base-ref <base-ref> --out <临时目录>/diff-facts.json` 从 diff 机械给出，组合只能在下限之上扩；确要收窄某条下限触发器时写入 `portfolio_narrowed[]` 并给出理由，它会进 `dev-review.md`。聚合器拒绝既不承接也未署名收窄的组合。
+`visual` / `navigation` / `shared-boundary` / `build-config` 的下限由 `<skill-dir>/scripts/classify_diff.py --repo-root <repo-root> --base-ref <base-ref> --out <临时目录>/diff-facts.json` 从 diff 机械给出，组合只能在下限之上扩；确要收窄某条下限触发器时写入 `portfolio_narrowed[]` 并给出理由，它会进 `acceptance.md`。聚合器拒绝既不承接也未署名收窄的组合。
 
 ## 四、验证模块
 
@@ -91,4 +91,4 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 
 收口逐声明判定，判据只用 [共享执行契约的状态表](../../../docs/skills/frontend-sdd/执行契约.md#声明与状态)，本文件不复制一份。
 
-`UNVERIFIED` 与 `DEFERRED` 都不计入已验收。它们必须进入 `alpha-tests.md`、`dev-review.md` 与最终状态限定，但只影响依赖它们的声明，不把无关声明一并降级。
+`UNVERIFIED` 与 `DEFERRED` 都不计入已验收。它们必须进入 `alpha-tests.md`、`acceptance.md` 与最终状态限定，但只影响依赖它们的声明，不把无关声明一并降级。

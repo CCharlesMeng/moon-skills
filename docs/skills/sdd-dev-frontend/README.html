@@ -1980,7 +1980,7 @@
           </div>
           <p class="section-intro">
             <code>tasks.md</code> 只管进度，<code>alpha-tests.md</code> 只管证据，
-            <code>dev-review.md</code> 只管最终检视；三者各自唯一，不另开第二本账。
+            <code>acceptance.md</code> 只管最终检视；三者各自唯一，不另开第二本账。
           </p>
         </div>
 
@@ -2002,7 +2002,7 @@
             <span>L4 / L3 / 还原记录与状态</span>
           </div>
           <div class="evidence-node review">
-            <strong><code>dev-review.md</code></strong>
+            <strong><code>acceptance.md</code></strong>
             <span>各路检视、阻断项与收口结论</span>
           </div>
           <div class="evidence-node ac">
@@ -2049,7 +2049,7 @@
           </article>
         </div>
 
-        <div class="merge-line"><strong>汇总进入 dev-review.md</strong></div>
+        <div class="merge-line"><strong>汇总进入 acceptance.md</strong></div>
 
         <div class="closure-loop" aria-label="修复与复跑循环">
           <div class="closure-node">
@@ -2116,7 +2116,7 @@
               <span class="artifact-arrow">→</span>
               <span class="artifact">alpha-tests.md</span>
               <span class="artifact-arrow">→</span>
-              <span class="artifact">dev-review.md</span>
+              <span class="artifact">acceptance.md</span>
               <span class="artifact">evidence/</span>
             </div>
           </div>
@@ -2256,7 +2256,7 @@
             </div>
             <div class="resume-rule">
               <strong>检视结论一律重跑</strong>
-              <span>代码已经变化，旧的 <code>dev-review.md</code> 结论不能复用。</span>
+              <span>代码已经变化，旧的 <code>acceptance.md</code> 结论不能复用。</span>
             </div>
           </div>
 
@@ -2322,7 +2322,7 @@
 
         <div class="final-index" aria-label="最终输出示例">
           <strong>✓ sdd-dev-frontend 完成</strong><br>
-          产出：&lt;story-dir&gt;/dev-review.md<br>
+          产出：&lt;story-dir&gt;/acceptance.md<br>
           下一步：&lt;按当前状态给出的唯一动作&gt;
         </div>
       </div>
@@ -2398,7 +2398,7 @@
           code: "PHASE C",
           title: "独立视角并行检视",
           purpose: "由验证组合选中的检视角色同轮进行；检查项与定级来自 sdd-review-frontend，结论只分阻断级与建议级，Open Question 单列。",
-          handoff: "dev-review.md + evidence/review/",
+          handoff: "acceptance.md + evidence/review/",
           outputs: [
             "各路检视执行状态",
             "阻断级与建议级结论",
@@ -2411,7 +2411,7 @@
           code: "PHASE D",
           title: "修复、精确复跑，再决定能否收口",
           purpose: "逐条清零确证的阻断级；代码变更后只失效依赖被改文件的证据与判断。同一阻断连续三次修不掉时把决定权交回给你。",
-          handoff: "最终 dev-review.md 与三行索引",
+          handoff: "最终 acceptance.md 与三行索引",
           outputs: [
             "阻断项修复状态",
             "功能实测回填与 AC 状态",

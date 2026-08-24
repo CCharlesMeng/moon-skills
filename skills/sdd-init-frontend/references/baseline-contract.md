@@ -192,7 +192,7 @@ ID **只增不改号**。前缀即命名空间，各文件独立编号，并行�
 | 角色 | 清单节 | 规范节 | 全量重建 |
 | --- | --- | --- | --- |
 | `sdd-init-frontend` | 可写 | **独占** | 可 |
-| `sdd-task-frontend` / `sdd-dev-frontend` | 可追加、可修正**单条**，须同步覆盖声明 | 只读；异议攒进 `dev-review.md` | 不可 |
+| `sdd-task-frontend` / `sdd-dev-frontend` | 可追加、可修正**单条**，须同步覆盖声明 | 只读；异议攒进 `acceptance.md` | 不可 |
 | `sdd-review-frontend` | 只读 | 只读 | 不可 |
 
 **检视不得修改任何判据。** 让判断者能改自己的判据就等于没有判断；检视发现基准有误只能出 Finding。
@@ -202,7 +202,7 @@ ID **只增不改号**。前缀即命名空间，各文件独立编号，并行�
 | 改动性质 | 处理 |
 | --- | --- |
 | 清单单条（看一眼代码就能验） | 就地改、进本次提交、**不阻塞任何 Task** |
-| 规范（要看多个样本才能判） | 攒进 `dev-review.md`，Story 收口时一次确认 |
+| 规范（要看多个样本才能判） | 攒进 `acceptance.md`，Story 收口时一次确认 |
 
 ## 各文件收纳边界
 
@@ -307,7 +307,7 @@ token、scale、mixin、工具类、主题对象、硬编码基准。主题机�
 
 | 调用方式 | 落点 |
 | --- | --- |
-| 由 `sdd-dev-frontend` 路由进来（有 `<story-dir>`） | 写进 `<story-dir>`，与 `dev-review.md` 同类 |
+| 由 `sdd-dev-frontend` 路由进来（有 `<story-dir>`） | 写进 `<story-dir>`，与 `acceptance.md` 同类 |
 | 用户独立调用（无 Story） | **只回话，不落盘** |
 
 ## 需求级消费契约

@@ -61,7 +61,7 @@
 ## 覆盖与发现
 
 - `status=executed` 时，`coverage` 与 `skipped` 的 `dimension` **合起来**必须恰好等于调用方分配的集合，且互不重叠。未分配的维度两边都不出现。
-- `skipped` 记被分配、但命中 `skip_when` 的维度，每条必须带引用 `skip_when` 的 `reason`。它会落进 `dev-review.md` 的「判定不适用」节——「看过且不适用」与「漏判」「跑不了」是三件事，不要用它替代 `unrun`：能跑而没跑成的写 coverage `unrun` + `known_gaps`。
+- `skipped` 记被分配、但命中 `skip_when` 的维度，每条必须带引用 `skip_when` 的 `reason`。它会落进 `acceptance.md` 的「判定不适用」节——「看过且不适用」与「漏判」「跑不了」是三件事，不要用它替代 `unrun`：能跑而没跑成的写 coverage `unrun` + `known_gaps`。
 - `status=unexecuted` 时 coverage、skipped、findings、`judged_files`、`evidence_reused` / `evidence_added` 全为空，只用 `known_gaps` 解释；原分配集由调用方用来把依赖声明标为未验证。不得为通过结构校验伪造 coverage。
 - `coverage.result` 只有 `clear`、`finding`、`unrun`。`finding` 必须能在 `findings`、`open_questions` 或 `deferred_candidates` 追到对应条目；`unrun` 必须在 `known_gaps` 说明。
 - `canonical_key` 描述同一个可观察问题的稳定身份，不含角色名或级别。两格报同一问题时必须给相同 key——那说明跨格了，删掉不属于本格的那条。同 key 的现象、定位或用户可见文本冲突时聚合器拒绝猜测，由调用方回到原始证据消歧。

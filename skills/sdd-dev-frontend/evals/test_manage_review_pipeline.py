@@ -482,7 +482,7 @@ class FailureDirectionTests(unittest.TestCase):
 
 
 class DisplayVocabularyTests(unittest.TestCase):
-    """`dev-review.md` 里给人读的格子必须是中文，而线上值一个字不动。
+    """`acceptance.md` 里给人读的格子必须是中文，而线上值一个字不动。
 
     列头一直是中文，但单元格印的是生的枚举值（「结果」列 `clear`、「类型」列
     `norm_candidate`）。读的人不写 JSON、也不 grep 这份文件，英文形态对他没用。
@@ -555,7 +555,7 @@ class NormCandidateTests(unittest.TestCase):
     """规范候选是 Dev → init 的回流通道。
 
     此前这条通道只存在于散文里：`recon-codebase` 会回传「规范待确认」，规则说攒进
-    `dev-review.md` 由 init 重新归纳，但 handoff 只有 suggestion / open_question /
+    `acceptance.md` 由 init 重新归纳，但 handoff 只有 suggestion / open_question /
     deferred 三类，装不下它——一句「攒进 handoff」到不了任何人手里。
     """
 

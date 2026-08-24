@@ -61,7 +61,7 @@
 <REPO section、需求输入、原型、QA baseline、restore contract 的指纹>
 ```
 
-## 二、`dev-review.md`
+## 二、`acceptance.md`
 
 **这份文件的主体由 `manage_review_pipeline.py aggregate` 渲染，不要手写。** 它是**人验收时的入口**，所以顺序固定为「能不能验收 → 有什么必须你处理 → 有什么你该知道但不用动 → 往下追的路径」；机器对账细节（代码指纹、证据纪元、逐条覆盖明细）一律不进这份文件，它们在 `review-results.json` 里。
 

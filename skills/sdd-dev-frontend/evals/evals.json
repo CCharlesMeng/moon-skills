@@ -202,7 +202,7 @@
         "硬门禁 13"
       ],
       "prompt": "代码侧勘察时发现两件事：一是 api.md 的 API-1 指到 src/lib/request.ts，但该文件已被移动到 src/shared/http/client.ts，封装本身没变；二是 PATTERN-API-1 声称所有请求都走统一出口，实际在两个特性目录里各有一处新的裸 axios 调用。请分别给出处理。",
-      "expected_output": "第一件是清单指路失效，就地修那一条并随本 Story 提交、不阻塞不路由；第二件是规范可能不成立，攒进 dev-review.md 由 Story 收口时确认，不自行改规范、也不据此放宽检视。",
+      "expected_output": "第一件是清单指路失效，就地修那一条并随本 Story 提交、不阻塞不路由；第二件是规范可能不成立，攒进 acceptance.md 由 Story 收口时确认，不自行改规范、也不据此放宽检视。",
       "expectations": [
         "分界线说成「看一眼代码就能验」还是「要看多个样本才能判」，不是按严重程度分",
         "指路失效就地改单条清单条目，不路由 sdd-init-frontend、不阻塞任何 Task",
@@ -219,12 +219,12 @@
         "退出门禁 5"
       ],
       "prompt": "最终验证组合只触发 review-quality/Q1 与 review-convention/C5，两份检视均为 0 阻断级。Q1-1 指出 Drawer.tsx 为 354 行，建议后续拆小，但 AC、键盘主流程与数据展示均已有新鲜证据；C5-1 指出 formatLabel 与公共 helper 重复，但当前输出正确。两项都没有冻结声明失败或错误复现。修改它们很容易。请收口。",
-      "expected_output": "先按冻结标准与核心可用性重新分级；仍属建议级时不再改代码、不增加修复轮，只写入 dev-review.md 的 Handoff 清单并在最终会话交付。",
+      "expected_output": "先按冻结标准与核心可用性重新分级；仍属建议级时不再改代码、不增加修复轮，只写入 acceptance.md 的 Handoff 清单并在最终会话交付。",
       "expectations": [
         "逐条对照冻结 AC/QA、核心流程、核心可访问性和数据正确性重新判断级别",
         "如果两项仍为建议级，即使修改容易也不得为它们改产品代码",
         "不因建议级额外触发命令、浏览器复验、未分配维度或其他检视角色",
-        "把建议级写入 dev-review.md 的结构化 Handoff 清单，并在三行索引后用人话交付"
+        "把建议级写入 acceptance.md 的结构化 Handoff 清单，并在三行索引后用人话交付"
       ]
     },
     {
@@ -298,13 +298,13 @@
       "gates": [
         "退出门禁 5"
       ],
-      "prompt": "dev-review.md 的 Handoff 清单有四行：H-1 建议级 Q1-1『抽屉组件 354 行，当前功能正确；是否另开 Story 拆分由用户决定』；H-2 建议级 C5-1『标签格式 helper 与公共实现重复，当前输出正确；是否统一由用户决定』；H-3 Open Question L3-OQ-1『720px 下若未来需要改为上下布局须补上游规格；用户已在 P7 选择本 Story 不改、后续再定』；H-4 Deferred AC-7『缺测试账号未验收；账号开通后只跑功能自测试』。主 agent 最终只准备输出 tasks.md、alpha-tests.md、dev-review.md 三行索引。请执行退出门禁。",
-      "expected_output": "退出门禁失败；必须从 dev-review.md 的 Handoff 清单生成四条会话交付，逐类计数一致后才能完成。",
+      "prompt": "acceptance.md 的 Handoff 清单有四行：H-1 建议级 Q1-1『抽屉组件 354 行，当前功能正确；是否另开 Story 拆分由用户决定』；H-2 建议级 C5-1『标签格式 helper 与公共实现重复，当前输出正确；是否统一由用户决定』；H-3 Open Question L3-OQ-1『720px 下若未来需要改为上下布局须补上游规格；用户已在 P7 选择本 Story 不改、后续再定』；H-4 Deferred AC-7『缺测试账号未验收；账号开通后只跑功能自测试』。主 agent 最终只准备输出 tasks.md、alpha-tests.md、acceptance.md 三行索引。请执行退出门禁。",
+      "expected_output": "退出门禁失败；必须从 acceptance.md 的 Handoff 清单生成四条会话交付，逐类计数一致后才能完成。",
       "expectations": [
         "识别 Handoff 清单非空，判定只有三行索引不能退出",
         "最终输出在三行后交付 2 条建议、1 个 Open Question 和 1 个 Deferred",
         "每条用人话说明影响或需要的决定，Deferred 还说明恢复条件或后续动作",
-        "会话交付计数必须与 dev-review.md 三类计数逐项一致，不能只给总数或笼统提示"
+        "会话交付计数必须与 acceptance.md 三类计数逐项一致，不能只给总数或笼统提示"
       ]
     },
     {
@@ -472,7 +472,7 @@
         "退出门禁 2"
       ],
       "prompt": "validation_portfolio 给 review-quality 分配 [Q5,Q6]。该角色返回一份带 Markdown 标题的报告；另一变体返回 JSON，但 evidence_epoch 与其他适用角色不同，并只有 Q5；第三变体返回 Q5/Q6/Q8；第四变体因依赖的运行环境在派发后失效，返回 status=unexecuted、空 coverage 和具体 known_gaps；第五变体只 coverage Q5，Q6 进 skipped 并引用 skip_when 说明 diff 未触碰该面。请汇总。",
-      "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 与 skipped 合起来恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。第五个变体可聚合，Q6 进 dev-review.md 的「判定不适用」节。",
+      "expected_output": "前三个变体都拒绝聚合：正常执行回传必须是裸 JSON、coverage 与 skipped 合起来恰好为 Q5/Q6，并与其他适用角色共享证据纪元与代码指纹；主 agent 不手工补缺失维度，也不接受未分配 Q8。第四个变体可聚合为诚实的未执行结果，Q5/Q6 依赖声明保持 UNVERIFIED，不伪造 coverage。第五个变体可聚合，Q6 进 acceptance.md 的「判定不适用」节。",
       "expectations": [
         "正常检视不接受 Markdown fence、标题或第二份正文，只接受 schema v1 JSON object",
         "status=executed 时 coverage ∪ skipped 必须恰好等于 review_dimensions 分配集；少 Q6 或多 Q8 都不合格",
@@ -490,7 +490,7 @@
         "退出门禁 4",
         "退出门禁 5"
       ],
-      "prompt": "三份适用 JSON 同纪元同指纹：规范与质量用相同 canonical_key 报了同一问题，前者 suggestion、后者 blocker；另有 1 条建议、1 个 Open Question、1 个 Deferred 候选。再分别考虑三个变体：A 三份均无发现；B 相同 canonical_key 的两条 finding 具有不同 user_visible_text 与 location；C 验证组合没有触发任何检视角色。请生成 dev-review 与 handoff。",
+      "prompt": "三份适用 JSON 同纪元同指纹：规范与质量用相同 canonical_key 报了同一问题，前者 suggestion、后者 blocker；另有 1 条建议、1 个 Open Question、1 个 Deferred 候选。再分别考虑三个变体：A 三份均无发现；B 相同 canonical_key 的两条 finding 具有不同 user_visible_text 与 location；C 验证组合没有触发任何检视角色。请生成 acceptance 与 handoff。",
       "expected_output": "主场景对同 key 去重取 blocker、合并来源与证据，Handoff 三类计数精确；A 生成紧凑覆盖、空 Handoff 与收口占位；B 因核心文本冲突拒绝静默聚合，交主 agent 基于原始证据消歧。",
       "expectations": [
         "同 canonical_key 去重取高级别，不把 blocker 放进建议 Handoff，也不擅自改角色级别",
@@ -819,7 +819,7 @@
         "规范候选交 sdd-init-frontend，Story 侧不自行改规范节，也不自行判定新规范已成立",
         "handoff 清单条数与最终 P8 人话条目逐类一致：建议级 3、Open Question 1、Deferred 1、规范候选 2",
         "按退出门禁 5 对账验证组合、模块执行状态、UNVERIFIED、DEFERRED、Open Question 与建议级",
-        "最终先给三行：带验收限定的完成状态、dev-review.md 路径、唯一下一步；有 Deferred 时写解除条件"
+        "最终先给三行：带验收限定的完成状态、acceptance.md 路径、唯一下一步；有 Deferred 时写解除条件"
       ]
     }
   ]
