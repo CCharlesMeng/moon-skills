@@ -49,4 +49,14 @@ python3 "<skill-dir>/scripts/manage_execution_evidence.py" telemetry \
   --note "cache HIT: <state_fingerprint>"
 ```
 
-`result` 只用 `run` / `reuse` / `skip` / `blocked`；重试追加新 `attempt`，不覆盖历史。用户等待单独记 `--kind human_wait`，不并入 agent 执行时间。浏览器探针只在验证组合选择相关模块时记录。Phase D 只从这份 JSON 机械汇总动作次数与耗时，没有记录就写「未记录」，不用 LOC、回忆或估算补。
+`result` 只用 `run` / `reuse` / `skip` / `blocked`；重试追加新 `attempt`，不覆盖历史。用户等待单独记 `--kind human_wait`，不并入 agent 执行时间。Phase D 只从这份 JSON 机械汇总动作次数与耗时，没有记录就写「未记录」，不用 LOC、回忆或估算补。
+
+**浏览器动作分三类记，不并进 `agent`。** 它们的削减手段完全不同，混成一个数就看不出该动哪一边：
+
+| `--kind` | 记什么 | 削减手段 |
+| --- | --- | --- |
+| `browser_connect` | 打开或连接一次页面 | 批量——同页面 / fixture / runtime / reset 边界只连一次 |
+| `browser_inject` | 注入一次采集脚本 | 契约范围——跨页按页面各一次，不是按规则 |
+| `browser_capture` | 截一张图 | 盲区收窄 + visual YELLOW 默认落 `UNVERIFIED` |
+
+浏览器探针只在验证组合选择相关模块时记录（`browser_connect`，`result` 用 `blocked` 表示探针失败）。这三类是当前唯一能把浏览器成本变成实测的入口——在它们落地之前，仓里一条浏览器耗时数据都没有，唯一的次数统计是从事故复盘里捞出来的，不是流程自己产出的。

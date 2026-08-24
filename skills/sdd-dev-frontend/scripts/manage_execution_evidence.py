@@ -518,7 +518,22 @@ def parser() -> argparse.ArgumentParser:
     telemetry.add_argument("--story", required=True)
     telemetry.add_argument("--id", required=True)
     telemetry.add_argument("--attempt", type=int, required=True)
-    telemetry.add_argument("--kind", choices=("agent", "human_wait"), required=True)
+    # 浏览器动作单独分类，不并进 agent。仓里此前一条浏览器耗时数据都没有，
+    # 而唯一的实测数字（一次会话 186 次调用、41 次失败）是从事故复盘里捞出来的，
+    # 不是流程自己产出的——说明流程不会自己暴露最贵的那笔成本。分三类是因为它们
+    # 的削减手段完全不同：连接靠批量（同页面/fixture/runtime/reset 只连一次）、
+    # 注入靠契约范围、截图靠盲区收窄。混成一个数就看不出该动哪一边。
+    telemetry.add_argument(
+        "--kind",
+        choices=(
+            "agent",
+            "human_wait",
+            "browser_connect",
+            "browser_inject",
+            "browser_capture",
+        ),
+        required=True,
+    )
     telemetry.add_argument("--started-at", required=True)
     telemetry.add_argument("--ended-at", required=True)
     telemetry.add_argument("--result", choices=("run", "reuse", "skip", "blocked"), required=True)

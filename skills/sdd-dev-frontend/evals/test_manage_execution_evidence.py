@@ -269,6 +269,64 @@ class TelemetryTests(unittest.TestCase):
                     )
                 )
 
+    def test_browser_kinds_are_recorded_separately(self) -> None:
+        """浏览器动作不能并进 agent。
+
+        连接、注入、截图的削减手段完全不同（批量 / 契约范围 / 盲区收窄），
+        混成一个数就看不出该动哪一边。而在这三类落地之前，仓里一条浏览器耗时
+        数据都没有——唯一的次数统计是从事故复盘里捞出来的。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "execution-telemetry.json"
+            kinds = ("browser_connect", "browser_inject", "browser_capture")
+            for index, kind in enumerate(kinds):
+                MODULE.command_telemetry(
+                    argparse.Namespace(
+                        file=str(path),
+                        story="ST-1",
+                        started_at="2026-08-16T10:00:00+08:00",
+                        ended_at="2026-08-16T10:00:02+08:00",
+                        count=[],
+                        evidence=[],
+                        note=None,
+                        id=f"phase-c.{kind}",
+                        attempt=1,
+                        kind=kind,
+                        result="run",
+                    )
+                )
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual([step["kind"] for step in payload["steps"]], list(kinds))
+            # 三类都带耗时，Phase D 才能机械汇总出「浏览器占了多少」。
+            self.assertTrue(all(step["duration_ms"] == 2000 for step in payload["steps"]))
+
+    def test_cli_rejects_an_unregistered_kind(self) -> None:
+        """--kind 是闭集：拼错或自造一类会让汇总静默漏掉那批动作。"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "execution-telemetry.json"
+            with self.assertRaises(SystemExit):
+                MODULE.main(
+                    [
+                        "telemetry",
+                        "--file",
+                        str(path),
+                        "--story",
+                        "ST-1",
+                        "--id",
+                        "phase-c.browser",
+                        "--attempt",
+                        "1",
+                        "--kind",
+                        "browser",
+                        "--started-at",
+                        "2026-08-16T10:00:00+08:00",
+                        "--ended-at",
+                        "2026-08-16T10:00:01+08:00",
+                        "--result",
+                        "run",
+                    ]
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
