@@ -135,4 +135,4 @@ YELLOW 按原因转为补证、`UNVERIFIED`、`DEFERRED` 或真实 RED；不就�
 
 **跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](../../docs/skills/frontend-sdd/执行契约.md#声明与状态)。
 
-`dev-review.md / Handoff` 非空时，再逐条输出 P8 人话条目；条数必须与建议级、Open Question、Deferred 清单一致。
+`dev-review.md` 的「需要你处理」或「你该知道，但不用动」非空时，再逐条输出 P8 人话条目；条数必须与建议级、Open Question、Deferred、规范候选逐类一致。

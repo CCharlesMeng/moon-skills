@@ -224,8 +224,12 @@ class AggregateTests(unittest.TestCase):
         aggregate = MODULE.aggregate_results(self.base_results())
         markdown = MODULE.render_markdown(aggregate)
         self.assertLess(len(markdown.splitlines()), 70)
-        self.assertIn("阻断级 0 条", markdown)
-        self.assertIn("## 交接清单\n\n无。", markdown)
+        # 第一句必须是结论本身，不是计数——读的人先要知道能不能收。
+        self.assertIn("**可验收**", markdown)
+        # 全清时不摆「需要你处理」「你该知道」这些空节，也不摆空表。
+        self.assertNotIn("## 需要你处理", markdown)
+        self.assertNotIn("无。", markdown)
+        self.assertIn("已判并通过：", markdown)
 
     def test_accepts_selected_roles_and_zero_role_portfolio(self):
         selected = [review("review-layout", ["L2", "L3"])]
@@ -292,9 +296,9 @@ class AggregateTests(unittest.TestCase):
         )
         self.assertEqual(aggregate["counts"]["skipped"], 1)
         markdown = MODULE.render_markdown(aggregate)
-        self.assertIn("## 判定不适用", markdown)
+        self.assertIn("判定不适用的检查项：", markdown)
         self.assertIn("命中 skip_when", markdown)
-        self.assertIn("判定不适用 1 条", markdown)
+        self.assertIn("1 条判定不适用", markdown)
 
     def test_skipped_cannot_replace_a_reason_or_double_count_a_dimension(self):
         silent = review("review-layout", ["L2"])
@@ -529,12 +533,18 @@ class DisplayVocabularyTests(unittest.TestCase):
             "risk_triggers": ["visual", "shared-boundary"],
             "modules": ["render", "causal"],
         }
+        aggregate["portfolio_narrowed"] = [
+            {"trigger": "shared-boundary", "reason": "只删了注释"}
+        ]
         body = MODULE.render_markdown(aggregate)
-        for raw in ("norm_candidate", "shared-boundary", "Open Question", "Handoff",
-                    "evidence epoch", "risk triggers"):
+        for raw in ("norm_candidate", "shared-boundary", "broken", "blocker",
+                    "Open Question", "Handoff"):
             self.assertNotIn(raw, body, f"`{raw}` 仍以英文原样出现在给人读的报告里")
-        for zh in ("规范候选", "共享边界", "交接清单", "证据纪元", "风险触发器"):
+        for zh in ("规范候选", "规范不再成立", "共享边界"):
             self.assertIn(zh, body)
+        # 缓存失效键不该出现在给人看的文档里——人不会对它们做任何决定。
+        self.assertNotIn(aggregate["code_fingerprint"], body)
+        self.assertNotIn("证据纪元", body)
 
 
 def markdown_table_rows(items, columns) -> str:

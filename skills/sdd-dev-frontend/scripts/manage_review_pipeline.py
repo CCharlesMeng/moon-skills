@@ -953,70 +953,127 @@ def markdown_table(items: list[dict[str, Any]], columns: list[tuple[str, str]]) 
 
 
 def render_markdown(aggregate: dict[str, Any]) -> str:
+    """渲染验收入口。没有任何机器消费这份 Markdown——结构化数据全在 `review-results.json`。
+
+    所以它只回答人验收时的三个问题，按这个顺序：**能不能验收 / 有什么必须我处理 /
+    有什么我该知道但不用动**，最后才是往下追的路径。
+
+    这里刻意不印证据纪元、代码指纹和「全部无发现」的覆盖明细。它们是缓存失效键与审计
+    轨迹，人不会对它们做任何决定，而把它们摆在开头会让读的人以为自己得先看懂这些
+    才有资格往下读。要审计就去 `review-results.json`，那份是给机器和追查用的。
+    """
     counts = aggregate["counts"]
-    lines = [
-        "# Dev Review", "",
-        "## 给人的摘要", "",
-        f"{len(aggregate['roles'])} 份适用检视已聚合：阻断级 {counts['blocker']} 条，建议级 {counts['suggestion']} 条，未决问题 {counts['open_question']} 条，暂缓候选 {counts['deferred']} 条，规范候选 {counts.get('norm_candidate', 0)} 条，判定不适用 {counts.get('skipped', 0)} 条。",
-        "## 检视基准", "",
-        f"- 证据纪元：`{aggregate['evidence_epoch']}`", f"- 代码指纹：`{aggregate['code_fingerprint']}`",
-    ]
-    if aggregate["findings"]:
-        summary_lines = [
-            f"- {item['user_visible_text']}（{'/'.join(item['source_ids'])}）"
-            for item in aggregate["findings"]
+    blockers = [item for item in aggregate["findings"] if item["level"] == "blocker"]
+    suggestions = [item for item in aggregate["findings"] if item["level"] == "suggestion"]
+    decisions = [item for item in aggregate["handoff"] if item.get("needs_decision")]
+
+    lines = ["# 验收摘要", ""]
+
+    # 第一句必须是结论本身，不是计数。读的人先要知道能不能收。
+    if blockers:
+        lines += [
+            f"**暂不可验收**：有 {len(blockers)} 条阻断级问题需要先修。逐条见下。",
+        ]
+    elif decisions:
+        lines += [
+            f"**可验收，但有 {len(decisions)} 件需要你定**。修完或拍板后即可收口。",
         ]
     else:
-        summary_lines = ["本次检视无需要你关注的发现。"]
-    lines[5:5] = ["", *summary_lines, ""]
+        lines += ["**可验收**：本次检视没有阻断级问题，也没有需要你决定的事项。"]
+
+    if blockers or decisions:
+        lines += ["", "## 需要你处理", ""]
+        rows = [
+            {
+                "什么问题": item["summary"],
+                "在哪": item["location"],
+                "要你做什么": "先修掉，它挡住验收",
+            }
+            for item in blockers
+        ] + [
+            {
+                "什么问题": item["user_visible_text"],
+                "在哪": display(item["kind"]),
+                "要你做什么": "需要你拍板",
+            }
+            for item in decisions
+        ]
+        lines += markdown_table(
+            rows, [("什么问题", "什么问题"), ("在哪", "在哪"), ("要你做什么", "要你做什么")]
+        )
+
+    heads_up = [item for item in aggregate["handoff"] if not item.get("needs_decision")]
+    if heads_up:
+        lines += ["", "## 你该知道，但不用动", ""]
+        lines += [f"- {item['user_visible_text']}" for item in heads_up]
+
+    # 「这次判了什么」只列没判到的，以及为什么。判到且无发现的用一句话带过——
+    # 逐行列出几十条「无发现」不帮任何决定，只会把上面的结论挤到看不见。
+    lines += ["", "## 这次判了什么", ""]
+    judged, unjudged = [], []
     for role, status in aggregate["roles"].items():
         gaps = aggregate["known_gaps"][role]
-        detail = f"（{'；'.join(str(item) for item in gaps)}）" if gaps else ""
-        lines.append(f"- {display(role)}：{display(status)}{detail}")
-    portfolio = aggregate.get("validation_portfolio")
-    if isinstance(portfolio, dict):
-        triggers = "、".join(display(item) for item in portfolio.get("risk_triggers", [])) or "无"
-        modules = "、".join(display(item) for item in portfolio.get("modules", [])) or "无"
-        lines += [f"- 风险触发器：{triggers}", f"- 验证模块：{modules}"]
-    narrowed = aggregate.get("portfolio_narrowed")
-    if narrowed:
-        lines += ["", "## 组合收窄", ""]
-        lines += markdown_table(narrowed, [("触发器", "trigger"), ("收窄理由", "reason")])
-    lines += ["", "## 覆盖矩阵", ""]
-    coverage_rows = []
-    for role, rows in aggregate["coverage"].items():
-        for row in rows:
-            coverage_rows.append({"role": role, **row})
-    lines += markdown_table(coverage_rows, [("角色", "role"), ("维度", "dimension"), ("范围", "scope"), ("证据", "evidence_ids"), ("结果", "result")])
-    skipped_rows = [
-        {"role": role, **row}
+        if status == "executed" and not gaps:
+            judged.append(display(role))
+        else:
+            reason = "；".join(str(item) for item in gaps) if gaps else display(status)
+            unjudged.append(f"- **{display(role)}**：{reason}")
+    if judged:
+        lines.append(f"已判并通过：{'、'.join(judged)}。")
+    if unjudged:
+        lines += ["", "没判到或判不全的："] + unjudged
+    if not judged and not unjudged:
+        lines.append("本次没有触发任何独立检视。")
+
+    not_applicable = [
+        f"- **{display(role)} {row['dimension']}**：{row['reason']}"
         for role, rows in aggregate.get("skipped", {}).items()
         for row in rows
     ]
-    if skipped_rows:
-        lines += ["", "## 判定不适用", ""]
-        lines += markdown_table(skipped_rows, [("角色", "role"), ("维度", "dimension"), ("理由", "reason")])
-    blockers = [item for item in aggregate["findings"] if item["level"] == "blocker"]
-    suggestions = [item for item in aggregate["findings"] if item["level"] == "suggestion"]
-    for title, items in (("阻断级", blockers), ("建议级", suggestions)):
-        if items:
-            lines += ["", f"## {title}", ""]
-            lines += markdown_table(items, [("来源", "source_ids"), ("发现", "summary"), ("定位", "location"), ("依据", "basis"), ("证据", "evidence_ids"), ("截图 / 工件", "artifacts")])
+    if not_applicable:
+        lines += ["", "判定不适用的检查项："] + not_applicable
+
+    narrowed = aggregate.get("portfolio_narrowed")
+    if narrowed:
+        # 收窄必须署名可见——这是它存在的全部意义。
+        lines += ["", "**主动少判了这些，理由如下：**"] + [
+            f"- {display(item['trigger'])}：{item['reason']}" for item in narrowed
+        ]
+
+    if suggestions:
+        lines += ["", "## 改进建议（本次不修）", ""]
+        lines += markdown_table(
+            suggestions,
+            [("建议", "summary"), ("在哪", "location"), ("依据", "basis")],
+        )
+
     if aggregate["open_questions"]:
         lines += ["", "## 未决问题", ""]
-        lines += markdown_table(aggregate["open_questions"], [("来源", "source_ids"), ("问题", "summary"), ("证据", "evidence_ids")])
+        lines += [f"- {item['summary']}" for item in aggregate["open_questions"]]
+
     if aggregate["deferred_candidates"]:
-        lines += ["", "## 暂缓候选", ""]
-        lines += markdown_table(aggregate["deferred_candidates"], [("来源", "source_ids"), ("验收标准", "ac"), ("原因", "reason"), ("解除条件", "resume_condition")])
+        lines += ["", "## 暂缓的验收项", ""]
+        lines += markdown_table(
+            aggregate["deferred_candidates"],
+            [("验收标准", "ac"), ("为什么缓", "reason"), ("什么条件下解除", "resume_condition")],
+        )
+
     if aggregate.get("norm_candidates"):
-        lines += ["", "## 规范候选（交 sdd-init-frontend）", ""]
+        # 这一节有 init 侧的读者，保留可被逐条对账的形状。
+        lines += ["", "## 交 sdd-init-frontend 的规范候选", ""]
         lines += markdown_table(
             aggregate["norm_candidates"],
             [("编号", "id"), ("类别", "kind"), ("质疑对象", "target_id"), ("结论", "claim"), ("依据样本", "samples")],
         )
-    lines += ["", "## 交接清单", ""]
-    lines += markdown_table(aggregate["handoff"], [("类型", "kind"), ("来源", "id"), ("用户可见文本", "user_visible_text"), ("需用户决定", "needs_decision")])
-    lines += ["", "## 收口结论", "", "待 Phase D 填写。", ""]
+
+    lines += [
+        "", "## 要往下追的话", "",
+        "- 冻结的验收基线：`dev-baseline.md`",
+        "- 逐条声明与它的证据：`alpha-tests.md`",
+        f"- 全部覆盖明细与结构化结论：`review-results.json`（共 {counts.get('handoff', 0)} 条交接项、"
+        f"{counts.get('skipped', 0)} 条判定不适用）",
+        "", "## 收口结论", "", "待 Phase D 填写。", "",
+    ]
     return "\n".join(lines)
 
 
