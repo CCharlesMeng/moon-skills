@@ -25,7 +25,7 @@
 ## 三、检视
 
 1. 从 `validation_portfolio.review_dimensions.review-layout` 取得精确 L 集合，按 `legacy_id` 对到 layout checklist 的检查项。
-2. 先复用新鲜场景，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。机器可检项记录几何/DOM 事实，截图只补字体栅格、裁切、阴影或复杂叠层。
+2. 先复用新鲜场景，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。机器可检项记录几何/DOM 事实；截图只补裁切后的焦点构图与混合/背景滤镜的合成结果，同一页面共用一张整页图。
 3. 逐条执行被分配的检查项，判据与定级按 layout checklist 与 layout-lens ROLE。
 
 ## 四、输出格式

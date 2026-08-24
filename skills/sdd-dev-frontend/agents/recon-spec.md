@@ -91,7 +91,7 @@
 - **同时产出还原契约规则草稿。** 每条实际生成的 R 期望值一一对应一条同 `baseline_id` 规则，字段与模式严格按 `references/restore-contract.md`；期望值与设计事实出处来自本侧材料，绝不读取实现当前值。实现 locator 不进规则草稿。
 - **R1 的期望值写实现中立的结构事实**：元素的存在与数量、层级、角色（heading / img 等）、可访问名。**不得把原型 class 名写进期望值**——类名是设计稿侧工件，实现没有复刻它的义务，写进去会制造修不掉的 RED；类名只作为 `design_fact_source` 的锚点。CSS 值的期望键写计算样式 longhand（`background-color` 而非 `background`）；static 针写实现侧真实会出现的形态，颜色优先用仓内 token 名而不是原型字面量。
 - **基线头必须引用两类上游。** 仓库公共事实只引 `<repo-baseline-dir>` 里的 ID，不铺正文、不写指纹；本次场景、`base-ref` 与起点失败集合引用 `dev-baseline.md` 已存在的“执行起点（环境）”，不得复制成第二份表。
-- **检查层级不能越权。** R1/R2 默认 render；R3/R4 默认 static+render；R5 需要明确 fixture，造不出时后续为 YELLOW；R6 必须 render。只有阴影观感、字体栅格、图片裁切、复杂叠层等机器盲区才加 visual。
+- **检查层级不能越权。** R1/R2 默认 render；R3/R4 默认 static+render；R5 需要明确 fixture，造不出时后续为 YELLOW；R6 必须 render。**visual 层只有两类，写规则时必须填 `visual_blind_spot`**：`image-focus`（裁切后露出的是不是该露的那部分）、`composite`（`mix-blend-mode` / `backdrop-filter` / 多层透明度叠出来的实际观感）。这两类之外一律不加 visual——阴影写计算样式 longhand 走 render，字号字重行高同理；指不出类别就说明它本来该是 render 或已知缺口。
 
 第 1 档另有两条硬约束，都是「区块规格标了什么就是什么」的具体化。
 

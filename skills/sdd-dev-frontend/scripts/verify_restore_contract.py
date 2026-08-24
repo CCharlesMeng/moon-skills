@@ -40,6 +40,13 @@ CHECK_MODES = {
     "visual",
 }
 LAYERS = {"static", "render", "visual"}
+# visual 层只剩两类盲区。删掉的两类都不是「机器判不了」，而是「截图也判不出可行动的结论」：
+#   - 阴影：box-shadow 的计算样式就是字符串，比对器已有分量顺序归一化；而 layout
+#     checklist 本来就写明「阴影不好看且无功能后果 → 不报」，截了也不采纳。
+#   - 字体栅格：视觉缓存键里含浏览器引擎版本与字体指纹，等于承认它是环境属性——
+#     换个小版本就整体失效重截，而看到的差异是环境不是实现，也改不动。
+#     该判的是 font-family / size / weight / line-height 这些 longhand，全部机器可判。
+VISUAL_BLIND_SPOTS = {"image-focus", "composite"}
 LOCATOR_PRIORITY = {"role": 0, "text": 1, "testid": 2, "css": 3}
 DEFAULT_LAYERS = {
     "R1": ["render"],
@@ -151,6 +158,18 @@ def validate_rule(raw: Any, index: int) -> dict[str, Any]:
         raise ContractError(
             f"规则 {rule_id} 的 visual 模式不能同时要求 render 层：render 层无法判定 visual 模式"
         )
+    if "visual" in layers:
+        # visual 层是唯一没有机器判据的层：末端靠人看两张图，所以它必须指名自己是
+        # 哪一类盲区。原先的判据是散文里一句「……等机器盲区」，结尾那个「等」是敞口——
+        # 任何判不了的规则都能自称盲区溜进 visual 层，然后以「等人看图」的名义
+        # 无限期停在 YELLOW。指不出类别的，本来就该写 render 或落 UNVERIFIED。
+        blind_spot = rule.get("visual_blind_spot")
+        if blind_spot not in VISUAL_BLIND_SPOTS:
+            raise ContractError(
+                f"规则 {rule_id} 要求 visual 层但 visual_blind_spot 不合法："
+                f"必须是 {sorted(VISUAL_BLIND_SPOTS)} 之一"
+            )
+        rule["visual_blind_spot"] = blind_spot
     if "static" in layers and not isinstance(rule.get("static_check"), dict):
         raise ContractError(f"规则 {rule_id} 要求 static 层但没有 static_check")
 

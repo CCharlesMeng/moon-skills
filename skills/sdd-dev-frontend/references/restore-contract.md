@@ -55,7 +55,24 @@
 | 规则 `id` 重复 | 报告里会出现两条同 `rule_id` 的条目，落账时分不清哪条是哪条 |
 | `required_layers` 含 `render`，但该层取到的 `expected` 为空（`{}` / `[]` / `""` / 缺键） | `numeric` 产生不出差异项、`overflow` 家族对空容器取 0，两种都无条件判绿。注意 `0` 与 `false` 是合法期望值 |
 | `check_mode: visual` 同时要求 `render` 层 | visual 只能由视觉补证判定，render 层对它恒判不通过，这条规则永远 GREEN 不了 |
+| `required_layers` 含 `visual` 但 `visual_blind_spot` 不是下表两值之一 | visual 是唯一没有机器判据的层，必须指名盲区类别；见下节 |
 | adapter 里有契约中不存在的规则条目 | 多半是契约改了 adapter 没跟着改；静默丢弃会让人以为旧定位还在生效 |
+
+### `visual_blind_spot`：visual 层只剩两类
+
+| 取值 | 判什么 |
+| --- | --- |
+| `image-focus` | 裁切后露出的是不是该露的那部分（改 `object-position` 之类） |
+| `composite` | `mix-blend-mode` / `backdrop-filter` / 多层透明度叠出来的实际观感 |
+
+**这道门存在的理由是 visual 层末端没有机器判据**——首版不做像素级 diff，所以最后是人看原型与实现两张图。原先的判据是散文里一句「阴影观感、字体栅格、图片裁切、复杂叠层**等**机器盲区」，结尾那个「等」是敞口：任何判不了的规则都能自称盲区溜进 visual 层，然后以「等人看图」的名义无限期停在 YELLOW，而每次未命中缓存要截两张。
+
+撤掉的两类不是「机器判不了」，而是**截了也得不出可行动的结论**：
+
+- **阴影**：`box-shadow` 的计算样式就是字符串，比对器已有分量顺序归一化，走 render 层判值即可；而 layout checklist 本来就写明「阴影不好看且无功能后果 → 不报」，截了也不采纳。
+- **字体栅格**：视觉缓存键里含浏览器引擎版本与字体指纹，等于承认它是环境属性——换个小版本整体失效重截，看到的差异是环境不是实现，也改不动。该判的是 `font-family` / `font-size` / `font-weight` / `line-height` 这些 longhand，全部机器可判。
+
+**几何不进 visual。** 「是不是被裁了、裁掉多少」用 `clip`，遮挡用 `overlap`，溢出用 `overflow`——这三个 `check_mode` 都在，别把它们推进盲区。
 
 字面值恰好长得像分层键时（例如 `expected` 就是 `{"visual": "hidden"}`）会命中第二条被拒——改写成 `{"render": {"visual": "hidden"}}` 明确层归属。
 
@@ -245,7 +262,9 @@ GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集�
 
 ## 六、视觉缓存
 
-只有 visual-required 规则仍为 YELLOW 时调用 `python3 "<skill-dir>/scripts/extract_design_spec.py" visual-cache --report <restore-report-red.json>`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
+**visual YELLOW 默认落 `UNVERIFIED` 并写补验方式，不默认截图。** 要把该声明收成 `PROVEN` 才走本节，且同一页面的多条 visual 只截一张整页图共用——逐规则截图付的是每处两张（原型 + 实现）的成本，换来的仍然是同一个人看同一个页面。
+
+需要截图时调 `python3 "<skill-dir>/scripts/extract_design_spec.py" visual-cache --report <restore-report-red.json>`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
 
 1. 原型指纹；
 2. 区块锚点；

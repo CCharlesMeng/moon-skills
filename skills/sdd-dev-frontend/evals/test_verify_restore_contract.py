@@ -68,6 +68,7 @@ def make_rule(
     tolerance: dict | None = None,
     static_check: dict | None = None,
     exemption: dict | None = None,
+    blind_spot: str | None = "composite",
     drop: tuple[str, ...] = (),
 ) -> dict:
     rule = {
@@ -86,6 +87,10 @@ def make_rule(
         },
         "required_layers": ["render"] if layers is None else layers,
     }
+    # visual 层必须指名盲区类别。这些用例考的是层替代与三色语义，不是盲区门，
+    # 所以默认给一个合法值；盲区门本身由 VisualBlindSpotTests 单独钉。
+    if "visual" in rule["required_layers"] and blind_spot is not None:
+        rule["visual_blind_spot"] = blind_spot
     if tolerance is not None:
         rule["tolerance"] = tolerance
     if static_check is not None:
@@ -1989,6 +1994,56 @@ class ToolEquivalenceSuspectTests(unittest.TestCase):
             VERIFIER.aggressive_css_key("8px 12px"),
         )
         self.assertFalse(VERIFIER.css_values_equivalent("12px 8px", "8px 12px"))
+
+
+class VisualBlindSpotTests(unittest.TestCase):
+    """visual 层必须指名盲区类别，且只剩两类。
+
+    visual 是唯一没有机器判据的层——末端靠人看两张图。原先的判据是散文里一句
+    「阴影观感、字体栅格、图片裁切、复杂叠层**等**机器盲区」，结尾那个「等」是敞口：
+    任何判不了的规则都能自称盲区溜进 visual 层，然后以「等人看图」的名义无限期
+    停在 YELLOW，而每次未命中缓存要截原型 + 截实现两张。
+
+    删掉的两类不是「机器判不了」，而是「截了也判不出可行动的结论」，理由钉在
+    VISUAL_BLIND_SPOTS 的注释里。
+    """
+
+    def test_visual_layer_requires_a_named_blind_spot(self) -> None:
+        rule = make_rule(
+            "R2-1", "R2", check_mode="visual", layers=["visual"], blind_spot=None
+        )
+        with self.assertRaises(VERIFIER.ContractError) as caught:
+            VERIFIER.validate_rule(rule, 1)
+        self.assertIn("visual_blind_spot", str(caught.exception))
+
+    def test_retired_blind_spots_are_rejected_by_name(self) -> None:
+        """阴影与字体栅格是被撤掉的两类，写它们必须报错而不是静默通过。"""
+        for retired in ("shadow", "font-raster", "image-clip", "stacking"):
+            with self.subTest(retired=retired):
+                rule = make_rule(
+                    "R2-1",
+                    "R2",
+                    check_mode="visual",
+                    layers=["visual"],
+                    blind_spot=retired,
+                )
+                with self.assertRaises(VERIFIER.ContractError):
+                    VERIFIER.validate_rule(rule, 1)
+
+    def test_the_two_surviving_blind_spots_are_accepted(self) -> None:
+        for kept in ("image-focus", "composite"):
+            with self.subTest(kept=kept):
+                rule = make_rule(
+                    "R2-1", "R2", check_mode="visual", layers=["visual"], blind_spot=kept
+                )
+                self.assertEqual(
+                    VERIFIER.validate_rule(rule, 1)["visual_blind_spot"], kept
+                )
+
+    def test_non_visual_rules_need_no_blind_spot(self) -> None:
+        """不碰 visual 层的规则不该被这道门牵连。"""
+        rule = make_rule("R1-1", layers=["render"], blind_spot=None)
+        self.assertNotIn("visual_blind_spot", VERIFIER.validate_rule(rule, 1))
 
 
 class MultiPageRenderMergeTests(unittest.TestCase):

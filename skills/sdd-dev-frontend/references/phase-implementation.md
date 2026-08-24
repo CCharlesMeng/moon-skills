@@ -32,8 +32,8 @@
 1. 校验 baseline 与 contract 哈希。
 2. 对同一契约运行 validate、static、结构化 render 与 RED 报告；RED 必须来自未实现差异，不来自环境或序列化等价。同页多轮共用一次 RED：只在上游标注取证归属的那一轮运行，其余轮引用同一份报告，不重复往返。
 3. 只修改 Task 文件范围与按扩散承接规则登记的连带文件；实现冻结规则，不从实现反推期望。
-4. 重跑同一契约生成 GREEN 报告。机器可检项用结构化事实；仅 visual YELLOW 按需截图。
-5. YELLOW 按原因补证、记 `UNVERIFIED`、记 `DEFERRED` 或转真实 RED；不改写 GREEN、不就地新增豁免。
+4. 重跑同一契约生成 GREEN 报告。机器可检项用结构化事实。
+5. YELLOW 按原因补证、记 `UNVERIFIED`、记 `DEFERRED` 或转真实 RED；不改写 GREEN、不就地新增豁免。**visual YELLOW 默认落 `UNVERIFIED` 并写补验方式，不默认截图**——截图末端没有机器判据，取证成本却是每处两张（原型 + 实现）。要把这条声明收成 `PROVEN` 才截，且同一页面的多条 visual 只截一张整页图共用，不逐规则截。
 6. `suspected-tool-equivalence` 只补比对器两端映射或按 P7 上报；不改产品代码迎合字符串。
 
 ## 5. 落账与新鲜度

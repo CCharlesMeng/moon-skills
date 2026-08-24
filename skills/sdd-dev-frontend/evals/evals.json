@@ -26,13 +26,13 @@
         "硬门禁 2",
         "硬门禁 11"
       ],
-      "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和阴影观感无法结构化判断。页面可用且截图可用。请继续执行。",
-      "expected_output": "先补结构化证据，再为剩余视觉盲区按需取证；未解决 YELLOW 时不能实现或 GREEN。",
+      "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和一条 visual_blind_spot=composite 的背景滤镜叠层。页面可用且截图可用。请继续执行。",
+      "expected_output": "先补结构化证据；剩下那条 visual 默认落 UNVERIFIED 并写补验方式，只有要把它收成 PROVEN 才取视觉证据。未解决 YELLOW 时不能实现或 GREEN。",
       "expectations": [
         "初次只有 YELLOW 时不进入 Step ③ 实现，也不把报告判为 GREEN",
         "先补 R5 状态 fixture 并重跑结构化采集",
-        "只有阴影视觉项仍为 YELLOW 时才生成或复用原型视觉缓存并截实现侧",
-        "视觉观察必须写成明确 red/green 结果后重跑报告；最终仍有 YELLOW 就不能完成还原轮"
+        "visual YELLOW 默认落 UNVERIFIED 并写补验方式，不默认截图；要收成 PROVEN 才生成或复用原型视觉缓存并截实现侧",
+        "取了视觉证据时，观察必须写成明确 red/green 结果后重跑报告；最终仍有未处置的 YELLOW 就不能完成还原轮"
       ]
     },
     {
@@ -572,11 +572,11 @@
       "gates": [
         "硬门禁 11"
       ],
-      "prompt": "T4 同时含还原与逻辑：还原契约明确 RED；逻辑测试通过点击尚未存在的按钮验证提交行为，当前失败原因只是找不到按钮。另有一条 visual YELLOW 等待截图补证。为了省时间，是否可以把两个 RED 一起收集后共同实现？",
-      "expected_output": "不能走双通道：逻辑 RED 不是独立行为失败，且还原侧存在 YELLOW。先补证并按默认顺序完成还原轮，再让逻辑测试以预期行为原因 RED，之后完成逻辑轮。",
+      "prompt": "T4 同时含还原与逻辑：还原契约明确 RED；逻辑测试通过点击尚未存在的按钮验证提交行为，当前失败原因只是找不到按钮。另有一条未处置的 visual YELLOW。为了省时间，是否可以把两个 RED 一起收集后共同实现？",
+      "expected_output": "不能走双通道：逻辑 RED 不是独立行为失败，且还原侧存在未处置 YELLOW。先处置再按默认顺序完成还原轮，再让逻辑测试以预期行为原因 RED，之后完成逻辑轮。",
       "expectations": [
         "识别找不到待还原 DOM 不是合格的独立逻辑 RED，不能把结构缺失重复记成两类失败",
-        "visual YELLOW 必须先补证，不能作为 RED 进入实现，也使双通道条件失败",
+        "visual YELLOW 必须先处置（补证或落 UNVERIFIED 并写补验方式），不能作为 RED 进入实现，也使双通道条件失败",
         "回退到先还原后逻辑不算流程失败；还原 GREEN 后重新取得原因正确的逻辑 RED",
         "仍保留两轮独立 6 步、证据与 AC 映射，不为追求少一轮而放宽 RED/GREEN 语义",
         "telemetry 记录双通道条件失败与 visual YELLOW 的回退原因；之后还原/逻辑通道的 RED/GREEN 仍使用各自稳定 ID 和 attempt"
@@ -745,6 +745,24 @@
         "不为它新增冻结豁免；豁免只表示已确认允许差异，不吸收工具缺口，「平台能力限制」这类理由在这里不成立",
         "这一条不计入「同一报错修 3 次」的计数，不因此打断用户去请求批准一条豁免",
         "补不了归一化或形态存疑时按 P7 上报工具等价缺口，附 rule_id 与两侧原值，而不是就地放行或标记通过"
+      ]
+    },
+    {
+      "id": 47,
+      "name": "visual-layer-only-takes-the-two-named-blind-spots",
+      "target": "agents/recon-spec.md",
+      "gates": [
+        "硬门禁 12"
+      ],
+      "prompt": "Phase A2 起草还原契约规则草稿。第 1 档原型，本 Story 涉及四条期望：卡片投影 `box-shadow: 0 1px 2px rgba(0,0,0,.08)`；标题字体是 14px/600/1.5 的思源黑体；封面图在 240×160 容器里裁切，设计稿里露出的是人物面部；一块半透明信息条压在封面图上，用了 backdrop-filter 与两层 opacity。请给出这四条的 required_layers 与 visual_blind_spot。",
+      "expected_output": "只有后两条进 visual 层，各自指名 image-focus 与 composite；投影与字体走 render 层判计算样式 longhand。",
+      "expectations": [
+        "投影不进 visual：写 render 层、期望键用计算样式 longhand，不因为「观感」把一条可判的规则推进盲区",
+        "字体不进 visual：font-family / font-size / font-weight / line-height 逐项走 render 层，栅格差异不作判据",
+        "封面图那条填 visual_blind_spot: image-focus，理由是裁切后露出哪一部分不可由几何导出；但「是否被裁、裁掉多少」仍用 clip / overflow 走 render 层，不并进 visual",
+        "半透明信息条那条填 visual_blind_spot: composite，理由是多层混合与背景滤镜的合成结果推不出来；遮挡几何仍用 overlap 走 render 层",
+        "不使用 shadow / font-raster / image-clip / stacking 这些已撤销的取值，编译期会因 visual_blind_spot 不合法而拒绝",
+        "不把判不了的规则以「等机器盲区」为由塞进 visual 层；指不出两类之一时写 render 或记已知缺口"
       ]
     }
   ]
