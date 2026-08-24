@@ -618,6 +618,55 @@ def merge_evidence_additions(
     return output, rewritten
 
 
+NORM_CANDIDATE_KINDS = {"broken", "new-pattern", "exemption-recurring"}
+
+
+def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
+    """校验规范候选：Dev 发现的仓库级事实变化，回流给 `sdd-init-frontend`。
+
+    这条通道此前只存在于散文里——`recon-codebase` 会回传「规范待确认」，规则说攒进
+    `dev-review.md` 由 init 重新归纳，但 `dev-review.md` 没有这一节、聚合器的 handoff
+    也只有 suggestion / open_question / deferred 三类，装不下它。结果是一句「攒进
+    handoff」到不了任何人手里。
+
+    两条校验是这个通道能用的前提：
+
+    - **必须点名依据样本。** init 归纳规范要的就是「看了哪几处」；只说「这条规范
+      不成立了」而不给样本，维护者得从零重扫，那还不如没有这条回流。
+    - **必须指名 `target_id`（`broken` 与 `exemption-recurring`）。** 说不出质疑的是
+      哪一条，就没法判断它是同一条的第 n 次复发还是一条新发现——而复发计数正是
+      init 决定要不要动规范节的唯一依据。
+
+    刻意**不**要求样本数 ≥ 2：跨 Story 的复发计数只有 init 能做，单个 Story 手里
+    永远只有自己那一次。在这里卡门槛等于把计数依据吞掉。
+    """
+    items = require_list(raw, "norm_candidates")
+    seen: set[str] = set()
+    validated: list[dict[str, Any]] = []
+    for index, entry in enumerate(items):
+        label = f"norm_candidates[{index}]"
+        item = require_dict(entry, label)
+        item_id = require_text(item.get("id"), f"{label}.id")
+        if item_id in seen:
+            raise ReviewPipelineError(f"duplicate norm candidate id: {item_id}")
+        seen.add(item_id)
+        kind = item.get("kind")
+        if kind not in NORM_CANDIDATE_KINDS:
+            raise ReviewPipelineError(
+                f"{label}.kind must be one of {sorted(NORM_CANDIDATE_KINDS)}"
+            )
+        require_text(item.get("claim"), f"{label}.claim")
+        samples = require_list(item.get("samples"), f"{label}.samples")
+        if not samples:
+            raise ReviewPipelineError(f"{label}.samples must not be empty")
+        for sample_index, sample in enumerate(samples):
+            require_text(sample, f"{label}.samples[{sample_index}]")
+        if kind in {"broken", "exemption-recurring"}:
+            require_text(item.get("target_id"), f"{label}.target_id")
+        validated.append(item)
+    return validated
+
+
 def aggregate_results(
     results: list[dict[str, Any]],
     expected_roles: list[str] | tuple[str, ...] | None = None,
@@ -627,6 +676,7 @@ def aggregate_results(
     evidence_index: set[str] | None = None,
     code_files: set[str] | None = None,
     skip_rebuttals: dict[str, list[Any]] | None = None,
+    norm_candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     if skip_rebuttals:
@@ -741,6 +791,20 @@ def aggregate_results(
     ] + [
         {"kind": "deferred", "id": "/".join(item["source_ids"]), "user_visible_text": item["user_visible_text"], "needs_decision": True}
         for item in deferred
+    ] + [
+        # 规范候选一律 needs_decision：规范节只有 sdd-init-frontend 能改，Story 侧
+        # 无权自行采纳，收口时必须由人裁决要不要把它交给 init。
+        {
+            "kind": "norm_candidate",
+            "id": item["id"],
+            "user_visible_text": (
+                f"{item['kind']}：{item['claim']}"
+                + (f"（质疑 {item['target_id']}）" if item.get("target_id") else "")
+                + f"；依据样本 {len(item['samples'])} 处"
+            ),
+            "needs_decision": True,
+        }
+        for item in (norm_candidates or [])
     ]
     return {
         "schema_version": SCHEMA_VERSION,
@@ -754,12 +818,14 @@ def aggregate_results(
         "findings": findings,
         "open_questions": questions,
         "deferred_candidates": deferred,
+        "norm_candidates": list(norm_candidates or []),
         "handoff": handoff,
         "counts": {
             "blocker": sum(item["level"] == "blocker" for item in findings),
             "suggestion": sum(item["level"] == "suggestion" for item in findings),
             "open_question": len(questions),
             "deferred": len(deferred),
+            "norm_candidate": len(norm_candidates or []),
             "handoff": len(handoff),
             "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
         },
@@ -856,6 +922,12 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     if aggregate["deferred_candidates"]:
         lines += ["", "## Deferred 候选", ""]
         lines += markdown_table(aggregate["deferred_candidates"], [("来源", "source_ids"), ("AC", "ac"), ("原因", "reason"), ("解除条件", "resume_condition")])
+    if aggregate.get("norm_candidates"):
+        lines += ["", "## 规范候选（交 sdd-init-frontend）", ""]
+        lines += markdown_table(
+            aggregate["norm_candidates"],
+            [("编号", "id"), ("类别", "kind"), ("质疑对象", "target_id"), ("结论", "claim"), ("依据样本", "samples")],
+        )
     lines += ["", "## Handoff 清单", ""]
     lines += markdown_table(aggregate["handoff"], [("类型", "kind"), ("来源", "id"), ("用户可见文本", "user_visible_text"), ("需用户决定", "needs_decision")])
     lines += ["", "## 收口结论", "", "待 Phase D 填写。", ""]
@@ -933,6 +1005,11 @@ def command_aggregate(args: argparse.Namespace) -> None:
         skip_rebuttals=require_dict(
             diff_facts.get("skip_rebuttals", {}), "diff_facts.skip_rebuttals"
         ),
+        norm_candidates=(
+            validate_norm_candidates(read_json(Path(args.norm_candidates)))
+            if args.norm_candidates
+            else []
+        ),
     )
     aggregate["validation_portfolio"] = portfolio
     aggregate["portfolio_narrowed"] = narrowed
@@ -977,6 +1054,10 @@ def parser() -> argparse.ArgumentParser:
     aggregate.add_argument("--result", action="append", default=[])
     aggregate.add_argument("--review-evidence", required=True)
     aggregate.add_argument("--diff-facts", required=True, help="classify_diff.py output for the final diff")
+    aggregate.add_argument(
+        "--norm-candidates",
+        help="JSON array：Dev 发现的仓库级规范变化，回流给 sdd-init-frontend；无则省略",
+    )
     aggregate.add_argument("--output-json", required=True)
     aggregate.add_argument("--output-markdown", required=True)
     aggregate.set_defaults(handler=command_aggregate)

@@ -764,6 +764,24 @@
         "不使用 shadow / font-raster / image-clip / stacking 这些已撤销的取值，编译期会因 visual_blind_spot 不合法而拒绝",
         "不把判不了的规则以「等机器盲区」为由塞进 visual 层；指不出两类之一时写 render 或记已知缺口"
       ]
+    },
+    {
+      "id": 48,
+      "name": "repo-level-facts-flow-back-as-norm-candidates",
+      "target": "agents/recon-codebase.md",
+      "gates": [
+        "硬门禁 13"
+      ],
+      "prompt": "Phase A2 的 full 勘察发现三件事：一、`components.md` 的 `COMP-3` 指向的文件已改名，打开即 404；二、`PATTERN-API-1` 写「所有请求走 request.ts」，但在 src/features/export/api.ts:12 与 src/features/audit/api.ts:8 各看到一处裸 axios；三、本 Story 需要为「组件库默认样式与原型不符但符合本仓既有范式」写一条豁免，而这个理由跟本 Story 没关系。请说明这三件各自怎么处置。",
+      "expected_output": "第一件就地修单条并同步覆盖声明；第二、三件回传规范候选，交 Phase C 的 aggregate --norm-candidates；规范节不自行改动。",
+      "expectations": [
+        "COMP-3 属清单指路失效：就地修那一条、同步该节覆盖声明、随本 Story 提交，不阻塞、不路由 sdd-init-frontend",
+        "PATTERN-API-1 回传 kind=broken 的规范候选，target_id 写 PATTERN-API-1，依据样本列出那两处具体位置",
+        "豁免那条照常写进豁免表，同时回传一条 kind=exemption-recurring 的规范候选，质疑对象指向对应的 PATTERN-*/STYLE-*",
+        "不自行改写规范节——规范节只有 sdd-init-frontend 能改，Story 侧只能出候选",
+        "不自行判定新规范已成立：跨 Story 的复发计数只能在 init 侧做，本 Story 手里只有自己这一次",
+        "三条候选都必须带依据样本；只写「这条规范不成立了」而不给样本不合格"
+      ]
     }
   ]
 }

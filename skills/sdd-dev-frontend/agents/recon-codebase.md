@@ -133,11 +133,13 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 
 ## 规范待确认
 
-| 规范 ID 或新惯例 | 看到几处反例 | 仓库证据 | 建议动作 |
-| --- | --- | --- | --- |
+| 编号 | 类别 | 质疑对象 | 结论 | 依据样本 |
+| --- | --- | --- | --- | --- |
 ```
 
-主 agent 落盘时只把“Story 需要 → `REQ-DEC-*` / `PATTERN-*`”并入 `dev-baseline.md / 工程依据`，**不写指纹**；证据复核列与参照页候选不复制进 Story 资产。清单待改的就地改进 baseline 并随本 Story 提交；规范待确认的攒进 `dev-review.md`。
+类别只有三个：`broken`（原规范不再成立）、`new-pattern`（已成惯例但需归纳多个样本）、`exemption-recurring`（同一类豁免在多个 Story 反复出现，应升为规范）。`broken` 与 `exemption-recurring` 必须写出质疑对象的 ID；**依据样本必填**，写清在哪几处看到——init 归纳规范要的就是这个，只说「不成立了」会让维护者从零重扫。
+
+主 agent 落盘时只把“Story 需要 → `REQ-DEC-*` / `PATTERN-*`”并入 `dev-baseline.md / 工程依据`，**不写指纹**；证据复核列与参照页候选不复制进 Story 资产。清单待改的就地改进 baseline 并随本 Story 提交；规范待确认的按本表形状交给 Phase C 的 `aggregate --norm-candidates`，由聚合器渲进 `dev-review.md` 的「规范候选」节。
 
 ## 六、证据要求
 

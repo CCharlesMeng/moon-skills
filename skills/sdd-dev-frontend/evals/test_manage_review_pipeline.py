@@ -214,7 +214,7 @@ class AggregateTests(unittest.TestCase):
         aggregate = MODULE.aggregate_results(results)
         self.assertEqual(
             aggregate["counts"],
-            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "handoff": 3, "skipped": 0},
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "handoff": 3, "skipped": 0},
         )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
@@ -474,6 +474,80 @@ class FailureDirectionTests(unittest.TestCase):
                 },
                 facts,
             )
+
+
+class NormCandidateTests(unittest.TestCase):
+    """规范候选是 Dev → init 的回流通道。
+
+    此前这条通道只存在于散文里：`recon-codebase` 会回传「规范待确认」，规则说攒进
+    `dev-review.md` 由 init 重新归纳，但 handoff 只有 suggestion / open_question /
+    deferred 三类，装不下它——一句「攒进 handoff」到不了任何人手里。
+    """
+
+    BASE = {
+        "id": "NC-1",
+        "kind": "broken",
+        "target_id": "PATTERN-API-1",
+        "claim": "出现第二个请求出口，统一实例的约定已不成立",
+        "samples": ["src/features/export/api.ts:12", "src/features/audit/api.ts:8"],
+    }
+
+    def test_accepts_a_well_formed_candidate(self):
+        self.assertEqual(MODULE.validate_norm_candidates([self.BASE]), [self.BASE])
+
+    def test_samples_are_mandatory(self):
+        """没有依据样本，init 归纳规范就得从零重扫，这条回流就没有价值。"""
+        for samples in ([], None):
+            with self.subTest(samples=samples):
+                item = {**self.BASE, "samples": samples}
+                with self.assertRaises(MODULE.ReviewPipelineError):
+                    MODULE.validate_norm_candidates([item])
+
+    def test_broken_and_recurring_must_name_the_target(self):
+        """说不出质疑哪一条，就分不清这是同一条的第 n 次复发还是新发现。"""
+        for kind in ("broken", "exemption-recurring"):
+            with self.subTest(kind=kind):
+                item = {**self.BASE, "kind": kind}
+                item.pop("target_id")
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, "target_id"):
+                    MODULE.validate_norm_candidates([item])
+
+    def test_new_pattern_needs_no_target(self):
+        item = {k: v for k, v in self.BASE.items() if k != "target_id"}
+        item["kind"] = "new-pattern"
+        self.assertEqual(MODULE.validate_norm_candidates([item])[0]["kind"], "new-pattern")
+
+    def test_single_sample_is_allowed(self):
+        """跨 Story 的复发计数只有 init 能做；在这里卡样本数等于把计数依据吞掉。"""
+        item = {**self.BASE, "samples": ["src/features/export/api.ts:12"]}
+        self.assertEqual(len(MODULE.validate_norm_candidates([item])[0]["samples"]), 1)
+
+    def test_unknown_kind_and_duplicate_id_are_rejected(self):
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "kind must be one of"):
+            MODULE.validate_norm_candidates([{**self.BASE, "kind": "suggestion"}])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "duplicate norm candidate"):
+            MODULE.validate_norm_candidates([self.BASE, dict(self.BASE)])
+
+    def test_candidate_reaches_handoff_and_always_needs_a_decision(self):
+        """规范节只有 init 能改，所以 Story 侧无权自行采纳，必须由人裁决。"""
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            norm_candidates=[self.BASE],
+        )
+        self.assertEqual(aggregate["counts"]["norm_candidate"], 1)
+        entry = next(
+            item for item in aggregate["handoff"] if item["kind"] == "norm_candidate"
+        )
+        self.assertTrue(entry["needs_decision"])
+        self.assertIn("PATTERN-API-1", entry["user_visible_text"])
+        self.assertIn("规范候选", MODULE.render_markdown(aggregate))
+
+    def test_absent_candidates_add_no_section(self):
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a"
+        )
+        self.assertEqual(aggregate["counts"]["norm_candidate"], 0)
+        self.assertNotIn("规范候选", MODULE.render_markdown(aggregate))
 
 
 if __name__ == "__main__":

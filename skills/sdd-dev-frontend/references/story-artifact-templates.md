@@ -106,6 +106,10 @@
 
 <无；或 AC、原因与解除条件>
 
+## 规范候选（交 sdd-init-frontend）
+
+<无；或编号、类别、质疑对象、结论、依据样本。由 `aggregate --norm-candidates` 渲染，不手写>
+
 ## Handoff
 
 | # | 类型 | 现象 | 影响 | 用户是否需要处理 | 引用 |
