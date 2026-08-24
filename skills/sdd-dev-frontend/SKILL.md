@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 一次只处理一个前端仓 × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](../../docs/skills/frontend-sdd/执行契约.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
 
-`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 产出的八份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
+`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 
 ## 工作流
 
@@ -42,7 +42,7 @@ disable-model-invocation: true
 
 这些门禁保护来源、所有权和状态诚信；它们本身不触发固定验证动作。
 
-0. **仓库事实就绪。** baseline 八份文件全缺或栈签名读不出时先完成 `sdd-init-frontend`；仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。单条结论不成立不是就绪问题，按消费点自证就地修。
+0. **仓库事实就绪。** baseline 的 `index.md` 缺失或 `structure.md` 读不出「具名框架 + 具名形态」时先完成 `sdd-init-frontend`；仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。**不按份数查**——空文件按规定整份删，`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，按消费点自证就地修。
 1. **执行清单存在。** 没有 `tasks.md` 时，仅在会话已明确 Story、AC、基线和文件范围时按 Phase 0 起草并确认；否则回 `sdd-task`。
 2. **期望先冻结。** QA 基线未经用户确认不得进入 Phase B。
 3. **声明按需生成。** R/F 是分类表；只生成需求与风险实际要求的行，不造 N/A 空壳。
@@ -105,7 +105,7 @@ Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的�
 
 | 工件 | 所有权与生命周期 |
 | --- | --- |
-| 八份仓库 baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
+| 九份仓库 baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
 | `dev-baseline.md` | Phase 0 写执行起点，A2 追加冻结 QA 基线 |
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |

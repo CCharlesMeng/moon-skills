@@ -17,7 +17,7 @@ python3 setup.py --case convention-01
 | 源料 | 是什么 |
 | --- | --- |
 | `repo/` | 一个最小但真实的前端仓（React + TS + Vite + CSS Modules），Story 起点的代码树 |
-| `baseline/` | 冻结的八份仓库 baseline，`setup.py` 原样拷进现场 |
+| `baseline/` | 冻结的九份仓库 baseline，`setup.py` 原样拷进现场 |
 | [`sdd-review-frontend/evals/cases/<用例>/`](../../../sdd-review-frontend/evals/README.md) | 一个 Story 的产物、一组带种子缺陷的改动、以及 ground truth |
 | `../设计稿原型-标准版.html`、`../原型-客户风险简报.html` | 两份真实设计稿 |
 
@@ -46,7 +46,7 @@ python3 setup.py --case convention-01
     └── risk-brief/
 ```
 
-八份 baseline 里有六条 `PATTERN-*`：`PATTERN-COMP-1` 组件写法与命名、`PATTERN-COMP-2` 数值展示口径、`PATTERN-API-1` 请求统一出口、`PATTERN-DATA-1` 取数三态与取消、`PATTERN-STYLE-1` token 与样式落地、`PATTERN-STRUCT-1` 类型来源与检查抑制。**这六条是检视类模块的全部判据来源**，它们依据清单条目指的路径在 `repo/` 里都真实存在，可以逐条打开核对。
+九份 baseline 里有六条正向 `PATTERN-*`：`PATTERN-COMP-1` 组件写法与命名、`PATTERN-COMP-2` 数值展示口径、`PATTERN-API-1` 请求统一出口、`PATTERN-DATA-1` 取数三态与取消、`PATTERN-STYLE-1` token 与样式落地、`PATTERN-STRUCT-1` 类型来源与检查抑制。**这六条是检视类模块的全部判据来源**，它们依据清单条目指的路径在 `repo/` 里都真实存在，可以逐条打开核对。
 
 另有五条**「无统一做法」规范**同样是判据：`PATTERN-API-2` 无 mock 层、`PATTERN-DATA-2` 无缓存无 store、`PATTERN-DATA-3` 无表单机制、`PATTERN-STYLE-2` 阴影没有基准、`PATTERN-STYLE-3` 无主题机制、`PATTERN-TEST-1` 无既有测试与定位约定。它们决定的是**不得**判什么违规，漏读会造成编造基准。
 
@@ -62,6 +62,6 @@ python3 setup.py --case convention-01
 
 都在 [`sdd-review-frontend/evals/`](../../../sdd-review-frontend/evals/README.md)：现有三个用例、准入分、以及加一个用例的步骤。
 
-本目录只在两处与用例耦合：`baseline/` 的 `PATTERN-*` 是所有用例共享的判据来源，`setup.py` 校验八份文件齐全、占位符全部替换、工作区改动数与 `after/` 文件数相符。
+本目录只在两处与用例耦合：`baseline/` 的 `PATTERN-*` 是所有用例共享的判据来源，`setup.py` 校验九份文件齐全、占位符全部替换、工作区改动数与 `after/` 文件数相符。
 
 改到接缝上的东西时，对照 [接缝契约](../../../../docs/skills/frontend-sdd/接缝契约.md) 看哪些 fixture 样本要跟着改。

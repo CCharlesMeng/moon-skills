@@ -2,7 +2,7 @@
 """把冻结的 fixture 源料展开成一个可跑的现场。
 
 现场里的东西全部是派生物，不进仓：目标业务仓、Story 产物、design-spec 都由本脚本
-从仓内源料确定性重建。源料只有四样：`repo/`、`baseline/`（冻结的八份仓库 baseline，
+从仓内源料确定性重建。源料只有四样：`repo/`、`baseline/`（冻结的九份仓库 baseline，
 原样拷贝）、`sdd-review-frontend/evals/cases/<case>/`，以及 `evals/` 下的两份原型 HTML。
 
     python3 setup.py --case convention-01
@@ -40,6 +40,7 @@ BASELINE_FILES = (
     "structure.md",
     "runtime.md",
     "components.md",
+    "routing.md",
     "api.md",
     "data.md",
     "styling.md",
@@ -82,7 +83,7 @@ def build_repo(work_dir: Path) -> tuple[Path, str]:
 
 
 def build_baseline(work_dir: Path) -> Path:
-    """把冻结的八份 baseline 原样拷进现场。
+    """把冻结的九份 baseline 原样拷进现场。
 
     这里没有扫描、没有注入、没有指纹回填：baseline 全部用仓内相对路径指路，
     不含绝对路径也不含哈希，所以源料本身就是最终产物，逐字节可复现。

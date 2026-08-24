@@ -9,14 +9,18 @@
 
 | 判据 | 不满足时 |
 | --- | --- |
-| `<repo-baseline-dir>` 下八份 baseline 文件在不在 | 全缺或大面积缺 → 完整执行 `sdd-init-frontend` |
-| `structure.md` 的栈签名读不读得出一个具名的栈 | 读不出 → 完整执行 `sdd-init-frontend` |
+| `<repo-baseline-dir>/index.md` 在不在 | 不在 → 完整执行 `sdd-init-frontend` |
+| `structure.md` 的栈签名读不读得出一个具名的框架**和**一个具名的形态 | 读不出 → 完整执行 `sdd-init-frontend` |
+
+**不按份数查。** 空文件按规定整份删，`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在，按份数查会把正确产物判成不合格。`index.md` 恒存在（它只做路由）、`structure.md` 恒非空（栈签名恒存在），这两条才是可靠判据。
+
+**形态要一起读出来**，因为它决定本 Story 后续判据是否适用：`微前端子应用` 里查不到统一请求出口不等于没有出口，`组件库` 里没有路由是正常的。
 
 **这道门刻意不精确。** 「本 Story 需要的那几条查得到吗」在 Phase -1 还没有信息可判——`tasks.md` 要到 Phase 0 才读。所以这里只拦住「baseline 根本不存在」这一种情况；具体某条结论不成立由消费点自证并就地修，不在这里预判。
 
 **不查 readiness、不查指纹、不查 stale。** 这三样已随仓库 baseline 改版整体取消：内容指纹只能告诉你文件变了，永远不能告诉你结论变了，为这点信噪比要养账本、stale 状态、readiness 回退和一条「本 Story 自身改动放行」的例外。现在的跟进方式是消费点自证 + 就地修，Phase C/D 重查时**没有任何 baseline 失效需要放行或路由**。
 
-退出：baseline 存在且栈可判。
+退出：baseline 入口存在，栈与形态均可判。
 
 ## Phase 0 — 执行起点
 

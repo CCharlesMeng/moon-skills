@@ -8,15 +8,9 @@
 
 | ID | 指路 | 是什么、何时用 | 被引用 |
 | --- | --- | --- | --- |
-| `COMP-1` | `src/components/StatCard/` 的 `StatCard` | 展示**单个**指标数值的卡片。指标名 + 数值 + 语气色。**不要拿它做多值对比或表格行**，那需要新构件 | 2 处特性 |
+| `COMP-1` | `src/components/StatCard/` 的 `StatCard` | 展示**单个**指标数值的卡片。指标名 + 数值 + 语气色。**不要拿它做多值对比或表格行**，那需要新构件 | 2 处消费单元 |
 
-### 业务组件路由索引
-
-<!-- 覆盖：src/features/（2026-08-05） -->
-
-| ID | 路由 / 特性 | 入口 | 何时看它 |
-| --- | --- | --- | --- |
-| `COMP-2` | `portfolio` 组合概览 | `src/features/portfolio/` 的 `PortfolioPanel` | 需要一个「取数 + 三态 + 多张指标卡」的现成样例时；它是本仓面板写法的参照页 |
+业务面板不进本文件，见 `routing.md` 的界面装配索引。`COMP-2` 是它迁走后退役的号，不再复用。
 
 ### 渲染辅助
 
@@ -35,7 +29,7 @@
 | 适用场景 | **新增组件与特性面板。** 不含 `src/lib/` 下的工具函数与渲染辅助 |
 | 规则 | 通用组件放 `src/components/<PascalCase 目录>/<PascalCase>.tsx`，业务面板放 `src/features/<kebab-case 领域>/<PascalCase>.tsx`；一律具名函数声明 + 具名导出；props 以 `interface <组件名>Props` 就近声明并导出；样式同名 `*.module.css`；跨目录导入走 `@/` 别名 |
 | 不变量 | 不使用默认导出；不使用 `React.FC`；文件名与导出的组件名逐字一致 |
-| 依据清单 | `COMP-1`、`COMP-2` |
+| 依据清单 | `COMP-1`、`ROUTE-2` |
 | 依据样本 | `src/components/StatCard/StatCard.tsx`（具名函数 + 具名导出 + 就近 props 接口）、`src/features/portfolio/PortfolioPanel.tsx`（业务面板目录与命名、`@/` 别名导入） |
 | 违例判定 | 文件名与导出名不一致、默认导出、`React.FC`、props 未导出或未按 `<组件名>Props` 命名、跨目录用相对路径而非 `@/` |
 | 验证 | `typecheck`、`lint` |

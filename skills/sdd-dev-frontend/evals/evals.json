@@ -184,10 +184,11 @@
       "gates": [
         "硬门禁 0"
       ],
-      "prompt": "Phase -1 检查仓库 baseline：八份文件都在，structure.md 能读出这是 Vue。但你注意到 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
-      "expected_output": "两条判据都成立，继续 Phase 0，不路由 sdd-init-frontend；覆盖缺口留给 Phase 0 之后的消费点自行勘察并追加单条。",
+      "prompt": "Phase -1 检查仓库 baseline：index.md 在，structure.md 能读出「Vue + 组件库形态」。但目录里没有 routing.md 也没有 api.md，而且 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
+      "expected_output": "两条判据都成立，继续 Phase 0，不路由 sdd-init-frontend；组件库形态下缺这两份是正确产物，覆盖缺口留给 Phase 0 之后的消费点自行勘察并追加单条。",
       "expectations": [
-        "只按两条判据判定：八份文件是否存在、栈签名是否读得出一个具名的栈",
+        "只按两条判据判定：index.md 是否存在、栈签名是否读得出具名框架加具名形态",
+        "不按份数查，不因为缺 routing.md 与 api.md 就判不合格——组件库形态下它们本就不该存在",
         "不因为覆盖声明没包含本次模块就整体重跑 sdd-init-frontend",
         "指出「本 Story 需要的条目查得到吗」在 Phase -1 还没有信息可判，tasks.md 要到 Phase 0 才读",
         "不检查 readiness、不检查指纹、不检查 stale"

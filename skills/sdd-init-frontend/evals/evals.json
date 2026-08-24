@@ -107,12 +107,97 @@
       "name": "pattern-body-lives-only-at-repo-level",
       "target": "SKILL.md",
       "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的取数封装与样式 token。另外本次勘察还发现两处看起来像新惯例、但只有一个样例支持。请说明仓库级、Requirement 级、Story 级分别保存什么。",
-      "expected_output": "规范正文只在仓库级八份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
+      "expected_output": "规范正文只在仓库级九份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
       "expectations": [
         "不为每个 Story 生成范式卡片或额外的勘察文档",
         "Requirement 不复制仓库规范正文，完全沿用时连工程决策章节也省略",
         "Story 的工程依据只写 ID，不记录任何指纹",
         "只有一个样例支持的候选不写进 baseline，也不长期维护候选清单"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "shape-is-decided-first-because-it-changes-the-criteria",
+      "target": "references/discovery-rules.md",
+      "prompt": "一个 Vue 仓：包清单声明了 exports 与 types 入口、构建目标是库，src/ 下全是组件目录，没有任何挂载到 DOM 根节点的入口，也没有路由库和请求封装。请说明栈签名怎么写，以及这个结论如何改变其余文件的判据。",
+      "expected_output": "形态 = 组件库，与框架并列写进 structure.md 的栈签名；据此通用/业务分层判据整体失效、routing.md 与 api.md 因无内容整份删、structure.md 增收对外导出面与版本约定。",
+      "expectations": [
+        "栈签名给出一个具名框架加一个具名形态，形态判为组件库，判据是有对外导出入口且无应用挂载入口",
+        "指出组件库形态下「被两个以上消费单元引用」这条分层判据不适用，对外导出的构件全部进 components.md 详表",
+        "routing.md 与 api.md 判为整份删，并说明这是正确产物而不是缺失",
+        "形态写进 structure.md 的栈签名，不为它单独开一份文件",
+        "形态必须在其余文件之前定出来，理由是它改判据而不是为了描述更全"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "micro-frontend-remote-must-not-conclude-no-request-exit",
+      "target": "references/discovery-rules.md",
+      "prompt": "一个 React 仓导出了 bootstrap/mount/unmount 三个生命周期符号，构建配置把它声明为远端暴露。全仓搜不到任何 HTTP 客户端实例的构造，业务代码里的请求都调一个从宿主注入的对象上的方法。请说明 structure.md 与 api.md 分别写什么。",
+      "expected_output": "形态 = 微前端子应用；api.md 不得写成「无统一请求出口」，而要写清出口由宿主注入、本仓的约定是经注入对象调用，并记下宿主是否下发这件事的确认状态。",
+      "expectations": [
+        "形态判为微前端子应用，判据是导出挂载/卸载生命周期符号加远端暴露配置",
+        "明确不能因为本仓搜不到实例就判「无统一出口」，理由是出口可能由宿主注入，判成无会让检视放过真正的绕过",
+        "structure.md 增收挂载契约、宿主注入了什么、共享依赖版本约束",
+        "宿主是否下发无法确认时按缺口如实记，不猜一个结论"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "layering-criterion-must-work-in-a-flat-repo",
+      "target": "references/baseline-contract.md",
+      "prompt": "一个仓 src/pages/ 下平铺着 14 个页面文件，没有 features/ 也没有任何按特性分的目录；src/ 根下有个 Modal.tsx 被 6 个页面引用，另有个 OrderStep.tsx 只被 1 个页面引用。请说明 components.md 的分层怎么判。",
+      "expected_output": "消费单元在平铺仓里是页面文件：Modal 被 6 个页面引用判为通用构件进详表，OrderStep 只被 1 个页面引用归 routing.md 的路由索引。",
+      "expectations": [
+        "消费单元的粒度按 structure.md 记的目录实况定，平铺仓算页面文件",
+        "不因为仓里没有特性目录就说这条判据无法执行或跳过分层",
+        "Modal 进 components.md 详表，OrderStep 不进详表而归 routing.md",
+        "不因为两个文件都放在 src/ 根下就按目录名判定分层"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "routing-file-is-not-a-page-catalog",
+      "target": "references/baseline-contract.md",
+      "prompt": "仓内有集中路由表、一个登录守卫、两个布局容器，本次需求还要新增 5 个页面路径。另外有人提议把全部 40 条现有路由路径抄进 routing.md 以便检索。请说明 routing.md 写什么、不写什么。",
+      "expected_output": "写路由表与守卫与布局的指路、装配规则、跳转入口；不抄 40 条路径，也不写本次新增的 5 条——具体路由路径是 Story 级契约，唯一例外是路由→业务组件索引。",
+      "expectations": [
+        "不把 40 条路由路径逐条抄进文件，理由与 api.md 的端点同形：会产生第二事实源并必然漂移",
+        "不写本次需求新增的 5 条路径，那是 Story 级的",
+        "写的是路由表与守卫与布局容器的指路、新增页面要动哪几处的装配规则、跳转只能经哪个入口",
+        "路由→业务组件索引作为唯一例外进清单节，因为它本身就是检索入口"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "cross-concern-scenarios-do-not-get-files",
+      "target": "references/baseline-contract.md",
+      "prompt": "本次勘察发现：i18n 文案资源放 src/locales/、取文案用一个 t 封装、当前语言持在一个 store 里；权限角色从登录接口取、路由上挂了守卫、界面里用一个 can 函数判按钮；埋点 SDK 在入口初始化、上报走一个 track 封装；构建里有个体积预算检查命令。有人提议建 i18n.md、permission.md、telemetry.md 三份文件。请给出归置并评价那个提议。",
+      "expected_output": "三份都不建：这些是横跨多个问句的场景，按归置表拆进现有文件，靠 index.md 的场景索引串起来。",
+      "expectations": [
+        "不新建 i18n.md、permission.md、telemetry.md，理由是它们问不出自带成员判据的问句，会与现有文件重叠并破坏唯一事实源",
+        "i18n 拆成 structure.md 资源位置、components.md 取文案入口、data.md 语言状态",
+        "权限拆成 data.md 权限数据、routing.md 守卫、components.md 界面级判定辅助、api.md 鉴权头",
+        "埋点上报出口归 api.md（跨进程边界，与请求实例同类）、SDK 初始化位置归 structure.md",
+        "体积预算检查命令归 runtime.md 的质量命令，不当成独立关注点",
+        "index.md 的场景索引把每个场景串起来，且只写指向 ID 的行"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "end-to-end-baseline-from-a-real-tree",
+      "target": "SKILL.md",
+      "prompt": "目标仓的全部源文件是：package.json（依赖 react、react-dom、vite、typescript、vitest，scripts 有 dev/build/test/typecheck/lint/format，无路由库无状态库无表单库无取数缓存库）、vite.config.ts（挂 React 插件，配了 @/ 别名）、tsconfig.json（strict 开）、src/main.tsx（挂载到 DOM 根节点）、src/App.tsx（直接渲染 PortfolioPanel）、src/components/StatCard/StatCard.tsx 与同名 module.css（被 2 个特性引用）、src/features/portfolio/PortfolioPanel.tsx、src/features/portfolio/usePortfolioSummary.ts（调 request、建取消控制器、返回加载/数据/错误三态）、src/lib/request.ts（构造唯一 HTTP 实例、注册拦截器、集中翻译错误码）、src/lib/format.ts（三个纯格式化函数）、src/styles/tokens.css（间距与字号自定义属性）。仓内没有任何测试文件。请产出全套 baseline 的文件清单、每份的 ID 与结论要点。",
+      "expected_output": "九份文件；栈签名为 React + TypeScript + Vite、形态为应用；routing.md 只有一条「无路由机制，单点挂载」规范；testing.md 写有 Vitest 但无既有测试与定位约定；data.md 写三态与取消并显式写「无缓存无 store」「无表单」。",
+      "expectations": [
+        "栈签名同时给出具名框架与形态 = 应用，形态判据是挂载到 DOM 根节点且无导出入口、无远端暴露、无平台配置",
+        "PortfolioPanel 只被一个消费单元引用，因此归 routing.md 的装配索引而不进 components.md 详表",
+        "format.ts 判为渲染辅助进 components.md，request.ts 判为统一请求出口进 api.md，usePortfolioSummary 判为数据 hook 进 data.md，tokens.css 判为 token 集进 styling.md",
+        "routing.md 不留空也不删，写成「无路由库、无路由表、无守卫、无代码分割，界面由 App 单点装配」的显式规范",
+        "testing.md 写出框架是 Vitest 但无既有测试与元素定位约定，并指明实现阶段的影响",
+        "data.md 显式写出无取数缓存库、无全局 store、无表单机制三条「无统一做法」规范",
+        "全文不出现方法签名、props 列表、token 具体数值或目录树",
+        "index.md 只有指向 ID 的行，速查节含栈与形态各一行"
       ]
     }
   ]

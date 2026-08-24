@@ -3,7 +3,7 @@
 | 字段 | 值 |
 | --- | --- |
 | Story | `S3 · 客户风险简报概览面板` |
-| 仓库 baseline | `{{BASELINE_DIR}}`（八份，入口 `index.md`） |
+| 仓库 baseline | `{{BASELINE_DIR}}`（九份，入口 `index.md`） |
 | 工程依据 | 见下方「工程依据」 |
 | 执行起点 | 见下方「执行起点（环境）」 |
 | 基线源 | `文字规格`（`tasks.md / 文字规格`） |

@@ -141,7 +141,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 ### Phase -1：仓库接入门
 
-走一道极轻的门：仓库 baseline 的八份文件在不在、`structure.md` 的栈签名读不读得出一个具名的栈。全缺或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。单条结论不成立不是就绪问题，读到时就地修。
+走一道极轻的门：仓库 baseline 的 `index.md` 在不在、`structure.md` 的栈签名读不读得出一个具名的框架加一个具名的形态。不在或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。不按份数查——`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，读到时就地修。
 
 仓库 baseline 保存在 `<project-sdd-dir>/frontend-baselines/<repo-id>/`，不会每个 Story 重抽。
 

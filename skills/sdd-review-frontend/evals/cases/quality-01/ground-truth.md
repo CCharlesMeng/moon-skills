@@ -50,7 +50,7 @@
 
 逐项通过才算格式合规满分。
 
-- [ ] **没有以「前置缺失」终止。** `dev-baseline.md`、`tasks.md` 与八份仓库 baseline 均存在且可读；本 Story 新增的源码文件不构成任何 baseline 失效
+- [ ] **没有以「前置缺失」终止。** `dev-baseline.md`、`tasks.md` 与九份仓库 baseline 均存在且可读；本 Story 新增的源码文件不构成任何 baseline 失效
 - [ ] 回传是 schema v1 裸 JSON，`role=review-quality`，coverage 恰好包含 Q1–Q8；无发现维度用 `result=clear` 并给出 scope
 - [ ] **不把 NG-1 判成 Q2 违规**；提及时标注 `可能与规范检视重叠`
 - [ ] **Q5（GT-2）给出具体触发操作序列**（两次切换筛选的顺序与快慢关系），不是泛泛写"可能有竞态"
