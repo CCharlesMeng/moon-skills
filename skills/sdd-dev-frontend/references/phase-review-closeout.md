@@ -16,7 +16,7 @@
 
 ## Phase D — 收口
 
-1. 只修确证 blocker，且未清零的 blocker 只把它命中的声明保持 `UNVERIFIED`，不牵连无关声明。建议级进入 handoff，不在当前 Story 自动修，也不因此扩大命令、浏览器矩阵或检视重跑；Open Question 和 Deferred 候选按 P7 批量上报。
+1. 只修确证 blocker，且未清零的 blocker 只把它命中的声明保持 `UNVERIFIED`，不牵连无关声明。建议级进入 handoff，不在当前 Story 自动修，也不因此扩大命令、浏览器矩阵或检视重跑；Open Question 和 Deferred 候选按 P7 批量上报。**上报要在对话里问成可回答的问题**（每条给可选项与后果），拿到答复后按 `aggregate --decisions` 重渲染，把答复与时间就地记回 `acceptance.md` 的对应条目——只报不问会让同一件事下一轮重复出现。
 2. 修复后按 `depends_on` 失效命中的命令、场景与声明，按 `judged_files` 失效命中的角色判断，再按实际 diff 重编译组合。出现新风险才扩展；否则精确重跑。
 3. 同一 blocker 连续三次修复失败、需要越界改动或会改变冻结期望时停下请求决策。改变期望回 Phase A 重新确认；只补事实则回对应 Phase C 模块。
 4. 更新 `alpha-tests.md`、`review-evidence.json`、`review-results.json` 与 `acceptance.md`。Handoff 条数与最终 P8 输出逐类一致。

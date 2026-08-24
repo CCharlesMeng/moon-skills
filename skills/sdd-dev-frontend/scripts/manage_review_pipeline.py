@@ -369,7 +369,6 @@ def validate_common_item(item: dict[str, Any], label: str, fields: tuple[str, ..
             require_text(item[field], f"{label}.{field}")
     require_text(item.get("id"), f"{label}.id")
     require_text(item.get("canonical_key"), f"{label}.canonical_key")
-    require_text(item.get("user_visible_text"), f"{label}.user_visible_text")
     evidence_ids = require_list(item.get("evidence_ids"), f"{label}.evidence_ids")
     if not evidence_ids:
         raise ReviewPipelineError(f"{label}.evidence_ids must not be empty")
@@ -472,7 +471,11 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
     ids: set[str] = set()
     for index, raw_finding in enumerate(findings):
         item = require_dict(raw_finding, f"{role}.findings[{index}]")
-        validate_common_item(item, f"{role}.findings[{index}]", ("dimension", "level", "summary", "location", "basis"))
+        validate_common_item(
+            item,
+            f"{role}.findings[{index}]",
+            ("dimension", "level", "summary", "location", "basis", "impact", "suggested_action"),
+        )
         if item["level"] not in {"blocker", "suggestion"}:
             raise ReviewPipelineError(f"invalid finding level: {item['level']}")
         if item["id"] in ids:
@@ -503,7 +506,7 @@ def merge_findings(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 merged[key] = {**item, "roles": [role], "source_ids": [item["id"]]}
                 continue
             current = merged[key]
-            for field in ("summary", "location", "user_visible_text"):
+            for field in ("summary", "location", "impact", "suggested_action"):
                 if current[field] != item[field]:
                     raise ReviewPipelineError(
                         f"canonical_key conflict for {key}: incompatible {field}"
@@ -522,8 +525,8 @@ def merge_named(results: list[dict[str, Any]], field: str) -> list[dict[str, Any
     for result in results:
         for item in result[field]:
             key = item["canonical_key"]
-            if key in merged and merged[key]["user_visible_text"] != item["user_visible_text"]:
-                raise ReviewPipelineError(f"canonical_key conflict for {key}: incompatible user_visible_text")
+            if key in merged and merged[key]["summary"] != item["summary"]:
+                raise ReviewPipelineError(f"canonical_key conflict for {key}: incompatible summary")
             if key not in merged:
                 merged[key] = {**item, "roles": [result["role"]], "source_ids": [item["id"]]}
             else:
@@ -667,6 +670,28 @@ def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
     return validated
 
 
+def validate_decisions(raw: Any) -> list[dict[str, Any]]:
+    """校验用户对待决项的答复，让答复就地落回 `acceptance.md`。
+
+    原先待决项（规范候选、未决问题、暂缓）只被「报出来」：P7 说攒批上报，但**答复没有
+    任何落点**。于是同一件事下一轮会被再问一遍，而「当时为什么这么定」下个月没人说得清。
+    Phase A2 的确认早就记进 `dev-baseline.md` 的「确认记录」与「变更记录」了，收口这侧
+    一直缺同样的东西。
+
+    `item` 必须对得上某条 handoff 的 `id`，否则记下的是一个无主的答复；这条由
+    `aggregate` 在渲染前校验。
+    """
+    items = require_list(raw, "decisions")
+    validated: list[dict[str, Any]] = []
+    for index, entry in enumerate(items):
+        label = f"decisions[{index}]"
+        item = require_dict(entry, label)
+        for field in ("item", "answer", "decided_at"):
+            require_text(item.get(field), f"{label}.{field}")
+        validated.append(item)
+    return validated
+
+
 def validate_unplanned_carry(raw: Any) -> list[dict[str, Any]]:
     """校验计划外承接：Dev 直接承接的、计划文件清单之外的连带改动。
 
@@ -704,6 +729,7 @@ def aggregate_results(
     skip_rebuttals: dict[str, list[Any]] | None = None,
     norm_candidates: list[dict[str, Any]] | None = None,
     unplanned_carry: list[dict[str, Any]] | None = None,
+    decisions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     if skip_rebuttals:
@@ -809,14 +835,26 @@ def aggregate_results(
     findings = merge_findings(validated)
     questions = merge_named(validated, "open_questions")
     deferred = merge_named(validated, "deferred_candidates")
+    # handoff 的文本一律由结构化字段拼，不再依赖角色自己写的一段自由文本——
+    # 那段文本原先要同时装现象、影响和建议动作，结果三样都说不清。
     handoff = [
-        {"kind": "suggestion", "id": "/".join(item["source_ids"]), "user_visible_text": item["user_visible_text"], "needs_decision": False}
+        {
+            "kind": "suggestion",
+            "id": "/".join(item["source_ids"]),
+            "user_visible_text": f"{item['summary']}（{item['impact']}）",
+            "needs_decision": False,
+        }
         for item in findings if item["level"] == "suggestion"
     ] + [
-        {"kind": "open_question", "id": "/".join(item["source_ids"]), "user_visible_text": item["user_visible_text"], "needs_decision": bool(item["needs_decision"])}
+        {"kind": "open_question", "id": "/".join(item["source_ids"]), "user_visible_text": item["summary"], "needs_decision": bool(item["needs_decision"])}
         for item in questions
     ] + [
-        {"kind": "deferred", "id": "/".join(item["source_ids"]), "user_visible_text": item["user_visible_text"], "needs_decision": True}
+        {
+            "kind": "deferred",
+            "id": "/".join(item["source_ids"]),
+            "user_visible_text": f"{item['ac']}：{item['reason']}",
+            "needs_decision": True,
+        }
         for item in deferred
     ] + [
         # 规范候选一律 needs_decision：规范节只有 sdd-init-frontend 能改，Story 侧
@@ -833,6 +871,17 @@ def aggregate_results(
         }
         for item in (norm_candidates or [])
     ]
+    # 答复必须挂在一条真实的待决项上。挂不上的答复要么是编号写错、要么是那条待决项
+    # 已经消失（比如修完之后不再需要决定）——两种都不能静默收下，否则报告里会出现一条
+    # 谁也对不上的「你的决定」。
+    decidable = {item["id"] for item in handoff if item.get("needs_decision")}
+    orphans = sorted(
+        item["item"] for item in (decisions or []) if item["item"] not in decidable
+    )
+    if orphans:
+        raise ReviewPipelineError(
+            f"decisions reference items that are not awaiting a decision: {orphans}"
+        )
     return {
         "schema_version": SCHEMA_VERSION,
         "evidence_epoch": resolved_epoch,
@@ -847,6 +896,7 @@ def aggregate_results(
         "deferred_candidates": deferred,
         "norm_candidates": list(norm_candidates or []),
         "unplanned_carry": list(unplanned_carry or []),
+        "decisions": list(decisions or []),
         "handoff": handoff,
         "counts": {
             "blocker": sum(item["level"] == "blocker" for item in findings),
@@ -855,6 +905,7 @@ def aggregate_results(
             "deferred": len(deferred),
             "norm_candidate": len(norm_candidates or []),
             "unplanned_carry": len(unplanned_carry or []),
+            "decided": len(decisions or []),
             "handoff": len(handoff),
             "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
         },
@@ -995,6 +1046,9 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     blockers = [item for item in aggregate["findings"] if item["level"] == "blocker"]
     suggestions = [item for item in aggregate["findings"] if item["level"] == "suggestion"]
     decisions = [item for item in aggregate["handoff"] if item.get("needs_decision")]
+    answers = {item["item"]: item for item in aggregate.get("decisions", [])}
+    # 已答复的不再算「待你定」——否则答完一轮，顶上那句还在催同一件事。
+    pending = [item for item in decisions if item["id"] not in answers]
 
     lines = ["# 验收摘要", ""]
 
@@ -1003,37 +1057,60 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         lines += [
             f"**暂不可验收**：有 {len(blockers)} 条阻断级问题需要先修。逐条见下。",
         ]
-    elif decisions:
+    elif pending:
         lines += [
-            f"**可验收，但有 {len(decisions)} 件需要你定**。修完或拍板后即可收口。",
+            f"**可验收，但有 {len(pending)} 件需要你定**。修完或拍板后即可收口。",
         ]
     else:
         lines += ["**可验收**：本次检视没有阻断级问题，也没有需要你决定的事项。"]
 
     if blockers or decisions:
+        # 逐项分块而不是表格：中文一句 60–100 字塞进单元格，三列一起就没法读了。
+        # 表格适合短枚举，不适合成句。
         lines += ["", "## 需要你处理", ""]
-        rows = [
-            {
-                "什么问题": item["summary"],
-                "在哪": item["location"],
-                "要你做什么": "先修掉，它挡住验收",
-            }
-            for item in blockers
-        ] + [
-            {
-                "什么问题": item["user_visible_text"],
-                "在哪": display(item["kind"]),
-                "要你做什么": "需要你拍板",
-            }
-            for item in decisions
-        ]
-        lines += markdown_table(
-            rows, [("什么问题", "什么问题"), ("在哪", "在哪"), ("要你做什么", "要你做什么")]
-        )
+        index = 0
+        for item in blockers:
+            index += 1
+            lines += [
+                f"### {index}. {item['summary']}",
+                "",
+                f"- **在哪**：`{item['location']}`",
+                f"- **影响**：{item['impact']}",
+                f"- **建议**：{item['suggested_action']}",
+                f"- 依据与完整证据：`review-results.json` 的 `{'/'.join(item['source_ids'])}`",
+                "",
+            ]
+        for item in decisions:
+            index += 1
+            answered = answers.get(item["id"])
+            lines += [
+                f"### {index}. {item['user_visible_text']}",
+                "",
+                f"- **类型**：{display(item['kind'])}",
+            ]
+            if answered:
+                # 已答复的就地记下结论，别让人在下一轮再被问一遍同一件事。
+                lines.append(f"- **你的决定**：{answered['answer']}（{answered['decided_at']}）")
+                if answered.get("rationale"):
+                    lines.append(f"- 理由：{answered['rationale']}")
+            else:
+                lines.append("- **要你定**：见下方提问，回答后会记回本文件")
+            lines.append("")
 
-    heads_up = [item for item in aggregate["handoff"] if not item.get("needs_decision")]
-    if heads_up:
+    # 建议只在这一节出现。原先它同时进「你该知道」和一张「改进建议」表，
+    # 同一条被说两遍——正是要避免的那种重复。
+    heads_up = [
+        item
+        for item in aggregate["handoff"]
+        if not item.get("needs_decision") and item["kind"] != "suggestion"
+    ]
+    if suggestions or heads_up:
         lines += ["", "## 你该知道，但不用动", ""]
+        for item in suggestions:
+            lines += [
+                f"- **{item['summary']}**（`{item['location']}`）",
+                f"  {item['impact']}。建议：{item['suggested_action']}",
+            ]
         lines += [f"- {item['user_visible_text']}" for item in heads_up]
 
     # 「这次判了什么」只列没判到的，以及为什么。判到且无发现的用一句话带过——
@@ -1068,13 +1145,6 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         lines += ["", "**主动少判了这些，理由如下：**"] + [
             f"- {display(item['trigger'])}：{item['reason']}" for item in narrowed
         ]
-
-    if suggestions:
-        lines += ["", "## 改进建议（本次不修）", ""]
-        lines += markdown_table(
-            suggestions,
-            [("建议", "summary"), ("在哪", "location"), ("依据", "basis")],
-        )
 
     if aggregate["open_questions"]:
         lines += ["", "## 未决问题", ""]
@@ -1193,6 +1263,9 @@ def command_aggregate(args: argparse.Namespace) -> None:
             if args.unplanned_carry
             else []
         ),
+        decisions=(
+            validate_decisions(read_json(Path(args.decisions))) if args.decisions else []
+        ),
     )
     aggregate["validation_portfolio"] = portfolio
     aggregate["portfolio_narrowed"] = narrowed
@@ -1244,6 +1317,10 @@ def parser() -> argparse.ArgumentParser:
     aggregate.add_argument(
         "--unplanned-carry",
         help="JSON array：计划外承接的连带改动，权威登记在 alpha-tests.md；无则省略",
+    )
+    aggregate.add_argument(
+        "--decisions",
+        help="JSON array：用户对待决项的答复（item / answer / decided_at），就地记回报告",
     )
     aggregate.add_argument("--output-json", required=True)
     aggregate.add_argument("--output-markdown", required=True)

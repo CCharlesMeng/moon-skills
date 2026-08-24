@@ -26,11 +26,12 @@
       "canonical_key": "route:/detail|viewport:720|horizontal-overflow",
       "dimension": "L3",
       "level": "blocker",
-      "summary": "<可观察现象>",
+      "summary": "<可观察现象，一句话>",
       "location": "<页面 / 路由 / 视口，或文件与行号>",
       "basis": "<冻结基线、PATTERN-* 或量化后果>",
       "evidence_ids": ["BE-2"],
-      "user_visible_text": "<现象 + 影响 + 建议动作>"
+      "impact": "<这样会怎样：证伪了哪条声明，或产生什么坏结果>",
+      "suggested_action": "<建议怎么改，具体到可动手；给不出就写为什么给不出>"
     }
   ],
   "skipped": [
@@ -65,8 +66,19 @@
 - `status=unexecuted` 时 coverage、skipped、findings、`judged_files`、`evidence_reused` / `evidence_added` 全为空，只用 `known_gaps` 解释；原分配集由调用方用来把依赖声明标为未验证。不得为通过结构校验伪造 coverage。
 - `coverage.result` 只有 `clear`、`finding`、`unrun`。`finding` 必须能在 `findings`、`open_questions` 或 `deferred_candidates` 追到对应条目；`unrun` 必须在 `known_gaps` 说明。
 - `canonical_key` 描述同一个可观察问题的稳定身份，不含角色名或级别。两格报同一问题时必须给相同 key——那说明跨格了，删掉不属于本格的那条。同 key 的现象、定位或用户可见文本冲突时聚合器拒绝猜测，由调用方回到原始证据消歧。
-- `open_questions` 每项必含 `id`、`canonical_key`、`summary`、`user_visible_text`、`needs_decision`、`evidence_ids`。
-- `deferred_candidates` 每项必含 `id`、`canonical_key`、`ac`、`reason`、`resume_condition`、`user_visible_text`、`evidence_ids`。
+- `open_questions` 每项必含 `id`、`canonical_key`、`summary`、`needs_decision`、`evidence_ids`。
+- `deferred_candidates` 每项必含 `id`、`canonical_key`、`ac`、`reason`、`resume_condition`、`evidence_ids`。
+
+### `summary` / `impact` / `suggested_action` 三样分开写
+
+原先只有一个 `user_visible_text`，定义是「现象 + 影响 + 建议动作」——三样塞进一段自由文本，而 `summary` 已经是现象。后果有两个，都实测到过：
+
+- **重复。** 调用方要把发现渲染给人看时，只能整段贴出来，于是现象被说两遍。
+- **建议动作可以悄悄消失。** 它埋在自由文本里，没有任何东西能发现某条发现根本没给建议——而「怎么改」恰恰是人拿到这份结论后第一个要问的。
+
+拆开之后三样各有裁判：`summary` 一句话说清现象（当标题用，别写成段落）；`impact` 说这样会怎样，**能指名被证伪的冻结声明就指名**；`suggested_action` 说建议怎么改，具体到能动手。
+
+**给不出建议时不许留空**，写清为什么给不出（缺基准、需要产品决策、要跨仓改动）。空字符串会被聚合器拒绝——留空和「不需要建议」在输出上分不开，而前者是漏写。
 - Finding 条数不得超过该格 `max_findings`；超了按严重度截断，余下进 `known_gaps`。
 
 ## 证据边界

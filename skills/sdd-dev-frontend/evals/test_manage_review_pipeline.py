@@ -91,7 +91,8 @@ def finding(identifier, key, level="suggestion"):
         "location": "src/a.tsx:L1-L2",
         "basis": f"basis {identifier}",
         "evidence_ids": ["BE-1"],
-        "user_visible_text": "这个问题会影响用户，建议后续处理。",
+        "impact": "会让该分支的验收声明无法成立",
+        "suggested_action": "按仓内既有写法改掉这一处",
     }
 
 
@@ -203,18 +204,18 @@ class AggregateTests(unittest.TestCase):
         results[2]["findings"] = [finding("Q2-1", "shared", "blocker"), finding("Q8-1", "perf")]
         results[3]["open_questions"] = [{
             "id": "OQ-1", "canonical_key": "oq", "summary": "choose behavior",
-            "user_visible_text": "需要决定边界行为，否则该分支无法验收。", "needs_decision": True,
+            "needs_decision": True,
             "evidence_ids": ["BE-1"],
         }]
         results[3]["deferred_candidates"] = [{
             "id": "D-1", "canonical_key": "deferred", "ac": "AC-4", "reason": "backend missing",
-            "resume_condition": "backend ready", "user_visible_text": "AC-4 等后端就绪后再验收。",
+            "resume_condition": "backend ready",
             "evidence_ids": ["BE-1"],
         }]
         aggregate = MODULE.aggregate_results(results)
         self.assertEqual(
             aggregate["counts"],
-            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "handoff": 3, "skipped": 0},
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "decided": 0, "handoff": 3, "skipped": 0},
         )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
@@ -479,6 +480,123 @@ class FailureDirectionTests(unittest.TestCase):
                 },
                 facts,
             )
+
+
+class BlockerBlockRenderingTests(unittest.TestCase):
+    """阻断级按「现象 / 影响 / 建议」三样分开渲染成块，不再是一格模板话。
+
+    原先「要你做什么」那列统一填「先修掉，它挡住验收」——是模板话，没有任何可动手的
+    信息；而真正的建议埋在 user_visible_text 里，那个字段同时装现象、影响和建议，
+    结果放进表格就把现象说两遍。
+    """
+
+    ITEM = {
+        "id": "Q6-1",
+        "canonical_key": "component:HoldingsTable|empty-state",
+        "dimension": "Q6",
+        "level": "blocker",
+        "summary": "没持仓时渲染的是只有表头的空表格，不是「暂无持仓」",
+        "location": "HoldingsTable.tsx:47-55",
+        "basis": "冻结基线 F3-3",
+        "impact": "F3-3 与 AC-5.3 同时被证伪，且本 Story 无豁免",
+        "suggested_action": "在 error 分支之后补一条空态分支，参照 PortfolioPanel 的三分支写法",
+        "evidence_ids": ["BE-1"],
+    }
+
+    def _render(self):
+        result = {
+            "schema_version": 1, "role": "review-quality", "evidence_epoch": "e1",
+            "code_fingerprint": "fp", "status": "executed", "judged_files": ["src/a.tsx"],
+            "coverage": [{"id": "Q6-c", "dimension": "Q6", "scope": "s",
+                          "evidence_ids": ["BE-1"], "result": "finding"}],
+            "skipped": [], "findings": [self.ITEM], "open_questions": [],
+            "deferred_candidates": [], "known_gaps": [],
+            "evidence_reused": ["BE-1"], "evidence_added": [],
+        }
+        return MODULE.render_markdown(
+            MODULE.aggregate_results(
+                [result], expected_roles=["review-quality"],
+                expected_dimensions={"review-quality": ["Q6"]},
+            )
+        )
+
+    def test_all_three_facets_are_rendered_separately(self):
+        body = self._render()
+        self.assertIn(f"### 1. {self.ITEM['summary']}", body)
+        self.assertIn(f"**影响**：{self.ITEM['impact']}", body)
+        self.assertIn(f"**建议**：{self.ITEM['suggested_action']}", body)
+
+    def test_the_old_boilerplate_action_is_gone(self):
+        self.assertNotIn("先修掉，它挡住验收", self._render())
+
+    def test_a_finding_without_an_action_is_rejected(self):
+        """建议动作给不出时要写清为什么给不出；留空和「不需要建议」在输出上分不开。"""
+        for field in ("impact", "suggested_action"):
+            with self.subTest(field=field):
+                broken = {k: v for k, v in self.ITEM.items() if k != field}
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, field):
+                    MODULE.validate_review_result({
+                        "schema_version": 1, "role": "review-quality",
+                        "evidence_epoch": "e1", "code_fingerprint": "fp",
+                        "status": "executed", "judged_files": ["src/a.tsx"],
+                        "coverage": [{"id": "Q6-c", "dimension": "Q6", "scope": "s",
+                                      "evidence_ids": ["BE-1"], "result": "finding"}],
+                        "skipped": [], "findings": [broken], "open_questions": [],
+                        "deferred_candidates": [], "known_gaps": [],
+                        "evidence_reused": ["BE-1"], "evidence_added": [],
+                    })
+
+
+class DecisionRecordTests(unittest.TestCase):
+    """待决项的答复就地记回报告，别让同一件事下一轮再被问一遍。
+
+    原先待决项只被「报出来」：P7 说攒批上报，但答复没有任何落点——同一件事会重复问，
+    而「当时为什么这么定」下个月没人说得清。Phase A2 的确认早就记进 dev-baseline 了，
+    收口这侧一直缺同样的东西。
+    """
+
+    CANDIDATE = {
+        "id": "NC-1", "kind": "broken", "target_id": "PATTERN-API-1",
+        "claim": "出现第二个请求出口", "samples": ["src/a.ts:1"],
+    }
+
+    def _aggregate(self, decisions=None):
+        return MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            norm_candidates=[self.CANDIDATE], decisions=decisions or [],
+        )
+
+    def test_unanswered_item_says_it_will_be_asked(self):
+        body = MODULE.render_markdown(self._aggregate())
+        self.assertIn("要你定", body)
+        self.assertIn("回答后会记回本文件", body)
+
+    def test_answer_is_recorded_in_place_with_its_time(self):
+        body = MODULE.render_markdown(self._aggregate([{
+            "item": "NC-1", "answer": "交 sdd-init-frontend 重新归纳",
+            "decided_at": "2026-08-24 21:40", "rationale": "两处样本够了，不必再等",
+        }]))
+        self.assertIn("**你的决定**：交 sdd-init-frontend 重新归纳（2026-08-24 21:40）", body)
+        self.assertIn("理由：两处样本够了，不必再等", body)
+        self.assertNotIn("要你定", body)
+        # 答完之后顶上那句必须翻过来，否则它还在催同一件事。
+        self.assertIn("**可验收**", body)
+        self.assertNotIn("需要你定", body)
+
+    def test_item_answer_and_time_are_all_mandatory(self):
+        for field in ("item", "answer", "decided_at"):
+            with self.subTest(field=field):
+                entry = {"item": "NC-1", "answer": "交给 init", "decided_at": "2026-08-24"}
+                del entry[field]
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, field):
+                    MODULE.validate_decisions([entry])
+
+    def test_an_answer_with_no_matching_open_item_is_rejected(self):
+        """挂不上任何待决项的答复不能静默收下——报告里会出现一条谁也对不上的决定。"""
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "not awaiting a decision"):
+            self._aggregate([{
+                "item": "NC-9", "answer": "随便", "decided_at": "2026-08-24",
+            }])
 
 
 class UnplannedCarryTests(unittest.TestCase):
