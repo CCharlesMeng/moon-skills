@@ -54,12 +54,19 @@ def empty_package():
     return {"schema_version": 1, "evidence_epoch": "review-1", "scenarios": []}
 
 
-def review(role, dimensions, *, findings=None, questions=None, deferred=None, status="executed"):
+def review(
+    role, dimensions, *, findings=None, questions=None, deferred=None,
+    status="executed", judged_files=None,
+):
     return {
         "schema_version": 1,
         "role": role,
         "evidence_epoch": "review-1",
         "code_fingerprint": "fp",
+        "judged_files": (
+            (judged_files if judged_files is not None else ["src/a.tsx"])
+            if status == "executed" else []
+        ),
         "status": status,
         "coverage": [
             {"dimension": dimension, "scope": "scope", "evidence_ids": ["BE-1"], "result": "clear"}
@@ -368,6 +375,105 @@ class AggregateTests(unittest.TestCase):
         self.assertEqual(rewritten[0]["coverage"][0]["evidence_ids"], ["BE-1"])
         self.assertEqual(rewritten[0]["evidence_added"], [])
         self.assertIn("BE-1", rewritten[0]["evidence_reused"])
+
+
+class FailureDirectionTests(unittest.TestCase):
+    """每条新拒绝路径一对用例：拒绝一条、正当放行一条。"""
+
+    def layout(self, **kwargs):
+        return review("review-layout", ["L1"], **kwargs)
+
+    def aggregate(self, results, **kwargs):
+        return MODULE.aggregate_results(
+            results,
+            expected_roles=["review-layout"],
+            expected_dimensions={"review-layout": ["L1"]},
+            **kwargs,
+        )
+
+    def test_clear_without_evidence_is_rejected_but_unrun_is_allowed(self):
+        blank = self.layout()
+        blank["coverage"][0]["evidence_ids"] = []
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "clear but cites no evidence"):
+            MODULE.validate_review_result(blank)
+        honest = self.layout()
+        honest["coverage"][0].update({"result": "unrun", "evidence_ids": []})
+        honest["known_gaps"] = ["browser driver unavailable"]
+        self.assertEqual(MODULE.validate_review_result(honest)["role"], "review-layout")
+
+    def test_unresolvable_evidence_is_rejected_and_static_forms_pass(self):
+        index = MODULE.build_evidence_index(
+            {"scenarios": [{"id": "BE-1"}], "quality_gate": {"commands": [{"name": "test"}]}}
+        )
+        ghost = self.layout()
+        ghost["coverage"][0]["evidence_ids"] = ["BE-9"]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unresolvable evidence"):
+            self.aggregate([ghost], evidence_index=index)
+        for citation in ("BE-1", "test", "src/a.tsx:L1-L2", "PATTERN-3", "REQ-DEC-1"):
+            good = self.layout()
+            good["coverage"][0]["evidence_ids"] = [citation]
+            self.assertEqual(len(self.aggregate([good], evidence_index=index)["roles"]), 1)
+
+    def test_judged_files_must_be_present_and_inside_the_reviewed_state(self):
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "must list judged_files"):
+            MODULE.validate_review_result(self.layout(judged_files=[]))
+        outside = self.layout(judged_files=["src/ghost.tsx"])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "outside the reviewed code state"):
+            self.aggregate([outside], code_files={"src/a.tsx"})
+        inside = self.layout(judged_files=["src/a.tsx"])
+        self.assertEqual(
+            self.aggregate([inside], code_files={"src/a.tsx"})["judged_files"],
+            {"review-layout": ["src/a.tsx"]},
+        )
+
+    def test_skipped_dimension_cannot_survive_a_diff_rebuttal(self):
+        skipping = review("review-convention", [], status="executed")
+        skipping["coverage"] = []
+        skipping["skipped"] = [{"dimension": "C3", "reason": "diff 不涉及样式"}]
+        rebuttal = {"C3": [{"rule": "style-or-token-file", "evidence": "src/a.module.css"}]}
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "but the diff touches it"):
+            MODULE.aggregate_results(
+                [skipping],
+                expected_roles=["review-convention"],
+                expected_dimensions={"review-convention": ["C3"]},
+                skip_rebuttals=rebuttal,
+            )
+        # 同一份回传，diff 没有反驳时照常放行。
+        self.assertEqual(
+            len(MODULE.aggregate_results(
+                [skipping],
+                expected_roles=["review-convention"],
+                expected_dimensions={"review-convention": ["C3"]},
+                skip_rebuttals={"C6": [{"rule": "check-suppression", "evidence": "x"}]},
+            )["skipped"]["review-convention"]),
+            1,
+        )
+
+    def test_portfolio_must_carry_or_sign_every_derived_trigger(self):
+        facts = {"risk_triggers": {"visual": [{"rule": "style-or-token-file", "evidence": "a.css"}]}}
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "without narrowing"):
+            MODULE.check_portfolio_floor({"risk_triggers": ["interaction"]}, facts)
+        carried = MODULE.check_portfolio_floor({"risk_triggers": ["visual"]}, facts)
+        self.assertEqual(carried, [])
+        signed = MODULE.check_portfolio_floor(
+            {
+                "risk_triggers": [],
+                "portfolio_narrowed": [{"trigger": "visual", "reason": "样式文件只删注释"}],
+            },
+            facts,
+        )
+        self.assertEqual(signed, [{"trigger": "visual", "reason": "样式文件只删注释"}])
+
+    def test_narrowing_cannot_double_book_a_carried_trigger(self):
+        facts = {"risk_triggers": {"visual": [{"rule": "r", "evidence": "a.css"}]}}
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "also declared as a trigger"):
+            MODULE.check_portfolio_floor(
+                {
+                    "risk_triggers": ["visual"],
+                    "portfolio_narrowed": [{"trigger": "visual", "reason": "两头都占"}],
+                },
+                facts,
+            )
 
 
 if __name__ == "__main__":

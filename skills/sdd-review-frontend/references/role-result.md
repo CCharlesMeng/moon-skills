@@ -10,6 +10,7 @@
   "role": "review-layout",
   "evidence_epoch": "review-1",
   "code_fingerprint": "<sha256>",
+  "judged_files": ["src/features/detail/DetailPanel.tsx"],
   "status": "executed",
   "coverage": [
     {
@@ -55,12 +56,13 @@
 - `level`：只有 `blocker`、`suggestion`。由 [SKILL.md 定级](../SKILL.md#定级) 的 P 级映射：P0 / P1 → `blocker`，P2 / P3 → `suggestion`。
 - `status`：`executed` | `unexecuted`（`not_applicable` 仅为旧工件兼容）。
 - `id`：维度加序号（`L3-1`、`C5-2`），不另造全局编号。同一份结果内不得重号。
+- `judged_files`：本格判断实际依据的仓库相对路径，`executed` 时非空且必须是证据包 `code.files` 的子集。它是判断的失效键——后续修复只落在集合外时本格判断仍然成立，落在集合内才需重判。
 
 ## 覆盖与发现
 
 - `status=executed` 时，`coverage` 与 `skipped` 的 `dimension` **合起来**必须恰好等于调用方分配的集合，且互不重叠。未分配的维度两边都不出现。
 - `skipped` 记被分配、但命中 `skip_when` 的维度，每条必须带引用 `skip_when` 的 `reason`。它会落进 `dev-review.md` 的「判定不适用」节——「看过且不适用」与「漏判」「跑不了」是三件事，不要用它替代 `unrun`：能跑而没跑成的写 coverage `unrun` + `known_gaps`。
-- `status=unexecuted` 时 coverage、skipped、findings、`evidence_reused` / `evidence_added` 全为空，只用 `known_gaps` 解释；原分配集由调用方用来把依赖声明标为未验证。不得为通过结构校验伪造 coverage。
+- `status=unexecuted` 时 coverage、skipped、findings、`judged_files`、`evidence_reused` / `evidence_added` 全为空，只用 `known_gaps` 解释；原分配集由调用方用来把依赖声明标为未验证。不得为通过结构校验伪造 coverage。
 - `coverage.result` 只有 `clear`、`finding`、`unrun`。`finding` 必须能在 `findings`、`open_questions` 或 `deferred_candidates` 追到对应条目；`unrun` 必须在 `known_gaps` 说明。
 - `canonical_key` 描述同一个可观察问题的稳定身份，不含角色名或级别。两格报同一问题时必须给相同 key——那说明跨格了，删掉不属于本格的那条。同 key 的现象、定位或用户可见文本冲突时聚合器拒绝猜测，由调用方回到原始证据消歧。
 - `open_questions` 每项必含 `id`、`canonical_key`、`summary`、`user_visible_text`、`needs_decision`、`evidence_ids`。

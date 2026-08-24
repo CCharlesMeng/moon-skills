@@ -24,6 +24,7 @@
   "evidence_epoch": "review-1",
   "validation_portfolio": {
     "risk_triggers": ["visual"],
+    "portfolio_narrowed": [],
     "modules": ["causal", "render", "targeted-quality"],
     "review_roles": ["review-layout"],
     "review_dimensions": {"review-layout": ["L2", "L3"]},

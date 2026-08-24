@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -34,6 +35,11 @@ JUDGMENT_KEYS = {
     "passed", "pass", "failed", "result", "open_questions",
     "deferred_candidates", "user_visible_text",
 }
+# 静态检视引用的三种形态：仓内范式、Requirement 决策、文件行范围。
+# 它们不在证据包里，只能校验形状；BE-n 与命令名必须在包里解析得到。
+STATIC_EVIDENCE = re.compile(
+    r"PATTERN-[0-9A-Za-z._/-]+|REQ-DEC-[0-9A-Za-z._/-]+|[0-9A-Za-z._/@-]+:L\d+(?:-L?\d+)?"
+)
 
 
 class ReviewPipelineError(RuntimeError):
@@ -82,6 +88,62 @@ def require_dict(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ReviewPipelineError(f"{label} must be an object")
     return value
+
+
+def build_evidence_index(review_evidence: dict[str, Any]) -> set[str]:
+    """Collect every evidence id a role is allowed to cite from the shared pack."""
+    index: set[str] = set()
+    for item in require_list(review_evidence.get("scenarios", []), "review_evidence.scenarios"):
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            index.add(item["id"])
+    gate = review_evidence.get("quality_gate")
+    if isinstance(gate, dict):
+        for command in require_list(gate.get("commands", []), "review_evidence.quality_gate.commands"):
+            if isinstance(command, dict) and isinstance(command.get("name"), str):
+                index.add(command["name"])
+    return index
+
+
+def check_portfolio_floor(portfolio: dict[str, Any], diff_facts: dict[str, Any]) -> list[dict[str, str]]:
+    """Every mechanically derived trigger must be carried or explicitly narrowed."""
+    floor = set(require_dict(diff_facts.get("risk_triggers", {}), "diff_facts.risk_triggers"))
+    declared = {
+        require_text(item, f"validation_portfolio.risk_triggers[{index}]")
+        for index, item in enumerate(
+            require_list(portfolio.get("risk_triggers", []), "validation_portfolio.risk_triggers")
+        )
+    }
+    narrowed: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for index, raw in enumerate(
+        require_list(portfolio.get("portfolio_narrowed", []), "validation_portfolio.portfolio_narrowed")
+    ):
+        item = require_dict(raw, f"validation_portfolio.portfolio_narrowed[{index}]")
+        trigger = require_text(item.get("trigger"), f"validation_portfolio.portfolio_narrowed[{index}].trigger")
+        reason = require_text(item.get("reason"), f"validation_portfolio.portfolio_narrowed[{index}].reason")
+        if trigger in declared:
+            raise ReviewPipelineError(f"portfolio_narrowed {trigger} is also declared as a trigger")
+        if trigger in seen:
+            raise ReviewPipelineError(f"duplicate portfolio_narrowed trigger: {trigger}")
+        seen.add(trigger)
+        narrowed.append({"trigger": trigger, "reason": reason})
+    missing = sorted(floor - declared - seen)
+    if missing:
+        raise ReviewPipelineError(
+            "validation portfolio drops mechanically derived triggers without narrowing: "
+            f"{missing}"
+        )
+    return narrowed
+
+
+def unresolved_evidence(values: list[Any], index: set[str]) -> list[str]:
+    """Ids that neither exist in the pack nor take a self-describing static form."""
+    return [
+        str(value) for value in values
+        if value not in index and not (
+            isinstance(value, str) and STATIC_EVIDENCE.fullmatch(value)
+        )
+    ]
 
 
 def require_list(value: Any, label: str) -> list[Any]:
@@ -339,6 +401,7 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
         raise ReviewPipelineError(f"{role}.status is invalid")
     coverage = require_list(result.get("coverage"), f"{role}.coverage")
     skipped = require_list(result.get("skipped", []), f"{role}.skipped")
+    judged_files = require_list(result.get("judged_files", []), f"{role}.judged_files")
     findings = require_list(result.get("findings"), f"{role}.findings")
     questions = require_list(result.get("open_questions"), f"{role}.open_questions")
     deferred = require_list(result.get("deferred_candidates"), f"{role}.deferred_candidates")
@@ -350,10 +413,19 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
     if status != "executed":
         if (
             coverage or skipped or findings or questions or deferred
-            or evidence_reused or evidence_added or not gaps
+            or judged_files or evidence_reused or evidence_added or not gaps
         ):
             raise ReviewPipelineError(f"{role} non-executed result must only explain known_gaps")
         return result
+
+    # judged_files 是判断的失效键：修复只落在集合外时本份判断存活，落在集合内才重判。
+    # 空集合会让「任何修复都不影响我」成立，所以 executed 必须给出非空集合。
+    if not judged_files:
+        raise ReviewPipelineError(f"{role} executed result must list judged_files")
+    for index, path in enumerate(judged_files):
+        require_text(path, f"{role}.judged_files[{index}]")
+    if len(set(judged_files)) != len(judged_files):
+        raise ReviewPipelineError(f"{role} judged_files contains duplicate paths")
 
     dimensions: set[str] = set()
     for index, raw_coverage in enumerate(coverage):
@@ -363,9 +435,17 @@ def validate_review_result(raw: Any, expected_role: str | None = None) -> dict[s
             raise ReviewPipelineError(f"duplicate coverage dimension {role}:{dimension}")
         dimensions.add(dimension)
         require_text(item.get("scope"), f"{role}.coverage[{index}].scope")
-        require_list(item.get("evidence_ids"), f"{role}.coverage[{index}].evidence_ids")
+        evidence_ids = require_list(
+            item.get("evidence_ids"), f"{role}.coverage[{index}].evidence_ids"
+        )
         if item.get("result") not in {"clear", "finding", "unrun"}:
             raise ReviewPipelineError(f"invalid coverage result {role}:{dimension}")
+        # `clear` 是唯一能把声明推向 PROVEN 的维度结论，所以它必须自带可复核证据。
+        # 不然「认真看过没问题」和「没看懂就说没问题」在结构上无法区分。
+        if item["result"] == "clear" and not evidence_ids:
+            raise ReviewPipelineError(
+                f"{role} coverage {dimension} is clear but cites no evidence"
+            )
     if role in ROLE_DIMENSIONS and not dimensions <= ROLE_DIMENSIONS[role]:
         extra = sorted(dimensions - ROLE_DIMENSIONS[role])
         raise ReviewPipelineError(f"{role} coverage contains unknown dimensions: {extra}")
@@ -544,8 +624,45 @@ def aggregate_results(
     expected_dimensions: dict[str, list[str] | tuple[str, ...] | set[str]] | None = None,
     evidence_epoch: str | None = None,
     code_fingerprint: str | None = None,
+    evidence_index: set[str] | None = None,
+    code_files: set[str] | None = None,
+    skip_rebuttals: dict[str, list[Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
+    if skip_rebuttals:
+        # 「看过且不适用」只有在 diff 事实不反驳它时才成立。diff 明确触碰了该类别时
+        # skipped 不再是一个合法出口，判不了就走 coverage `unrun` + known_gaps。
+        for result in validated:
+            for item in result.get("skipped", []):
+                evidence = skip_rebuttals.get(item["dimension"])
+                if evidence:
+                    raise ReviewPipelineError(
+                        f"{result['role']} skipped {item['dimension']} but the diff touches it: "
+                        f"{[fact.get('evidence') for fact in evidence if isinstance(fact, dict)][:2]}"
+                    )
+    if code_files is not None:
+        for result in validated:
+            outside = sorted(set(result.get("judged_files", [])) - code_files)
+            if outside:
+                raise ReviewPipelineError(
+                    f"{result['role']} judged_files outside the reviewed code state: {outside}"
+                )
+    if evidence_index is not None:
+        for result in validated:
+            role = result["role"]
+            for item in result["coverage"]:
+                missing = unresolved_evidence(item["evidence_ids"], evidence_index)
+                if missing:
+                    raise ReviewPipelineError(
+                        f"{role} coverage {item['dimension']} cites unresolvable evidence: {missing}"
+                    )
+            for field in ("findings", "open_questions", "deferred_candidates"):
+                for item in result[field]:
+                    missing = unresolved_evidence(item["evidence_ids"], evidence_index)
+                    if missing:
+                        raise ReviewPipelineError(
+                            f"{role}.{field} {item['id']} cites unresolvable evidence: {missing}"
+                        )
     by_role = {item["role"]: item for item in validated}
     if len(by_role) != len(validated):
         raise ReviewPipelineError("aggregate contains duplicate role results")
@@ -631,6 +748,7 @@ def aggregate_results(
         "code_fingerprint": resolved_fingerprint,
         "roles": {role: by_role[role]["status"] for role in expected},
         "known_gaps": {role: by_role[role]["known_gaps"] for role in expected},
+        "judged_files": {role: by_role[role].get("judged_files", []) for role in expected},
         "coverage": {role: by_role[role]["coverage"] for role in expected},
         "skipped": {role: by_role[role].get("skipped", []) for role in expected},
         "findings": findings,
@@ -708,6 +826,10 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         triggers = "、".join(str(item) for item in portfolio.get("risk_triggers", [])) or "无"
         modules = "、".join(str(item) for item in portfolio.get("modules", [])) or "无"
         lines += [f"- risk triggers: {triggers}", f"- validation modules: {modules}"]
+    narrowed = aggregate.get("portfolio_narrowed")
+    if narrowed:
+        lines += ["", "## 组合收窄", ""]
+        lines += markdown_table(narrowed, [("触发器", "trigger"), ("收窄理由", "reason")])
     lines += ["", "## 覆盖矩阵", ""]
     coverage_rows = []
     for role, rows in aggregate["coverage"].items():
@@ -794,6 +916,8 @@ def command_aggregate(args: argparse.Namespace) -> None:
         ]
         for role in expected_roles
     }
+    diff_facts = require_dict(read_json(Path(args.diff_facts)), "diff_facts")
+    narrowed = check_portfolio_floor(portfolio, diff_facts)
     evidence, results = merge_evidence_additions(
         source_evidence, results
     )
@@ -804,8 +928,14 @@ def command_aggregate(args: argparse.Namespace) -> None:
         expected_dimensions=expected_dimensions,
         evidence_epoch=require_text(evidence.get("evidence_epoch"), "review_evidence.evidence_epoch"),
         code_fingerprint=require_text(code.get("code_fingerprint"), "review_evidence.code.code_fingerprint"),
+        evidence_index=build_evidence_index(evidence),
+        code_files=set(code_hashes(code)),
+        skip_rebuttals=require_dict(
+            diff_facts.get("skip_rebuttals", {}), "diff_facts.skip_rebuttals"
+        ),
     )
     aggregate["validation_portfolio"] = portfolio
+    aggregate["portfolio_narrowed"] = narrowed
     aggregate = attach_evidence_artifacts(aggregate, evidence)
     atomic_write_json(evidence_path, evidence)
     atomic_write_json(Path(args.output_json), aggregate)
@@ -846,6 +976,7 @@ def parser() -> argparse.ArgumentParser:
     aggregate = subparsers.add_parser("aggregate")
     aggregate.add_argument("--result", action="append", default=[])
     aggregate.add_argument("--review-evidence", required=True)
+    aggregate.add_argument("--diff-facts", required=True, help="classify_diff.py output for the final diff")
     aggregate.add_argument("--output-json", required=True)
     aggregate.add_argument("--output-markdown", required=True)
     aggregate.set_defaults(handler=command_aggregate)

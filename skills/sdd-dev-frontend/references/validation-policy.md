@@ -24,6 +24,7 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 ```json
 {
   "risk_triggers": ["visual", "interaction"],
+  "portfolio_narrowed": [{"trigger": "build-config", "reason": "<收窄理由>"}],
   "modules": ["causal", "render", "targeted-quality"],
   "review_roles": ["review-layout"],
   "review_dimensions": {"review-layout": ["L2", "L3"]},
@@ -55,6 +56,8 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 | `performance` | AC 明示性能目标，或改列表规模、缓存、虚拟化、昂贵计算 |
 
 拿不准是否命中时加入触发器；不得用 Task 数量或文件数量代替风险事实。
+
+`visual` / `navigation` / `shared-boundary` / `build-config` 的下限由 `<skill-dir>/scripts/classify_diff.py --repo-root <repo-root> --base-ref <base-ref> --out <临时目录>/diff-facts.json` 从 diff 机械给出，组合只能在下限之上扩；确要收窄某条下限触发器时写入 `portfolio_narrowed[]` 并给出理由，它会进 `dev-review.md`。聚合器拒绝既不承接也未署名收窄的组合。
 
 ## 四、验证模块
 
