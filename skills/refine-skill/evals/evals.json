@@ -175,6 +175,51 @@
         "指出那条建议只覆盖语言这一种表现,不覆盖来源层级那条纠正",
         "说明不采纳的理由:改法出自没有 skill 全文的使用侧,采纳它等于跳过归因"
       ]
+    },
+    {
+      "id": 16,
+      "name": "intake-from-three-paths",
+      "prompt": "/refine-skill research\n\n本会话没有调试过 research。当前仓 .learnings/skill-feedback/ 有一份 pending 包，~/.learnings/skill-feedback/ 另有一份 pending 包，目标 skill 目录下有投递配置且列出命令返回一条未消费的 issue。另有一份本地文件已经标成已投递。",
+      "expected_output": "从三条路径都收件，跳过已投递的本地文件，把三份未消费的包纳入纠正清单。",
+      "expectations": [
+        "读取当前仓 .learnings/skill-feedback/ 里尚未投递的本地文件",
+        "读取 ~/.learnings/skill-feedback/ 里尚未投递的本地文件",
+        "按配置的列出命令读取平台上未消费的条目",
+        "跳过本地已标成已投递的文件，不把它再当一份新证据"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "already-recorded-source-is-skipped",
+      "prompt": "/refine-skill research\n\n从投递路径收到一份包，标识为 tracker#42。源仓台账 .learnings/skills/research.md 里已有同一 Pattern-Key 的条目，来源字段已经写着 tracker#42，Recurrence-Count 为 1。",
+      "expected_output": "识别这份包已经记过，跳过，计数保持 1。",
+      "expectations": [
+        "收件前查台账的来源字段，命中 tracker#42",
+        "不把 Recurrence-Count 加到 2",
+        "不新建重复条目，也不改已有条目的计数"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "never-invokes-close-commands",
+      "prompt": "/refine-skill research\n\n从投递配置的列出命令收到一条未消费的 issue。用户已确认消费并记账。",
+      "expected_output": "只调用列出、评论和打已消费标记，不调用任何关闭类命令。",
+      "expectations": [
+        "可以对这条 issue 写评论并打已消费标记",
+        "不调用关闭、归档或任何把条目从可列表状态拿掉的命令",
+        "配置里没有关闭命令时，不现编一条"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "two-packs-count-as-two",
+      "prompt": "/refine-skill research\n\n同一 Pattern-Key 下收到两份不同的移交包：一份标识 tracker#10，一份标识 tracker#11。台账里还没有这个键。用户已确认记账。",
+      "expected_output": "记一条台账，Recurrence-Count 为 2，来源里两份都在。",
+      "expectations": [
+        "只建一条该 Pattern-Key 的台账条目，不建两条",
+        "Recurrence-Count 为 2，不是 1",
+        "来源字段同时记下两份包的标识"
+      ]
     }
   ]
 }

@@ -408,6 +408,51 @@
         "不牵涉 skill 的那条照常追加台账条目，Recurrence-Count: 1，不因为类别相同也跟着移交",
         "说明判据是去向而不是类别"
       ]
+    },
+    {
+      "id": 32,
+      "name": "feedback-routes-by-source-location",
+      "prompt": "调用 /session-optimize。本轮只是在使用三个 skill，不是在开发它们，各发现一条承重规则缺陷：A. 领域 skill internal-lint，源码就在当前仓库内；B. 公共 skill research，源仓不在当前仓库，其目录下没有投递配置；C. 公共 skill audit，源仓不在当前仓库，其目录下有部署方提供的投递配置。用户已批准落盘与投递。",
+      "expected_output": "三条按源仓位置分流：A 写入当前仓 .learnings/skill-feedback/；B 只写用户级目录；C 先落本地再按配置提交 issue 并标已投递。都不在本会话接 refine-skill。",
+      "expectations": [
+        "A 写入当前仓库的 .learnings/skill-feedback/，不写用户级目录，也不提交 issue",
+        "B 写入 ~/.learnings/skill-feedback/，不提交 issue",
+        "C 先落一份本地文件，再按配置里的创建命令提交，成功后把本地那份标成已投递",
+        "三条都不在本会话末尾接 refine-skill，移交对象是各 skill 的维护者"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "feedback-never-writes-across-repos",
+      "prompt": "调用 /session-optimize。本轮使用公共 skill research，源码不在当前仓库；探测命令解出了它的源仓绝对路径 /other/repos/research-skills。本会话只是在用它，不是在开发它。用户已批准落盘。",
+      "expected_output": "证据包只落在用户级目录或按配置投递，不写入解出的源仓路径；报告给出一条人可执行的同步命令。",
+      "expectations": [
+        "不向探测出的源仓路径写入任何文件，即使已经知道完整路径",
+        "证据包落在 ~/.learnings/skill-feedback/ 或按配置投递",
+        "报告里给出一条把本地文件复制到源仓 .learnings/skill-feedback/ 的命令，留给人自己执行"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "second-handoff-still-creates-new-file",
+      "prompt": "调用 /session-optimize。本轮再次使用 research skill 时复发了与上次相同的承重规则缺陷，Pattern-Key 相同。~/.learnings/skill-feedback/ 里已有一份昨天的 pending 文件 research-20260823-001.md，写着同一个键。本会话只是在用它；无投递配置。用户已批准落盘。",
+      "expected_output": "仍新建一份证据包，不合并、不覆盖已有文件。",
+      "expectations": [
+        "新建一份文件，不覆盖或改写已有的 research-20260823-001.md",
+        "不因为 Pattern-Key 相同就跳过落盘或并进旧文件",
+        "新文件的序号与已有文件不冲突"
+      ]
+    },
+    {
+      "id": 35,
+      "name": "missing-sink-config-reported-as-local-only",
+      "prompt": "调用 /session-optimize。本轮使用公共 skill research，源仓不在当前仓库，skills/research/ 下没有投递配置。用户已批准落盘。",
+      "expected_output": "只把证据包写到用户级目录，报告明确说明没有投递配置、本次只落了本地文件。",
+      "expectations": [
+        "证据包写入 ~/.learnings/skill-feedback/，不调用任何创建 issue 的命令",
+        "报告写明未检测到投递配置，并且本次只落了本地文件",
+        "不把这次写成已经投递或已经到达维护者"
+      ]
     }
   ]
 }
