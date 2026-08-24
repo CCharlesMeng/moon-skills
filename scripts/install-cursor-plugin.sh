@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 将 moon-skills 注册为 Cursor 本地插件，并安装 immune-debug 所需的 superpowers skill。
-# 用法见 README「一键安装」。
+# 将 moon-skills 注册为 Cursor 本地插件。
+# 用法见 README「安装」。
 
 set -euo pipefail
 
@@ -20,7 +20,6 @@ require_cmd() {
 }
 
 require_cmd git
-require_cmd npx
 
 mkdir -p "$(dirname "$PLUGIN_LINK")"
 
@@ -43,8 +42,5 @@ fi
 ln -sfn "${CHECKOUT_DIR}" "${PLUGIN_LINK}"
 
 echo "Cursor 本地插件已就绪: ${PLUGIN_LINK} -> ${CHECKOUT_DIR}"
-echo "正在安装 superpowers / systematic-debugging（immune-debug 依赖）..."
-npx --yes skills add obra/superpowers --skill systematic-debugging
-
 echo ""
 echo "下一步：在 Cursor 中执行「Developer: Reload Window」重新加载窗口，然后在 Settings → Rules 中确认插件已加载。"

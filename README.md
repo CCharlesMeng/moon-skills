@@ -1,6 +1,6 @@
 # moon-skills
 
-面向 **Cursor / AI 辅助开发** 的一套**分析驱动工作流**：把需求澄清、设计验收、切片交付、检视、验证和复盘串成一条线，并把可复用结论落在仓库的 `.project-context/` 里，避免「每开一个新会话从零开始」。
+面向 **Cursor / AI 辅助开发** 的一套 **前端 SDD（规格驱动开发）skill**：把一个前端需求从「仓库初始化 → 实现计划 → Story 执行 → 检视」串成一条带证据的链路，另附两个会话级复盘工具。
 
 ---
 
@@ -8,10 +8,10 @@
 
 ### 用 Cursor（推荐）
 
-一键安装会把本仓库注册为 **Cursor 本地插件**，并自动安装 **`immune-debug` 所需的** `obra/superpowers` → `systematic-debugging`。需要本机已安装 **Git** 与 **Node.js（含 npx）**。
+一键安装会把本仓库注册为 **Cursor 本地插件**。需要本机已安装 **Git**。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/scripts/install-cursor-plugin-with-deps.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/scripts/install-cursor-plugin.sh | bash
 ```
 
 装完后在 Cursor 里 **`⌘⇧P` → `Developer: Reload Window`**，再到 **Settings → Rules** 里确认插件已出现。
@@ -22,90 +22,46 @@ curl -fsSL https://raw.githubusercontent.com/CCharlesMeng/moon-skills/main/scrip
 npx skills add CCharlesMeng/moon-skills
 ```
 
-查看可安装的 skill：`npx skills add CCharlesMeng/moon-skills --list`  
-若未使用上文一键脚本，**建议**再安装排障依赖：
-
-```bash
-npx skills add obra/superpowers --skill systematic-debugging
-```
-
----
-
-## 怎么用（复制即用）
-
-按需把下面整句丢给 AI（把 `<模块>`、`<问题>` 换成你的实际情况）。
-
-```
-# 首次接手仓库
-请用 initialize 为这个仓库建立首版上下文。
-
-# 每次开发前预热
-请用 sync-context 为 <模块> 做开发前预热。
-
-# 需求分析
-请完成 analysis-spec。
-
-# 设计验收（复杂需求时 AI 会按 skill 走多阶段确认）
-请基于 analysis-spec 产出 design-pack。
-
-# 交付切片
-请基于 analysis-spec 产出 slice-plan。
-
-# 实现后的代码检视
-请用 code-review 检视当前 slice 的代码。
-
-# 行为验证（有测试与证据再收口）
-请用 verify 验证当前 slice。
-
-# 和规格对账
-请做 spec-check，逐条对账 analysis-spec 和最终交付。
-
-# 本轮复盘
-请用 audit 做本轮交付的 post-ship reflect。
-
-# 会话结束诊断与优化
-请用 session-optimize 复盘本次会话，提出项目内可验证的修改方案，获批后再执行，并移交其余事项。
-
-# Bug / 回归
-请用 immune-debug 处理这个 <问题>，并给出免疫决策。
-```
+查看可安装的 skill：`npx skills add CCharlesMeng/moon-skills --list`
 
 ---
 
 ## 技能是干什么的
 
-| 你对 AI 说的方向 | Skill | 典型作用 |
+### 前端 SDD 链路
+
+| Skill | 作用 | 产出 |
 | --- | --- | --- |
-| 建首版仓库记忆 | `initialize` | 生成 `.project-context/` |
-| 开发前对齐上下文 | `sync-context` | 预热、增量同步 |
-| 把需求变成可验收行为 | `analysis-spec` | 产出 TB 等规格输入 |
-| 验收标准、测试思路、工作量 | `design-pack` | AC / TC / ADR 等（多阶段确认） |
-| 拆成可交付切片 | `slice-plan` | 切片 + 关联 TC |
-| 按规则检视代码 | `code-review` | 结构化检视结论 |
-| 用证据核对是否做对 | `verify` | TC 与证据（EV） |
-| 和最初规格对齐吗 | `spec-check` | TB 对账 |
-| 复盘与上下文治理 | `audit` | 沉淀与治理 |
-| 会话问题诊断与优化 | `session-optimize` | 提议项目内改进，获批后执行，移交跨边界事项 |
-| 事故与防护 | `immune-debug` | 根因 + 免疫决策 |
+| `sdd-init-frontend` | 扫描前端仓，定出栈与仓库形态，把机器准备到能装、能起、能跑质量命令 | 按消费者问句分类的九份仓库级 baseline |
+| `sdd-task` | 按 `requirement-design.md` 逐仓创建 Story 级实现计划 | `tasks.md`、`alpha-tests.md` |
+| `sdd-task-frontend` | 前端仓的实现计划：实现位置、每个文件的职责、验收声明与风险事实 | `tasks.md`、`alpha-tests.md` |
+| `sdd-dev-frontend` | 执行单个 Story：冻结验收基线、实现 tasks、按声明与风险编译最小充分验证 | 代码 + 可追溯证据 |
+| `sdd-review-frontend` | 按 restore / layout / convention / quality / test 五格独立 lens 检视前端改动 | 分格 Finding 与定级 |
 
-整体顺序大致是：**initialize → sync-context → analysis-spec →（需要时 design-pack）→ slice-plan → 实现 → code-review → verify → spec-check → audit**；会话结束时可运行 **session-optimize**，出事走 **immune-debug**。
+典型顺序：**`sdd-init-frontend` →（`sdd-task` →）`sdd-task-frontend` → `sdd-dev-frontend` → `sdd-review-frontend`**。`sdd-init-frontend` 只在首次接入或仓库 baseline 缺失时跑；`sdd-review-frontend` 是被调用的检视包，由 `sdd-dev-frontend` 的检视阶段派发，也可单独用于 PR 检视。
 
----
+### 会话工具
 
-## 工作流一眼看懂
-
-```
-初始化 → 预热 → 需求分析 →（设计验收包）→ 切片 → 实现 → 检视 → 验证 → 规格对账 → 复盘
-                                                      ↑
-                                            结论写入 .project-context/ 供下次复用
-```
-
-规格里常出现 **TB**（目标行为）、**AC**（验收标准）、**TC**（怎么测）、**EV**（证据）等缩写；细节不必背，跟着 skill 输出即可。
+| Skill | 作用 |
+| --- | --- |
+| `session-optimize` | 复盘本次会话的真实失败，沿失败层地图定位最早的可控边界，产出待批准的改进提案与跨边界移交 |
+| `refine-skill` | 会话末尾复盘某个 skill 本次执行出的错，改写它避免重犯 |
 
 ---
 
 ## 想深入了解
 
-- **方法、门禁、模式与完整示例**：[analysis-driven-sdd.md](analysis-driven-sdd.md)  
-- **和 AI 对话时的输出规范（确认门、表格优先等）**：[PRINCIPLES.md](PRINCIPLES.md)  
-- **Cursor 插件说明（市场、团队分发等）**：[Cursor 插件文档](https://cursor.com/cn/docs/plugins)
+前端链路的共享契约与设计文档都在 `docs/skills/` 下：
+
+- **[执行契约](docs/skills/frontend-sdd/执行契约.md)** — `sdd-task-frontend` 与 `sdd-dev-frontend` 的唯一共享事实源（所有权、分层边界、声明状态、TaskPacket）
+- **[接缝契约](docs/skills/frontend-sdd/接缝契约.md)** — 跨文件接缝的注册表：ID 命名空间、门禁编号、产物路径
+- **[模块与评测](docs/skills/frontend-sdd/模块与评测.md)**、**[基线分数](docs/skills/frontend-sdd/基线分数.md)** — 脚本与 evals 的覆盖情况和实测基线
+- **[sdd-dev-frontend 使用说明](docs/skills/sdd-dev-frontend/README.md)** — 使用者视角的完整流程说明
+- **[PRINCIPLES.md](PRINCIPLES.md)** — 和 AI 对话时的输出规范（确认门、表格优先等）
+- **[Cursor 插件文档](https://cursor.com/cn/docs/plugins)** — 市场、团队分发等
+
+改动前端链路的任何文件后，跑一次接缝一致性检查：
+
+```bash
+node tests/check-consistency.mjs
+```

@@ -1,5 +1,5 @@
 ---
-description: Skill-User interaction principles for moon-skills workflow (single decision per turn, structured output, confirmation gates, three-line completion index). Apply when running initialize, sync-context, analysis-spec, design-pack, slice-plan, code-review, verify, spec-check, audit, or immune-debug.
+description: Skill-User interaction principles for moon-skills (single decision per turn, structured output, confirmation gates, three-line completion index). Apply when running any interactive skill from this plugin — the frontend SDD chain, session-optimize, or refine-skill.
 alwaysApply: false
 ---
 
