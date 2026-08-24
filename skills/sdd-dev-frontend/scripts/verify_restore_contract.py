@@ -897,7 +897,16 @@ def evaluate_rule(
             item = render_rules.get(rule["id"])
             actual_by_layer[layer] = item
             if item is None:
-                red_reasons.append("页面可用但结构化采集缺本规则结果")
+                merged_from = render_payload.get("merged_from")
+                if merged_from:
+                    # 多份合并时，「缺结果」几乎总是漏注入了这条规则所在的页面，
+                    # 而不是页面打不开。写清区别，免得又被当成实现偏差去修。
+                    red_reasons.append(
+                        f"提供的 {merged_from} 份结构化采集结果都没有覆盖本规则："
+                        "补一次该规则所在页面的注入，或确认它的页面归属"
+                    )
+                else:
+                    red_reasons.append("页面可用但结构化采集缺本规则结果")
                 continue
             status = item.get("status")
             if status in {"missing_fixture", "unavailable"}:
@@ -1047,6 +1056,69 @@ def optional_json(path: str | None) -> dict | None:
     return load_json(Path(path).expanduser()) if path else None
 
 
+def merge_render_payloads(
+    paths: list[str] | None, contract_sha256: str
+) -> dict | None:
+    """把逐页注入的多份 render-results 合成一份。
+
+    采集脚本是单 DOM 的：一次注入只能看见当前页面，契约里属于其他页面的规则会拿到
+    `no implementation locator matched`，而报告把它算成 RED。所以**跨页契约只能逐页注入
+    再合并**——不给合并入口的话，多页 Story 的 GREEN 相里必然出现一批和真偏差长得一样的
+    假 RED，接着走「修 3 次 → 打断用户 → 补豁免」那条老路，把工具缺口写进冻结基线。
+
+    合并规则：一条规则只属于一个页面，所以**任何一份结果给出可用状态就采信它**，
+    其余份的「定位不到」是它不在那一页的正常表现，不是证据。全部份都报错才是真失败。
+    这不会放过真正的定位断裂：那种情况下没有任何一份能给出可用状态。
+
+    单份输入原样返回，不加字段——已有报告的 `report_sha256` 因此不变。
+    """
+    if not paths:
+        return None
+    payloads = [(path, load_json(Path(path).expanduser())) for path in paths]
+    for path, payload in payloads:
+        # 逐份校验契约身份，避免把别的契约或过期采集混进来。
+        result_rules(payload, f"render-results({path})", contract_sha256)
+    if len(payloads) == 1:
+        return payloads[0][1]
+
+    available = [(path, p) for path, p in payloads if p.get("page_available") is not False]
+    if not available:
+        return {
+            # build_report 会再校验一次契约身份，合成的载荷必须自带它。
+            "contract_sha256": contract_sha256,
+            "page_available": False,
+            "reason": "提供的全部结构化采集结果都报页面不可用",
+        }
+
+    def usable(item: Any) -> bool:
+        return isinstance(item, dict) and item.get("status") not in {
+            "error",
+            "capture_error",
+        }
+
+    merged: dict[str, Any] = {}
+    for path, source in available:
+        for rule_id, item in (source.get("rules") or {}).items():
+            if not isinstance(item, dict):
+                continue
+            candidate = {**item, "source_file": path}
+            existing = merged.get(rule_id)
+            if existing is None or (not usable(existing) and usable(candidate)):
+                merged[rule_id] = candidate
+
+    capture_errors = [p.get("capture_error") for _, p in available if p.get("capture_error")]
+    merged_payload: dict[str, Any] = {
+        "contract_sha256": contract_sha256,
+        "page_available": True,
+        "merged_from": len(available),
+        "rules": merged,
+    }
+    # 只有每一份都采集失败才让整体失败；一份坏文件不该作废其他页面已取到的事实。
+    if len(capture_errors) == len(available):
+        merged_payload["capture_error"] = capture_errors[0]
+    return merged_payload
+
+
 def require_recompile_is_allowed(out_path: Path, baseline_path: Path, acknowledged: bool) -> None:
     """基线改过之后重新编译，必须先经过重新确认。
 
@@ -1162,7 +1234,7 @@ def command_report(args: argparse.Namespace) -> int:
         adapter,
         args.phase,
         optional_json(args.static_results),
-        optional_json(args.render_results),
+        merge_render_payloads(args.render_results, contract["contract_sha256"]),
         optional_json(args.visual_results),
     )
     write_json(Path(args.out).expanduser(), report)
@@ -1247,7 +1319,14 @@ def main(argv: list[str] | None = None) -> int:
     add_contract_inputs(report_parser)
     report_parser.add_argument("--phase", choices=["red", "green"], required=True)
     report_parser.add_argument("--static-results")
-    report_parser.add_argument("--render-results")
+    report_parser.add_argument(
+        "--render-results",
+        action="append",
+        help=(
+            "结构化采集结果。跨页契约按页面各注入一次、本参数重复传，"
+            "脚本按 rule_id 合并；不合并会让其他页面的规则报「定位不到」"
+        ),
+    )
     report_parser.add_argument("--visual-results")
     report_parser.add_argument("--out", required=True)
 

@@ -196,6 +196,10 @@ window.__SDD_RESTORE_INPUT__ = {
 }
 ```
 
+**契约跨页面时按页面各注入一次，`--render-results` 重复传。** 采集脚本是单 DOM 的：一次注入遍历契约里全部 render 规则，属于其他页面的那些会拿到 `no implementation locator matched`，而报告把它算成 RED。所以单次注入配多页契约，GREEN 相里必然出现一批**和真偏差长得完全一样的假 RED**——报告写「定位不到」，与「选择器真写错了」在输出上无法区分，接着就会走「修 3 次 → 打断用户 → 补豁免」那条路，把工具缺口写进冻结基线。
+
+脚本按 `rule_id` 合并：**任何一份给出可用状态就采信它**，其余份的「定位不到」是它不在那一页的正常表现。全部份都报错才判 RED，所以真正的定位断裂不会被合并拼没。某条规则在每一份里都缺席时，报告直接说「都没有覆盖本规则」，提示补该页面的注入而不是去改实现。
+
 ### 4. 报告
 
 ```bash
@@ -210,7 +214,14 @@ python3 "<skill-dir>/scripts/verify_restore_contract.py" report \
   --out <story-dir>/restore-report-red.json
 ```
 
-GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集方式保持相同。
+跨页时把 `--render-results` 按页面重复传（顺序不影响结论）：
+
+```bash
+  --render-results <临时目录>/render-results-<页面A>.json \
+  --render-results <临时目录>/render-results-<页面B>.json \
+```
+
+GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集方式保持相同——**包括注入了哪几个页面**。GREEN 相少注入一页会让那一页的规则从「已绿」变成 RED。
 
 退出码：
 

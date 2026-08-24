@@ -7,7 +7,7 @@
 1. 先用 `classify_diff.py` 取最终 diff 的机械事实，再从初始风险、仓库事实、运行限制和已有证据重编译验证组合；下限与收窄规则见 [validation-policy.md](./validation-policy.md#三风险触发器)。结构同时写入 `dev-baseline.md` 与 `review-evidence.json / validation_portfolio`。
 2. 计算证据新鲜度，先复用有效命令和 scenario，再执行真正缺失的已选模块。质量命令先于浏览器采集；同页面/fixture/runtime/reset 边界批量执行。
 3. 首次新增浏览器模块时解析并实测 `<browser-driver>`；不可用则模块记未执行，依赖声明保持 `UNVERIFIED`。
-4. 组合含 `review-restore` 时，先按最终 diff 用 `--phase green` 重跑**全部已冻结区块**的还原契约，报告写 `<story-dir>/restore-report-review.json`。Phase B 只跑过当前变更区块，先前区块的 GREEN 在这里才会被最终 diff 推翻。
+4. 组合含 `review-restore` 时，先按最终 diff 用 `--phase green` 重跑**全部已冻结区块**的还原契约，报告写 `<story-dir>/restore-report-review.json`。冻结区块跨页面时按页面各注入一次、`--render-results` 重复传，否则其他页面的规则会以「定位不到」冒充实现偏差。Phase B 只跑过当前变更区块，先前区块的 GREEN 在这里才会被最终 diff 推翻。
 5. 只派 `review_roles` 中角色，给同一 evidence epoch 和原始证据包；后启动角色不得收到先完成角色的判断。
 6. 角色前置缺失或回传不合格时只退回一次；仍失败则生成 `unexecuted` 结果与 known gap，不伪造 coverage。
 7. 若角色补采场景，先校验 raw scenario，再由主 agent 合并进证据包。只归档被结论引用的截图。

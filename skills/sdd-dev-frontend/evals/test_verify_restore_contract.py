@@ -1991,5 +1991,175 @@ class ToolEquivalenceSuspectTests(unittest.TestCase):
         self.assertFalse(VERIFIER.css_values_equivalent("12px 8px", "8px 12px"))
 
 
+class MultiPageRenderMergeTests(unittest.TestCase):
+    """跨页契约只能逐页注入再合并。
+
+    采集脚本是单 DOM 的：一次注入遍历契约全部 render 规则，属于别的页面的那些拿到
+    `no implementation locator matched`，而报告把它算成 RED。所以不给合并入口的话，
+    多页 Story 的 GREEN 相必然出现一批和真偏差长得一样的假 RED——那正是
+    `EX-2`–`EX-5` 那次事故的形状（修 3 次 → 打断用户 → 补豁免）。
+
+    这里同时钉住两端：合并要能把逐页结果拼成 GREEN，也不许把真正的定位断裂拼没了。
+    """
+
+    RULES = [make_rule("R1-1"), make_rule("R1-2", baseline_id="R1-2")]
+
+    @staticmethod
+    def _ok(value: int = 1) -> dict:
+        return {"status": "ok", "actual": value, "matched": 1}
+
+    @staticmethod
+    def _off_page() -> dict:
+        # 采集器对不在当前页面的规则就是这个形状。
+        return {
+            "status": "error",
+            "reason": "no implementation locator matched",
+            "matched": 0,
+        }
+
+    def _workspace(self, root: Path) -> Workspace:
+        return Workspace(root, self.RULES)
+
+    def test_single_file_path_is_unchanged(self) -> None:
+        """单份输入不加字段——否则存量报告的 report_sha256 会集体变动。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            payload = work.render({"R1-1": self._ok(), "R1-2": self._ok()})
+            path = work.write("render.json", payload)
+            merged = VERIFIER.merge_render_payloads(
+                [str(path)], work.contract["contract_sha256"]
+            )
+            self.assertEqual(merged, payload)
+            self.assertNotIn("merged_from", merged)
+
+    def test_single_page_inject_blocks_green_on_a_two_page_contract(self) -> None:
+        """这就是当前的缺陷现场：只注入一页，另一页的规则被判成实现偏差。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            only_a = work.write(
+                "render-a.json",
+                work.render({"R1-1": self._ok(), "R1-2": self._off_page()}),
+            )
+            code, _, _ = run_cli(
+                [
+                    "report",
+                    "--phase",
+                    "green",
+                    *work.contract_args(),
+                    "--render-results",
+                    str(only_a),
+                    "--out",
+                    str(Path(tmp) / "report.json"),
+                ]
+            )
+            self.assertEqual(code, VERIFIER.EXIT_NOT_GREEN)
+
+    def test_merging_per_page_injections_reaches_green(self) -> None:
+        """正当放行：两页各注入一次，合并后应当转绿。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            page_a = work.write(
+                "render-a.json",
+                work.render({"R1-1": self._ok(), "R1-2": self._off_page()}),
+            )
+            page_b = work.write(
+                "render-b.json",
+                work.render({"R1-1": self._off_page(), "R1-2": self._ok()}),
+            )
+            code, _, _ = run_cli(
+                [
+                    "report",
+                    "--phase",
+                    "green",
+                    *work.contract_args(),
+                    "--render-results",
+                    str(page_a),
+                    "--render-results",
+                    str(page_b),
+                    "--out",
+                    str(Path(tmp) / "report.json"),
+                ]
+            )
+            self.assertEqual(code, VERIFIER.EXIT_OK)
+
+    def test_merge_prefers_usable_result_regardless_of_file_order(self) -> None:
+        """一条规则只属于一个页面，所以哪一份先给不该影响结论。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            good = work.write("good.json", work.render({"R1-1": self._ok(7)}))
+            bad = work.write("bad.json", work.render({"R1-1": self._off_page()}))
+            for order in ([good, bad], [bad, good]):
+                merged = VERIFIER.merge_render_payloads(
+                    [str(path) for path in order],
+                    work.contract["contract_sha256"],
+                )
+                self.assertEqual(merged["rules"]["R1-1"]["status"], "ok")
+                self.assertEqual(merged["rules"]["R1-1"]["actual"], 7)
+
+    def test_merge_does_not_hide_a_genuinely_broken_locator(self) -> None:
+        """全部份都报错才是真失败——合并不得把它拼成绿的。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            page_a = work.write(
+                "render-a.json",
+                work.render({"R1-1": self._ok(), "R1-2": self._off_page()}),
+            )
+            page_b = work.write(
+                "render-b.json",
+                work.render({"R1-1": self._off_page(), "R1-2": self._off_page()}),
+            )
+            merged = VERIFIER.merge_render_payloads(
+                [str(page_a), str(page_b)], work.contract["contract_sha256"]
+            )
+            report = work.report("green", render=merged)
+            self.assertEqual(statuses(report)["R1-2"], "red")
+            self.assertEqual(report["overall"], "red")
+
+    def test_rule_missing_from_every_file_says_which_page_to_inject(self) -> None:
+        """漏注入一整页时，原来的文案指向「页面可用但缺结果」，会被当成实现偏差去修。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            page_a = work.write("render-a.json", work.render({"R1-1": self._ok()}))
+            page_b = work.write("render-b.json", work.render({"R1-1": self._ok()}))
+            merged = VERIFIER.merge_render_payloads(
+                [str(page_a), str(page_b)], work.contract["contract_sha256"]
+            )
+            report = work.report("green", render=merged)
+            entry = next(e for e in report["entries"] if e["rule_id"] == "R1-2")
+            self.assertEqual(entry["status"], "red")
+            self.assertIn("都没有覆盖本规则", " ".join(entry["reasons"]))
+
+    def test_all_pages_unavailable_stays_yellow(self) -> None:
+        """页面起不来是「没证据」，不是「有偏差」，只能是 YELLOW。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            paths = [
+                work.write(
+                    f"render-{name}.json",
+                    work.render({}, page_available=False, reason="dev server 未启动"),
+                )
+                for name in ("a", "b")
+            ]
+            merged = VERIFIER.merge_render_payloads(
+                [str(path) for path in paths], work.contract["contract_sha256"]
+            )
+            report = work.report("green", render=merged)
+            self.assertEqual(set(statuses(report).values()), {"yellow"})
+
+    def test_one_stale_file_is_rejected_by_name(self) -> None:
+        """混进别的契约的采集结果必须报错，且要说清是哪一份。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self._workspace(Path(tmp))
+            good = work.write("good.json", work.render({"R1-1": self._ok()}))
+            stale_payload = work.render({"R1-2": self._ok()})
+            stale_payload["contract_sha256"] = "0" * 64
+            stale = work.write("stale.json", stale_payload)
+            with self.assertRaises(VERIFIER.ContractError) as caught:
+                VERIFIER.merge_render_payloads(
+                    [str(good), str(stale)], work.contract["contract_sha256"]
+                )
+            self.assertIn("stale.json", str(caught.exception))
+
+
 if __name__ == "__main__":
     unittest.main()
