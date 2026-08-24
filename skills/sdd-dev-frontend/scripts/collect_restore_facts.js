@@ -66,22 +66,65 @@
     );
   };
 
-  const byRole = (locator) => Array.from(document.querySelectorAll("*")).filter((element) => {
+  // 选择器不跨 shadow 边界，所以必须逐个 root 查再合并。不这么做的话，
+  // web-component 形态的组件库（Lit / Stencil 构建的那类）会让每条规则都返回
+  // 「定位不到」，而报告把它算成 RED——那与真实现偏差在输出上无法区分，
+  // 最后会走成「修 3 次 → 打断用户 → 补豁免」，把工具缺口写进冻结基线。
+  const collectRoots = () => {
+    const roots = [document];
+    const queue = [document];
+    while (queue.length) {
+      const root = queue.shift();
+      for (const element of root.querySelectorAll("*")) {
+        // 只有 open 模式的 shadowRoot 从外部可见；closed 的拿不到，见 suspectClosedShadow。
+        if (element.shadowRoot) {
+          roots.push(element.shadowRoot);
+          queue.push(element.shadowRoot);
+        }
+      }
+    }
+    return roots;
+  };
+
+  const deepQueryAll = (selector) => {
+    const nodes = [];
+    for (const root of collectRoots()) {
+      nodes.push(...root.querySelectorAll(selector));
+    }
+    return nodes;
+  };
+
+  /* closed shadow root 从外部无法枚举，也无法读取。所以「定位不到」有两种成因，
+   * 必须分开报：选择器写错了（该修 adapter），还是这一层根本不可见（工具边界）。
+   * 判据是自定义元素（标签名含 `-`）既没有 shadowRoot 也没有子节点——它渲染出的
+   * 内容一定在某处，而我们看不见。 */
+  const suspectClosedShadow = () =>
+    deepQueryAll("*")
+      .filter((element) =>
+        element.tagName.includes("-") && !element.shadowRoot && !element.children.length
+      )
+      .map((element) => element.tagName.toLowerCase());
+
+  const byRole = (locator) => deepQueryAll("*").filter((element) => {
     const role = element.getAttribute("role") || implicitRole(element);
     return role === locator.role && accessibleName(element) === locator.name;
   });
 
   const byExactText = (text) => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
     const nodes = [];
-    let current = walker.currentNode;
-    while (current) {
-      if (normalizeText(current.textContent) === text) {
-        const childHasSameText = Array.from(current.children)
-          .some((child) => normalizeText(child.textContent) === text);
-        if (!childHasSameText) nodes.push(current);
+    for (const root of collectRoots()) {
+      const scope = root === document ? document.body : root;
+      if (!scope) continue;
+      const walker = document.createTreeWalker(scope, NodeFilter.SHOW_ELEMENT);
+      let current = walker.currentNode;
+      while (current) {
+        if (normalizeText(current.textContent) === text) {
+          const childHasSameText = Array.from(current.children)
+            .some((child) => normalizeText(child.textContent) === text);
+          if (!childHasSameText) nodes.push(current);
+        }
+        current = walker.nextNode();
       }
-      current = walker.nextNode();
     }
     return nodes;
   };
@@ -92,9 +135,9 @@
       if (locator.strategy === "role") nodes = byRole(locator);
       if (locator.strategy === "text") nodes = byExactText(locator.text);
       if (locator.strategy === "testid") {
-        nodes = Array.from(document.querySelectorAll(`[data-testid="${CSS.escape(locator.testid)}"]`));
+        nodes = deepQueryAll(`[data-testid="${CSS.escape(locator.testid)}"]`);
       }
-      if (locator.strategy === "css") nodes = Array.from(document.querySelectorAll(locator.selector));
+      if (locator.strategy === "css") nodes = deepQueryAll(locator.selector);
       if (nodes.length) return { nodes, locator };
     }
     return { nodes: [], locator: (locators || [])[0] || null };
@@ -132,8 +175,11 @@
   // 请求名，与契约 expected 的键对齐。verify_restore_contract.py 有同一份映射。
   const PROPERTY_ALIASES = { background: "background-color", flex: "flex-grow" };
 
-  const styleFacts = (element, properties) => {
-    const computed = window.getComputedStyle(element);
+  /* `pseudo` 让规则读 ::before / ::after 的计算样式。不给这个入口的话，图标字体和
+   * 设计系统放在伪元素里的装饰内容对采集器完全不可见——不是判错，是静默看不见，
+   * 而静默不可见比报错危险。`content` 是伪元素最常判的属性，照常走 properties 请求。 */
+  const styleFacts = (element, properties, pseudo) => {
+    const computed = window.getComputedStyle(element, pseudo || null);
     const output = {};
     for (const property of properties || []) {
       const resolved = PROPERTY_ALIASES[property] || property;
@@ -195,7 +241,25 @@
 
   const collect = (nodes, spec) => {
     const kind = (spec && spec.kind) || "count";
-    if (kind === "count") return nodes.length;
+    if (kind === "count") {
+      /* 虚拟列表里 DOM 只有窗口内的行，`nodes.length` 量到的是窗口而不是数据集——
+       * 那会给出一个「看起来对」的错数，比报错危险。ARIA 正是为这件事存在的：
+       * 容器声明了 aria-rowcount / aria-setsize 且与渲染数不符时，两个数都给出去，
+       * 由契约那侧决定判哪一个，采集器不替它选。 */
+      const declared = nodes
+        .map((node) => {
+          const owner = node.closest("[aria-rowcount], [aria-setsize]");
+          if (!owner) return null;
+          const value = owner.getAttribute("aria-rowcount") || owner.getAttribute("aria-setsize");
+          const parsed = Number.parseInt(value, 10);
+          return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+        })
+        .find((value) => value !== null);
+      if (declared !== undefined && declared !== null && declared !== nodes.length) {
+        return { rendered: nodes.length, declared, windowed: true };
+      }
+      return nodes.length;
+    }
     if (kind === "text") {
       const values = nodes.map((node) => normalizeText(node.textContent));
       return spec && spec.single ? (values[0] || "") : values;
@@ -206,7 +270,7 @@
       return spec && spec.single ? (values[0] || null) : values;
     }
     if (kind === "style") {
-      const values = nodes.map((node) => styleFacts(node, spec.properties));
+      const values = nodes.map((node) => styleFacts(node, spec.properties, spec.pseudo));
       return spec && spec.single ? (values[0] || null) : values;
     }
     if (kind === "rect") {
@@ -215,7 +279,7 @@
     }
     if (kind === "state") {
       const values = nodes.map((node) => ({
-        styles: styleFacts(node, spec.properties),
+        styles: styleFacts(node, spec.properties, spec.pseudo),
         attributes: Object.fromEntries(
           (spec.attributes || []).map((name) => [name, node.getAttribute(name)])
         )
@@ -246,6 +310,8 @@
 
   const results = {};
   const fixtureStatus = input.fixture_status || {};
+  // 整页算一次就够，别在每条定位失败时重扫一遍整棵树。
+  const closedShadow = suspectClosedShadow();
 
   for (const rule of input.contract.rules || []) {
     if (!(rule.required_layers || []).includes("render") || rule.frozen_exemption) continue;
@@ -267,7 +333,9 @@
       if (!located.nodes.length) {
         results[rule.id] = {
           status: "error",
-          reason: "no implementation locator matched",
+          reason: closedShadow.length
+            ? `possible closed shadow root: ${[...new Set(closedShadow)].join(", ")}`
+            : "no implementation locator matched",
           locator_used: located.locator,
           matched: 0
         };

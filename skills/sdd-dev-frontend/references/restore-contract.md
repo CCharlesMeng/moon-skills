@@ -160,6 +160,21 @@
 
 浏览器采集 `kind` 支持：`count`、`text`、`order`、`structure`、`style`、`rect`、`state`、`overflow`、`overlap`、`clip`。状态必须先由浏览器驱动实际触发；采集脚本只读，不代替 hover、focus、loading 或 fixture。
 
+### 三件与组件库形态相关的行为
+
+采集器读的是**渲染后的 DOM 与计算样式**，所以框架换成 Vue / Svelte / Angular、样式换成 CSS Modules / CSS-in-JS / Tailwind 都不构成新场景——它们都收敛到同一棵 DOM 和同一份 `getComputedStyle` 输出。真正会让它失效的是下面这几种 DOM 层面的现象，按现象处理，不按栈处理。
+
+| 现象 | 行为 |
+| --- | --- |
+| **open shadow root** | 四种定位策略都逐个 root 查再合并。选择器不跨 shadow 边界，不这么做的话 web-component 形态的组件库会让每条规则都返回「定位不到」 |
+| **closed shadow root** | 从外部无法枚举也无法读取。定位失败且页面上存在「自定义元素既无 `shadowRoot` 又无子节点」时，`reason` 报 `possible closed shadow root: <标签名>`，与选择器写错区分开 |
+| **伪元素** | `collect.pseudo` 取 `::before` / `::after`，走 `getComputedStyle(el, pseudo)`。不给这个入口的话，图标字体与设计系统放在伪元素里的内容是**静默不可见**，比报错危险 |
+| **虚拟列表** | `count` 发现容器声明了 `aria-rowcount` / `aria-setsize` 且与渲染行数不符时，返回 `{"rendered": n, "declared": m, "windowed": true}` 而不是一个数 |
+
+**虚拟列表那条会让原本写成数字的期望值判不通过，这是故意的。** DOM 里只有窗口内的行，直接返回 `nodes.length` 会给出一个「看起来对」的错数——那比报错危险得多。两个数都交出去，由契约那侧决定判哪一个，采集器不替它选。
+
+两条已知边界：`closest()` 同样不跨 shadow 边界，所以 `aria-rowcount` 容器与行不在同一个 root 时读不到声明数；closed shadow root 的判据是启发式的，只能提示怀疑，不能证明。
+
 ## 四、执行
 
 ### 1. 编译与校验
