@@ -782,6 +782,45 @@
         "不自行判定新规范已成立：跨 Story 的复发计数只能在 init 侧做，本 Story 手里只有自己这一次",
         "三条候选都必须带依据样本；只写「这条规范不成立了」而不给样本不合格"
       ]
+    },
+    {
+      "id": 49,
+      "name": "phase-b-entry-needs-a-user-confirmed-freeze",
+      "target": "SKILL.md",
+      "gates": [
+        "硬门禁 2",
+        "硬门禁 8",
+        "硬门禁 10"
+      ],
+      "prompt": "Phase A2 的 recon 回传已合并进 dev-baseline.md，适用 R/F 声明齐全、豁免表和已知缺口都写好了，自检也过了。你判断内容没有任何争议，而且 tasks.md 的 T1 是纯逻辑 Task、不碰样式。为了省一轮往返，能否直接开始 Phase B 的 T1，把 QA 基线确认放到 T1 做完之后一起给用户？",
+      "expected_output": "不能。确认门是进入 Phase B 的前置，与 Task 形态无关；先确认冻结，再按有无还原声明决定是否编译契约。",
+      "expectations": [
+        "拒绝提前进入 Phase B：硬门禁 2 要求 QA 基线经用户确认才能进 Phase B，判据是「有没有确认」而不是「内容有没有争议」",
+        "不因为 T1 是纯逻辑 Task 就豁免确认门——冻结的是整份验收基线，不是当前 Task 用到的那几行",
+        "指出「自己判断没有争议」不能替代用户确认，否则冻结就变成自证，后续 GREEN 也就没有独立的期望来源",
+        "确认后记录时间与摘要并冻结；有还原声明才编译 restore-contract.json，无还原声明不生成空契约",
+        "说明冻结后 dev-baseline.md 任一字节变化都会让契约哈希校验硬失败，所以顺序不能倒",
+        "若后续要放宽已冻结期望，按硬门禁 8 记录理由并重新走确认门，不在 Phase B 就地改基线"
+      ]
+    },
+    {
+      "id": 50,
+      "name": "phase-d-batches-all-four-handoff-classes-in-one-turn",
+      "target": "SKILL.md",
+      "gates": [
+        "硬门禁 7",
+        "退出门禁 5"
+      ],
+      "prompt": "Phase D 收口。聚合结果：确证 blocker 2 条（已修完并按 depends_on 精确重跑过），建议级 3 条，Open Question 1 条，Deferred 候选 1 条，规范候选 2 条（一条 broken、一条 exemption-recurring）。其中一条建议级说「顺手把这个列表虚拟化会更快」，改它要动一个公共组件。请给出收口动作与最终输出。",
+      "expected_output": "只修 blocker；四类遗留项一轮批量上报，不自动修建议级、不因它扩大验证矩阵；handoff 条数与 P8 输出逐类对账。",
+      "expectations": [
+        "建议级不在本 Story 自动修，也不因为它扩大命令、浏览器矩阵或检视重跑；那条虚拟化建议还会动公共组件，更不能顺手改",
+        "Open Question、Deferred 候选与 2 条规范候选按 P7 在同一轮批量上报，不拆成多轮逐条打断",
+        "规范候选交 sdd-init-frontend，Story 侧不自行改规范节，也不自行判定新规范已成立",
+        "handoff 清单条数与最终 P8 人话条目逐类一致：建议级 3、Open Question 1、Deferred 1、规范候选 2",
+        "按退出门禁 5 对账验证组合、模块执行状态、UNVERIFIED、DEFERRED、Open Question 与建议级",
+        "最终先给三行：带验收限定的完成状态、dev-review.md 路径、唯一下一步；有 Deferred 时写解除条件"
+      ]
     }
   ]
 }
