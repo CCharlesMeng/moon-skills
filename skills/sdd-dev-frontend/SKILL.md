@@ -106,7 +106,7 @@ Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的�
 | 工件 | 所有权与生命周期 |
 | --- | --- |
 | 九份仓库 baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
-| `dev-baseline.md` | Phase 0 写执行起点，A2 追加冻结 QA 基线 |
+| `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |
 | `review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |

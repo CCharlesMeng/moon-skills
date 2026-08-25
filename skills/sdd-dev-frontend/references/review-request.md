@@ -30,7 +30,7 @@
     "exemptions": ["EX-1"],
     "risk_closure": ["/orders", "/orders/:id"],
     "required_states": ["overflow"],
-    "start_failures": "<story-dir>/dev-baseline.md / 执行起点",
+    "start_failures": "<story-dir>/dev-baseline.md / 执行起点（环境）",
     "tolerance": {"css_px": 1}
   }
 }

@@ -12,7 +12,7 @@
 | --- | --- |
 | 已冻结 F/AC 声明与豁免 | `<story-dir>/dev-baseline.md`、`tasks.md`、`alpha-tests.md` |
 | 当前证据包、代码指纹和 F/REG 分配 | `<review-evidence>` |
-| 起点失败集合 | `<story-dir>/dev-baseline.md / 执行起点` |
+| 起点失败集合 | `<story-dir>/dev-baseline.md / 执行起点（环境）` |
 | 需补浏览器场景时可用驱动 | `<browser-driver>` |
 | 判据 | `<review-pack-dir>/roles/test-lens/ROLE.md` 与 `frontend-code-checklists/self-test.md` |
 
