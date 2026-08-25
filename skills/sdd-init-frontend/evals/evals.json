@@ -34,7 +34,7 @@
       "expected_output": "逐个文件按结构判据定位：导出什么、被谁引用、内部调用什么；六个文件都被正确归位，不因为文件名里没有 hook/util/component 这类词而漏掉。",
       "expectations": [
         "StatCard 按「导出返回视图的符号」判为构件，不因为判据词表里没有「组件」而漏掉",
-        "usePortfolioSummary 按「既调用框架状态原语又经请求出口」判为数据 hook，不要求路径含 hook 字样",
+        "usePortfolioSummary 按「既调用框架状态原语又经请求出口」判为取数单元，不要求路径含 hook 字样",
         "format.ts 按「导出纯函数且被构件引用」判为渲染辅助，不要求路径含 util 字样",
         "tokens.css 按「声明自定义属性」判为 token 集，不靠对文件名分词匹配",
         "PortfolioPanel 只被一个特性引用，因此只进业务路由索引而不进通用构件详表"
@@ -192,12 +192,52 @@
       "expectations": [
         "栈签名同时给出具名框架与形态 = 应用，形态判据是挂载到 DOM 根节点且无导出入口、无远端暴露、无平台配置",
         "PortfolioPanel 只被一个消费单元引用，因此归 routing.md 的装配索引而不进 components.md 详表",
-        "format.ts 判为渲染辅助进 components.md，request.ts 判为统一请求出口进 api.md，usePortfolioSummary 判为数据 hook 进 data.md，tokens.css 判为 token 集进 styling.md",
+        "format.ts 判为渲染辅助进 components.md，request.ts 判为统一请求出口进 api.md，usePortfolioSummary 判为取数单元进 data.md，tokens.css 判为 token 集进 styling.md",
         "routing.md 不留空也不删，写成「无路由库、无路由表、无守卫、无代码分割，界面由 App 单点装配」的显式规范",
         "testing.md 写出框架是 Vitest 但无既有测试与元素定位约定，并指明实现阶段的影响",
         "data.md 显式写出无取数缓存库、无全局 store、无表单机制三条「无统一做法」规范",
         "全文不出现方法签名、props 列表、token 具体数值或目录树",
         "index.md 只有指向 ID 的行，速查节含栈与形态各一行"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "ui-library-is-part-of-the-components-answer",
+      "target": "references/baseline-contract.md",
+      "prompt": "一个 Vue 仓的依赖里有一个第三方 UI 组件库，模板里到处直接用它的组件；src/ui/ 下另有三个自研构件，其中一个内部就是包着该库的表格组件、被 4 个业务模块引用；库的主题色与圆角在一个覆盖文件里改过。有人说 UI 库属于样式范畴，应该整段写进 styling.md。请给出归置，并写出对应的清单与规范条目要点。",
+      "expected_output": "UI 库与仓内封装层归 components.md，主题覆盖归 styling.md；关键结论是使用点没有统一经过封装，因此写成「无统一做法」规范。",
+      "expectations": [
+        "UI 库归 components.md 而不是 styling.md，理由是它回答「拼界面时有哪些现成构件可用」这个问句",
+        "库的主题机制正文归 styling.md，components.md 只留 ID 引用，不把主题值复制两处",
+        "包着库表格的自研构件按「被两个以上消费单元引用」判进通用详表",
+        "写出「直接引库与经封装混用，无统一做法」规范，并指明检视不得据此判「绕过封装」",
+        "不列举库导出了哪些组件、不抄 props，只写库是哪个、怎么用、封装在哪"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "framework-provided-http-client-is-still-a-unified-exit",
+      "target": "references/discovery-rules.md",
+      "prompt": "一个 Angular 仓里搜不到任何构造 HTTP 客户端实例的代码——客户端由框架提供、在各处靠依赖注入拿到。仓内有一个可注入服务包着它，注册了拦截器并集中翻译错误码，被 9 处业务服务注入使用；另有 2 处组件直接注入了框架客户端。请写出 api.md 的结论。",
+      "expected_output": "判为有统一出口（那个可注入服务），并写出 2 处绕过；不得因为搜不到构造调用就判「无统一请求出口」。",
+      "expectations": [
+        "不因为搜不到实例构造调用而判「无统一请求出口」，并说明这类误判会让检视放过真正的绕过",
+        "判据落在「被多处消费的那一层包装」上，构造、注入取得、平台 API 包装三种形态都算",
+        "如实写出 2 处直接注入框架客户端的绕过，规范条目给出可执行的违例判定",
+        "不抄该服务导出了哪些方法或它们的签名"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "view-helpers-are-not-always-plain-functions",
+      "target": "references/discovery-rules.md",
+      "prompt": "两个仓：一个 Svelte 仓里有两个 use: action（一个做点击外部关闭、一个做元素尺寸观测），都被多个构件用在模板上；一个 Angular 仓里有三个管道（金额、日期、状态文案）和一个属性指令（权限控制按钮禁用）。有人按「渲染辅助 = 导出纯函数」的判据，把两个仓的渲染辅助节都判成空，并提议新开一份 directives.md。请给出归置。",
+      "expected_output": "两个仓的渲染辅助节都非空：action、管道、指令都进 components.md 的渲染辅助小节；不新开文件、不加类型列。",
+      "expectations": [
+        "指出「导出纯函数」是形状判据而不是角色判据，按它字面执行会在这些栈里把本该非空的整节判空",
+        "action、管道、属性指令都判为渲染辅助，判据是做展示用变换或界面级行为增强且被构件或模板消费",
+        "不新开 directives.md，也不在渲染辅助表里加「类型」列区分 action / 管道 / 指令",
+        "权限控制指令按跨关注点归置落进渲染辅助，不单独开权限文件"
       ]
     }
   ]
