@@ -180,7 +180,7 @@
     {
       "id": 12,
       "name": "phase-minus-1-gate-is-deliberately-coarse",
-      "target": "references/phase-entry.md",
+      "target": "references/phases/entry.md",
       "gates": [
         "硬门禁 0"
       ],
@@ -213,7 +213,7 @@
     {
       "id": 14,
       "name": "suggestions-do-not-expand-validation-or-trigger-code-changes",
-      "target": "references/phase-review-closeout.md",
+      "target": "references/phases/review-closeout.md",
       "gates": [
         "硬门禁 7",
         "退出门禁 5"
@@ -230,7 +230,7 @@
     {
       "id": 15,
       "name": "fresh-browser-evidence-is-not-reexecuted",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "gates": [
         "退出门禁 3"
       ],
@@ -246,7 +246,7 @@
     {
       "id": 16,
       "name": "code-change-invalidates-only-dependent-browser-evidence",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "gates": [
         "退出门禁 3"
       ],
@@ -262,7 +262,7 @@
     {
       "id": 17,
       "name": "applicable-reviews-complete-with-limited-child-slots",
-      "target": "references/phase-review-closeout.md",
+      "target": "references/phases/review-closeout.md",
       "gates": [
         "硬门禁 6"
       ],
@@ -278,7 +278,7 @@
     {
       "id": 18,
       "name": "repair-loop-reruns-only-invalidated-portfolio-modules",
-      "target": "references/phase-review-closeout.md",
+      "target": "references/phases/review-closeout.md",
       "gates": [
         "退出门禁 3"
       ],
@@ -371,7 +371,7 @@
     {
       "id": 24,
       "name": "lite-code-recon-uses-unique-existing-patterns",
-      "target": "references/phase-spec.md",
+      "target": "references/phases/spec.md",
       "gates": [
         "硬门禁 13"
       ],
@@ -388,7 +388,7 @@
     {
       "id": 25,
       "name": "lite-code-recon-falls-back-on-ambiguity-or-public-boundary",
-      "target": "references/phase-spec.md",
+      "target": "references/phases/spec.md",
       "gates": [
         "硬门禁 13"
       ],
@@ -433,7 +433,7 @@
     {
       "id": 28,
       "name": "phase-b-promotion-invalidates-only-dependent-scenario",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "gates": [
         "退出门禁 3"
       ],
@@ -449,7 +449,7 @@
     {
       "id": 29,
       "name": "slots-refill-applicable-reviews-without-judgment-leakage",
-      "target": "references/phase-review-closeout.md",
+      "target": "references/phases/review-closeout.md",
       "gates": [
         "硬门禁 6"
       ],
@@ -502,7 +502,7 @@
     {
       "id": 32,
       "name": "same-task-restore-and-logic-use-two-channel-waves",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "gates": [
         "退出门禁 1"
       ],
@@ -519,7 +519,7 @@
     {
       "id": 33,
       "name": "compatible-claims-reuse-one-selected-command-execution",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "prompt": "T1、T2 都改 packages/dashboard 内的私有文件，两条声明的 causal 测试已各自 GREEN。候选组合为这两条声明选中同一条包级 targeted-quality 命令；它们的命令、scope、toolchain/runtime 与当前代码指纹完全一致，且未触发 regression。请安排。",
       "expected_output": "只执行一次该 targeted-quality 命令，T1/T2 声明共同引用它；各自 causal 证据仍分开落账。未触发 regression，不再附加全量门。",
       "expectations": [
@@ -533,7 +533,7 @@
     {
       "id": 34,
       "name": "freshness-key-invalidates-only-on-in-scope-change",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "gates": [
         "退出门禁 1"
       ],
@@ -549,7 +549,7 @@
     {
       "id": 35,
       "name": "single-private-logic-claim-keeps-causal-proof-without-fixed-full-gate",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "gates": [
         "硬门禁 3",
         "硬门禁 4",
@@ -568,7 +568,7 @@
     {
       "id": 36,
       "name": "two-channel-fast-path-falls-back-when-logic-red-is-structural",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "gates": [
         "硬门禁 11"
       ],
@@ -585,7 +585,7 @@
     {
       "id": 37,
       "name": "browser-portfolio-is-compiled-from-claims-before-execution",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "gates": [
         "硬门禁 3",
         "硬门禁 15"
@@ -603,7 +603,7 @@
     {
       "id": 38,
       "name": "browser-scenarios-rerun-only-when-their-own-deps-change",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "gates": [
         "退出门禁 3"
       ],
@@ -619,7 +619,7 @@
     {
       "id": 39,
       "name": "shared-evidence-rejects-summary-only-success",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "gates": [
         "硬门禁 5",
         "硬门禁 12",
@@ -637,7 +637,7 @@
     {
       "id": 40,
       "name": "risk-boundary-flushes-even-inside-one-task",
-      "target": "references/phase-implementation.md",
+      "target": "references/phases/implementation.md",
       "prompt": "同一个 T2 同时要验证本地筛选交互、真实账号权限变化和一次不可回滚的数据提交。它们使用同一页面和浏览器。为了减少打开次数，能否全放进一次连接连续跑？",
       "expected_output": "不能。页面相同不覆盖风险边界：本地可复位交互可以连续跑；权限变化与不可回滚写入各自单独跑并在之前收束。一次连接能带多少场景取决于状态可复位和失败可归因，不取决于是否同一 Task。",
       "expectations": [
@@ -650,7 +650,7 @@
     {
       "id": 41,
       "name": "phase-c-collects-all-gaps-before-browser-batch",
-      "target": "references/review-evidence.md",
+      "target": "references/review/evidence.md",
       "prompt": "Phase C 重编译组合后，布局检视分配的 L2 缺 900px 溢出场景，功能自测分配的 F3-2/F3-3 缺错误态和停止态；三项共用页面、fixture、runtime 与 reset 策略。主 agent 尚未派两份适用检视。请补证。",
       "expected_output": "主 agent 先从两份检视范围取缺口并集，把三项并入验证组合的已选场景，在同一可复位执行边界内一次进入页面连续采集，再把原始事实写入 review evidence；之后才派检视角色独立判断。",
       "expectations": [
@@ -663,7 +663,7 @@
     {
       "id": 42,
       "name": "missing-tasks-with-complete-session-facts-drafts-and-confirms",
-      "target": "references/phase-entry.md",
+      "target": "references/phases/entry.md",
       "gates": [
         "硬门禁 1"
       ],
@@ -680,7 +680,7 @@
     {
       "id": 43,
       "name": "missing-tasks-with-unclear-scope-returns-to-sdd-task",
-      "target": "references/phase-entry.md",
+      "target": "references/phases/entry.md",
       "gates": [
         "硬门禁 1"
       ],
@@ -697,7 +697,7 @@
     {
       "id": 44,
       "name": "prototype-source-stays-behind-extraction-subagents",
-      "target": "references/phase-spec.md",
+      "target": "references/phases/spec.md",
       "gates": [
         "硬门禁 9"
       ],
@@ -732,7 +732,7 @@
     {
       "id": 46,
       "name": "tool-equivalence-suspect-never-becomes-an-exemption",
-      "target": "references/restore-contract.md",
+      "target": "references/restore/run.md",
       "gates": [
         "硬门禁 16"
       ],
@@ -825,7 +825,7 @@
     {
       "id": 51,
       "name": "stacking-order-is-a-render-rule-not-a-visual-blind-spot",
-      "target": "references/restore-contract.md",
+      "target": "references/restore/contract.md",
       "gates": [
         "硬门禁 12"
       ],

@@ -115,7 +115,7 @@ Phase B 的行为结论（RED/GREEN、逐项失败集合）仍只在 `alpha-test
 
 检视独立性的判据是「各自回到冻结基线与本角色规则作判断」，不是「各自重新点击一次页面」。
 
-telemetry 开启时，每次连接、注入与截图各记一条 `browser_connect` / `browser_inject` / `browser_capture`（见 [preflight-and-telemetry.md](./preflight-and-telemetry.md)）。浏览器是这条流程最贵的一笔，而它此前唯一的次数统计来自事故复盘而不是流程自身——不记就永远只能靠推导判断该削哪一边。
+telemetry 开启时，每次连接、注入与截图各记一条 `browser_connect` / `browser_inject` / `browser_capture`（见 [preflight-and-telemetry.md](../preflight-and-telemetry.md)）。浏览器是这条流程最贵的一笔，而它此前唯一的次数统计来自事故复盘而不是流程自身——不记就永远只能靠推导判断该削哪一边。
 
 ## 五、新鲜度与精确失效
 
@@ -139,7 +139,7 @@ telemetry 开启时，每次连接、注入与截图各记一条 `browser_connec
 
 ## 六、命令证据
 
-各 Phase 该跑多宽只定义在 [validation-policy.md 的执行时机](./validation-policy.md#五执行时机)，本文件不复制一份分阶段清单。
+各 Phase 该跑多宽只定义在 [validation-policy.md 的执行时机](../validation-policy.md#五执行时机)，本文件不复制一份分阶段清单。
 
 这里只定义命令的**记录形状**：每条命令保存完整 command、scope、toolchain/runtime 与相关代码状态；相同键复用，变化时只失效该命令。
 

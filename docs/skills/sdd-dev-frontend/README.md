@@ -527,8 +527,8 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - [方案设计.md](./方案设计.md)：设计取舍与流程蓝图
 - [样式还原验证改造计划.md](./样式还原验证改造计划.md)：V2 契约化还原的已实施计划
 - [ADR](./adr/)：关键架构决策记录
-- [QA 基线模板](../../../skills/sdd-dev-frontend/references/qa-baseline-template.md)：十个固定维度
+- [QA 基线模板](../../../skills/sdd-dev-frontend/references/templates/qa-baseline.md)：十个固定维度
 - [前端 Task 切分与步骤形状](../../../skills/sdd-dev-frontend/references/execution-contract.md#task-切分与步骤形状)：还原 Task、样式文件归属与计划边界
-- [还原契约与机器报告](../../../skills/sdd-dev-frontend/references/restore-contract.md)：V2 JSON 工件、命令和三色语义
-- [`alpha-tests.md` 还原证据扩容](../../../skills/sdd-dev-frontend/references/alpha-tests-restore.md)：还原证据和 AC 映射
-- [检视包接线](../../../skills/sdd-dev-frontend/references/review-pack-adapter.md)：角色 ↔ lens 映射；检查项、定级与回传契约都在 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)
+- [还原契约怎么写](../../../skills/sdd-dev-frontend/references/restore/contract.md) 与 [怎么跑](../../../skills/sdd-dev-frontend/references/restore/run.md)：JSON 工件与规则字段，以及命令和三色语义
+- [Story 工件模板](../../../skills/sdd-dev-frontend/references/templates/story-artifacts.md)：`dev-baseline.md` / `alpha-tests.md` / `acceptance.md` 的形状，含还原证据和 AC 映射
+- [检视派发](../../../skills/sdd-dev-frontend/references/review/dispatch.md)：派哪几格、角色 ↔ lens 映射与请求参数包；检查项、定级与回传契约都在 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)

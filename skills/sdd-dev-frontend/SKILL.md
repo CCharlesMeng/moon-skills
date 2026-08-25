@@ -18,10 +18,10 @@ disable-model-invocation: true
 
 | Phase | 动作与出口 | 细则 |
 | --- | --- | --- |
-| -1 / 0 | 校验仓库 baseline；定位 Story；核实上游字段；编译初始验证组合；只为已选模块取得起点证据 | [phase-entry.md](./references/phase-entry.md) |
-| A1 / A2 | 按基线源抽取规格；按风险选择 `lite/full` 勘察；生成 QA 基线；用户确认后冻结并编译还原契约 | [phase-spec.md](./references/phase-spec.md) |
-| B | 按 Task 实现，只取得本 Task 改变声明的因果证据；checkbox 与证据账本同步 | [phase-implementation.md](./references/phase-implementation.md) |
-| C / D | 按最终 diff 重编译组合；执行适用模块和角色；修确证阻断；按依赖重取失效证据；逐声明收口 | [phase-review-closeout.md](./references/phase-review-closeout.md) |
+| -1 / 0 | 校验仓库 baseline；定位 Story；核实上游字段；编译初始验证组合；只为已选模块取得起点证据 | [phases/entry.md](./references/phases/entry.md) |
+| A1 / A2 | 按基线源抽取规格；按风险选择 `lite/full` 勘察；生成 QA 基线；用户确认后冻结并编译还原契约 | [phases/spec.md](./references/phases/spec.md) |
+| B | 按 Task 实现，只取得本 Task 改变声明的因果证据；checkbox 与证据账本同步 | [phases/implementation.md](./references/phases/implementation.md) |
+| C / D | 按最终 diff 重编译组合；执行适用模块和角色；修确证阻断；按依赖重取失效证据；逐声明收口 | [phases/review-closeout.md](./references/phases/review-closeout.md) |
 
 正常主干只有 QA 基线确认需要用户决策。路径歧义、外部授权、无安全默认值的规格缺口、连续三次修复失败、越界改动和未决阻断按所在阶段一次性批量上报。
 
@@ -99,7 +99,7 @@ disable-model-invocation: true
 | 规格 / 代码勘察 | `recon-spec` / 风险触发时的 `recon-codebase` |
 | 独立检视 | 只派验证组合选中的 `review-restore`、`review-layout`、`review-convention`、`review-quality`、`self-test` |
 
-Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的原始事实；参数按 [review-request.md](./references/review-request.md) 组装，检查项、定级与回传契约都不在本 Skill，按 [review-pack-adapter.md](./references/review-pack-adapter.md) 读 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
+Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的原始事实；派哪几格、参数怎么组装见 [review/dispatch.md](./references/review/dispatch.md)，检查项、定级与回传契约都不在本 Skill，按同一份指向 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
 
 ## 工件管理
 
@@ -115,7 +115,7 @@ Phase C 角色共享 [review-evidence.md](./references/review-evidence.md) 的�
 | `alpha-tests.md` | 回填证据、声明状态与 Deferred |
 | `execution-telemetry.json` | 仅流程优化明确需要时开启；缺席不是降级 |
 
-模板只在创建对应工件时读取 [story-artifact-templates.md](./references/story-artifact-templates.md)。还原契约、QA 基线和证据字段分别以其 reference 或脚本 schema 为唯一事实源，不在本文件展开。
+模板只在创建对应工件时读取 [templates/story-artifacts.md](./references/templates/story-artifacts.md)。还原契约、QA 基线和证据字段分别以其 reference 或脚本 schema 为唯一事实源，不在本文件展开。
 
 ## 退出门禁
 

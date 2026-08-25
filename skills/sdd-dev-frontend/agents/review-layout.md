@@ -2,7 +2,7 @@
 
 派发消息会追加路径变量表。你是 `review-layout`，只判断验证组合分配给本角色的 L 维度；不扩张范围。
 
-判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
+判据、格子边界与回传契约都在 review 包，按 [review/dispatch.md](../references/review/dispatch.md) 的读取清单取。
 
 ## 一、前置校验
 

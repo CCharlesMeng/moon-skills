@@ -15,8 +15,8 @@
 | `tasks.md` | `<story-dir>/tasks.md` | 终止 |
 | `story-delta-frontend-design.md` | `<story-dir>/story-delta-frontend-design.md` | 终止 |
 | 基线源 | 见下表 | 三档都不成立才终止 |
-| QA 基线模板 | `<skill-dir>/references/qa-baseline-template.md` | 终止 |
-| 还原契约格式 | `<skill-dir>/references/restore-contract.md` | 终止 |
+| QA 基线模板 | `<skill-dir>/references/templates/qa-baseline.md` | 终止 |
+| 还原契约格式 | `<skill-dir>/references/restore/contract.md` | 终止 |
 | `requirement-frontend-design.md` | `<requirement-dir>/requirement-frontend-design.md` | 不终止，记入「已知缺口」 |
 | Test Design 用例 | `story-delta-frontend-design.md` 或 `tasks.md` 中引用的路径 | 不终止，记入「已知缺口」 |
 
@@ -78,7 +78,7 @@
 
 ### 3.2 QA 基线
 
-**先完整读一遍 `<skill-dir>/references/qa-baseline-template.md`，然后按它的结构填写。**
+**先完整读一遍 `<skill-dir>/references/templates/qa-baseline.md`，然后按它的结构填写。**
 
 硬约束：
 
@@ -88,7 +88,7 @@
 - **不发明响应式规格。** 上游没有规格时 R6 只承诺「不破」三项；需要改变布局结构的诉求记为 Open Question，不自行推断。
 - **不放宽标准。** 觉得某条做不到，走豁免表并写足理由；理由必须命中模板列的三类可接受理由之一。因外部依赖做不了的事不进豁免表，记入「已知缺口」由主 agent 走 Deferred。
 - **区块名逐字沿用切分表。** 第 1 档下 QA 基线还原侧引用的每个区块名都要能在 `block-index.md` 里找到，不自造名字、不改写；三个阶段靠这个名字认同一个东西。第 2 / 3 档跳过了抽取层、没有切分表，区块名取自 `tasks.md` 还原 Task 的区块划分，取不到时按「一屏可截 + 一个名词短语说得清」自行命名并在「已知缺口」登记一行，说明后续轮次以本基线的区块名为准。
-- **同时产出还原契约规则草稿。** 每条实际生成的 R 期望值一一对应一条同 `baseline_id` 规则，字段与模式严格按 `references/restore-contract.md`；期望值与设计事实出处来自本侧材料，绝不读取实现当前值。实现 locator 不进规则草稿。
+- **同时产出还原契约规则草稿。** 每条实际生成的 R 期望值一一对应一条同 `baseline_id` 规则，字段与模式严格按 `references/restore/contract.md`；期望值与设计事实出处来自本侧材料，绝不读取实现当前值。实现 locator 不进规则草稿。
 - **R1 的期望值写实现中立的结构事实**：元素的存在与数量、层级、角色（heading / img 等）、可访问名。**不得把原型 class 名写进期望值**——类名是设计稿侧工件，实现没有复刻它的义务，写进去会制造修不掉的 RED；类名只作为 `design_fact_source` 的锚点。CSS 值的期望键写计算样式 longhand（`background-color` 而非 `background`）；static 针写实现侧真实会出现的形态，颜色优先用仓内 token 名而不是原型字面量。
 - **基线头必须引用两类上游。** 仓库公共事实只引 `<repo-baseline-dir>` 里的 ID，不铺正文、不写指纹；本次场景、`base-ref` 与起点失败集合引用 `dev-baseline.md` 已存在的“执行起点（环境）”，不得复制成第二份表。
 - **检查层级不能越权。** R1/R2 默认 render；R3/R4 默认 static+render；R5 需要明确 fixture，造不出时后续为 YELLOW；R6 必须 render。**visual 层只有两类，写规则时必须填 `visual_blind_spot`**：`image-focus`（裁切后露出的是不是该露的那部分）、`composite`（`mix-blend-mode` / `backdrop-filter` / 多层透明度叠出来的实际观感）。这两类之外一律不加 visual——阴影写计算样式 longhand 走 render，字号字重行高同理，「谁压在谁上面」用 `check_mode: stacking` 走 render；指不出类别就说明它本来该是 render 或已知缺口。
@@ -139,7 +139,7 @@
 
 ## QA 基线
 
-<按 <skill-dir>/references/qa-baseline-template.md 填写实际适用的 R/F 验收声明。列形按该文件第三、四节逐维度取，不自行增删列。不生成不适用分类的占位表>
+<按 <skill-dir>/references/templates/qa-baseline.md 填写实际适用的 R/F 验收声明。列形按该文件第三、四节逐维度取，不自行增删列。不生成不适用分类的占位表>
 
 ### 豁免表
 
@@ -156,7 +156,7 @@
 | 日期 | 变更项（编号） | 变更内容 | 理由 | 确认状态 | 新指纹 |
 | --- | --- | --- | --- | --- | --- |
 
-<!-- 交付前自检：逐条勾选 qa-baseline-template.md 第七节。主 agent 校验后删除本段再落盘 -->
+<!-- 交付前自检：逐条勾选 qa-baseline.md 第七节。主 agent 校验后删除本段再落盘 -->
 <!-- artifact: restore-contract-rules.json -->
 ```json
 {
@@ -183,7 +183,7 @@
 ```
 ````
 
-- 「已知缺口」收三类内容：可选前置文件缺失、区块规格里标 `未见` 的 R4 / R5 维度、以及读完仍无法确定的事实。**每一行写入前必须先完成 [qa-baseline-template.md](../references/qa-baseline-template.md)「提问前 — 证据来源分类」**：`repo 有证据` 或 `prototype 有证据` 任一为「是」的，证据直接写入基线对应位置，**不进本表**；只有分类为 `user-only` 或 `conflict` 的才进本表，并在「分类」「证据」列写上分类值与具体路径 / 锚点（或「检索 … → 未见」）。**没有缺口时保留标题并写「无」**，不要删掉这一节。
+- 「已知缺口」收三类内容：可选前置文件缺失、区块规格里标 `未见` 的 R4 / R5 维度、以及读完仍无法确定的事实。**每一行写入前必须先完成 [qa-baseline.md](../references/templates/qa-baseline.md)「提问前 — 证据来源分类」**：`repo 有证据` 或 `prototype 有证据` 任一为「是」的，证据直接写入基线对应位置，**不进本表**；只有分类为 `user-only` 或 `conflict` 的才进本表，并在「分类」「证据」列写上分类值与具体路径 / 锚点（或「检索 … → 未见」）。**没有缺口时保留标题并写「无」**，不要删掉这一节。
 - 需要上游决策的响应式诉求写进「已知缺口」，标注 `Open Question`，分类仍须是 `user-only` 或 `conflict`。
 
 ## 五、证据要求
@@ -193,4 +193,4 @@
 - 引用上游文字规格时给出文件与章节名。
 - **读不到就写「未见」，不要编。** 不接受「据说」「推测」「一般来说」。凡是靠推断得到的结论，标注 `推测` 并写明推断依据，或者干脆放进「已知缺口」。**「未见」必须附检索方式**——写清查了哪个文件、哪个区块规格锚点之后的未见；裸写「未见」不合格。
 - **写入「已知缺口」之前，候选事实必须先完成证据来源分类**（表头字段：`事实/问题`、`repo 有证据`、`prototype 有证据`、`分类`、`证据`；允许进提问的分类值仅 `user-only`、`conflict`）。分类结果与证据（或检索方式后的未见）一并写入该行；跳过分类直接提问，不合格。
-- 规则草稿必须是合法 JSON；R1–R6 每条基线编号恰好出现一次。默认容差、`static_check`、冻结豁免与模式约束逐条按 `references/restore-contract.md` 校验。
+- 规则草稿必须是合法 JSON；R1–R6 每条基线编号恰好出现一次。默认容差、`static_check`、冻结豁免与模式约束逐条按 `references/restore/contract.md` 校验。

@@ -756,7 +756,7 @@ def suspect_tool_equivalence(expected: Any, actual: Any) -> bool:
 
     命中它的 RED 不是还原偏差：既不该改实现去迎合字符串，也不该补豁免掩盖，
     只能按 CONTEXT.md 的问题分流上报为工具等价缺口。判据见
-    `references/restore-contract.md` 第五节。
+    `references/restore/run.md` 的 suspected-tool-equivalence 一节。
     """
     if isinstance(expected, dict) and isinstance(actual, dict):
         for key, expected_value in expected.items():

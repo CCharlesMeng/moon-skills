@@ -30,11 +30,11 @@
 
 ### 2. 缺 `tasks.md` 的分支
 
-仅当会话已明确 Story 范围、AC、基线来源和文件范围时，读取 [story-artifact-templates.md](./story-artifact-templates.md) 第三节，起草 `tasks.md`、缺失的 `alpha-tests.md` 与 `story-delta-frontend-design.md`，展示草稿并确认后落盘。缺任一核心信息时回 `sdd-task` 或按 P7 问缺口；不带分歧开工。
+仅当会话已明确 Story 范围、AC、基线来源和文件范围时，读取 [templates/story-artifacts.md](../templates/story-artifacts.md) 第四节，起草 `tasks.md`、缺失的 `alpha-tests.md` 与 `story-delta-frontend-design.md`，展示草稿并确认后落盘。缺任一核心信息时回 `sdd-task` 或按 P7 问缺口；不带分歧开工。
 
 ### 3. 核实上游事实
 
-按 [共享执行契约](./execution-contract.md) 读取 TaskPacket。核实 `baseline_source`、目录、路由、状态、还原 Task 与风险 token：
+按 [共享执行契约](../execution-contract.md) 读取 TaskPacket。核实 `baseline_source`、目录、路由、状态、还原 Task 与风险 token：
 
 - 字段是候选索引；缺席不表示低风险。
 - `prototype` 必须实测目录存在且包含相关 HTML，否则重新判档并记录冲突。
@@ -49,12 +49,12 @@
 
 ### 5. 编译初始验证组合
 
-完整读取 [validation-policy.md](./validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、仓库 baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
+完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、仓库 baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
 
-只有组合含命令模块时才读取 [preflight-and-telemetry.md](./preflight-and-telemetry.md) 的缓存节并取得起点失败集合；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。
+只有组合含命令模块时才读取 [preflight-and-telemetry.md](../preflight-and-telemetry.md) 的缓存节并取得起点失败集合；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。
 
 ### 6. 写 `dev-baseline.md`
 
-按 [story-artifact-templates.md](./story-artifact-templates.md) 第一节写执行起点与初始组合。若本次明确要为流程优化取数，再读取 telemetry 节并开启 `<execution-telemetry>`；默认关闭。
+按 [templates/story-artifacts.md](../templates/story-artifacts.md) 第一节写执行起点与初始组合。若本次明确要为流程优化取数，再读取 telemetry 节并开启 `<execution-telemetry>`；默认关闭。
 
 退出：路径唯一、上游事实已核、初始组合与执行起点已落盘。

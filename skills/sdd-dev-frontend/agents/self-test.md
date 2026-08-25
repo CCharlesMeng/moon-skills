@@ -2,7 +2,7 @@
 
 派发消息会追加路径变量表。你是 `self-test`，只判断验证组合分配给本角色的 F/REG 声明；不自行补分类或扩大用户旅程。
 
-判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
+判据、格子边界与回传契约都在 review 包，按 [review/dispatch.md](../references/review/dispatch.md) 的读取清单取。
 
 ## 一、前置校验
 

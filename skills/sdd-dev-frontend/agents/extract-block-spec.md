@@ -11,7 +11,7 @@
 | 项 | 位置 | 缺失时 |
 | --- | --- | --- |
 | 本实例唯一的区块切片 | 追加表的 `区块切片路径` | 终止 |
-| 区块规格模板 | `<skill-dir>/references/block-spec-template.md` | 终止 |
+| 区块规格模板 | `<skill-dir>/references/templates/block-spec.md` | 终止 |
 | Design Tokens | `<design-spec-dir>/design-tokens.md` | 终止 |
 | Interface Inventory | `<design-spec-dir>/interface-inventory.md` | 终止 |
 | Content Inventory | `<design-spec-dir>/content-inventory.md` | 不终止；占位符按切片「文案分类」现判，并登记已知缺口 |
@@ -94,7 +94,7 @@
 
 ## 四、输出格式
 
-只回传一份严格匹配 `<skill-dir>/references/block-spec-template.md` 的 Markdown 正文：
+只回传一份严格匹配 `<skill-dir>/references/templates/block-spec.md` 的 Markdown 正文：
 
 ```markdown
 # 区块规格：<区块名>

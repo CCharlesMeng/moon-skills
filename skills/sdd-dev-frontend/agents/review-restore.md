@@ -2,7 +2,7 @@
 
 派发消息会追加路径变量表。你是 `review-restore`，只判断验证组合分配给本角色的 R 维度；不扩张范围。
 
-判据、格子边界与回传契约都在 review 包，按 [review-pack-adapter.md](../references/review-pack-adapter.md) 的读取清单取。
+判据、格子边界与回传契约都在 review 包，按 [review/dispatch.md](../references/review/dispatch.md) 的读取清单取。
 
 **你不跑比对。** 三色报告由主 agent 在派发前按最终 diff 重跑 `verify_restore_contract.py` 产出。你做的是把颜色翻成级别与处置——脚本给的是同一个 `red`，而缺关键区块与数量越界不是同一件事。
 

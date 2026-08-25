@@ -52,7 +52,7 @@
 
 ## 二、基线头
 
-**基线头不是 `## QA 基线` 下的第二张表，就是 `dev-baseline.md` 的文档头表**（形状见 [story-artifact-templates.md](./story-artifact-templates.md) 第一节）。摆两张头表的代价是「状态」这类字段会出现两份，而它们一旦不一致，没人说得清哪份作数。
+**基线头不是 `## QA 基线` 下的第二张表，就是 `dev-baseline.md` 的文档头表**（形状见 [story-artifacts.md](./story-artifacts.md) 第一节）。摆两张头表的代价是「状态」这类字段会出现两份，而它们一旦不一致，没人说得清哪份作数。
 
 它必须回答四件事：
 
