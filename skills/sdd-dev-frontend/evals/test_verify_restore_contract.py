@@ -2046,6 +2046,146 @@ class VisualBlindSpotTests(unittest.TestCase):
         self.assertNotIn("visual_blind_spot", VERIFIER.validate_rule(rule, 1))
 
 
+class StackingModeTests(unittest.TestCase):
+    """层叠顺序是 render 层的机器判据，不是 visual 盲区。
+
+    `overlap` 只量矩形相交多少，答不出「谁压在谁上面」——蒙层、下拉、吸顶这些元素
+    本来就该重叠，相交量不为 0 是正常表现。`stacking` 补的就是这一格：期望值声明
+    定位到的元素该在上还是在下，实际值取浏览器合成后的命中顺序。
+    """
+
+    @staticmethod
+    def facts(subject_on_top, **extra) -> dict:
+        return {"subject_on_top": subject_on_top, "probes": [], **extra}
+
+    def test_expected_must_declare_which_side_is_on_top(self) -> None:
+        """没有 subject_on_top 的 stacking 规则没有判据，编译期就该拒。"""
+        for expected in (0, {}, {"subject_on_top": "yes"}, {"on_top": True}):
+            with self.subTest(expected=expected):
+                rule = make_rule("R6-1", "R6", check_mode="stacking", expected=expected)
+                with self.assertRaises(VERIFIER.ContractError) as caught:
+                    VERIFIER.validate_rule(rule, 1)
+                self.assertIn("subject_on_top", str(caught.exception))
+
+    def test_stacking_cannot_escape_into_the_visual_layer(self) -> None:
+        rule = make_rule(
+            "R6-1",
+            "R6",
+            check_mode="stacking",
+            expected={"subject_on_top": True},
+            layers=["visual"],
+        )
+        with self.assertRaisesRegex(VERIFIER.ContractError, "必须要求 render 层"):
+            VERIFIER.validate_rule(rule, 1)
+
+    def test_layered_expected_is_accepted(self) -> None:
+        rule = make_rule(
+            "R6-1",
+            "R6",
+            check_mode="stacking",
+            expected={"render": {"subject_on_top": True}},
+        )
+        self.assertEqual(VERIFIER.validate_rule(rule, 1)["check_mode"], "stacking")
+
+    def test_green_when_observed_order_matches_the_frozen_expectation(self) -> None:
+        rule = make_rule(
+            "R6-1", "R6", check_mode="stacking", expected={"subject_on_top": True}
+        )
+        passed, detail = VERIFIER.compare_actual(
+            VERIFIER.validate_rule(rule, 1), {"subject_on_top": True}, self.facts(True)
+        )
+        self.assertTrue(passed)
+        self.assertTrue(detail["actual_subject_on_top"])
+
+    def test_red_when_the_other_element_wins_and_hints_reach_the_report(self) -> None:
+        """判不通过时，报告里要带上「为什么输了」，否则人还得再排查一轮。"""
+        rule = VERIFIER.validate_rule(
+            make_rule("R6-1", "R6", check_mode="stacking", expected={"subject_on_top": True}),
+            1,
+        )
+        hint = "祖先 div.card 建立了新层叠上下文：transform: matrix(1, 0, 0, 1, 0, 10)"
+        passed, detail = VERIFIER.compare_actual(
+            rule,
+            {"subject_on_top": True},
+            self.facts(False, stacking_hints=[hint], probe_method="elementsFromPoint"),
+        )
+        self.assertFalse(passed)
+        self.assertEqual(detail["stacking_hints"], [hint])
+        self.assertEqual(detail["probe_method"], "elementsFromPoint")
+
+    def test_expecting_the_subject_underneath_is_a_legal_expectation(self) -> None:
+        """装饰层必须在内容之下，和「必须在之上」一样是可冻结的期望。"""
+        rule = VERIFIER.validate_rule(
+            make_rule("R6-1", "R6", check_mode="stacking", expected={"subject_on_top": False}),
+            1,
+        )
+        below, _ = VERIFIER.compare_actual(rule, {"subject_on_top": False}, self.facts(False))
+        above, _ = VERIFIER.compare_actual(rule, {"subject_on_top": False}, self.facts(True))
+        self.assertTrue(below)
+        self.assertFalse(above)
+
+    def test_no_conclusion_is_red_not_green(self) -> None:
+        """采集器给 null 表示「没量到」。把它当成「没问题」正是这类检查自动变绿的入口。"""
+        rule = VERIFIER.validate_rule(
+            make_rule("R6-1", "R6", check_mode="stacking", expected={"subject_on_top": True}),
+            1,
+        )
+        passed, detail = VERIFIER.compare_actual(
+            rule, {"subject_on_top": True}, self.facts(None, truncated=True)
+        )
+        self.assertFalse(passed)
+        self.assertIn("没有得出层叠结论", detail["reason"])
+        self.assertTrue(detail["truncated"])
+
+    def test_malformed_actual_is_red(self) -> None:
+        rule = VERIFIER.validate_rule(
+            make_rule("R6-1", "R6", check_mode="stacking", expected={"subject_on_top": True}),
+            1,
+        )
+        passed, detail = VERIFIER.compare_actual(rule, {"subject_on_top": True}, 0)
+        self.assertFalse(passed)
+        self.assertEqual(detail["reason"], "not-a-stacking-fact")
+
+    def test_stacking_red_is_not_mistaken_for_a_tool_equivalence_gap(self) -> None:
+        """布尔差异不是序列化差异；误判成工具缺口会让真实层叠事故被挂起。"""
+        self.assertFalse(
+            VERIFIER.suspect_tool_equivalence(
+                {"subject_on_top": True}, {"subject_on_top": False}
+            )
+        )
+
+    def test_report_carries_the_stacking_red_end_to_end(self) -> None:
+        rules = [
+            make_rule("R6-1", "R6", check_mode="stacking", expected={"subject_on_top": True})
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            space = Workspace(Path(directory), rules)
+            report = space.report(
+                "green",
+                render=space.render(
+                    {
+                        "R6-1": {
+                            "status": "ok",
+                            "actual": self.facts(
+                                False, stacking_hints=["本元素 position: static，z-index: 10 不生效"]
+                            ),
+                        }
+                    }
+                ),
+            )
+
+        self.assertEqual(report["overall"], "red")
+        entry = report["entries"][0]
+        comparison = entry["actual"]["render"]["comparison"]
+        self.assertFalse(comparison["actual_subject_on_top"])
+        self.assertIn("z-index: 10 不生效", comparison["stacking_hints"][0])
+        self.assertNotIn("reason_class", entry)
+        self.assertEqual(
+            VERIFIER.report_exit_code("green", report["overall"]),
+            VERIFIER.EXIT_NOT_GREEN,
+        )
+
+
 class MultiPageRenderMergeTests(unittest.TestCase):
     """跨页契约只能逐页注入再合并。
 

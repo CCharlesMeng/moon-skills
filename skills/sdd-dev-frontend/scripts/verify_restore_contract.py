@@ -37,6 +37,7 @@ CHECK_MODES = {
     "overflow",
     "overlap",
     "clip",
+    "stacking",
     "visual",
 }
 LAYERS = {"static", "render", "visual"}
@@ -170,6 +171,22 @@ def validate_rule(raw: Any, index: int) -> dict[str, Any]:
                 f"必须是 {sorted(VISUAL_BLIND_SPOTS)} 之一"
             )
         rule["visual_blind_spot"] = blind_spot
+    if check_mode == "stacking":
+        # 层叠顺序是机器可判的（浏览器合成后的命中顺序），所以它必须落在 render 层。
+        # 允许它走 visual 就等于把「谁盖住谁」重新推回人看图，而那正是撤掉 stacking
+        # 盲区要解决的问题。
+        if "render" not in layers:
+            raise ContractError(
+                f"规则 {rule_id} 的 stacking 模式必须要求 render 层：层叠顺序由命中顺序判定"
+            )
+        declared = expected_for_layer(rule, "render")
+        if not isinstance(declared, dict) or not isinstance(
+            declared.get("subject_on_top"), bool
+        ):
+            raise ContractError(
+                f"规则 {rule_id} 的 stacking 模式必须声明 expected.subject_on_top 为布尔值："
+                "层叠规则要说清定位到的元素该在上面还是下面"
+            )
     if "static" in layers and not isinstance(rule.get("static_check"), dict):
         raise ContractError(f"规则 {rule_id} 要求 static 层但没有 static_check")
 
@@ -813,6 +830,31 @@ def compare_actual(rule: dict, expected: Any, actual: Any) -> tuple[bool, dict[s
             "threshold_css_px": tolerance,
             "actual_max_css_px": measured,
         }
+    if mode == "stacking":
+        if not isinstance(actual, dict):
+            return False, {
+                "expected": expected,
+                "actual": actual,
+                "reason": "not-a-stacking-fact",
+            }
+        observed = actual.get("subject_on_top")
+        detail = {
+            "expected_subject_on_top": expected.get("subject_on_top"),
+            "actual_subject_on_top": observed,
+            "probes": actual.get("probes", []),
+        }
+        for key in ("probe_method", "candidates", "truncated", "stacking_hints"):
+            if key in actual:
+                detail[key] = actual[key]
+        if observed is None:
+            # 采集器量不出结论时给 null，不给 True。这里必须判不通过：把「没量到」
+            # 当成「没问题」正是层叠检查最容易自动变绿的地方。
+            detail["reason"] = (
+                "采集器没有得出层叠结论：两者在本场景下没有可比对的重叠区域，"
+                "或 with_selector 命中面过宽被截断"
+            )
+            return False, detail
+        return observed == expected.get("subject_on_top"), detail
     if mode == "visual":
         return False, {"reason": "visual mode must be decided by visual-results"}
     raise ContractError(f"未知 check_mode：{mode}")

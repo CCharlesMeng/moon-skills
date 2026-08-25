@@ -72,7 +72,7 @@
 - **阴影**：`box-shadow` 的计算样式就是字符串，比对器已有分量顺序归一化，走 render 层判值即可；而 layout checklist 本来就写明「阴影不好看且无功能后果 → 不报」，截了也不采纳。
 - **字体栅格**：视觉缓存键里含浏览器引擎版本与字体指纹，等于承认它是环境属性——换个小版本整体失效重截，看到的差异是环境不是实现，也改不动。该判的是 `font-family` / `font-size` / `font-weight` / `line-height` 这些 longhand，全部机器可判。
 
-**几何不进 visual。** 「是不是被裁了、裁掉多少」用 `clip`，遮挡用 `overlap`，溢出用 `overflow`——这三个 `check_mode` 都在，别把它们推进盲区。
+**几何与层叠都不进 visual。** 「是不是被裁了、裁掉多少」用 `clip`，遮挡量用 `overlap`，溢出用 `overflow`，「谁压在谁上面」用 `stacking`——这四个 `check_mode` 都在，别把它们推进盲区。
 
 字面值恰好长得像分层键时（例如 `expected` 就是 `{"visual": "hidden"}`）会命中第二条被拒——改写成 `{"render": {"visual": "hidden"}}` 明确层归属。
 
@@ -84,7 +84,44 @@
 | `numeric` | 数字或 CSS px，默认 ±1 CSS px；非数值叶子先做 CSS 序列化等价比对（见下） |
 | `color` | 颜色规范化后精确匹配 |
 | `overflow` / `overlap` / `clip` | 最大值不超过 1 CSS px |
+| `stacking` | 相交区域的实际命中顺序等于 `expected.subject_on_top` |
 | `visual` | 只能由视觉补证结果决定；缺补证为 YELLOW |
+
+### `stacking`：`overlap` 答不了「谁在上面」
+
+`overlap` 量的是矩形相交多少，而蒙层、下拉、吸顶、tooltip **本来就该重叠**——相交量不为 0 是它们的正常表现，所以 z-index 事故恰好全落在 `overlap` 判不动的地方。读 `z-index` 的计算样式也不行：最常见的事故是祖先的 `transform` / `opacity` / `filter` 建了新层叠上下文把子树整块关进去，此时 z-index 写多大都没用，而它的计算值完全正常。
+
+判据因此取**浏览器合成后的真实命中顺序**：在两者相交区域中心打点，看 `elementsFromPoint` 先返回谁。
+
+```json
+{
+  "id": "R6-2",
+  "check_mode": "stacking",
+  "expected": {"subject_on_top": true},
+  "required_layers": ["render"]
+}
+```
+
+对应 adapter 侧 `collect`：
+
+```json
+{"kind": "stacking", "with_selector": ".page-content"}
+```
+
+四条约束：
+
+| 约束 | 理由 |
+| --- | --- |
+| `expected.subject_on_top` 必须是布尔值，编译期校验 | 「谁必须在上」就是这条规则的全部判据，缺了它规则没有内容 |
+| 必须要求 `render` 层，不得走 `visual` | 命中顺序是机器可判的；允许它进 visual 就是把「谁盖住谁」推回人看图 |
+| `with_selector` 必填 | 层叠是二元关系，不说和谁比就无从判起 |
+| 采集器给不出结论时返回 `subject_on_top: null`，报告判 RED | 两者不重叠、或 `with_selector` 命中面过宽被截断时，「没量到」不能算「没问题」 |
+
+`subject_on_top: false` 同样是合法期望——装饰层必须压在内容之下，和 tooltip 必须浮在最上是同一类可冻结事实。
+
+判不通过时报告带 `stacking_hints`，直接写出 z-index 为什么不生效（`本元素 position: static，z-index: 10 不生效` / `祖先 div.card 建立了新层叠上下文：transform: …`）。**它是提示不是判据**：建立层叠上下文的条件是一份还在变的长枚举，这里只覆盖实测最常撞上的两条，结论永远由命中顺序给出。
+
+两条已知边界：`containsNode` 与 `closest()` 同样不跨 shadow 边界；驱动只有 `elementFromPoint` 时退化为「只知道最顶上那个」，此时 `probe_method` 会回传实际用的是哪一种。
 
 ### CSS 序列化等价（`numeric` 非数值叶子与 `token` / `state_selector` 针）
 
@@ -158,7 +195,7 @@
 
 `locators` 按 `role/name` → 精确文案 → 稳定 test id → CSS 排序；数组可以提前结束。CSS 禁止构建生成随机 class。期望值、容差和设计事实出处不得写入 adapter。
 
-浏览器采集 `kind` 支持：`count`、`text`、`order`、`structure`、`style`、`rect`、`state`、`overflow`、`overlap`、`clip`。状态必须先由浏览器驱动实际触发；采集脚本只读，不代替 hover、focus、loading 或 fixture。
+浏览器采集 `kind` 支持：`count`、`text`、`order`、`structure`、`style`、`rect`、`state`、`overflow`、`overlap`、`clip`、`stacking`。`overlap` 与 `stacking` 的 `with_selector` 与主定位走同一条 shadow 规则（逐 root 查再合并）。状态必须先由浏览器驱动实际触发；采集脚本只读，不代替 hover、focus、loading 或 fixture。
 
 ### 三件与组件库形态相关的行为
 

@@ -206,6 +206,195 @@
     return Math.min(width, height);
   };
 
+  const describeElement = (element) => {
+    if (!element) return null;
+    const testid = element.getAttribute ? element.getAttribute("data-testid") : null;
+    const classes = Array.from(element.classList || []).join(".");
+    return (
+      element.tagName.toLowerCase() +
+      (testid ? `[data-testid="${testid}"]` : "") +
+      (classes ? `.${classes}` : "")
+    );
+  };
+
+  // 与 closest() 同一条边界：不跨 shadow 边界。
+  const containsNode = (ancestor, node) => {
+    let current = node;
+    while (current) {
+      if (current === ancestor) return true;
+      current = current.parentElement;
+    }
+    return false;
+  };
+
+  const cssValue = (style, name) => (style.getPropertyValue(name) || "").trim();
+
+  // 逐条都必须是**计算样式默认值落在下面中性表里**的属性，否则会在每个元素上误命中，
+  // 把真正的成因挤掉。`mask` 就是这样被换成 `mask-image` 的：Chrome 给 mask 的默认
+  // 计算值是一整段 `none 0% 0% / auto repeat border-box border-box add match-source`。
+  const STACKING_CONTEXT_PROPERTIES = [
+    "transform",
+    "translate",
+    "rotate",
+    "scale",
+    "filter",
+    "backdrop-filter",
+    "perspective",
+    "clip-path",
+    "mask-image",
+    "mix-blend-mode",
+    "isolation",
+    "contain",
+    "will-change"
+  ];
+  const STACKING_NEUTRAL_VALUES = ["", "none", "normal", "auto", "0"];
+  // with_selector 命中面过宽时，逐对打点会把整页拖垮。超预算不是「量到没问题」，
+  // 见 stackingFacts 末尾：截断时不给 true。
+  const MAX_STACKING_PROBES = 32;
+
+  const stackingContextReason = (element) => {
+    const style = window.getComputedStyle(element);
+    const position = cssValue(style, "position");
+    if (position === "fixed" || position === "sticky") return `position: ${position}`;
+    const zIndex = cssValue(style, "z-index");
+    if (zIndex && zIndex !== "auto" && position && position !== "static") {
+      return `position: ${position} + z-index: ${zIndex}`;
+    }
+    const opacity = cssValue(style, "opacity");
+    if (opacity && Number(opacity) < 1) return `opacity: ${opacity}`;
+    for (const property of STACKING_CONTEXT_PROPERTIES) {
+      const value = cssValue(style, property);
+      if (value && !STACKING_NEUTRAL_VALUES.includes(value)) return `${property}: ${value}`;
+    }
+    return null;
+  };
+
+  /* 「为什么输了」——这是提示，不是判据。判据永远是下面的命中顺序。
+   * 建立层叠上下文的条件是一份还在变的长枚举，这里只覆盖实测最常撞上的两条，
+   * 因为它们的共同点是「z-index 的计算值完全正常，却不起作用」——只看样式值
+   * 排查不出来，而这正是人要花掉一轮的地方。指不出成因时返回空数组，不编。 */
+  const stackingHints = (subject) => {
+    const hints = [];
+    const style = window.getComputedStyle(subject);
+    const zIndex = cssValue(style, "z-index");
+    const position = cssValue(style, "position");
+    if (zIndex && zIndex !== "auto" && (position === "" || position === "static")) {
+      const parent = subject.parentElement;
+      const display = parent ? cssValue(window.getComputedStyle(parent), "display") : "";
+      if (!/flex|grid/.test(display)) {
+        hints.push(`本元素 position: static，z-index: ${zIndex} 不生效`);
+      }
+    }
+    let ancestor = subject.parentElement;
+    while (ancestor) {
+      const reason = stackingContextReason(ancestor);
+      if (reason) {
+        hints.push(`祖先 ${describeElement(ancestor)} 建立了新层叠上下文：${reason}`);
+        break;
+      }
+      ancestor = ancestor.parentElement;
+    }
+    return hints;
+  };
+
+  const elementStackAt = (x, y) => {
+    if (typeof document.elementsFromPoint === "function") {
+      return { nodes: document.elementsFromPoint(x, y), method: "elementsFromPoint" };
+    }
+    // 退化形态只知道最顶上那个，判不出「第三个元素盖住了两边」之外的排序，
+    // 所以 probe_method 要回传，报告里能看出这条结论是哪种精度得来的。
+    if (typeof document.elementFromPoint === "function") {
+      const node = document.elementFromPoint(x, y);
+      return { nodes: node ? [node] : [], method: "elementFromPoint" };
+    }
+    throw new Error("stacking 需要 document.elementsFromPoint 或 elementFromPoint，当前驱动都没有");
+  };
+
+  /* 层叠顺序。`overlap` 只量矩形相交多少，答不出「谁压在谁上面」——蒙层、下拉、
+   * 吸顶这些元素本来就该重叠，相交量不为 0 是正常表现，而 z-index 事故恰好全发生
+   * 在这类元素之间。读 z-index 计算值同样不行：最常见的事故是祖先的 transform /
+   * opacity / filter 建了新层叠上下文把子树整块关进去，此时 z-index 写多大都没用，
+   * 而它的计算值完全正常。所以判据取浏览器合成后的真实命中顺序：在两者相交区域
+   * 中心打点，看谁先被返回。 */
+  const stackingFacts = (nodes, spec) => {
+    if (!spec || !spec.with_selector) {
+      throw new Error("stacking 必须给 with_selector：层叠规则要说清和谁比");
+    }
+    const others = deepQueryAll(spec.with_selector);
+    const pairs = [];
+    for (const subject of nodes) {
+      for (const other of others) {
+        if (subject !== other) pairs.push([subject, other]);
+      }
+    }
+
+    const probes = [];
+    let probed = 0;
+    let truncated = false;
+    let method = null;
+    let violatingSubject = null;
+
+    for (const [subject, other] of pairs) {
+      if (probed >= MAX_STACKING_PROBES) {
+        truncated = true;
+        break;
+      }
+      const base = { subject: describeElement(subject), with: describeElement(other) };
+      if (containsNode(subject, other) || containsNode(other, subject)) {
+        // 祖先与后代之间的命中顺序由文档树决定，不携带层叠信息；判它等于判一句废话。
+        probes.push({ ...base, winner: "not-comparable", reason: "ancestor-descendant" });
+        continue;
+      }
+      const a = rect(subject);
+      const b = rect(other);
+      const left = Math.max(a.left, b.left);
+      const right = Math.min(a.right, b.right);
+      const top = Math.max(a.top, b.top);
+      const bottom = Math.min(a.bottom, b.bottom);
+      if (right <= left || bottom <= top) {
+        probes.push({ ...base, winner: "not-comparable", reason: "no-overlap" });
+        continue;
+      }
+
+      const point = { x: (left + right) / 2, y: (top + bottom) / 2 };
+      const stack = elementStackAt(point.x, point.y);
+      method = stack.method;
+      probed += 1;
+      const subjectIndex = stack.nodes.findIndex((node) => containsNode(subject, node));
+      const otherIndex = stack.nodes.findIndex((node) => containsNode(other, node));
+      let winner;
+      if (subjectIndex < 0 && otherIndex < 0) winner = "neither";
+      else if (otherIndex < 0) winner = "subject";
+      else if (subjectIndex < 0) winner = "other";
+      else winner = subjectIndex < otherIndex ? "subject" : "other";
+      if (winner !== "subject" && !violatingSubject) violatingSubject = subject;
+      probes.push({
+        ...base,
+        winner,
+        point,
+        top_of_stack: describeElement(stack.nodes[0])
+      });
+    }
+
+    const decisive = probes.filter((probe) => probe.winner !== "not-comparable");
+    let subjectOnTop;
+    if (violatingSubject) {
+      // 已经量到反例，截断与否都不改变结论。
+      subjectOnTop = false;
+    } else if (truncated || decisive.length === 0) {
+      // 没量全、或压根没有可比对：不给结论。给 true 就是把「没测到」说成「没问题」。
+      subjectOnTop = null;
+    } else {
+      subjectOnTop = true;
+    }
+
+    const facts = { subject_on_top: subjectOnTop, probes, candidates: others.length };
+    if (method) facts.probe_method = method;
+    if (truncated) facts.truncated = true;
+    if (violatingSubject) facts.stacking_hints = stackingHints(violatingSubject);
+    return facts;
+  };
+
   const clippingAmount = (element) => {
     const value = rect(element);
     let maximum = Math.max(
@@ -293,9 +482,9 @@
       return Math.max(0, ...nodes.map(clippingAmount));
     }
     if (kind === "overlap") {
-      const others = spec && spec.with_selector
-        ? Array.from(document.querySelectorAll(spec.with_selector))
-        : nodes;
+      // with_selector 走 deepQueryAll，与主定位同一条 shadow 规则；用
+      // document.querySelectorAll 的话，组件库形态下这一侧会恒空而判绿。
+      const others = spec && spec.with_selector ? deepQueryAll(spec.with_selector) : nodes;
       let maximum = 0;
       for (let first = 0; first < nodes.length; first += 1) {
         for (let second = 0; second < others.length; second += 1) {
@@ -304,6 +493,9 @@
         }
       }
       return maximum;
+    }
+    if (kind === "stacking") {
+      return stackingFacts(nodes, spec);
     }
     throw new Error(`unsupported collect kind: ${kind}`);
   };

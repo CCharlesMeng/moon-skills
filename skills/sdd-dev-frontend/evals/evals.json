@@ -761,7 +761,7 @@
         "字体不进 visual：font-family / font-size / font-weight / line-height 逐项走 render 层，栅格差异不作判据",
         "封面图那条填 visual_blind_spot: image-focus，理由是裁切后露出哪一部分不可由几何导出；但「是否被裁、裁掉多少」仍用 clip / overflow 走 render 层，不并进 visual",
         "半透明信息条那条填 visual_blind_spot: composite，理由是多层混合与背景滤镜的合成结果推不出来；遮挡几何仍用 overlap 走 render 层",
-        "不使用 shadow / font-raster / image-clip / stacking 这些已撤销的取值，编译期会因 visual_blind_spot 不合法而拒绝",
+        "不使用 shadow / font-raster / image-clip / stacking 这些已撤销的 visual_blind_spot 取值，编译期会因 visual_blind_spot 不合法而拒绝；层叠顺序另有 check_mode: stacking 走 render 层",
         "不把判不了的规则以「等机器盲区」为由塞进 visual 层；指不出两类之一时写 render 或记已知缺口"
       ]
     },
@@ -820,6 +820,24 @@
         "handoff 清单条数与最终 P8 人话条目逐类一致：建议级 3、Open Question 1、Deferred 1、规范候选 2",
         "按退出门禁 5 对账验证组合、模块执行状态、UNVERIFIED、DEFERRED、Open Question 与建议级",
         "最终先给三行：带验收限定的完成状态、acceptance.md 路径、唯一下一步；有 Deferred 时写解除条件"
+      ]
+    },
+    {
+      "id": 51,
+      "name": "stacking-order-is-a-render-rule-not-a-visual-blind-spot",
+      "target": "references/restore-contract.md",
+      "gates": [
+        "硬门禁 12"
+      ],
+      "prompt": "Phase A2 起草规则草稿。区块规格写明：筛选面板展开时，下拉菜单必须完整浮在下方表格之上；表格容器上有一条 `transform: translateZ(0)`。现场实测下拉被表格盖住了一半。请给出这条的 check_mode、required_layers、expected 与 adapter 的 collect。",
+      "expected_output": "check_mode: stacking、required_layers: [render]、expected: {\"subject_on_top\": true}，collect 写 {\"kind\": \"stacking\", \"with_selector\": \"<表格容器>\"}。",
+      "expectations": [
+        "用 check_mode: stacking 而不是 overlap：下拉与表格本来就该重叠，相交量不为 0 是正常表现，overlap 判不出「谁压在谁上面」",
+        "不写成 style 规则去比对 z-index 计算值：祖先的 transform 建了新层叠上下文时 z-index 计算值完全正常却不生效，比对数值看不出来",
+        "不填 visual_blind_spot、不进 visual 层：命中顺序是机器可判的，stacking 是已撤销的盲区取值，编译期会拒",
+        "expected 写 {\"subject_on_top\": true} 布尔值；缺这个键编译期就拒，因为规则没有判据",
+        "adapter 的 collect 必须给 with_selector 指明和谁比；层叠是二元关系，缺它无从判起",
+        "不把 transform 那条当成本 Story 要顺手删掉的东西——先让规则判红，修法归实现步，且报告的 stacking_hints 已经指出成因"
       ]
     }
   ]

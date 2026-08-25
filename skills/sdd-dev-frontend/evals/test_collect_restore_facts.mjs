@@ -68,6 +68,8 @@ class Element {
       bottom: (options.y ?? 0) + (options.height ?? 40),
     };
     this._styles = { ...(options.styles || {}) };
+    // The stub cannot paint, so fixtures declare paint order explicitly; higher wins.
+    this.paintIndex = options.paintIndex ?? 0;
     if (options.textContent != null && options.textContent !== "") {
       this.childNodes.push(new TextNode(options.textContent));
     }
@@ -160,6 +162,15 @@ function createDocument(bodyChildren) {
     },
     querySelectorAll(selector) {
       return all().filter((element) => matchesSimpleSelector(element, selector));
+    },
+    // Topmost-first, matching the browser contract the collector relies on.
+    elementsFromPoint(x, y) {
+      return all()
+        .filter((element) => {
+          const box = element.getBoundingClientRect();
+          return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+        })
+        .sort((first, second) => second.paintIndex - first.paintIndex);
     },
     createTreeWalker(root, whatToShow) {
       assert.equal(whatToShow, NodeFilter.SHOW_ELEMENT);
@@ -275,6 +286,155 @@ function clipInput(ruleId) {
     fixture_status: {},
   };
 }
+
+function stackingInput(ruleId) {
+  return {
+    contract: {
+      contract_sha256: "test-sha",
+      rules: [
+        {
+          id: ruleId,
+          required_layers: ["render"],
+          state_scenario: { name: "default" },
+          expected: { subject_on_top: true },
+          check_mode: "stacking",
+        },
+      ],
+    },
+    adapter: {
+      schema_version: 1,
+      rules: {
+        [ruleId]: {
+          locators: [{ strategy: "testid", testid: "tooltip" }],
+          source_files: ["src/view.tsx"],
+          collect: { kind: "stacking", with_selector: ".overlay" },
+        },
+      },
+    },
+    fixture_status: {},
+  };
+}
+
+// Tooltip and overlay always intersect around (225, 150); only paint order differs,
+// which is exactly the defect `overlap` cannot see — it measures the same intersection
+// either way. The card ancestor carries a transform so the RED case can also prove the
+// hint names the stacking context that traps the tooltip.
+function stackingScene({ tooltipPaintIndex, overlayPaintIndex }) {
+  const card = new Element("div", {
+    classes: ["card"],
+    x: 0,
+    y: 0,
+    width: 600,
+    height: 400,
+    styles: { transform: "matrix(1, 0, 0, 1, 0, 10)" },
+  });
+  const tooltip = new Element("div", {
+    attributes: { "data-testid": "tooltip" },
+    classes: ["tooltip"],
+    x: 100,
+    y: 100,
+    width: 200,
+    height: 80,
+    paintIndex: tooltipPaintIndex,
+  });
+  card.appendChild(tooltip);
+  const overlay = new Element("div", {
+    classes: ["overlay"],
+    x: 150,
+    y: 120,
+    width: 300,
+    height: 200,
+    paintIndex: overlayPaintIndex,
+  });
+  return [card, overlay];
+}
+
+test("stacking collect: GREEN tooltip above overlay, RED after paint-order mutation", () => {
+  const ruleId = "R6-stacking";
+  const input = stackingInput(ruleId);
+
+  const green = runCollector(input, {
+    elements: stackingScene({ tooltipPaintIndex: 3, overlayPaintIndex: 2 }),
+  });
+  assert.equal(green.rules[ruleId].status, "ok");
+  assert.equal(green.rules[ruleId].actual.subject_on_top, true);
+  assert.equal(green.rules[ruleId].actual.probes[0].winner, "subject");
+
+  const red = runCollector(input, {
+    // Only this differs from GREEN: the overlay now paints above the tooltip.
+    elements: stackingScene({ tooltipPaintIndex: 1, overlayPaintIndex: 2 }),
+  });
+  assert.equal(red.rules[ruleId].status, "ok");
+  assert.equal(red.rules[ruleId].actual.subject_on_top, false);
+  assert.equal(red.rules[ruleId].actual.probes[0].winner, "other");
+  assert.match(
+    red.rules[ruleId].actual.stacking_hints[0],
+    /div\.card 建立了新层叠上下文：transform/
+  );
+
+  // False-negative self-check: restoring the paint order must make the RED assertion fail.
+  const restored = runCollector(input, {
+    elements: stackingScene({ tooltipPaintIndex: 3, overlayPaintIndex: 2 }),
+  });
+  assert.throws(() => {
+    assert.equal(restored.rules[ruleId].actual.subject_on_top, false);
+  }, /strictly equal/i);
+});
+
+test("stacking collect: geometric overlap alone never decides the winner", () => {
+  const ruleId = "R6-stacking";
+  const input = stackingInput(ruleId);
+
+  const scenes = [
+    stackingScene({ tooltipPaintIndex: 3, overlayPaintIndex: 2 }),
+    stackingScene({ tooltipPaintIndex: 1, overlayPaintIndex: 2 }),
+  ];
+  const verdicts = scenes.map(
+    (elements) => runCollector(input, { elements }).rules[ruleId].actual.subject_on_top
+  );
+
+  // Same geometry in both scenes, opposite verdicts: this is the gap `overlap` left open.
+  assert.deepEqual(verdicts, [true, false]);
+});
+
+test("stacking collect: no overlap yields no verdict rather than a passing one", () => {
+  const ruleId = "R6-stacking";
+  const input = stackingInput(ruleId);
+
+  const tooltip = new Element("div", {
+    attributes: { "data-testid": "tooltip" },
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 40,
+    paintIndex: 3,
+  });
+  const overlay = new Element("div", {
+    classes: ["overlay"],
+    x: 400,
+    y: 400,
+    width: 100,
+    height: 40,
+    paintIndex: 2,
+  });
+  const result = runCollector(input, { elements: [tooltip, overlay] });
+
+  assert.equal(result.rules[ruleId].status, "ok");
+  assert.equal(result.rules[ruleId].actual.subject_on_top, null);
+  assert.equal(result.rules[ruleId].actual.probes[0].reason, "no-overlap");
+});
+
+test("stacking collect: missing with_selector is an error, not an empty pass", () => {
+  const ruleId = "R6-stacking";
+  const input = stackingInput(ruleId);
+  delete input.adapter.rules[ruleId].collect.with_selector;
+
+  const result = runCollector(input, {
+    elements: stackingScene({ tooltipPaintIndex: 3, overlayPaintIndex: 2 }),
+  });
+  assert.equal(result.rules[ruleId].status, "capture_error");
+  assert.match(result.rules[ruleId].reason, /with_selector/);
+});
 
 test("text collect: GREEN matching copy, RED after text mutation", () => {
   const ruleId = "R1-text";
