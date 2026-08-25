@@ -34,7 +34,7 @@
 
 ### 3. 核实上游事实
 
-按 [共享执行契约](../../../docs/skills/frontend-sdd/执行契约.md) 读取 TaskPacket。核实 `baseline_source`、目录、路由、状态、还原 Task 与风险 token：
+按 [共享执行契约](./execution-contract.md) 读取 TaskPacket。核实 `baseline_source`、目录、路由、状态、还原 Task 与风险 token：
 
 - 字段是候选索引；缺席不表示低风险。
 - `prototype` 必须实测目录存在且包含相关 HTML，否则重新判档并记录冲突。

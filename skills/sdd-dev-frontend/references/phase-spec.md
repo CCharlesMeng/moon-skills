@@ -1,6 +1,6 @@
 # Phase A：规格与冻结基线
 
-只在进入 Phase A 时读取。基线源语义来自 [共享执行契约](../../../docs/skills/frontend-sdd/执行契约.md)，QA 声明形状来自 [qa-baseline-template.md](./qa-baseline-template.md)。
+只在进入 Phase A 时读取。基线源语义来自 [共享执行契约](./execution-contract.md)，QA 声明形状来自 [qa-baseline-template.md](./qa-baseline-template.md)。
 
 ## 代码侧勘察模式
 

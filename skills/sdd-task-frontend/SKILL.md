@@ -8,9 +8,9 @@ disable-model-invocation: true
 
 ## 边界
 
-一次只处理一个前端仓 × 一个 Story。`sdd-task` 负责遍历、目录与 `codespec` CLI；本 skill 消费交接事实、按「输入」表自取其余，写 `tasks.md`、`alpha-tests.md`。共享所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则以 [前端 SDD 执行契约](../../docs/skills/frontend-sdd/执行契约.md) 为唯一事实源。
+一次只处理一个前端仓 × 一个 Story。`sdd-task` 负责遍历、目录与 `codespec` CLI；本 skill 消费交接事实、按「输入」表自取其余，写 `tasks.md`、`alpha-tests.md`。共享所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则以 [前端 SDD 执行契约](../sdd-dev-frontend/references/execution-contract.md) 为唯一事实源。
 
-计划回答四件事：**什么必须成立、改哪些文件、每个文件实现什么功能、按什么顺序**。粒度写到「打开哪个文件、在里面实现什么」；代码写法、命令、浏览器场景、验证广度和证据结论由 `sdd-dev-frontend` 决定，计划没识别到的连带改动也由它按[扩散承接](../../docs/skills/frontend-sdd/执行契约.md#扩散承接)接住——所以计划不必为了保险把文件清单写宽。
+计划回答四件事：**什么必须成立、改哪些文件、每个文件实现什么功能、按什么顺序**。粒度写到「打开哪个文件、在里面实现什么」；代码写法、命令、浏览器场景、验证广度和证据结论由 `sdd-dev-frontend` 决定，计划没识别到的连带改动也由它按[扩散承接](../sdd-dev-frontend/references/execution-contract.md#扩散承接)接住——所以计划不必为了保险把文件清单写宽。
 
 ## 输入
 
@@ -32,6 +32,7 @@ disable-model-invocation: true
 | 仓库规范                                  | 已成立、可跨 Requirement 复用的 `PATTERN-*`（请求封装、三态处理、通用组件、路由装配、测试定位约定）    | `sdd-init-frontend` 产出的 `frontend-baselines/<repo-id>/`，按 `index.md` 场景索引取 ID；先读 `structure.md` 的形态，它决定其余判据是否适用 | 自取 —— 无 baseline 时按 `search_paths` 内代码勘察既有资产，不因此停           |
 | `detection_ref`                       | 测试框架探测规则，判据只有这一份                                                | `[sdd-task/references/test-framework-detection.md](../sdd-task/references/test-framework-detection.md)`             | 自取 —— 路径固定，上游不给也照此读                                        |
 | `extraction_ref`                      | 验收用例提炼规则，判据只有这一份                                                | `[sdd-task/references/acceptance-criteria-extraction.md](../sdd-task/references/acceptance-criteria-extraction.md)` | 自取 —— 同上                                                   |
+| `contract_ref`                        | 共享执行契约：所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则                   | `[sdd-dev-frontend/references/execution-contract.md](../sdd-dev-frontend/references/execution-contract.md)`         | 自取 —— 路径固定；文件确实不存在说明 `sdd-dev-frontend` 未与本 skill 一起安装，**停**并要求补装，不凭记忆重述字段语义 |
 
 
 
@@ -58,12 +59,12 @@ disable-model-invocation: true
 1. 使用交接给定的目录与 schema，不调用 `codespec` CLI、不创建替代目录。输入缺失只按「输入」表最后一列处理：该停的停、该降级的显式标注、该自取的自己取，不静默补造。
 2. `tasks.md` 是唯一执行清单，`alpha-tests.md` 是唯一证据账本；不新增交接文件。
 3. 每个受影响文件都写清位置、职责与对外契约；这三层缺一就不算计划，不能推给 Dev 现场决定。
-4. 既有做法默认沿用且只写引用，按[执行契约](../../docs/skills/frontend-sdd/执行契约.md#计划与实现的分层边界)。三态处理、请求封装、通用组件、测试定位约定只在本 Story 偏离它们、或被某条 AC/AT 直接断言时才展开。
+4. 既有做法默认沿用且只写引用，按[执行契约](../sdd-dev-frontend/references/execution-contract.md#计划与实现的分层边界)。三态处理、请求封装、通用组件、测试定位约定只在本 Story 偏离它们、或被某条 AC/AT 直接断言时才展开。
 5. 不写可以直接粘贴运行的代码：函数体、JSX/模板片段、CSS 规则、对象字面量、具体 API 调用语句、内部子组件与 helper 怎么拆，一律属于 Dev。
 6. 视觉数值只来自外部基线。无外部基线时不写 px、色值、字号、圆角、阴影，也不自创响应式规格。
 7. `baseline_source` 必填但只是下游确认输入；参照页只给候选。
 8. 一个 Task 一种形态；切不开时写明理由并分轮。样式集中在还原 Task，不设收尾样式 Task。
-9. 每个 Task 都改到产品代码或测试代码；确认、勘察、评审、补文档不占 Task 编号。Task 数、单 Task 文件数与步骤数按[执行契约的规模判据](../../docs/skills/frontend-sdd/执行契约.md#规模)，越界先切分，切不动就回流拆 Story。
+9. 每个 Task 都改到产品代码或测试代码；确认、勘察、评审、补文档不占 Task 编号。Task 数、单 Task 文件数与步骤数按[执行契约的规模判据](../sdd-dev-frontend/references/execution-contract.md#规模)，越界先切分，切不动就回流拆 Story。
 10. 步骤按形态裁剪，不把每个 Task 都凑成同样多步；只写声明与因果意图，不写精确命令、浏览器矩阵、状态矩阵、全量回归或独立检视。
 11. 还原取证以页面为单位，标明归属轮；不为单个 Task 安排页面级复验。
 12. 文件清单只写已确认范围；有风险没定论的写进「可能扩散」，不靠扩大清单兜底。

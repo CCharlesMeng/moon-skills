@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 ## 核心契约
 
-一次只处理一个前端仓 × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](../../docs/skills/frontend-sdd/执行契约.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
+一次只处理一个前端仓 × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
 
 `tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 
@@ -133,7 +133,7 @@ YELLOW 按原因转为补证、`UNVERIFIED`、`DEFERRED` 或真实 RED；不就�
 
 先输出三行：带验收限定的完成状态、`<story-dir>/acceptance.md`、唯一下一步。全部 `PROVEN` 时写“可验收”；有 `UNVERIFIED` 时写补验方式；有 `DEFERRED` 时写解除条件。
 
-**跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](../../docs/skills/frontend-sdd/执行契约.md#声明与状态)。
+**跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](./references/execution-contract.md#声明与状态)。
 
 **有待决项时当场问，不要只给路径。** `acceptance.md` 的「需要你处理」里每条待决项都要在对话里问出来：一轮问完（P1、P7），每条给出可选项与各自后果，别让用户自己去文档里找该决定什么。用户答完后按 `aggregate --decisions` 重渲染，答复连同时间就地记回该条目下——**同一件事不许下一轮再问一遍**，而三个月后「当时为什么这么定」也查得到。给不出选项的（需要外部信息才能判）照实说明缺什么。
 

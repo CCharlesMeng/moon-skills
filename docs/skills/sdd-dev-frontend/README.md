@@ -523,12 +523,12 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 - [团队起步套件.md](./团队起步套件.md)：没有 `sdd-task` / `sdd-design` 时，如何手写最小合规产物快速试跑
 - [背景介绍.md](./背景介绍.md)：框架形成时的项目与流程背景
 - [SKILL.md](../../../skills/sdd-dev-frontend/SKILL.md)：完整编排规则、硬门禁和失败处理
-- [前端 SDD 执行契约](../frontend-sdd/执行契约.md)：跨 Skill 的所有权、状态与 TaskPacket 语义
+- [前端 SDD 执行契约](../../../skills/sdd-dev-frontend/references/execution-contract.md)：跨 Skill 的所有权、状态与 TaskPacket 语义
 - [方案设计.md](./方案设计.md)：设计取舍与流程蓝图
 - [样式还原验证改造计划.md](./样式还原验证改造计划.md)：V2 契约化还原的已实施计划
 - [ADR](./adr/)：关键架构决策记录
 - [QA 基线模板](../../../skills/sdd-dev-frontend/references/qa-baseline-template.md)：十个固定维度
-- [前端 Task 切分与步骤形状](../frontend-sdd/执行契约.md#task-切分与步骤形状)：还原 Task、样式文件归属与计划边界
+- [前端 Task 切分与步骤形状](../../../skills/sdd-dev-frontend/references/execution-contract.md#task-切分与步骤形状)：还原 Task、样式文件归属与计划边界
 - [还原契约与机器报告](../../../skills/sdd-dev-frontend/references/restore-contract.md)：V2 JSON 工件、命令和三色语义
 - [`alpha-tests.md` 还原证据扩容](../../../skills/sdd-dev-frontend/references/alpha-tests-restore.md)：还原证据和 AC 映射
 - [检视包接线](../../../skills/sdd-dev-frontend/references/review-pack-adapter.md)：角色 ↔ lens 映射；检查项、定级与回传契约都在 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)

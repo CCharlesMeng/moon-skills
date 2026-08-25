@@ -51,9 +51,9 @@ npx skills add CCharlesMeng/moon-skills
 
 ## 想深入了解
 
-前端链路的共享契约与设计文档都在 `docs/skills/` 下：
+设计与治理文档在 `docs/skills/` 下；**agent 运行期要读的规则一律在 `skills/` 内**，这样 skill 被单独安装时也拿得到：
 
-- **[执行契约](docs/skills/frontend-sdd/执行契约.md)** — `sdd-task-frontend` 与 `sdd-dev-frontend` 的唯一共享事实源（所有权、分层边界、声明状态、TaskPacket）
+- **[执行契约](skills/sdd-dev-frontend/references/execution-contract.md)** — `sdd-task-frontend` 与 `sdd-dev-frontend` 的唯一共享事实源（所有权、分层边界、声明状态、TaskPacket）；随 `sdd-dev-frontend` 分发，计划侧按兄弟 skill 路径引用同一份
 - **[接缝契约](docs/skills/frontend-sdd/接缝契约.md)** — 跨文件接缝的注册表：ID 命名空间、门禁编号、产物路径
 - **[模块与评测](docs/skills/frontend-sdd/模块与评测.md)**、**[基线分数](docs/skills/frontend-sdd/基线分数.md)** — 脚本与 evals 的覆盖情况和实测基线
 - **[sdd-dev-frontend 使用说明](docs/skills/sdd-dev-frontend/README.md)** — 使用者视角的完整流程说明

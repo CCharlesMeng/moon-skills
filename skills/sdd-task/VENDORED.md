@@ -40,6 +40,6 @@
 
 | 文档 | 主题 | 现在的定位 |
 | --- | --- | --- |
-| `docs/skills/frontend-sdd/执行契约.md` | 前端 Task 的验收声明、计划与实现的分层边界、按形态裁剪的步骤形状与切分口径 | 共享运行契约；执行落在 `sdd-task-frontend` |
+| `skills/sdd-dev-frontend/references/execution-contract.md` | 前端 Task 的验收声明、计划与实现的分层边界、按形态裁剪的步骤形状与切分口径 | 共享运行契约；执行落在 `sdd-task-frontend` |
 
 **不要再为前端规则写新的上游说明书。** 前端专有规则直接进 `sdd-task-frontend`。只有需要改动通用主干（后端行、CLI、命名、提交规范）时才走上游说明书这条路。

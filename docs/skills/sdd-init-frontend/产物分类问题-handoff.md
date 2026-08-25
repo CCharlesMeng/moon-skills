@@ -218,7 +218,7 @@ src/components/StatCard/StatCard.tsx        不进账本
 | 现行产物契约 | `skills/sdd-init-frontend/references/baseline-contract.md` |
 | 扫描器 | `skills/sdd-init-frontend/scripts/manage_repo_baseline.py` |
 | 单测（改脚本会红） | `skills/sdd-init-frontend/evals/test_manage_repo_baseline.py` |
-| 下游共享契约 | `docs/skills/frontend-sdd/执行契约.md`、`接缝契约.md` |
+| 下游共享契约 | `skills/sdd-dev-frontend/references/execution-contract.md`、`docs/skills/frontend-sdd/接缝契约.md` |
 | 消费点：计划 | `skills/sdd-task-frontend/SKILL.md`「输入」表、`templates/tasks-frontend.md` |
 | 消费点：执行 | `skills/sdd-dev-frontend/references/phase-entry.md`、`agents/recon-codebase.md` |
 | 消费点：检视 | `skills/sdd-review-frontend/references/stack-signals.md` |

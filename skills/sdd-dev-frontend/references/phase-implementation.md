@@ -1,6 +1,6 @@
 # Phase B：按 Task 实现
 
-只在进入 Phase B 时读取。共享 Task 步骤形状、形态与扩散承接规则见 [前端 SDD 执行契约](../../../docs/skills/frontend-sdd/执行契约.md)；验证动作仍由 [validation-policy.md](./validation-policy.md) 编译。
+只在进入 Phase B 时读取。共享 Task 步骤形状、形态与扩散承接规则见 [前端 SDD 执行契约](./execution-contract.md)；验证动作仍由 [validation-policy.md](./validation-policy.md) 编译。
 
 ## 1. 开工前
 
@@ -41,13 +41,13 @@
 每个 Task 的末步（回填账本并提交）：
 
 - 在 `alpha-tests.md` 回填声明、状态、证据 ID/路径、环境和相关依赖；还原记录按 [alpha-tests-restore.md](./alpha-tests-restore.md)。
-- 状态按 [共享执行契约的状态表](../../../docs/skills/frontend-sdd/执行契约.md#声明与状态)判定，本文件不复制判据。
+- 状态按 [共享执行契约的状态表](./execution-contract.md#声明与状态)判定，本文件不复制判据。
 - 先回填账本、后勾 checkbox；checkbox 是本 Task 的 commit point。勾选已实际完成的项，验证结果不替代实现进度。
 - 同一动作可被多条声明引用，不复制输出。依赖文件变化时只失效命中的证据。
 
 ## 6. 升级、降级与恢复
 
-计划的文件清单是已确认范围，不是穷举。需要动清单外的文件时按[执行契约的扩散承接规则](../../../docs/skills/frontend-sdd/执行契约.md#扩散承接)分流：同 Story 内、不改变验收契约的连带改动直接承接并登记文件与原因，不为此中断；会改变 AC/AT 断言或对外契约的先按 P7 上报；跨仓或需要新增 AC 的回流上游。承接的文件同样进入依赖闭包，失效范围一并登记。
+计划的文件清单是已确认范围，不是穷举。需要动清单外的文件时按[执行契约的扩散承接规则](./execution-contract.md#扩散承接)分流：同 Story 内、不改变验收契约的连带改动直接承接并登记文件与原因，不为此中断；会改变 AC/AT 断言或对外契约的先按 P7 上报；跨仓或需要新增 AC 的回流上游。承接的文件同样进入依赖闭包，失效范围一并登记。
 
 连续三次针对同一原因的小修仍失败时，先收集事实再按 P7 一次上报。
 

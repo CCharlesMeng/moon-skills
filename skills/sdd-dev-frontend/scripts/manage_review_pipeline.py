@@ -989,7 +989,7 @@ DISPLAY = {
     # 规范候选类别
     "broken": "规范不再成立",
     "exemption-recurring": "豁免反复出现",
-    # 声明状态（与 docs/skills/frontend-sdd/执行契约.md 的状态表同一套词）
+    # 声明状态（与 references/execution-contract.md 的状态表同一套词）
     "PROVEN": "已验证",
     "UNVERIFIED": "未验证",
     "DEFERRED": "已暂缓",

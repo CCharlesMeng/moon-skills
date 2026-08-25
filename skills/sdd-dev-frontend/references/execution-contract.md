@@ -2,6 +2,8 @@
 
 本文件是 `sdd-task-frontend` 与 `sdd-dev-frontend` 的共享事实源。前者定义计划与验收声明，后者实现并取证；两边都不复制这里的字段语义。
 
+它落在 `sdd-dev-frontend/references/` 而不是仓库文档区，因为 skill 被单独安装时只会拿到自己的目录——运行期读不到的规则等于没有规则。`sdd-task-frontend` 按兄弟 skill 的相对路径引用同一份，不留副本。
+
 ## 所有权
 
 | 所有者 | 负责 | 不负责 |
@@ -77,7 +79,7 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 | `restore_tasks` | 还原轮 Task 编号 | 无还原轮留空 | 形态索引；冲突时以 Task 内容为准 |
 | `risk_triggers` | 风险触发器 token | 只写计划事实直接支持的 token | 与仓库事实、实际 diff 合并后编译验证组合 |
 
-风险 token 的唯一完整注册表在 [validation-policy.md](../../../skills/sdd-dev-frontend/references/validation-policy.md#三风险触发器)。计划侧通常只会直接识别 `visual`、`interaction`、`navigation`、`shared-boundary`、`auth`、`write`；需要代码勘察的 token 留给 Dev。
+风险 token 的唯一完整注册表在 [validation-policy.md](./validation-policy.md#三风险触发器)。计划侧通常只会直接识别 `visual`、`interaction`、`navigation`、`shared-boundary`、`auth`、`write`；需要代码勘察的 token 留给 Dev。
 
 ## 基线源
 

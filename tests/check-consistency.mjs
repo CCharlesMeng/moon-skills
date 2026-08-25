@@ -556,6 +556,55 @@ function checkFrontendReviewOwnership(files) {
   }
 }
 
+// 运行期读不到的规则等于没有规则。Cursor 插件安装是整仓 symlink，所以 skills/ 里
+// 写 `../../docs/…` 看上去是解析得到的；而 `npx skills add` 只拷 skill 目录，同一条
+// 路径指向的地方根本不存在，agent 读不到判据就现编。执行契约就这么漂了一轮。
+//
+// 判据面 = SKILL.md + 下列目录。evals/ 与各自的 README 豁免：那是治理与样本数据，
+// 引用仓库文档（模块与评测、基线分数、接缝契约）正是它们该做的事。
+const SKILL_RUNTIME_SURFACE = [
+  "references",
+  "agents",
+  "templates",
+  "roles",
+  "frontend-code-checklists",
+];
+
+function onRuntimeSurface(file) {
+  const tail = file.slice(SKILLS_DIR.length + 1).split("/").slice(1).join("/");
+  if (tail === "SKILL.md") return true;
+  return SKILL_RUNTIME_SURFACE.some((dir) => tail.startsWith(`${dir}/`));
+}
+
+function checkFrontendSkillBoundary(files) {
+  let failed = 0;
+  let count = 0;
+
+  for (const file of files) {
+    if (!file.startsWith(SKILLS_DIR)) continue;
+    if (!onRuntimeSurface(file)) continue;
+    count++;
+    const dir = resolve(file, "..");
+    const content = readFileSync(file, "utf-8");
+    for (const match of content.matchAll(/\]\(([^)\s]+)\)/g)) {
+      const link = match[1];
+      if (/^(https?:|mailto:|#)/.test(link)) continue;
+      const target = resolve(dir, link.split("#")[0]);
+      if (target.startsWith(`${SKILLS_DIR}/`)) continue;
+      report(
+        "fail",
+        "fe-skill-boundary",
+        `${rel(file)} → ${link} 指向 skills/ 之外 — 判据面只能引用 skills/ 内的文件，` +
+          `否则 skill 单独安装时这条路径解析不到；规则本身要搬进某个 skill，跨 skill 走兄弟目录`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-skill-boundary", `${count} runtime-surface files link only inside skills/`);
+  }
+}
+
 function checkFrontendChain() {
   console.log("\n── Frontend SDD Chain ──");
 
@@ -579,6 +628,7 @@ function checkFrontendChain() {
   checkFrontendRegistryTargets();
   checkFrontendGateCoverage();
   checkFrontendReviewOwnership(files);
+  checkFrontendSkillBoundary(files);
 }
 
 // ── Run ────────────────────────────────────────────────────────────

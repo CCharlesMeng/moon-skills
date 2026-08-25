@@ -18,6 +18,6 @@ status: accepted
 
 - 全仓「行号范围」表述迁移为「锚点」并说明取值形态：`SKILL.md`、`diff-list-template.md`、`alpha-tests-restore.md`、`qa-baseline-template.md`、`sdd-task-frontend-split.md`、`方案设计.md`（后者 5 处：L119、L152、L186、L301、L319；L260 的「基线行号」指 QA 基线表格行编号，与原型定位无关，不在内）。
 - 脚本的锚点方案必须为「根元素无具名 class」的区块提供兜底，不得假设具名 class 恒存在。
-- 原 `sdd-task-frontend-split.md` 的「行号跨度 200 行」经验值在单行档上无意义；当前运行契约只保留职责单一区块与稳定锚点，详见 [执行契约](../../frontend-sdd/执行契约.md#task-切分与步骤形状)。
+- 原 `sdd-task-frontend-split.md` 的「行号跨度 200 行」经验值在单行档上无意义；当前运行契约只保留职责单一区块与稳定锚点，详见 [执行契约](../../../../skills/sdd-dev-frontend/references/execution-contract.md#task-切分与步骤形状)。
 - Phase 0 需探测原型形态，用来决定锚点是否附带行号。
 - 无脚本能力时的降级分两档：格式化档还能用 `rg` 按 class 名逐个定位、勉强凑出区块边界；单行档没有退路，直接判基线源不可用并按 P7 上报。

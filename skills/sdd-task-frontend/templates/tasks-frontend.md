@@ -8,7 +8,7 @@
 
 **知识 trace:** <!-- 上游 consume 的 entries[].id；gaps 非空则一并列出 -->
 
-字段含义见 [前端 SDD 执行契约 / TaskPacket](../../../docs/skills/frontend-sdd/执行契约.md#taskpacket)；计划写到哪一层见[分层边界](../../../docs/skills/frontend-sdd/执行契约.md#计划与实现的分层边界)。
+字段含义见 [前端 SDD 执行契约 / TaskPacket](../../sdd-dev-frontend/references/execution-contract.md#taskpacket)；计划写到哪一层见[分层边界](../../sdd-dev-frontend/references/execution-contract.md#计划与实现的分层边界)。
 
 ## 项目边界
 
@@ -93,7 +93,7 @@
 
 ## Task List
 
-顺序：跨页公共骨架 → 每页还原 → 该页逻辑。规模按[执行契约](../../../docs/skills/frontend-sdd/执行契约.md#规模)：一个 Story 3–7 个 Task，单 Task ≤ 5 个文件、2–5 步，每个 Task 都改到产品代码或测试代码——确认、勘察、评审、补文档不占编号。
+顺序：跨页公共骨架 → 每页还原 → 该页逻辑。规模按[执行契约](../../sdd-dev-frontend/references/execution-contract.md#规模)：一个 Story 3–7 个 Task，单 Task ≤ 5 个文件、2–5 步，每个 Task 都改到产品代码或测试代码——确认、勘察、评审、补文档不占编号。
 
 下面三种形状按 Task 形态选一份复制，步骤数不凑齐成一样多；改造既有行为或修缺陷时可在暴露缺口后追加一步「确认原因」，实现后确有必要重构时可追加一步「重构」，其余情况不加编号。
 
