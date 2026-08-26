@@ -1,7 +1,6 @@
 ---
 name: sdd-task-frontend
-description: 为单个前端仓与 Story 生成 tasks.md 和 alpha-tests.md；定义实现位置、每个文件的功能职责、验收声明与风险事实，不写代码也不执行验证。
-disable-model-invocation: true
+description: 为单个前端仓与 Story 生成或更新 tasks.md 和 alpha-tests.md，定义实现位置、每个文件的功能职责、验收声明与风险事实，不写代码也不执行验证。用于 sdd-task 按 type=frontend 自动路由，或用户要求规划单个前端 Story、补齐前端任务与验收用例；多仓或多 Story 仍由 sdd-task 统筹。
 ---
 
 # 前端实现计划

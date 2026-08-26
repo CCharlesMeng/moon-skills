@@ -1,7 +1,6 @@
 ---
 name: sdd-dev-frontend
-description: 执行单个前端 Story：冻结验收基线、实现 tasks.md，并按声明与风险编译最小充分验证，留下可追溯证据。
-disable-model-invocation: true
+description: 执行或续跑单个前端 Story：冻结验收基线、实现 tasks.md，并按声明与风险编译最小充分验证，留下可追溯证据。用于用户要求实现、继续或收口前端 Story，按 HTML 原型、参照页或文字规格还原页面，或执行其中的勘察、验证与检视阶段；只规划不写代码时路由 sdd-task 或 sdd-task-frontend。
 ---
 
 # 前端 Story 执行
