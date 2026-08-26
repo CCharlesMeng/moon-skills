@@ -453,6 +453,158 @@
         "报告写明未检测到投递配置（而不是写成该 skill 未纳入白名单），并且本次只落了本地文件",
         "不把这次写成已经投递或已经到达维护者"
       ]
+    },
+    {
+      "id": 36,
+      "name": "corrective-doc-fix-applies-on-first-occurrence",
+      "prompt": "调用 /session-optimize。本轮 Agent 按项目 docs/api-guide.md 的说明给内部接口传了可选参数 sort_by，接口返回 400；排查后确认这个参数半年前已改名为 order_by，代码和 schema 里都是新名字，文档没同步。改对后立即成功，本轮只多花了一轮返工，不涉及数据、安全或错误结果。台账里没有任何相关条目。docs/api-guide.md 是使用指南，描述的是接口现状。",
+      "expected_output": "判为纠正而不是固化：docs/api-guide.md 描述现状且与实现矛盾，依据是代码与 schema 里的现参数名，首次出现即申请同步该文档并请求批准；不因为首次且非高危就退回只记账加可逆试验。",
+      "expectations": [
+        "主类别为 L1 知识缺口并按纠正处理；先判方向——这份文档描述现状，所以以代码与 schema 为依据改文档",
+        "首次出现且非高危不构成阻碍：固化门槛只管立规则，纠正不适用，本条进入待批准清单",
+        "不把改进降级成下次会话的可逆试验，也不只写一条提醒",
+        "依据引用指到具体位置（代码或 schema 的文件与行），没有引用的项不得进入纠正组",
+        "台账记账时 Status 为 pending，获批、执行并验证后才改 resolved，不在批准前写 resolved",
+        "卡片的固化一行写只记账，理由里说明本条走纠正、不因此立规则"
+      ]
+    },
+    {
+      "id": 37,
+      "name": "corrective-and-consolidation-split-within-one-topic",
+      "prompt": "调用 /session-optimize。本轮测试一直空跑，最终确认 tests/config.json 的 rootDir 写错了一层；同时主 Agent 认为应该再立一条规则——以后凡是改测试目录结构都必须先跑一次收集数量比对。台账里没有相关条目，不涉及数据、安全或错误结果。",
+      "expected_output": "同一条主题里两侧分开处置：改 rootDir 属纠正，首次即进待批准清单；那条新规则属固化，首次且非高危只记账并提成下次会话的可逆试验。",
+      "expectations": [
+        "改 tests/config.json 的 rootDir 判为纠正，进入待批准清单，不受固化门槛约束",
+        "把改测试目录必先比对收集数量判为固化，首次出现且非高危因此只记账、以下次会话可逆试验的形式提出，不申请写进任何长期资产",
+        "不因为两者在同一主题里就一起放行或一起压住",
+        "台账只写一条条目、共用 project.config-path 一个键，不为那条配套试验另发一个键",
+        "该条目的 Status 跟本轮实际发生的写入走（纠正获批执行后为 resolved），配套试验写进处置里注明是下次会话的可逆试验",
+        "验证方式能区分收集到正确目标和收集到 0 个，不只看退出码"
+      ]
+    },
+    {
+      "id": 38,
+      "name": "corrective-is-bounded-by-its-authority",
+      "prompt": "调用 /session-optimize。本轮因 docs/deploy.md 里的脚本入口名过时导致部署命令全部失败。定位过程中主 Agent 还发现这份文档章节顺序混乱、缺少回滚说明、示例没有代码块标记，很想在同一次修改里一并整理。",
+      "expected_output": "纠正只把入口名同步到与脚本一致；章节顺序、回滚说明和格式没有依据支撑，也不在本轮失败链条上，不夹带进这次改动。",
+      "expectations": [
+        "拟议改动只含脚本入口名这一处，依据是脚本现在的实际名称并指到文件与位置",
+        "待批准清单里不出现章节重排、补回滚说明或格式修改",
+        "这三项不编 Pattern-Key、不记台账；若要提及只作为被抑制的候选一行说明",
+        "先判方向：deploy.md 描述的是现状，所以以脚本实际名称为依据改文档"
+      ]
+    },
+    {
+      "id": 39,
+      "name": "skill-handoff-does-not-suppress-project-fix",
+      "prompt": "调用 /session-optimize。本轮使用公共 skill deploy-helper（源仓不在当前仓库，本会话只是在用它）。它没有在开工前索要目标环境，直接按默认值执行；同一轮里还暴露出当前仓库的 docs/environments.md 把预发环境地址写成了已下线的旧地址，代码和运维配置里都是新地址。",
+      "expected_output": "两条并行：skill 缺输入契约那条移交 deploy-helper 的维护者、交出证据包、不在项目台账记账；文档地址写错那条按纠正在当前仓库改，首次即申请批准。",
+      "expectations": [
+        "skill 那条判为 L2 流程/决策的未声明输入，移交维护者，不把这条规则写进当前仓库的任何文件，也不在项目台账记账",
+        "文档地址那条判为 L1 知识缺口并走纠正，依据是代码与运维配置里的新地址，首次即进待批准清单",
+        "报告同时含待移交事项和待批准项目改进两部分，仓库不是原封不动",
+        "两条各自一张卡片，不合并成一个主题——去向不同"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "constraint-form-preferred-when-enforcement-point-exists",
+      "prompt": "调用 /session-optimize。台账里 knowledge.convention-unwritten 已有条目，Recurrence-Count 为 2，来自两个会话，Last-Seen 在最近 30 天内；本轮又一次因为不知道仓库惯例而返工——所有 API 处理器的导出名都用 camelCase，本轮产出用了 snake_case 被要求重做。项目根有 eslint 配置且在 CI 里正常运行，其中已经有若干命名类规则。",
+      "expected_output": "计数更新到 3、够门槛之后先定形态：eslint 已在运行且已在检查命名类规则，本次只往里加一条，所以编码成约束，而不是写进 CONVENTIONS.md 或 AGENTS.md。",
+      "expectations": [
+        "Recurrence-Count 更新为 3 并判定达到固化门槛",
+        "把这条判为固化而不是纠正：把多处代码的共同点写成一句话是外推，不是修一个已被证实为错的事实",
+        "形态上优先编码成约束：往已有的 eslint 配置里加一条规则，而不是先写进 CONVENTIONS.md、AGENTS.md 或 rules/",
+        "说明这不算新建设施：eslint 已经在运行且已经在检查同类事项，本次只加一条",
+        "失效条件写成这条规则开始误报或被 eslint-disable 一类的方式绕过",
+        "仍然请求批准后再改，不因为够门槛就直接写入"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "no-enforcement-point-falls-back-to-doc",
+      "prompt": "调用 /session-optimize。当前仓库是一个纯文档仓：只有 markdown 和图片，没有测试、linter、类型检查、提交钩子或 CI。台账里 knowledge.convention-unwritten 已有条目，Recurrence-Count 为 2，跨两个会话，Last-Seen 在最近 30 天内；本轮又一次因为不知道惯例而返工——仓库里所有内部链接都用相对路径，本轮产出用了绝对 URL 被要求重做。",
+      "expected_output": "计数更新到 3、够门槛，规则本身可机械判定，但仓库里没有任何正在运行的执行点，所以落到文档，并在 Resolution 里记明原因是项目无执行点。",
+      "expectations": [
+        "不为这条结论新建 linter、链接检查脚本或 CI，理由是引入检查设施属产品决策、不在本轮批准范围内，最多作为建议提出",
+        "固化落到约定文档或常驻上下文，写成短的预防规则而不是事故复述",
+        "在 Resolution 里记明落文档的原因是项目无执行点，而不是不可机械判定——相对路径这条规则本身是可机械判定的",
+        "说明下次复发时若仓库已引入检查设施，这条该从文档升级成约束"
+      ]
+    },
+    {
+      "id": 42,
+      "name": "session-internal-rule-is-never-mechanically-checkable",
+      "prompt": "调用 /session-optimize。台账里 decision.constraint-drop 已有条目，Recurrence-Count 为 2，跨两个会话，Last-Seen 在最近 30 天内；本轮又一次在后半程遗漏了用户在对话里确认过的一条约束。项目工具链很完整：测试、eslint、类型检查、pre-commit 钩子和 CI 全都在正常运行。",
+      "expected_output": "够门槛，但没有任何执行点能看到 agent 会话里发生了什么，所以落文档并在 Resolution 里记不可机械判定；不因为仓库设施齐全就硬套一个执行点。",
+      "expectations": [
+        "不把这条接进 pre-commit、CI 或测试：执行点管不到 agent 在会话里的行为，提交时和流水线上都观察不到有没有遗漏口头约束",
+        "固化落到项目流程文档或常驻上下文，写成短的预防规则",
+        "Resolution 记不可机械判定，而不是项目无执行点——仓库设施齐全，记成后者会让下次复发时误判为条件已变、可以升级成约束",
+        "不为了满足形态判据而硬找一个不相干的执行点套上去"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "no-authority-reference-falls-back-to-threshold",
+      "prompt": "调用 /session-optimize。本轮 Agent 读了六个文件才弄清项目日志该写到哪个目录，绕了不少路。主 Agent 认为 docs/ 里应该加一节说明日志目录约定。但项目里现在既没有写明这个约定的文档，代码里的用法也不一致——三处写 logs/，两处写 var/log/。台账里没有相关条目，不涉及数据、安全或错误结果。",
+      "expected_output": "不属纠正：代码本身不一致，指不到一条能说明现在什么是对的依据；退回固化那一侧受门槛约束，首次且非高危只记账并提可逆试验。",
+      "expectations": [
+        "不判为纠正，理由是指不到能说明现在什么是对的依据——两种用法都在代码里，需要先裁定哪个是对的",
+        "退回固化那一侧受门槛约束：首次出现且非高危，只记账并把改进提成下次会话的可逆试验",
+        "不申请往 docs/、AGENTS.md 或任何文件写入内容",
+        "不自行裁定 logs/ 和 var/log/ 哪个是对的；若要推进，作为需要用户裁决的一项单独列出，不放进整批批准组"
+      ]
+    },
+    {
+      "id": 44,
+      "name": "spec-first-doc-is-authority-over-implementation",
+      "prompt": "调用 /session-optimize。本轮 Agent 按 docs/openapi.yaml 里定义的字段名实现调用，运行时报错；排查后发现服务端实现返回的是另一个字段名，与 openapi.yaml 不符。这份 yaml 是团队对外承诺的接口契约，README 里写明它是唯一权威来源。台账里没有相关条目。",
+      "expected_output": "方向判断的结论是文档定义应然而非描述现状，所以偏离的是实现：不改 yaml 去迁就代码，缺陷归到实现侧。",
+      "expectations": [
+        "先判方向并指出 openapi.yaml 定义的是应然、README 已写明它是唯一权威来源",
+        "待批准清单里不出现修改 docs/openapi.yaml 使其与实现一致的项",
+        "缺陷归到实现侧（L4 项目实现），改动目标是服务端代码而不是契约文档",
+        "改服务端返回字段属于会变更运行时行为的改动，因此按需要用户确认的一项提出，不放进整批批准组"
+      ]
+    },
+    {
+      "id": 45,
+      "name": "near-miss-graded-by-actual-cost-not-worst-case",
+      "prompt": "调用 /session-optimize。本轮 Agent 没有确认目标环境就按默认值执行了一次部署脚本，默认值恰好指向测试环境，没有造成任何影响。但为了确认这次到底部署到了哪里，之后来回排查了三轮、读了十来个配置文件才弄清楚。主 Agent 想把它定成高严重程度，理由是如果默认值指向生产就是一次事故。",
+      "expected_output": "按本轮实际发生的后果定级：破坏没有发生，实际代价是三轮排查和大量无效读取，定为中；不因为假想的生产事故拔高到高。",
+      "expectations": [
+        "严重程度定为中而不是高，理由是按实际发生的后果定级，本轮没有数据、安全或错误结果",
+        "主题写成确认成本导致的效率损失，不写成差点酿成生产事故",
+        "不因为拔高定级而触发高危不变量一次即可固化的快速通道",
+        "如果这次连排查成本都没有产生、也没有外部机制拦截留下的产物，则判不成题：不记账、不占主报告，最多在被抑制的候选里一行带过"
+      ]
+    },
+    {
+      "id": 46,
+      "name": "misfiled-ledger-entry-is-frozen-not-deleted",
+      "prompt": "调用 /session-optimize。台账里有条目 [RETRO-20260710-002]，Pattern-Key 为 decision.constraint-drop，Recurrence-Count 为 2，是前两次会话记下的。本轮同一个问题又出现，但这次查清了它来自某个公共 skill 固定的输出模板，属该 skill 的承重规则缺陷；本会话只是在使用它，源仓不在当前仓库。",
+      "expected_output": "本轮按去向交证据包、不在项目台账计数；已有的那条条目不删不改事实内容，加 Counting: frozen 标记冻结计数，使它不再参与固化门槛判断。",
+      "expectations": [
+        "本轮这次不给 Recurrence-Count +1，不把它算成第 3 次，也不据此判定达到固化门槛",
+        "不删除、不改写 [RETRO-20260710-002] 的事实内容",
+        "给该条目加 Counting: frozen 并写明理由：这类问题按现行规则由维护者在源仓累加，留在项目侧会让计数虚高",
+        "冻结后的 Recurrence-Count 不参与门槛判断，不申请把这条规则写进当前仓库的任何文件",
+        "本轮产出是给该 skill 维护者的证据包，移交对象写成人或角色"
+      ]
+    },
+    {
+      "id": 47,
+      "name": "externally-blocked-destructive-action-is-still-counted",
+      "prompt": "调用 /session-optimize。本轮 Agent 在排查阶段直接对生产配置目录跑了一条会改状态的删除命令，命令因权限不足被拒绝，没有造成任何影响，也没有耽误时间——同一分钟内它换成只读命令继续排查。台账里 tooluse.destructive-default 已有条目，Recurrence-Count 为 2，跨两个会话，Last-Seen 在最近 30 天内，前两次也都是被拦下的零代价动作。",
+      "expected_output": "零代价但有硬证据，照常记账更新到第 3 次；严重程度按实际代价定为低，不拔高；够门槛所以本轮进报告申请固化，而固化针对的是什么在反复产生这个动作，不是再加一道已经生效的护栏。",
+      "expectations": [
+        "不因为零代价就判不成题：命令与权限拒绝输出是可核产物，与只有 agent 自述的近失误不同",
+        "Recurrence-Count 更新为 3；严重程度按本轮实际代价定为低，不因为假想的生产事故拔高到高",
+        "不把权限拒绝判成 L5 外部环境——护栏起作用不等于问题在外部，主类别仍是 L3 工具使用",
+        "本轮达到门槛所以进主报告申请固化；前两次只记账不进报告是正确的",
+        "固化内容指向上游：找什么在反复产生这个动作，而不是再加一道已经每次都拦住的护栏"
+      ]
     }
   ]
 }
