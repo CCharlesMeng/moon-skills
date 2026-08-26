@@ -40,11 +40,11 @@ BASELINE_FILES = (
     "structure.md",
     "runtime.md",
     "components.md",
-    "routing.md",
+    "routes.md",
     "api.md",
     "data.md",
-    "styling.md",
-    "testing.md",
+    "styles.md",
+    "tests.md",
 )
 PROTOTYPES = {
     "standard": EVAL_DIR / "设计稿原型-标准版.html",

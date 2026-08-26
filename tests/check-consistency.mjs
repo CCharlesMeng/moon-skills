@@ -48,6 +48,26 @@ const FRONTEND_ROOTS = [
 // 与 接缝契约.md §2 的注册表保持一致；加前缀两处都要改。
 const ID_REGISTRY = join("frontend-sdd", "接缝契约.md");
 const ID_REGISTRY_PATH = join(ROOT, "docs", "skills", ID_REGISTRY);
+const BASELINE_CONTRACT_PATH = join(
+  SKILLS_DIR,
+  "sdd-init-frontend",
+  "references",
+  "baseline-contract.md"
+);
+const BASELINE_FIXTURE_DIR = join(
+  SKILLS_DIR,
+  "sdd-dev-frontend",
+  "evals",
+  "fixtures",
+  "baseline"
+);
+const BASELINE_SETUP_PATH = join(
+  SKILLS_DIR,
+  "sdd-dev-frontend",
+  "evals",
+  "fixtures",
+  "setup.py"
+);
 
 // 标准名，形状上撞 ID 规则但不是命名空间（SHA-256 / ISO-8601）。
 // 它们刻意不在 接缝契约 §2 登记，所以只能列在这里。
@@ -605,6 +625,56 @@ function checkFrontendSkillBoundary(files) {
   }
 }
 
+function checkFrontendBaselineArtifacts() {
+  const contract = readFileSync(BASELINE_CONTRACT_PATH, "utf-8");
+  const artifactSection = contract.split(/^## 目录与九份文件$/m)[1]?.split(/^## /m)[0];
+  const canonical = artifactSection
+    ? [...artifactSection.matchAll(/[├└]── ([a-z][a-z-]*\.md)\b/g)].map((m) => m[1])
+    : [];
+  const expected = [...new Set(canonical)].sort();
+
+  if (canonical.length !== 9 || expected.length !== 9) {
+    report(
+      "fail",
+      "fe-baseline-files",
+      `baseline-contract.md must define exactly 9 unique artifact files; parsed ${canonical.length}`
+    );
+    return;
+  }
+
+  const fixtureFiles = readdirSync(BASELINE_FIXTURE_DIR)
+    .filter((name) => name.endsWith(".md"))
+    .sort();
+  const setup = readFileSync(BASELINE_SETUP_PATH, "utf-8");
+  const setupBlock =
+    setup.match(/BASELINE_FILES\s*=\s*(?:\[|\()([\s\S]*?)(?:\]|\))/)?.[1] ?? "";
+  const setupFiles = [...setupBlock.matchAll(/["']([^"']+\.md)["']/g)]
+    .map((m) => m[1])
+    .sort();
+
+  const mismatches = [];
+  if (JSON.stringify(fixtureFiles) !== JSON.stringify(expected)) {
+    mismatches.push(`fixture=[${fixtureFiles.join(", ")}]`);
+  }
+  if (JSON.stringify(setupFiles) !== JSON.stringify(expected)) {
+    mismatches.push(`setup.py=[${setupFiles.join(", ")}]`);
+  }
+  if (mismatches.length > 0) {
+    report(
+      "fail",
+      "fe-baseline-files",
+      `canonical=[${expected.join(", ")}]; ${mismatches.join("; ")}`
+    );
+    return;
+  }
+
+  report(
+    "pass",
+    "fe-baseline-files",
+    `contract, fixture, and setup.py share ${expected.length} canonical filenames`
+  );
+}
+
 function checkFrontendChain() {
   console.log("\n── Frontend SDD Chain ──");
 
@@ -629,6 +699,7 @@ function checkFrontendChain() {
   checkFrontendGateCoverage();
   checkFrontendReviewOwnership(files);
   checkFrontendSkillBoundary(files);
+  checkFrontendBaselineArtifacts();
 }
 
 // ── Run ────────────────────────────────────────────────────────────

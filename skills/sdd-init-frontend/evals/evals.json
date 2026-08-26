@@ -5,11 +5,11 @@
       "id": 1,
       "name": "point-not-copy",
       "target": "references/baseline-contract.md",
-      "prompt": "仓内 src/lib/request.ts 导出了 get/post/put/del 四个方法，签名都带泛型；src/styles/tokens.css 定义了 6 档间距变量和 4 档字号变量。请写出对应的 api.md 与 styling.md 清单条目。",
+      "prompt": "仓内 src/lib/request.ts 导出了 get/post/put/del 四个方法，签名都带泛型；src/styles/tokens.css 定义了 6 档间距变量和 4 档字号变量。请写出对应的 api.md 与 styles.md 清单条目。",
       "expected_output": "两处都只写指路加一句何时用，不抄方法签名、不抄档位数值；规则部分写代码里读不到的归纳结论。",
       "expectations": [
         "api.md 条目不列出 get/post/put/del 的方法名与签名，只指到 src/lib/ 的 request 实例",
-        "styling.md 条目不写任何具体像素或字号数值，只指到文件加统一命名前缀",
+        "styles.md 条目不写任何具体像素或字号数值，只指到文件加统一命名前缀",
         "写出的规范条目是归纳结论（所有请求必须走统一出口、间距只能取仓内 scale），不是对代码的转述"
       ]
     },
@@ -17,12 +17,12 @@
       "id": 2,
       "name": "no-unified-practice-is-a-first-class-entry",
       "target": "SKILL.md",
-      "prompt": "扫描发现这个仓 pages/ 平铺、状态全留在发起请求的组件里、12 处调用点各自裸用 axios、样式全是字面量没有任何 token。请说明 structure.md、api.md、data.md、styling.md 分别写什么。",
+      "prompt": "扫描发现这个仓 pages/ 平铺、状态全留在发起请求的组件里、12 处调用点各自裸用 axios、样式全是字面量没有任何 token。请说明 structure.md、api.md、data.md、styles.md 分别写什么。",
       "expected_output": "四份文件都非空，把「无统一做法」写成显式规范，并指出它对下游意味着什么，而不是留空或省略整节。",
       "expectations": [
         "不把这四份文件写成空文件，也不用「无」「未见」「未声明」填版面",
         "api.md 显式写出无统一请求出口，并指明检视不得据此判「绕过统一实例」",
-        "styling.md 显式写出无 token 全硬编码，并指明检视不得判硬编码违规",
+        "styles.md 显式写出无 token 全硬编码，并指明检视不得判硬编码违规",
         "不把仓库描述成它应该有的分层或应该有的 store，只写实测形态"
       ]
     },
@@ -98,7 +98,7 @@
       "expected_output": "拒绝：需要靠类型列区分内部条目的表，说明它应该被那个类型列切开；这些资产按消费者问句已各有归属，合并会同时破坏成员判据与唯一事实源。",
       "expectations": [
         "用「需要类型列就该被切开」这条判据明确否决",
-        "指出这几类资产已分别归属 components.md、data.md、api.md、styling.md，合并会造成同一条事实出现在两处",
+        "指出这几类资产已分别归属 components.md、data.md、api.md、styles.md，合并会造成同一条事实出现在两处",
         "指出「一次扫完找复用」的需求由 index.md 的场景索引承担，不需要靠合并成一张表"
       ]
     },
@@ -120,11 +120,11 @@
       "name": "shape-is-decided-first-because-it-changes-the-criteria",
       "target": "references/discovery-rules.md",
       "prompt": "一个 Vue 仓：包清单声明了 exports 与 types 入口、构建目标是库，src/ 下全是组件目录，没有任何挂载到 DOM 根节点的入口，也没有路由库和请求封装。请说明栈签名怎么写，以及这个结论如何改变其余文件的判据。",
-      "expected_output": "形态 = 组件库，与框架并列写进 structure.md 的栈签名；据此通用/业务分层判据整体失效、routing.md 与 api.md 因无内容整份删、structure.md 增收对外导出面与版本约定。",
+      "expected_output": "形态 = 组件库，与框架并列写进 structure.md 的栈签名；据此通用/业务分层判据整体失效、routes.md 与 api.md 因无内容整份删、structure.md 增收对外导出面与版本约定。",
       "expectations": [
         "栈签名给出一个具名框架加一个具名形态，形态判为组件库，判据是有对外导出入口且无应用挂载入口",
         "指出组件库形态下「被两个以上消费单元引用」这条分层判据不适用，对外导出的构件全部进 components.md 详表",
-        "routing.md 与 api.md 判为整份删，并说明这是正确产物而不是缺失",
+        "routes.md 与 api.md 判为整份删，并说明这是正确产物而不是缺失",
         "形态写进 structure.md 的栈签名，不为它单独开一份文件",
         "形态必须在其余文件之前定出来，理由是它改判据而不是为了描述更全"
       ]
@@ -147,11 +147,11 @@
       "name": "layering-criterion-must-work-in-a-flat-repo",
       "target": "references/baseline-contract.md",
       "prompt": "一个仓 src/pages/ 下平铺着 14 个页面文件，没有 features/ 也没有任何按特性分的目录；src/ 根下有个 Modal.tsx 被 6 个页面引用，另有个 OrderStep.tsx 只被 1 个页面引用。请说明 components.md 的分层怎么判。",
-      "expected_output": "消费单元在平铺仓里是页面文件：Modal 被 6 个页面引用判为通用构件进详表，OrderStep 只被 1 个页面引用归 routing.md 的路由索引。",
+      "expected_output": "消费单元在平铺仓里是页面文件：Modal 被 6 个页面引用判为通用构件进详表，OrderStep 只被 1 个页面引用归 routes.md 的路由索引。",
       "expectations": [
         "消费单元的粒度按 structure.md 记的目录实况定，平铺仓算页面文件",
         "不因为仓里没有特性目录就说这条判据无法执行或跳过分层",
-        "Modal 进 components.md 详表，OrderStep 不进详表而归 routing.md",
+        "Modal 进 components.md 详表，OrderStep 不进详表而归 routes.md",
         "不因为两个文件都放在 src/ 根下就按目录名判定分层"
       ]
     },
@@ -159,7 +159,7 @@
       "id": 13,
       "name": "routing-file-is-not-a-page-catalog",
       "target": "references/baseline-contract.md",
-      "prompt": "仓内有集中路由表、一个登录守卫、两个布局容器，本次需求还要新增 5 个页面路径。另外有人提议把全部 40 条现有路由路径抄进 routing.md 以便检索。请说明 routing.md 写什么、不写什么。",
+      "prompt": "仓内有集中路由表、一个登录守卫、两个布局容器，本次需求还要新增 5 个页面路径。另外有人提议把全部 40 条现有路由路径抄进 routes.md 以便检索。请说明 routes.md 写什么、不写什么。",
       "expected_output": "写路由表与守卫与布局的指路、装配规则、跳转入口；不抄 40 条路径，也不写本次新增的 5 条——具体路由路径是 Story 级契约，唯一例外是路由→业务组件索引。",
       "expectations": [
         "不把 40 条路由路径逐条抄进文件，理由与 api.md 的端点同形：会产生第二事实源并必然漂移",
@@ -177,7 +177,7 @@
       "expectations": [
         "不新建 i18n.md、permission.md、telemetry.md，理由是它们问不出自带成员判据的问句，会与现有文件重叠并破坏唯一事实源",
         "i18n 拆成 structure.md 资源位置、components.md 取文案入口、data.md 语言状态",
-        "权限拆成 data.md 权限数据、routing.md 守卫、components.md 界面级判定辅助、api.md 鉴权头",
+        "权限拆成 data.md 权限数据、routes.md 守卫、components.md 界面级判定辅助、api.md 鉴权头",
         "埋点上报出口归 api.md（跨进程边界，与请求实例同类）、SDK 初始化位置归 structure.md",
         "体积预算检查命令归 runtime.md 的质量命令，不当成独立关注点",
         "index.md 的场景索引把每个场景串起来，且只写指向 ID 的行"
@@ -188,13 +188,13 @@
       "name": "end-to-end-baseline-from-a-real-tree",
       "target": "SKILL.md",
       "prompt": "目标仓的全部源文件是：package.json（依赖 react、react-dom、vite、typescript、vitest，scripts 有 dev/build/test/typecheck/lint/format，无路由库无状态库无表单库无取数缓存库）、vite.config.ts（挂 React 插件，配了 @/ 别名）、tsconfig.json（strict 开）、src/main.tsx（挂载到 DOM 根节点）、src/App.tsx（直接渲染 PortfolioPanel）、src/components/StatCard/StatCard.tsx 与同名 module.css（被 2 个特性引用）、src/features/portfolio/PortfolioPanel.tsx、src/features/portfolio/usePortfolioSummary.ts（调 request、建取消控制器、返回加载/数据/错误三态）、src/lib/request.ts（构造唯一 HTTP 实例、注册拦截器、集中翻译错误码）、src/lib/format.ts（三个纯格式化函数）、src/styles/tokens.css（间距与字号自定义属性）。仓内没有任何测试文件。请产出全套 baseline 的文件清单、每份的 ID 与结论要点。",
-      "expected_output": "九份文件；栈签名为 React + TypeScript + Vite、形态为应用；routing.md 只有一条「无路由机制，单点挂载」规范；testing.md 写有 Vitest 但无既有测试与定位约定；data.md 写三态与取消并显式写「无缓存无 store」「无表单」。",
+      "expected_output": "九份文件；栈签名为 React + TypeScript + Vite、形态为应用；routes.md 只有一条「无路由机制，单点挂载」规范；tests.md 写有 Vitest 但无既有测试与定位约定；data.md 写三态与取消并显式写「无缓存无 store」「无表单」。",
       "expectations": [
         "栈签名同时给出具名框架与形态 = 应用，形态判据是挂载到 DOM 根节点且无导出入口、无远端暴露、无平台配置",
-        "PortfolioPanel 只被一个消费单元引用，因此归 routing.md 的装配索引而不进 components.md 详表",
-        "format.ts 判为渲染辅助进 components.md，request.ts 判为统一请求出口进 api.md，usePortfolioSummary 判为取数单元进 data.md，tokens.css 判为 token 集进 styling.md",
-        "routing.md 不留空也不删，写成「无路由库、无路由表、无守卫、无代码分割，界面由 App 单点装配」的显式规范",
-        "testing.md 写出框架是 Vitest 但无既有测试与元素定位约定，并指明实现阶段的影响",
+        "PortfolioPanel 只被一个消费单元引用，因此归 routes.md 的装配索引而不进 components.md 详表",
+        "format.ts 判为渲染辅助进 components.md，request.ts 判为统一请求出口进 api.md，usePortfolioSummary 判为取数单元进 data.md，tokens.css 判为 token 集进 styles.md",
+        "routes.md 不留空也不删，写成「无路由库、无路由表、无守卫、无代码分割，界面由 App 单点装配」的显式规范",
+        "tests.md 写出框架是 Vitest 但无既有测试与元素定位约定，并指明实现阶段的影响",
         "data.md 显式写出无取数缓存库、无全局 store、无表单机制三条「无统一做法」规范",
         "全文不出现方法签名、props 列表、token 具体数值或目录树",
         "index.md 只有指向 ID 的行，速查节含栈与形态各一行"
@@ -204,11 +204,11 @@
       "id": 16,
       "name": "ui-library-is-part-of-the-components-answer",
       "target": "references/baseline-contract.md",
-      "prompt": "一个 Vue 仓的依赖里有一个第三方 UI 组件库，模板里到处直接用它的组件；src/ui/ 下另有三个自研构件，其中一个内部就是包着该库的表格组件、被 4 个业务模块引用；库的主题色与圆角在一个覆盖文件里改过。有人说 UI 库属于样式范畴，应该整段写进 styling.md。请给出归置，并写出对应的清单与规范条目要点。",
-      "expected_output": "UI 库与仓内封装层归 components.md，主题覆盖归 styling.md；关键结论是使用点没有统一经过封装，因此写成「无统一做法」规范。",
+      "prompt": "一个 Vue 仓的依赖里有一个第三方 UI 组件库，模板里到处直接用它的组件；src/ui/ 下另有三个自研构件，其中一个内部就是包着该库的表格组件、被 4 个业务模块引用；库的主题色与圆角在一个覆盖文件里改过。有人说 UI 库属于样式范畴，应该整段写进 styles.md。请给出归置，并写出对应的清单与规范条目要点。",
+      "expected_output": "UI 库与仓内封装层归 components.md，主题覆盖归 styles.md；关键结论是使用点没有统一经过封装，因此写成「无统一做法」规范。",
       "expectations": [
-        "UI 库归 components.md 而不是 styling.md，理由是它回答「拼界面时有哪些现成构件可用」这个问句",
-        "库的主题机制正文归 styling.md，components.md 只留 ID 引用，不把主题值复制两处",
+        "UI 库归 components.md 而不是 styles.md，理由是它回答「拼界面时有哪些现成构件可用」这个问句",
+        "库的主题机制正文归 styles.md，components.md 只留 ID 引用，不把主题值复制两处",
         "包着库表格的自研构件按「被两个以上消费单元引用」判进通用详表",
         "写出「直接引库与经封装混用，无统一做法」规范，并指明检视不得据此判「绕过封装」",
         "不列举库导出了哪些组件、不抄 props，只写库是哪个、怎么用、封装在哪"
@@ -238,6 +238,20 @@
         "action、管道、属性指令都判为渲染辅助，判据是做展示用变换或界面级行为增强且被构件或模板消费",
         "不新开 directives.md，也不在渲染辅助表里加「类型」列区分 action / 管道 / 指令",
         "权限控制指令按跨关注点归置落进渲染辅助，不单独开权限文件"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "legacy-artifact-names-migrate-without-renumbering",
+      "target": "SKILL.md",
+      "prompt": "一个已有仓库 baseline 的 index.md 与 structure.md 都可读，目录里仍是 routing.md、styling.md、testing.md；其中有 ROUTE-*、STYLE-*、TEST-* 及对应 PATTERN-*，index.md 和 components.md 还引用了旧文件名。请说明刷新动作。另一个目录同时存在 routing.md 与 routes.md，内容不同。",
+      "expected_output": "第一处只把三份文件迁成 routes.md、styles.md、tests.md，并同步目录内导航与交叉引用；正文和所有 ID 保留，不重扫。第二处不覆盖，先比较来源并让用户决定保留哪份。",
+      "expectations": [
+        "把命名迁移识别为 schema 归一，不因为 index.md 与 structure.md 已可读就跳过，也不触发全量重扫",
+        "迁移映射严格是一对一：routing.md → routes.md、styling.md → styles.md、testing.md → tests.md",
+        "同步更新 index.md 与同目录交叉引用，避免文件已经改名而导航仍指旧路径",
+        "ROUTE-*、STYLE-*、TEST-* 与对应 PATTERN-* 全部保留，不重编号、不换命名空间",
+        "旧名和新名同时存在且内容不同时不覆盖，先让用户决定保留哪份"
       ]
     }
   ]

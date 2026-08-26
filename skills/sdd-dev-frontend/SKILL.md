@@ -42,7 +42,7 @@ disable-model-invocation: true
 
 这些门禁保护来源、所有权和状态诚信；它们本身不触发固定验证动作。
 
-0. **仓库事实就绪。** baseline 的 `index.md` 缺失或 `structure.md` 读不出「具名框架 + 具名形态」时先完成 `sdd-init-frontend`；仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。**不按份数查**——空文件按规定整份删，`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，按消费点自证就地修。
+0. **仓库事实就绪。** baseline 出现旧名 `routing.md` / `styling.md` / `testing.md` 时先由 `sdd-init-frontend` 原位迁移；`index.md` 缺失或 `structure.md` 读不出「具名框架 + 具名形态」时再完整执行 init。仅验证能力受限时继续，但依赖声明保持 `UNVERIFIED`。**命名归一后不按份数查**——空文件按规定整份删，`组件库` 形态下 `routes.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，按消费点自证就地修。
 1. **执行清单存在。** 没有 `tasks.md` 时，仅在会话已明确 Story、AC、基线和文件范围时按 Phase 0 起草并确认；否则回 `sdd-task`。
 2. **期望先冻结。** QA 基线未经用户确认不得进入 Phase B。
 3. **声明按需生成。** R/F 是分类表；只生成需求与风险实际要求的行，不造 N/A 空壳。

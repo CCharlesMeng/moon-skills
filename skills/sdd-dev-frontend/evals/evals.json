@@ -168,13 +168,13 @@
       "gates": [
         "硬门禁 13"
       ],
-      "prompt": "当前 Story 需要取数三态与样式 token。仓库 baseline 的 data.md 有 PATTERN-DATA-1、styling.md 有 PATTERN-STYLE-1，Requirement 没有偏离仓库默认规范。请完成代码侧勘察并说明落盘内容。",
+      "prompt": "当前 Story 需要取数三态与样式 token。仓库 baseline 的 data.md 有 PATTERN-DATA-1、styles.md 有 PATTERN-STYLE-1，Requirement 没有偏离仓库默认规范。请完成代码侧勘察并说明落盘内容。",
       "expected_output": "复核两条规范的依据清单条目后，只把两个 PATTERN ID 写入 dev-baseline.md 的工程依据，不写指纹，不创建 codebase-brief.md 或 Story 范式卡片。",
       "expectations": [
         "Requirement 完全沿用仓库默认规范时不制造 Requirement 工程决策",
         "顺着每条规范的依据清单条目复核证据，但不把源码片段或规范正文复制进 Story",
         "dev-baseline.md 只保存 Story 需要到 PATTERN ID 的映射，不记录任何 baseline 指纹",
-        "实现与检视通过 ID 回读 data.md / styling.md 的唯一正文"
+        "实现与检视通过 ID 回读 data.md / styles.md 的唯一正文"
       ]
     },
     {
@@ -184,11 +184,11 @@
       "gates": [
         "硬门禁 0"
       ],
-      "prompt": "Phase -1 检查仓库 baseline：index.md 在，structure.md 能读出「Vue + 组件库形态」。但目录里没有 routing.md 也没有 api.md，而且 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
+      "prompt": "Phase -1 检查仓库 baseline：index.md 在，structure.md 能读出「Vue + 组件库形态」。但目录里没有 routes.md 也没有 api.md，而且 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
       "expected_output": "两条判据都成立，继续 Phase 0，不路由 sdd-init-frontend；组件库形态下缺这两份是正确产物，覆盖缺口留给 Phase 0 之后的消费点自行勘察并追加单条。",
       "expectations": [
         "只按两条判据判定：index.md 是否存在、栈签名是否读得出具名框架加具名形态",
-        "不按份数查，不因为缺 routing.md 与 api.md 就判不合格——组件库形态下它们本就不该存在",
+        "不按份数查，不因为缺 routes.md 与 api.md 就判不合格——组件库形态下它们本就不该存在",
         "不因为覆盖声明没包含本次模块就整体重跑 sdd-init-frontend",
         "指出「本 Story 需要的条目查得到吗」在 Phase -1 还没有信息可判，tasks.md 要到 Phase 0 才读",
         "不检查 readiness、不检查指纹、不检查 stale"
@@ -838,6 +838,22 @@
         "expected 写 {\"subject_on_top\": true} 布尔值；缺这个键编译期就拒，因为规则没有判据",
         "adapter 的 collect 必须给 with_selector 指明和谁比；层叠是二元关系，缺它无从判起",
         "不把 transform 那条当成本 Story 要顺手删掉的东西——先让规则判红，修法归实现步，且报告的 stacking_hints 已经指出成因"
+      ]
+    },
+    {
+      "id": 52,
+      "name": "phase-minus-1-normalizes-legacy-baseline-filenames-first",
+      "target": "references/phases/entry.md",
+      "gates": [
+        "硬门禁 0"
+      ],
+      "prompt": "Phase -1 发现 baseline 的 index.md 与 structure.md 都可读，但目录仍有 routing.md、styling.md、testing.md，且没有对应的新文件名。是否可以因为两条接入判据都成立而直接进入 Phase 0？",
+      "expected_output": "不直接进入。先路由 sdd-init-frontend 原位迁移三份旧名并更新目录内引用，保留所有 ID、不重扫；命名归一后再只按 index.md 与 structure.md 两条 readiness 判据继续。",
+      "expectations": [
+        "先执行旧名到 routes.md、styles.md、tests.md 的 schema 迁移，不把它误当成单条清单失效",
+        "说明迁移只改文件名和目录内引用，正文与 ID 不变，也不因此全量重扫",
+        "迁移完成后 readiness 仍只查 index.md 和 structure.md，不改回按九份文件齐全性检查",
+        "不因两条 readiness 判据已满足而把旧名留给 Phase 0 的消费者现场失败"
       ]
     }
   ]

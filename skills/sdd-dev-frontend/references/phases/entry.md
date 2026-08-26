@@ -5,14 +5,15 @@
 ## Phase -1 — 仓库接入
 
 1. 解析 `<repo-root>`、`<project-sdd-dir>`、`<repo-id>`、`<repo-baseline-dir>`。
-2. 走**极轻的门**，只查两件事：
+2. 先查命名 schema：目录里出现旧名 `routing.md` / `styling.md` / `testing.md` 任一项时，先路由 `sdd-init-frontend` 做原位迁移；这不触发全量重扫。
+3. 走**极轻的门**，只查两件事：
 
 | 判据 | 不满足时 |
 | --- | --- |
 | `<repo-baseline-dir>/index.md` 在不在 | 不在 → 完整执行 `sdd-init-frontend` |
 | `structure.md` 的栈签名读不读得出一个具名的框架**和**一个具名的形态 | 读不出 → 完整执行 `sdd-init-frontend` |
 
-**不按份数查。** 空文件按规定整份删，`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在，按份数查会把正确产物判成不合格。`index.md` 恒存在（它只做路由）、`structure.md` 恒非空（栈签名恒存在），这两条才是可靠判据。
+**命名归一后不按份数查。** 空文件按规定整份删，`组件库` 形态下 `routes.md` 与 `api.md` 本就不该存在，按份数查会把正确产物判成不合格。`index.md` 恒存在（它只做路由）、`structure.md` 恒非空（栈签名恒存在），这两条才是可靠判据。
 
 **形态要一起读出来**，因为它决定本 Story 后续判据是否适用：`微前端子应用` 里查不到统一请求出口不等于没有出口，`组件库` 里没有路由是正常的。
 

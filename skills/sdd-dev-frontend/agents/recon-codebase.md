@@ -57,9 +57,9 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 
 从 `<repo-baseline-dir>/index.md` 的场景索引按 Story 需要取 ID，再回读对应关注点文件；已知 ID 时直接 grep `PATTERN-*` 定位，不必先过 index。
 
-九份文件与它们回答的问句：`structure.md` 栈与形态、目录命名、`runtime.md` 装起与质量命令、`components.md` 现成构件、`routing.md` 加页面与路由要动哪几处、`api.md` 与后端通信、`data.md` 客户端数据持有与流动、`styling.md` 样式取值、`testing.md` 测试与定位约定。
+九份文件与它们回答的问句：`structure.md` 栈与形态、目录命名、`runtime.md` 装起与质量命令、`components.md` 现成构件、`routes.md` 加页面与路由要动哪几处、`api.md` 与后端通信、`data.md` 客户端数据持有与流动、`styles.md` 样式取值、`tests.md` 测试与定位约定。
 
-**先读 `structure.md` 的形态。** 形态决定其余判据是否适用：`微前端子应用` 里本仓查不到统一请求出口不等于没有（可能由宿主注入），`组件库` 里没有 `routing.md` 是正常产物而不是缺失。按份数判缺失是错的。
+**先读 `structure.md` 的形态。** 形态决定其余判据是否适用：`微前端子应用` 里本仓查不到统一请求出口不等于没有（可能由宿主注入），`组件库` 里没有 `routes.md` 是正常产物而不是缺失。按份数判缺失是错的。
 
 选择必须同时满足：
 

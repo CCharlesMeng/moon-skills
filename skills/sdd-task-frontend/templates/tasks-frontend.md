@@ -36,9 +36,9 @@
 
 ## 模块与文件
 
-先看仓库 baseline `components.md` / `routing.md` / `api.md` / `data.md` / `styling.md` 的 `PATTERN-*` 与清单条目，再在 `search_paths` 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写明原因，不是只写「新建」。样式文件归属还原 Task。
+先看仓库 baseline `components.md` / `routes.md` / `api.md` / `data.md` / `styles.md` 的 `PATTERN-*` 与清单条目，再在 `search_paths` 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写明原因，不是只写「新建」。样式文件归属还原 Task。
 
-**新增页面时读 `routing.md`**：路由注册在哪、挂哪个布局、要不要守卫，按它写；写着「无路由机制」时不要发明一个路由入口。
+**新增页面时读 `routes.md`**：路由注册在哪、挂哪个布局、要不要守卫，按它写；写着「无路由机制」时不要发明一个路由入口。
 
 | 文件 | 类型 | 新建/修改 | 职责与对外导出 | 复用的既有资产 | Task |
 | --- | --- | --- | --- | --- | --- |

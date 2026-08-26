@@ -141,7 +141,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 ### Phase -1：仓库接入门
 
-走一道极轻的门：仓库 baseline 的 `index.md` 在不在、`structure.md` 的栈签名读不读得出一个具名的框架加一个具名的形态。不在或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。不按份数查——`组件库` 形态下 `routing.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，读到时就地修。
+先把旧版 `routing.md` / `styling.md` / `testing.md` 原位迁成 `routes.md` / `styles.md` / `tests.md`，再走一道极轻的门：仓库 baseline 的 `index.md` 在不在、`structure.md` 的栈签名读不读得出一个具名的框架加一个具名的形态。不在或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。命名归一后不按份数查——`组件库` 形态下 `routes.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，读到时就地修。
 
 仓库 baseline 保存在 `<project-sdd-dir>/frontend-baselines/<repo-id>/`，不会每个 Story 重抽。
 
@@ -381,7 +381,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 | 产物 | 生命周期 | 生产阶段 | 主要消费者 |
 | --- | --- | --- | --- |
-| `frontend-baselines/<repo-id>/` 四件套 | 仓库级 | Phase -1 / `sdd-init-frontend` | 所有 Requirement / Story |
+| `frontend-baselines/<repo-id>/` 九份按问句 baseline | 仓库级 | Phase -1 / `sdd-init-frontend` | 所有 Requirement / Story |
 | `design-spec/design-tokens.md` | Requirement 级 | A1 | 区块规格抽取、QA 基线 |
 | `design-spec/interface-inventory.md` | Requirement 级 | A1 | 区块规格抽取 |
 | `design-spec/content-inventory.md` | Requirement 级 | A1 | 静态标签 / 动态数据位判定 |
@@ -404,8 +404,8 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 <project-sdd-dir>/frontend-baselines/
 └── <repo-id>/
     ├── index.md
-    ├── structure.md / runtime.md / components.md
-    └── api.md / data.md / styling.md / testing.md
+    ├── structure.md / runtime.md / components.md / routes.md
+    └── api.md / data.md / styles.md / tests.md
 
 <requirement-dir>/
 ├── requirement-frontend-design.md
