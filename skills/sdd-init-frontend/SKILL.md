@@ -1,36 +1,35 @@
 ---
 name: sdd-init-frontend
-description: 扫描一个前端仓，先定出栈与仓库形态（应用 / 微前端宿主 / 微前端子应用 / 小程序 / 组件库），再产出按消费者问句分类的九份可复用仓库级 baseline，并把依赖、环境变量、服务、身份与质量命令准备到可开发状态。用于前端项目首次接入、仓库 baseline 缺失、用户要求准备前端开发环境，或 sdd-dev-frontend 在 Story 开工前自动路由；不要求 tasks.md，不做浏览器实证，不生成 Requirement/Story 级 QA 基线。
+description: 扫描一个独立前端 app，先定出栈与形态（应用 / 微前端宿主 / 微前端子应用 / 小程序 / 组件库），再在该 app 根目录产出按消费者问句分类的九份可复用 baseline，并把依赖、环境变量、服务、身份与质量命令准备到可开发状态。用于前端项目首次接入、app baseline 缺失、用户要求准备前端开发环境，或 sdd-dev-frontend 在 Story 开工前自动路由；monorepo 可选择一个 app 或一次为全部 app 分别生成，不要求 tasks.md，不做浏览器实证，不生成 Requirement/Story 级 QA 基线。
 ---
 
 # 前端仓初始化
 
 ## 目标与边界
 
-以**一个前端仓库及其中一个目标 app**为工作单位，产出 [references/baseline-contract.md](references/baseline-contract.md) 定义的九份文件，并把当前机器准备到能装、能起、能跑质量命令。
+以**一个独立前端 app**为工作单位，产出 [references/baseline-contract.md](references/baseline-contract.md) 定义的九份文件，并把当前机器准备到能装、能起、能跑质量命令。单应用仓的 app 根就是仓根；monorepo 的 app 根是选中的子目录。“整体生成”只批量执行所有已选 app，各 app 的 baseline 仍彼此隔离。
 
 执行前先完整读取该契约与 [references/discovery-rules.md](references/discovery-rules.md)。
 
 | 事项 | 本 skill |
 | --- | --- |
-| 仓库级九份文件 | 负责，且**独占规范节的写权限** |
+| app 级九份文件 | 负责，且**独占规范节的写权限** |
 | 机器准备（装、起、必需服务与身份、质量命令实跑） | 负责 |
 | 浏览器实证（截图、DOM 采集、视口与字体） | **不负责**，由 `sdd-dev-frontend` Phase 0 按当次 Story 是否需要视觉能力决定 |
 | 需求级 `DEMAND-1~3` | 不负责，由 `sdd-dev-frontend` 在 Requirement / Story 生命周期生成 |
-| 项目级跨仓拓扑 | 不负责，由外层流程管理 |
+| monorepo / 跨仓拓扑 | 只负责识别 app 候选；拓扑由外层流程管理 |
 
 ## 路径
 
 | 变量 | 含义 |
 | --- | --- |
-| `<repo-root>` | 目标前端仓根目录 |
-| `<target-app>` | monorepo 中的目标 app；单 app 仓为 `.` |
-| `<project-sdd-dir>` | 外层 SDD 项目产物根目录 |
-| `<repo-id>` | 仓库稳定标识；默认取仓库目录名，冲突时加远端仓库名或短哈希 |
-| `<repo-baseline-dir>` | `<project-sdd-dir>/frontend-baselines/<repo-id>/` |
+| `<repo-root>` | Git 仓或 monorepo 根目录 |
+| `<target-app>` | 目标 app 相对 `<repo-root>` 的路径；单 app 仓为 `.` |
+| `<frontend-root>` | 目标 app 根目录；`<target-app>=.` 时等于 `<repo-root>`，否则为 `<repo-root>/<target-app>` |
+| `<repo-baseline-dir>` | `<frontend-root>/frontend-baselines/` |
 | `<story-dir>` | 由 `sdd-dev-frontend` 路由进来时的 Story 目录；独立调用时不存在 |
 
-先自动定位。多个 app 同等合理、多个 SDD 根候选或 repo id 冲突时，一轮问完；不要逐项追问。
+先自动定位。monorepo 只有一个合理 app 时静默选择；有多个合理 app 时，一轮列出每个 app 和“整体生成（为全部 app 分别生成）”选项，未选择不继续，不默认把仓根当成整体 app。“整体生成”逐 app 独立执行本 skill，不把多个 app 写进同一目录。
 
 ## 硬门禁
 
@@ -45,16 +44,17 @@ description: 扫描一个前端仓，先定出栈与仓库形态（应用 / 微�
 9. **实证不进 baselines 目录。** 命令退出码、耗时、失败摘要按调用方式落进 `<story-dir>` 或只回话，见门禁 10。
 10. **独立调用时实证只回话不落盘。** 无 `<story-dir>` 时无处可落，落进 baselines 会毁掉「契约 vs 实证」这条界线。
 11. **不用内容指纹、不写 readiness 字段、不维护 stale 状态。** 跟进方式是消费点自证 + 就地修；覆盖声明负责区分「仓里没有」和「没扫过」。
-12. **规范正文只在仓库级。** 不为 Requirement 或 Story 复制规范条目，也不长期保存候选清单。仍是候选就不落盘。
+12. **规范正文只在 app 级。** 不为 Requirement 或 Story 复制规范条目，也不长期保存候选清单。仍是候选就不落盘。
+13. **产物不反扫。** 所有发现、引用计数与代码检索排除任意 app 下的 `frontend-baselines/`；baseline 不能成为自己的代码证据。
 
 ## 工作流
 
 ### Phase 0 — 定位、定形态、定首扫范围
 
-1. 定位 `<repo-root>`、`<target-app>`、`<project-sdd-dir>`、`<repo-id>`，创建 `<repo-baseline-dir>`。
+1. 定位 `<repo-root>`、`<target-app>`、`<frontend-root>`，按上面的 monorepo 选择规则锁定一个 app，创建 `<repo-baseline-dir>`。“整体生成”时先锁定 app 清单，再对每个 app 从本步独立执行。
 2. 若目录已有文件，走[刷新与路由](#刷新与路由)，先归一旧版产物名，不要无条件全量重建。
 3. **先定栈签名：框架 + 形态**（`应用` / `微前端宿主` / `微前端子应用` / `小程序` / `组件库`），判据见 `discovery-rules.md`。形态必须在其余文件之前定出来并写进 `structure.md`，因为多组结构判据依赖它——组件库的分层判据整体失效、微前端子应用搜不到请求出口不等于没有、小程序的请求与样式判据都不同。定不出就按 `应用` 处理并在结论里说明。
-4. 定首扫范围：**通用层候选目录**（`components/`、`shared/`、`common/`、`ui/`、`lib/`、`utils/` 及其栈内等价物）**加上本次已知涉及的业务模块**。大仓不做全量遍历；业务侧靠增量长，覆盖声明负责对消费者诚实。
+4. 定首扫范围：`<frontend-root>` 内的**通用层候选目录**（`components/`、`shared/`、`common/`、`ui/`、`lib/`、`utils/` 及其栈内等价物）**加上本次已知涉及的业务模块**。允许读取当前 app 实际依赖的 monorepo 共享包作为证据，但不扫描其他 app；任何位置的 `frontend-baselines/` 均排除。大仓不做全量遍历；业务侧靠增量长，覆盖声明负责对消费者诚实。
 
 ### Phase 1 — 逐问句产出九份文件
 
@@ -110,6 +110,13 @@ description: 扫描一个前端仓，先定出栈与仓库形态（应用 / 微�
 - [ ] `index.md` 只有指向 ID 的行。
 
 ## 刷新与路由
+
+先做位置迁移：canonical 目录固定为 `<frontend-root>/frontend-baselines/`。仅当 canonical 不存在时，才检查调用方明确提供或当前工作区唯一可定位的旧外层 baseline 目录：
+
+- 旧目录已是九文件契约：保留正文、ID 与覆盖声明，迁入 canonical 后再走下表；不得长期 fallback 读取旧目录。
+- 旧目录只有 `repo-baseline.md` / `onboarding-report.md`：它不能无损转换成九文件契约，在 canonical 完整执行本 skill；旧目录保留为历史备份。
+- 新旧同时存在且内容不同：不覆盖、不按 mtime 猜，批量展示冲突并让用户决定。
+- “整体生成”逐 app 分别迁移；一个 app 的旧产物不得并入另一个 app。
 
 | 现状 | 动作 |
 | --- | --- |

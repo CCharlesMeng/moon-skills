@@ -47,7 +47,7 @@
 
 逐项通过才算格式合规满分。
 
-- [ ] **没有以「前置缺失」终止。** 九份仓库 baseline 与 `dev-baseline.md` 均存在且可读；本 Story 新增的源码文件不构成任何 baseline 失效
+- [ ] **没有以「前置缺失」终止。** 九份 app baseline 与 `dev-baseline.md` 均存在且可读；本 Story 新增的源码文件不构成任何 baseline 失效
 - [ ] 回传是 schema v1 裸 JSON，`role=review-convention`，coverage 恰好包含 C1–C7；无发现维度用 `result=clear` 并给出 scope
 - [ ] **穷尽性：C3 小节同时点出 `OrderExportPanel.module.css` 与 `StatCard.module.css` 两处硬编码，不因为先找到一处就收敛**（对应 GT-1、GT-2）
 - [ ] **豁免核对：结论里明确提到 `EX-1` 并说明「失败批次卡的 `String()` 因豁免不报」，而不是保持沉默**——沉默无法区分"检查过豁免表后判定不报"与"根本没检查 `failedCount` 那一行"，这条要求显式留痕

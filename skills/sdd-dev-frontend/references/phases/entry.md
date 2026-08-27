@@ -4,9 +4,10 @@
 
 ## Phase -1 — 仓库接入
 
-1. 解析 `<repo-root>`、`<project-sdd-dir>`、`<repo-id>`、`<repo-baseline-dir>`。
+1. 解析 `<repo-root>`，再按 TaskPacket 的 `search_paths`、前端设计与仓内 app 边界确定唯一 `<frontend-root>`；按 `sdd-init-frontend/references/baseline-contract.md` 得到 `<repo-baseline-dir>=<frontend-root>/frontend-baselines/`。单 app 仓静默取仓根；monorepo 多候选按 P7 一次确认。当前 Story 横跨多个独立 app 时回流 `sdd-task` 拆分，不把 monorepo 根当作混合 baseline。
 2. 先查命名 schema：目录里出现旧名 `routing.md` / `styling.md` / `testing.md` 任一项时，先路由 `sdd-init-frontend` 做原位迁移；这不触发全量重扫。
-3. 走**极轻的门**，只查两件事：
+3. canonical 缺失但发现旧外层 baseline 目录时，路由 `sdd-init-frontend` 做位置迁移；本 skill 不长期 fallback 读取旧目录。
+4. 走**极轻的门**，只查两件事：
 
 | 判据 | 不满足时 |
 | --- | --- |
@@ -19,7 +20,7 @@
 
 **这道门刻意不精确。** 「本 Story 需要的那几条查得到吗」在 Phase -1 还没有信息可判——`tasks.md` 要到 Phase 0 才读。所以这里只拦住「baseline 根本不存在」这一种情况；具体某条结论不成立由消费点自证并就地修，不在这里预判。
 
-**不查 readiness、不查指纹、不查 stale。** 这三样已随仓库 baseline 改版整体取消：内容指纹只能告诉你文件变了，永远不能告诉你结论变了，为这点信噪比要养账本、stale 状态、readiness 回退和一条「本 Story 自身改动放行」的例外。现在的跟进方式是消费点自证 + 就地修，Phase C/D 重查时**没有任何 baseline 失效需要放行或路由**。
+**不查 readiness、不查指纹、不查 stale。** 这三样已随 app baseline 改版整体取消：内容指纹只能告诉你文件变了，永远不能告诉你结论变了，为这点信噪比要养账本、stale 状态、readiness 回退和一条「本 Story 自身改动放行」的例外。现在的跟进方式是消费点自证 + 就地修，Phase C/D 重查时**没有任何 baseline 失效需要放行或路由**。
 
 退出：baseline 入口存在，栈与形态均可判。
 
@@ -44,13 +45,13 @@
 
 ### 4. 建立执行上下文
 
-记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制仓库 baseline，也不记录任何 baseline 指纹。
+记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制 app baseline，也不记录任何 baseline 指纹。
 
 按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `acceptance.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
 
 ### 5. 编译初始验证组合
 
-完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、仓库 baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
+完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、当前 app baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
 
 只有组合含命令模块时才读取 [preflight-and-telemetry.md](../preflight-and-telemetry.md) 的缓存节并取得起点失败集合；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。
 

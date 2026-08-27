@@ -17,7 +17,7 @@ python3 setup.py --case convention-01
 | 源料 | 是什么 |
 | --- | --- |
 | `repo/` | 一个最小但真实的前端仓（React + TS + Vite + CSS Modules），Story 起点的代码树 |
-| `baseline/` | 冻结的九份仓库 baseline，`setup.py` 原样拷进现场 |
+| `baseline/` | 冻结的九份 app baseline，`setup.py` 原样拷进目标 app |
 | [`sdd-review-frontend/evals/cases/<用例>/`](../../../sdd-review-frontend/evals/README.md) | 一个 Story 的产物、一组带种子缺陷的改动、以及 ground truth |
 | `../设计稿原型-标准版.html`、`../原型-客户风险简报.html` | 两份真实设计稿 |
 
@@ -25,18 +25,18 @@ python3 setup.py --case convention-01
 
 其余全是派生物，`setup.py` 每次从源料重建：目标仓的 git 历史、替换过占位符的 Story 产物、`design-spec/`（`design-facts.json` 单份接近 2 MB）。
 
-**baseline 不再是派生物。** 它现在全部用仓内相对路径指路，不含绝对路径也不含哈希，所以源料本身就是最终产物，`setup.py` 只做一次拷贝加一次文件齐全性校验。
+**baseline 内容不再现场生成。** 它全部用仓内相对路径指路，不含绝对路径也不含哈希，所以源料本身就是最终内容；`setup.py` 只把它拷进目标 app 的 `frontend-baselines/`、校验文件齐全，再与业务代码一同提交为 Story 起点。
 
-**派生物不进仓**，理由是它们要么机器相关要么体积大；能这么做的前提是重建确定性：提交时间固定为冻结日期，抽取器有 32 条回归测试钉住指标，所以任何人任何时候跑，`base-ref` 的 SHA 都一样。
+**Story 产物与 `design-spec/` 不进目标仓**，理由是它们属于外层 SDD 工作区且后者体积大；能这么做的前提是重建确定性：提交时间固定为冻结日期，抽取器有 32 条回归测试钉住指标，所以任何人任何时候跑，`base-ref` 的 SHA 都一样。
 
 ## 二、现场长什么样
 
 ```text
 现场根目录/
 ├── repo/                          目标业务仓，git 已初始化
+│   ├── frontend-baselines/
+│   │   └── index.md + 七份关注点文件   原样拷自 baseline/
 │   └── (工作区里有本 Story 的未提交改动 = 待检视的 diff)
-├── frontend-baselines/risk-console/
-│   └── index.md + 七份关注点文件   原样拷自 baseline/
 ├── story/
 │   ├── tasks.md
 │   ├── dev-baseline.md            工程依据 + 已冻结的 QA 基线

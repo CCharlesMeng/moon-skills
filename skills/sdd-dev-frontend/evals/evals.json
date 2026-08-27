@@ -168,7 +168,7 @@
       "gates": [
         "硬门禁 13"
       ],
-      "prompt": "当前 Story 需要取数三态与样式 token。仓库 baseline 的 data.md 有 PATTERN-DATA-1、styles.md 有 PATTERN-STYLE-1，Requirement 没有偏离仓库默认规范。请完成代码侧勘察并说明落盘内容。",
+      "prompt": "当前 Story 需要取数三态与样式 token。当前 app baseline 的 data.md 有 PATTERN-DATA-1、styles.md 有 PATTERN-STYLE-1，Requirement 没有偏离 app 默认规范。请完成代码侧勘察并说明落盘内容。",
       "expected_output": "复核两条规范的依据清单条目后，只把两个 PATTERN ID 写入 dev-baseline.md 的工程依据，不写指纹，不创建 codebase-brief.md 或 Story 范式卡片。",
       "expectations": [
         "Requirement 完全沿用仓库默认规范时不制造 Requirement 工程决策",
@@ -184,7 +184,7 @@
       "gates": [
         "硬门禁 0"
       ],
-      "prompt": "Phase -1 检查仓库 baseline：index.md 在，structure.md 能读出「Vue + 组件库形态」。但目录里没有 routes.md 也没有 api.md，而且 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
+      "prompt": "Phase -1 检查当前 app baseline：index.md 在，structure.md 能读出「Vue + 组件库形态」。但目录里没有 routes.md 也没有 api.md，而且 components.md 的覆盖声明里没有本次 Story 要改的那个业务模块。请给出接下来的路由。",
       "expected_output": "两条判据都成立，继续 Phase 0，不路由 sdd-init-frontend；组件库形态下缺这两份是正确产物，覆盖缺口留给 Phase 0 之后的消费点自行勘察并追加单条。",
       "expectations": [
         "只按两条判据判定：index.md 是否存在、栈签名是否读得出具名框架加具名形态",
@@ -854,6 +854,23 @@
         "说明迁移只改文件名和目录内引用，正文与 ID 不变，也不因此全量重扫",
         "迁移完成后 readiness 仍只查 index.md 和 structure.md，不改回按九份文件齐全性检查",
         "不因两条 readiness 判据已满足而把旧名留给 Phase 0 的消费者现场失败"
+      ]
+    },
+    {
+      "id": 53,
+      "name": "phase-minus-1-resolves-app-local-baseline",
+      "target": "references/phases/entry.md",
+      "gates": [
+        "硬门禁 0"
+      ],
+      "prompt": "Story 属于 monorepo 的 apps/web，search_paths 全在 apps/web/src；apps/web/frontend-baselines/ 有有效 index.md 与 structure.md。外层 Requirement 目录还留着旧 frontend-baselines/legacy-repo/。Phase -1 应读取哪份？若 search_paths 同时落在 apps/web 与 apps/mobile 呢？",
+      "expected_output": "唯一 app 时读取 apps/web/frontend-baselines/ 并忽略旧外层；横跨两个 app 时回流 sdd-task 拆分，不使用 monorepo 根或旧外层 baseline 兜底。",
+      "expectations": [
+        "从 project、search_paths 和前端设计确定 frontend-root=apps/web，再读取其 frontend-baselines/",
+        "canonical 已存在时不读取外层旧目录，也不比较 repo-id",
+        "Phase -1 的 readiness 仍只检查 canonical 的 index.md 与 structure.md 栈签名",
+        "search_paths 横跨 apps/web 与 apps/mobile 时回流 sdd-task 拆分 app 范围",
+        "不把 monorepo 根当成混合 frontend-root，也不选择任一 app 的 baseline 代表另一个 app"
       ]
     }
   ]

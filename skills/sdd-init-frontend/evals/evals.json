@@ -107,7 +107,7 @@
       "name": "pattern-body-lives-only-at-repo-level",
       "target": "SKILL.md",
       "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的取数封装与样式 token。另外本次勘察还发现两处看起来像新惯例、但只有一个样例支持。请说明仓库级、Requirement 级、Story 级分别保存什么。",
-      "expected_output": "规范正文只在仓库级九份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
+      "expected_output": "规范正文只在 app 级九份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
       "expectations": [
         "不为每个 Story 生成范式卡片或额外的勘察文档",
         "Requirement 不复制仓库规范正文，完全沿用时连工程决策章节也省略",
@@ -244,7 +244,7 @@
       "id": 19,
       "name": "legacy-artifact-names-migrate-without-renumbering",
       "target": "SKILL.md",
-      "prompt": "一个已有仓库 baseline 的 index.md 与 structure.md 都可读，目录里仍是 routing.md、styling.md、testing.md；其中有 ROUTE-*、STYLE-*、TEST-* 及对应 PATTERN-*，index.md 和 components.md 还引用了旧文件名。请说明刷新动作。另一个目录同时存在 routing.md 与 routes.md，内容不同。",
+      "prompt": "一个已有 app baseline 的 index.md 与 structure.md 都可读，目录里仍是 routing.md、styling.md、testing.md；其中有 ROUTE-*、STYLE-*、TEST-* 及对应 PATTERN-*，index.md 和 components.md 还引用了旧文件名。请说明刷新动作。另一个目录同时存在 routing.md 与 routes.md，内容不同。",
       "expected_output": "第一处只把三份文件迁成 routes.md、styles.md、tests.md，并同步目录内导航与交叉引用；正文和所有 ID 保留，不重扫。第二处不覆盖，先比较来源并让用户决定保留哪份。",
       "expectations": [
         "把命名迁移识别为 schema 归一，不因为 index.md 与 structure.md 已可读就跳过，也不触发全量重扫",
@@ -252,6 +252,34 @@
         "同步更新 index.md 与同目录交叉引用，避免文件已经改名而导航仍指旧路径",
         "ROUTE-*、STYLE-*、TEST-* 与对应 PATTERN-* 全部保留，不重编号、不换命名空间",
         "旧名和新名同时存在且内容不同时不覆盖，先让用户决定保留哪份"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "monorepo-app-selection-keeps-baselines-isolated",
+      "target": "SKILL.md",
+      "prompt": "一个 monorepo 检出 apps/web、apps/mobile、apps/miniprogram 三个合理前端 app，用户只说‘初始化这个前端仓’，没有指定 app。请说明下一步；如果用户选择‘整体生成’，说明每份产物写到哪里。",
+      "expected_output": "一轮列出三个 app 与整体生成选项，未选择不扫描；整体生成逐 app 独立执行，分别写进各 app 根下的 frontend-baselines/，不在 monorepo 根生成混合 baseline。",
+      "expectations": [
+        "把 apps/web、apps/mobile、apps/miniprogram 和‘整体生成’放在同一轮选择里，不逐项追问",
+        "没有用户选择时不默认 target-app=.，也不开始扫描",
+        "选择整体生成时分别写 apps/web/frontend-baselines/、apps/mobile/frontend-baselines/、apps/miniprogram/frontend-baselines/",
+        "不创建 monorepo 根的 frontend-baselines/ 聚合三套内容，不把不同 app 的栈、命令或规范混写",
+        "每个 app 的扫描排除任意 frontend-baselines/，共享包只有被该 app 实际消费时才可作为证据"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "baseline-location-is-owned-by-frontend-root",
+      "target": "references/baseline-contract.md",
+      "prompt": "目标是 monorepo 的 apps/web，仓根之外另有旧 SDD 目录，其中存在 frontend-baselines/legacy-repo/index.md；apps/web 里还没有 baseline。请给出 canonical 路径、旧目录处理与后续消费者读取规则。另一个现场的新旧目录都存在但内容不同。",
+      "expected_output": "canonical 固定为 apps/web/frontend-baselines/；旧九文件目录由 init 迁入而不是被消费者长期 fallback；新旧冲突时停止并让用户决定。",
+      "expectations": [
+        "canonical 由 frontend-root 唯一推出，路径是 apps/web/frontend-baselines/，不含 repo-id",
+        "project-sdd-dir 不参与 canonical 定位，Requirement/Story 目录位置不改变 app baseline 所有权",
+        "旧九文件目录保留正文、ID 与覆盖声明迁入 canonical，消费者之后只读 canonical",
+        "旧两文件 repo-baseline.md/onboarding-report.md 不冒充九文件契约，改在 canonical 完整生成",
+        "新旧内容冲突时不覆盖、不按 mtime 猜，批量展示冲突并请求选择"
       ]
     }
   ]

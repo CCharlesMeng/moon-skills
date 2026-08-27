@@ -3,7 +3,7 @@
 ## 目录
 
 1. [分类依据：文件即消费者问句](#分类依据文件即消费者问句)
-2. [目录与九份文件](#目录与九份文件)
+2. [作用域、目录与九份文件](#作用域目录与九份文件)
 3. [仓库形态门控问句](#仓库形态门控问句)
 4. [条目格式](#条目格式)
 5. [只指路不复制](#只指路不复制)
@@ -23,10 +23,23 @@
 
 唯一事实源由三条机制共同保证，不靠自觉：同一条事实只出现在一节、ID 全局唯一、只指路不复制。
 
-## 目录与九份文件
+## 作用域、目录与九份文件
+
+baseline 的最小所有权单位是**一个独立前端 app**，不是外层 SDD 项目，也不是默认聚合的 monorepo。
+
+| 变量 | 解析 |
+| --- | --- |
+| `<repo-root>` | Git 仓或 monorepo 根目录 |
+| `<target-app>` | 目标 app 相对仓根的路径；单 app 仓为 `.` |
+| `<frontend-root>` | `<target-app>=.` 时取 `<repo-root>`，否则取 `<repo-root>/<target-app>` |
+| `<repo-baseline-dir>` | `<frontend-root>/frontend-baselines/` |
+
+monorepo 只检出一个合理 app 时静默选择；检出多个时，一轮向用户列出每个 app 与“整体生成”选项。选择“整体生成”表示**为全部 app 分别执行**，每个 app 仍写自己的 `<frontend-root>/frontend-baselines/`，不在仓根建立混合 baseline。未获得选择时不开始扫描，也不默认把整个 monorepo 当成一个 app。
+
+共享包只有被当前 app 实际消费时才可作为该 app 的证据；其他 app 不进本轮扫描。所有扫描、全文搜索与引用计数都排除任意 `frontend-baselines/` 目录，防止产物反过来成为代码证据。
 
 ```text
-<project-sdd-dir>/frontend-baselines/<repo-id>/
+<frontend-root>/frontend-baselines/
 ├── index.md        入口与路由，零事实正文
 ├── structure.md    STRUCT-*
 ├── runtime.md      RUN-*
@@ -327,7 +340,7 @@ token、scale、mixin、工具类、主题对象、硬编码基准。主题机�
 
 | 事实范围 | 保存位置 | 处理方式 |
 | --- | --- | --- |
-| 跨 Requirement 的仓库惯例 | baselines 的九份文件 | 保存唯一正文 |
+| 跨 Requirement 的 app 惯例 | baselines 的九份文件 | 保存唯一正文 |
 | 同一 Requirement 多个 Story 的选择或偏离 | `requirement-frontend-design.md` 的工程决策 | 只引用 ID，不复制正文 |
 | 当前 Story 采用哪些规范 | `dev-baseline.md` 的工程依据 | 只保存 ID |
 | 当前 Story 的一次性实现细节 | tasks、代码与验证证据 | 不进 baseline |

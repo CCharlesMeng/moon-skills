@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """把冻结的 fixture 源料展开成一个可跑的现场。
 
-现场里的东西全部是派生物，不进仓：目标业务仓、Story 产物、design-spec 都由本脚本
-从仓内源料确定性重建。源料只有四样：`repo/`、`baseline/`（冻结的九份仓库 baseline，
-原样拷贝）、`sdd-review-frontend/evals/cases/<case>/`，以及 `evals/` 下的两份原型 HTML。
+目标业务仓、Story 产物与 design-spec 都由本脚本从仓内源料确定性重建。冻结的九份
+app baseline 会先拷进目标仓的 `frontend-baselines/`，再和业务代码一起提交为 Story 起点。
+源料只有四样：`repo/`、`baseline/`、`sdd-review-frontend/evals/cases/<case>/`，以及
+`evals/` 下的两份原型 HTML。
 
     python3 setup.py --case convention-01
     python3 setup.py --case convention-01 --work-dir /tmp/fx --with-design-spec
@@ -31,7 +32,6 @@ REVIEW_PACK_DIR = SKILL_DIR.parent / "sdd-review-frontend"
 # 用例测的是 review 包里的 checklist，所以跟 checklist 走；本脚本只负责把现场搭起来。
 CASES_DIR = REVIEW_PACK_DIR / "evals" / "cases"
 
-REPO_ID = "risk-console"
 # 现场必须逐字节可复现，所以时间戳取 fixture 的冻结日期，不取当前时间。
 FREEZE_DATE = "2026-08-05"
 LIMIT = "依赖未安装，质量命令与浏览器采集均未实跑；本现场只支持静态判据类模块的评测"
@@ -68,9 +68,10 @@ def run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = No
     return result.stdout
 
 
-def build_repo(work_dir: Path) -> tuple[Path, str]:
+def build_repo(work_dir: Path) -> tuple[Path, str, Path]:
     repo = work_dir / "repo"
     shutil.copytree(FIXTURE_DIR / "repo", repo)
+    baseline_dir = build_baseline(repo)
     run(["git", "init", "--quiet", "--initial-branch=main"], cwd=repo)
     run(["git", *GIT_CONFIG, "add", "-A"], cwd=repo)
     run(
@@ -79,17 +80,16 @@ def build_repo(work_dir: Path) -> tuple[Path, str]:
         env={**os.environ, "GIT_AUTHOR_DATE": COMMIT_DATE, "GIT_COMMITTER_DATE": COMMIT_DATE},
     )
     base_ref = run(["git", "rev-parse", "HEAD"], cwd=repo).strip()
-    return repo, base_ref
+    return repo, base_ref, baseline_dir
 
 
-def build_baseline(work_dir: Path) -> Path:
+def build_baseline(frontend_root: Path) -> Path:
     """把冻结的九份 baseline 原样拷进现场。
 
     这里没有扫描、没有注入、没有指纹回填：baseline 全部用仓内相对路径指路，
     不含绝对路径也不含哈希，所以源料本身就是最终产物，逐字节可复现。
     """
-    baseline_dir = work_dir / "frontend-baselines" / REPO_ID
-    baseline_dir.parent.mkdir(parents=True, exist_ok=True)
+    baseline_dir = frontend_root / "frontend-baselines"
     shutil.copytree(FIXTURE_DIR / "baseline", baseline_dir)
 
     missing = [name for name in BASELINE_FILES if not (baseline_dir / name).is_file()]
@@ -193,8 +193,7 @@ def main() -> int:
         raise SystemExit(f"现场目录非空，换一个或先清空：{work_dir}")
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    repo, base_ref = build_repo(work_dir)
-    baseline_dir = build_baseline(work_dir)
+    repo, base_ref, baseline_dir = build_repo(work_dir)
     story_dir = build_story(case_dir, work_dir, {
         "BASELINE_DIR": str(baseline_dir),
         "STORY_DIR": str(work_dir / "story"),
@@ -221,7 +220,7 @@ def main() -> int:
     print("| `evidence_epoch` | `fixture-review-1` |")
     if design_spec is not None:
         print(f"| `<design-spec-dir>` | `{design_spec}/risk-brief` |")
-    print(f"\n仓库 baseline：{len(BASELINE_FILES)} 份（{', '.join(BASELINE_FILES)}）")
+    print(f"\napp baseline：{len(BASELINE_FILES)} 份（{', '.join(BASELINE_FILES)}）")
     print(f"待检视改动（{len(changed)} 个文件）：")
     for item in dirty:
         print(f"  {item}")

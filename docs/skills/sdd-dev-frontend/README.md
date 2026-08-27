@@ -35,9 +35,9 @@ flowchart LR
 
 一次运行只处理：
 
-> **一个前端仓 × 一个 Story 的 `tasks.md`**
+> **一个独立前端 app × 一个 Story 的 `tasks.md`**
 
-如果一个需求涉及多个 Story 或多个仓，请分别运行；跨仓依赖由外层流程协调。
+如果一个需求涉及多个 Story、多个 app 或多个仓，请分别运行；跨 app / 跨仓依赖由外层流程协调。
 
 以下情况不应直接使用：
 
@@ -141,9 +141,9 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 ### Phase -1：仓库接入门
 
-先把旧版 `routing.md` / `styling.md` / `testing.md` 原位迁成 `routes.md` / `styles.md` / `tests.md`，再走一道极轻的门：仓库 baseline 的 `index.md` 在不在、`structure.md` 的栈签名读不读得出一个具名的框架加一个具名的形态。不在或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。命名归一后不按份数查——`组件库` 形态下 `routes.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，读到时就地修。
+先把旧版 `routing.md` / `styling.md` / `testing.md` 原位迁成 `routes.md` / `styles.md` / `tests.md`，再走一道极轻的门：当前 app baseline 的 `index.md` 在不在、`structure.md` 的栈签名读不读得出一个具名的框架加一个具名的形态。不在或读不出时自动路由 `sdd-init-frontend`，主动完成依赖、配置、服务、登录、fixture 和质量命令准备，再返回当前 Story。命名归一后不按份数查——`组件库` 形态下 `routes.md` 与 `api.md` 本就不该存在。单条结论不成立不是就绪问题，读到时就地修。
 
-仓库 baseline 保存在 `<project-sdd-dir>/frontend-baselines/<repo-id>/`，不会每个 Story 重抽。
+当前 app 的 baseline 保存在 `<frontend-root>/frontend-baselines/`，不会每个 Story 重抽。单应用仓的 `<frontend-root>` 就是仓根；monorepo 由 Story 的 `search_paths` 与前端设计定位到一个 app 根。
 
 ### Phase 0：需求执行起点
 
@@ -163,7 +163,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 | 产物 | 写入位置 | 交给下一步什么信息 |
 | --- | --- | --- |
-| `dev-baseline.md` 的“执行起点（环境）” | `<story-dir>/dev-baseline.md` | 仓库 baseline 引用、场景、`base-ref`、质量失败集合、页面/采集能力和 Story 特有限制 |
+| `dev-baseline.md` 的“执行起点（环境）” | `<story-dir>/dev-baseline.md` | app baseline 引用、场景、`base-ref`、质量失败集合、页面/采集能力和 Story 特有限制 |
 
 起点失败集合非常关键：后续回归不是要求仓库“从此全绿”，而是要求本 Story 不引入起点之外的新失败。
 
@@ -290,7 +290,7 @@ QA 基线的分类法固定为下面十个维度，不能增删；但它们是**
 
 ### Phase B：逐 Task 实现
 
-主 agent 按 `tasks.md` 原顺序执行，不重排 Task。每个 Task 动手前先读 `dev-baseline.md / 工程依据`，按 ID 回读仓库 baseline 里那条唯一正文，优先复用仓内已有 token、方法、hooks、请求封装和代码规范。
+主 agent 按 `tasks.md` 原顺序执行，不重排 Task。每个 Task 动手前先读 `dev-baseline.md / 工程依据`，按 ID 回读当前 app baseline 里那条唯一正文，优先复用 app 内已有 token、方法、hooks、请求封装和代码规范。
 
 上游已按形态切分时，页面还原 Task 只跑还原轮，后续逻辑 Task 只跑逻辑轮。只有上游没有切开，或样式确实由运行时状态计算、没有独立静态形态时，一个 Task 才包含多轮 6 步；顺序固定为先还原、后逻辑。
 
@@ -381,7 +381,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 
 | 产物 | 生命周期 | 生产阶段 | 主要消费者 |
 | --- | --- | --- | --- |
-| `frontend-baselines/<repo-id>/` 九份按问句 baseline | 仓库级 | Phase -1 / `sdd-init-frontend` | 所有 Requirement / Story |
+| `<frontend-root>/frontend-baselines/` 九份按问句 baseline | app 级 | Phase -1 / `sdd-init-frontend` | 该 app 的所有 Requirement / Story |
 | `design-spec/design-tokens.md` | Requirement 级 | A1 | 区块规格抽取、QA 基线 |
 | `design-spec/interface-inventory.md` | Requirement 级 | A1 | 区块规格抽取 |
 | `design-spec/content-inventory.md` | Requirement 级 | A1 | 静态标签 / 动态数据位判定 |
@@ -401,11 +401,10 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。
 典型目录布局：
 
 ```text
-<project-sdd-dir>/frontend-baselines/
-└── <repo-id>/
-    ├── index.md
-    ├── structure.md / runtime.md / components.md / routes.md
-    └── api.md / data.md / styles.md / tests.md
+<frontend-root>/frontend-baselines/
+├── index.md
+├── structure.md / runtime.md / components.md / routes.md
+└── api.md / data.md / styles.md / tests.md
 
 <requirement-dir>/
 ├── requirement-frontend-design.md

@@ -627,7 +627,9 @@ function checkFrontendSkillBoundary(files) {
 
 function checkFrontendBaselineArtifacts() {
   const contract = readFileSync(BASELINE_CONTRACT_PATH, "utf-8");
-  const artifactSection = contract.split(/^## 目录与九份文件$/m)[1]?.split(/^## /m)[0];
+  const artifactSection = contract
+    .split(/^## 作用域、目录与九份文件$/m)[1]
+    ?.split(/^## /m)[0];
   const canonical = artifactSection
     ? [...artifactSection.matchAll(/[├└]── ([a-z][a-z-]*\.md)\b/g)].map((m) => m[1])
     : [];
@@ -675,6 +677,77 @@ function checkFrontendBaselineArtifacts() {
   );
 }
 
+function checkFrontendBaselineLocation(files) {
+  const contract = readFileSync(BASELINE_CONTRACT_PATH, "utf-8");
+  const initSkill = readFileSync(
+    join(SKILLS_DIR, "sdd-init-frontend", "SKILL.md"),
+    "utf-8"
+  );
+  const setup = readFileSync(BASELINE_SETUP_PATH, "utf-8");
+  let failed = 0;
+
+  const requiredContractText = [
+    "`<repo-baseline-dir>` | `<frontend-root>/frontend-baselines/`",
+    "整体生成",
+    "为全部 app 分别执行",
+    "不在仓根建立混合 baseline",
+  ];
+  for (const text of requiredContractText) {
+    if (contract.includes(text)) continue;
+    report("fail", "fe-baseline-location", `baseline contract missing: ${text}`);
+    failed++;
+  }
+
+  if (!initSkill.includes("整体生成（为全部 app 分别生成）")) {
+    report(
+      "fail",
+      "fe-baseline-location",
+      "sdd-init-frontend must offer each app plus the separate-output 整体生成 option"
+    );
+    failed++;
+  }
+
+  const forbiddenRuntimePatterns = [
+    [/<project-sdd-dir>\/frontend-baselines/g, "outer SDD directory owns baseline"],
+    [/frontend-baselines\/<repo-id>/g, "redundant repo-id nesting"],
+  ];
+  for (const file of files) {
+    if (!file.startsWith(SKILLS_DIR) || !onRuntimeSurface(file)) continue;
+    const content = readFileSync(file, "utf-8");
+    for (const [pattern, reason] of forbiddenRuntimePatterns) {
+      pattern.lastIndex = 0;
+      if (!pattern.test(content)) continue;
+      report("fail", "fe-baseline-location", `${rel(file)} retains ${reason}`);
+      failed++;
+    }
+  }
+
+  if (!setup.includes('frontend_root / "frontend-baselines"')) {
+    report(
+      "fail",
+      "fe-baseline-location",
+      "fixture setup must place the baseline directly under frontend_root"
+    );
+    failed++;
+  }
+  if (/frontend_root\s*\/\s*["']frontend-baselines["']\s*\//.test(setup)) {
+    report(
+      "fail",
+      "fe-baseline-location",
+      "fixture setup adds a forbidden directory below frontend-baselines"
+    );
+    failed++;
+  }
+
+  if (failed === 0) {
+    report(
+      "pass",
+      "fe-baseline-location",
+      "app-local ownership, monorepo choice, and fixture layout stay aligned"
+    );
+  }
+}
+
 function checkFrontendChain() {
   console.log("\n── Frontend SDD Chain ──");
 
@@ -699,6 +772,7 @@ function checkFrontendChain() {
   checkFrontendGateCoverage();
   checkFrontendReviewOwnership(files);
   checkFrontendSkillBoundary(files);
+  checkFrontendBaselineLocation(files);
   checkFrontendBaselineArtifacts();
 }
 

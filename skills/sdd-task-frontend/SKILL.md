@@ -1,13 +1,13 @@
 ---
 name: sdd-task-frontend
-description: 为单个前端仓与 Story 生成或更新 tasks.md 和 alpha-tests.md，定义实现位置、每个文件的功能职责、验收声明与风险事实，不写代码也不执行验证。用于 sdd-task 按 type=frontend 自动路由，或用户要求规划单个前端 Story、补齐前端任务与验收用例；多仓或多 Story 仍由 sdd-task 统筹。
+description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 alpha-tests.md，定义实现位置、每个文件的功能职责、验收声明与风险事实，不写代码也不执行验证。用于 sdd-task 按 type=frontend 自动路由，或用户要求规划单个前端 Story、补齐前端任务与验收用例；多 app、多仓或多 Story 仍由 sdd-task 统筹。
 ---
 
 # 前端实现计划
 
 ## 边界
 
-一次只处理一个前端仓 × 一个 Story。`sdd-task` 负责遍历、目录与 `codespec` CLI；本 skill 消费交接事实、按「输入」表自取其余，写 `tasks.md`、`alpha-tests.md`。共享所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则以 [前端 SDD 执行契约](../sdd-dev-frontend/references/execution-contract.md) 为唯一事实源。
+一次只处理一个独立前端 app × 一个 Story。`sdd-task` 负责遍历、目录与 `codespec` CLI；本 skill 消费交接事实、按「输入」表自取其余，写 `tasks.md`、`alpha-tests.md`。共享所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则以 [前端 SDD 执行契约](../sdd-dev-frontend/references/execution-contract.md) 为唯一事实源。
 
 计划回答四件事：**什么必须成立、改哪些文件、每个文件实现什么功能、按什么顺序**。粒度写到「打开哪个文件、在里面实现什么」；代码写法、命令、浏览器场景、验证广度和证据结论由 `sdd-dev-frontend` 决定，计划没识别到的连带改动也由它按[扩散承接](../sdd-dev-frontend/references/execution-contract.md#扩散承接)接住——所以计划不必为了保险把文件清单写宽。
 
@@ -28,7 +28,7 @@ description: 为单个前端仓与 Story 生成或更新 tasks.md 和 alpha-test
 | 知识底座结果                                | 已消费的规范 `entries[].id` 与 `gaps`                                  | 交接值，原样写进 `tasks.md` 的知识 trace                                                                                       | 降级 —— 知识 trace 写「未交接」，已知 `gaps` 照登                          |
 | `project` / `project_type`            | 目标前端仓名 / 固定 `frontend`                                          | 交接值                                                                                                                 | 自取 —— 从 `story_dir` 的 `codebase/<project>/` 段推导            |
 | `search_paths`                        | 本 Story 允许改动的仓内路径                                               | 交接值，与仓内实际目录结构核对                                                                                                     | 自取 —— 由前端设计与仓内目录结构得出                                       |
-| 仓库规范                                  | 已成立、可跨 Requirement 复用的 `PATTERN-*`（请求封装、三态处理、通用组件、路由装配、测试定位约定）    | `sdd-init-frontend` 产出的 `frontend-baselines/<repo-id>/`，按 `index.md` 场景索引取 ID；先读 `structure.md` 的形态，它决定其余判据是否适用 | 自取 —— 无 baseline 时按 `search_paths` 内代码勘察既有资产，不因此停           |
+| app 规范                                 | 已成立、可跨 Requirement 复用的 `PATTERN-*`（请求封装、三态处理、通用组件、路由装配、测试定位约定）    | 先由 `project`、`search_paths` 与前端设计确定唯一 app 根，再按 [`sdd-init-frontend` baseline 契约](../sdd-init-frontend/references/baseline-contract.md#作用域目录与九份文件) 读取 `<frontend-root>/frontend-baselines/`；先读 `structure.md` 的形态 | 自取 —— 无 baseline 时按 `search_paths` 内代码勘察既有资产，不因此停           |
 | `detection_ref`                       | 测试框架探测规则，判据只有这一份                                                | `[sdd-task/references/test-framework-detection.md](../sdd-task/references/test-framework-detection.md)`             | 自取 —— 路径固定，上游不给也照此读                                        |
 | `extraction_ref`                      | 验收用例提炼规则，判据只有这一份                                                | `[sdd-task/references/acceptance-criteria-extraction.md](../sdd-task/references/acceptance-criteria-extraction.md)` | 自取 —— 同上                                                   |
 | `contract_ref`                        | 共享执行契约：所有权、分层边界、扩散承接、声明状态、TaskPacket、基线源与切分规则                   | `[sdd-dev-frontend/references/execution-contract.md](../sdd-dev-frontend/references/execution-contract.md)`         | 自取 —— 路径固定；文件确实不存在说明 `sdd-dev-frontend` 未与本 skill 一起安装，**停**并要求补装，不凭记忆重述字段语义 |
@@ -68,6 +68,7 @@ description: 为单个前端仓与 Story 生成或更新 tasks.md 和 alpha-test
 11. 还原取证以页面为单位，标明归属轮；不为单个 Task 安排页面级复验。
 12. 文件清单只写已确认范围；有风险没定论的写进「可能扩散」，不靠扩大清单兜底。
 13. 同一枚举、字段或 URL 契约只定义一次；禁止 TBD、TODO、空步骤和「类似任务」。
+14. 一个计划只覆盖一个 `<frontend-root>`。monorepo 中 `search_paths` 横跨多个独立 app 时回流 `sdd-task` 拆分，不读取仓根或其他 app 的 baseline 兜底。
 
 
 

@@ -15,7 +15,7 @@
 | 冻结状态 | 待确认 / 已冻结 ✅ |
 | 确认时间 | <YYYY-MM-DD> |
 | 声明状态 | 冻结时全部为 `UNVERIFIED`；逐条状态见 `alpha-tests.md` 的 AC ↔ 证据映射 |
-| 仓库 baseline | <目录 + 本次读过的关注点文件；仓库 baseline 没有 readiness 字段> |
+| app baseline | <目录 + 本次读过的关注点文件；app baseline 没有 readiness 字段> |
 | 设计事实 / 区块规格 | <路径；基线源非原型时写“无（基线源为 …）”> |
 | 还原契约 | <story-dir>/restore-contract.json；无还原声明时写“无” |
 
@@ -51,7 +51,7 @@
 | --- | --- |
 | <能力，如“后端取数”> | `PATTERN-*` / `REQ-DEC-*` |
 
-<勘察模式；选择理由。只保存采用的 ID，不复制仓库 baseline 正文>
+<勘察模式；选择理由。只保存采用的 ID，不复制 app baseline 正文>
 
 ## 功能理解
 

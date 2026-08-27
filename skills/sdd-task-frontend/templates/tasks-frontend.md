@@ -36,7 +36,7 @@
 
 ## 模块与文件
 
-先看仓库 baseline `components.md` / `routes.md` / `api.md` / `data.md` / `styles.md` 的 `PATTERN-*` 与清单条目，再在 `search_paths` 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写明原因，不是只写「新建」。样式文件归属还原 Task。
+先看当前 app baseline `components.md` / `routes.md` / `api.md` / `data.md` / `styles.md` 的 `PATTERN-*` 与清单条目，再在 `search_paths` 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写明原因，不是只写「新建」。样式文件归属还原 Task。
 
 **新增页面时读 `routes.md`**：路由注册在哪、挂哪个布局、要不要守卫，按它写；写着「无路由机制」时不要发明一个路由入口。
 
@@ -49,7 +49,7 @@
 | 状态 | 归属节点 | 来源 | 消费方 | 变化 / 失效时机 |
 | --- | --- | --- | --- | --- |
 
-有异步取数时先认既有做法：仓库 baseline `data.md` 的三态规范、`api.md` 的请求出口、`components.md` 的通用列表/表格/骨架构件。**默认沿用，写一行「三态沿用：<PATTERN-ID 或路径>」就够**，不复述既有行为。
+有异步取数时先认既有做法：当前 app baseline `data.md` 的三态规范、`api.md` 的请求出口、`components.md` 的通用列表/表格/骨架构件。**默认沿用，写一行「三态沿用：<PATTERN-ID 或路径>」就够**，不复述既有行为。
 
 `data.md` 写的是「无统一做法」时，结论是本仓没有三态基准：如实写成缺口并按 AT 需要定出本 Story 的做法，**不要假装在沿用一条不存在的约定**。
 

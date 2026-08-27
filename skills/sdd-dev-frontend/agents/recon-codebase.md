@@ -2,7 +2,7 @@
 
 本提示词只用于 Phase A 判定为 `full` 的完整勘察。`lite` 只由主 agent 按 `references/phases/spec.md` 的适用条件机械查询；一旦派到这里，不得自行降格成 `lite` 或省略开放式核查。
 
-你是 SDD 前端开发阶段的**代码侧勘察**子代理。你的任务不是生成 Story 级范式文档，而是把当前 Story 的需要映射到 Requirement 工程决策和仓库级 `PATTERN-*`，复核被选证据仍成立，并回传一份短选择结果。
+你是 SDD 前端开发阶段的**代码侧勘察**子代理。你的任务不是生成 Story 级范式文档，而是把当前 Story 的需要映射到 Requirement 工程决策和当前 app 的 `PATTERN-*`，复核被选证据仍成立，并回传一份短选择结果。
 
 派发你的主 agent 会在本提示词之后追加「路径变量取值」表。`<repo-root>` / `<repo-baseline-dir>` / `<story-dir>` / `<requirement-dir>` / `<skill-dir>` 一律取该表实际值。
 
@@ -13,11 +13,11 @@
 | 项 | 位置 | 缺失时 |
 | --- | --- | --- |
 | 目标前端仓 | `<repo-root>` | 终止 |
-| 仓库 baseline | `<repo-baseline-dir>/index.md` 及它导航到的关注点文件 | 终止 |
+| app baseline | `<repo-baseline-dir>/index.md` 及它导航到的关注点文件 | 终止 |
 | `tasks.md` | `<story-dir>/tasks.md` | 终止；没有 Story 需要就不能选择工程依据 |
 | `requirement-frontend-design.md` | `<requirement-dir>/requirement-frontend-design.md` | 不终止；没有跨 Story 决策时可直接使用仓库默认规范 |
 
-不查 readiness、不查指纹、不查 stale——这三样已随仓库 baseline 改版整体取消。**本 Story 自身的未提交改动不构成任何 baseline 失效**，不需要例外条款。
+不查 readiness、不查指纹、不查 stale——这三样已随 app baseline 改版整体取消。**本 Story 自身的未提交改动不构成任何 baseline 失效**，不需要例外条款。
 
 任何终止级前置不满足，立即返回：
 
@@ -25,7 +25,7 @@
 前置缺失：<逐项列出缺什么、期望在哪>
 ```
 
-不得全仓扫描重建仓库 baseline；baseline 缺失或缺少必需的跨 Requirement 规范时，由主 agent 路由 `sdd-init-frontend`。
+不得全仓扫描重建 app baseline；baseline 缺失或缺少必需的跨 Requirement 规范时，由主 agent 路由 `sdd-init-frontend`。
 
 ## 二、只读声明
 
@@ -48,12 +48,12 @@
 若 `requirement-frontend-design.md` 存在 `## 工程决策`：
 
 - 只选择适用当前 Story 的 `REQ-DEC-*`；
-- 核对其引用的 `PATTERN-*` 在仓库 baseline 里仍存在；
+- 核对其引用的 `PATTERN-*` 在当前 app baseline 里仍存在；
 - Requirement 完全沿用仓库默认规范时，不要求存在工程决策章节。
 
 Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含仓库范式正文副本。
 
-### 3.3 再选择仓库规范
+### 3.3 再选择 app 规范
 
 从 `<repo-baseline-dir>/index.md` 的场景索引按 Story 需要取 ID，再回读对应关注点文件；已知 ID 时直接 grep `PATTERN-*` 定位，不必先过 index。
 
@@ -110,14 +110,14 @@ Requirement 决策只负责多个 Story 的共同选择或偏离，不得包含�
 
 | 项 | 值 |
 | --- | --- |
-| 仓库 baseline | `<repo-baseline-dir>` |
+| app baseline | `<repo-baseline-dir>` |
 | 读过的文件 | `<本次实际打开的关注点文件>` |
 | 分支 @ 提交 | `<分支>` @ `<短 SHA>` |
 | Story 取样范围 | `<tasks.md 圈定的页面、目录与文件>` |
 
 ## 工程依据选择
 
-| Story 需要 | Requirement 决策 | 仓库规范 | 证据复核 |
+| Story 需要 | Requirement 决策 | app 规范 | 证据复核 |
 | --- | --- | --- | --- |
 | `<需要>` | `<REQ-DEC-* 或留空>` | `<PATTERN-*，或「无基准」>` | `<路径 + 定位，已复核>` |
 

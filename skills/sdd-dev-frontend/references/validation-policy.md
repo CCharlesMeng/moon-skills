@@ -17,7 +17,7 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 
 ## 二、输入与输出
 
-从 `tasks.md` 读取 AC/AT、`affected_routes`、`required_states`、`risk_triggers` 与文件范围；再用仓库 baseline、实际 diff 和运行限制校正。上游字段是候选事实，实测冲突时以实测为准并登记原因。
+从 `tasks.md` 读取 AC/AT、`affected_routes`、`required_states`、`risk_triggers` 与文件范围；再用当前 app baseline、实际 diff 和运行限制校正。上游字段是候选事实，实测冲突时以实测为准并登记原因。
 
 把结果写入 `dev-baseline.md / 验证组合`，候选稳定后把同一结构写入 `review-evidence.json / validation_portfolio`：
 

@@ -7,9 +7,9 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 ## 核心契约
 
-一次只处理一个前端仓 × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
+一次只处理一个独立前端 app × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
 
-`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。仓库公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
+`tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。当前 app 的公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 
 ## 工作流
 
@@ -17,7 +17,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 | Phase | 动作与出口 | 细则 |
 | --- | --- | --- |
-| -1 / 0 | 校验仓库 baseline；定位 Story；核实上游字段；编译初始验证组合；只为已选模块取得起点证据 | [phases/entry.md](./references/phases/entry.md) |
+| -1 / 0 | 校验 app baseline；定位 Story；核实上游字段；编译初始验证组合；只为已选模块取得起点证据 | [phases/entry.md](./references/phases/entry.md) |
 | A1 / A2 | 按基线源抽取规格；按风险选择 `lite/full` 勘察；生成 QA 基线；用户确认后冻结并编译还原契约 | [phases/spec.md](./references/phases/spec.md) |
 | B | 按 Task 实现，只取得本 Task 改变声明的因果证据；checkbox 与证据账本同步 | [phases/implementation.md](./references/phases/implementation.md) |
 | C / D | 按最终 diff 重编译组合；执行适用模块和角色；修确证阻断；按依赖重取失效证据；逐声明收口 | [phases/review-closeout.md](./references/phases/review-closeout.md) |
@@ -54,7 +54,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 10. **哈希一致。** `dev-baseline.md` 与 `restore-contract.json` 哈希不一致时拒绝执行，不从当前实现反推期望。
 11. **三色真实。** 还原报告只用 RED/YELLOW/GREEN；YELLOW 不能改写为 GREEN。
 12. **证据分层。** 机器可检项用结构化事实；截图只补机器无法可靠判断的视觉项。
-13. **规范单一所有者。** `PATTERN-*` 正文只在仓库 baseline，且规范节只有 `sdd-init-frontend` 能改；Story 只保存采用的 ID，不记录 baseline 指纹。清单条目指路失效可就地修单条。
+13. **规范单一所有者。** `PATTERN-*` 正文只在 app baseline，且规范节只有 `sdd-init-frontend` 能改；Story 只保存采用的 ID，不记录 baseline 指纹。清单条目指路失效可就地修单条。
 14. **抽取缺口先登记。** 抽取器退出码 4 的每类覆盖缺口先进入已知缺口，再显式确认重跑。
 15. **浏览器按需解析。** 组合首次选择浏览器模块时才确定并实测 `<browser-driver>`；不可用只影响依赖声明。
 16. **工具缺口不变豁免。** `suspected-tool-equivalence` 退出码 5 只补比对器或上报工具缺口，不改产品实现、不加冻结豁免。
@@ -63,10 +63,9 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 | 变量 | 解析 |
 | --- | --- |
-| `<repo-root>` | TaskPacket 的 project/search path 对应仓根 |
-| `<project-sdd-dir>` | Requirement 所属 SDD 产物根 |
-| `<repo-id>` | baseline 的 `repo_id`；首次接入默认仓目录名 |
-| `<repo-baseline-dir>` | `<project-sdd-dir>/frontend-baselines/<repo-id>/` |
+| `<repo-root>` | TaskPacket 的 project 对应 Git 仓或 monorepo 根 |
+| `<frontend-root>` | 当前 Story 唯一命中的独立前端 app 根；单 app 仓等于 `<repo-root>`，monorepo 由 `search_paths` 与前端设计定位 |
+| `<repo-baseline-dir>` | `<frontend-root>/frontend-baselines/`；公式以 `<init-skill-dir>/references/baseline-contract.md` 为唯一事实源 |
 | `<story-dir>` | `tasks.md` 所在目录 |
 | `<requirement-dir>` | Requirement 设计文档所在目录 |
 | `<prototype-dir>` | 已核实的 HTML 原型目录；无原型时为空 |
@@ -80,7 +79,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 | `<preflight-cache>` | Git metadata 下的起点质量缓存 |
 | `<execution-telemetry>` | 可选 `<story-dir>/execution-telemetry.json` |
 
-唯一命中时静默继续；不可推导或多候选的变量按 P7 一次问完。正式 Story 工件写 `<story-dir>`，Requirement 级设计事实写 `<design-spec-dir>`，仓库 baseline 写 `<repo-baseline-dir>`。
+唯一命中时静默继续；不可推导或多候选的变量按 P7 一次问完。`search_paths` 横跨多个独立 app 时不选 monorepo 根兜底，回流 `sdd-task` 拆分 app 范围。正式 Story 工件写 `<story-dir>`，Requirement 级设计事实写 `<design-spec-dir>`，app baseline 写 `<repo-baseline-dir>`。
 
 ## 浏览器驱动
 
@@ -104,7 +103,7 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 
 | 工件 | 所有权与生命周期 |
 | --- | --- |
-| 九份仓库 baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
+| 九份 app baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
 | `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |

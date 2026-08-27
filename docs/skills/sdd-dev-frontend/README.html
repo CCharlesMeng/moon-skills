@@ -1569,7 +1569,7 @@
         <p class="eyebrow">User guide · Frontend delivery workflow</p>
         <h1>从 <code>tasks.md</code><br>到可验收的前端交付</h1>
         <p class="hero-lead">
-          <code>sdd-dev-frontend</code> 把一个前端仓中的一个 Story，执行成代码、RED → GREEN
+          <code>sdd-dev-frontend</code> 把一个独立前端 app 中的一个 Story，执行成代码、RED → GREEN
           证据、并行检视和可追溯的最终结论。
         </p>
 
@@ -1586,7 +1586,7 @@
         <div class="hero-stats" aria-label="流程关键数字">
           <div class="hero-stat">
             <strong>1 × 1</strong>
-            <span>一个前端仓 × 一个 Story</span>
+            <span>一个独立前端 app × 一个 Story</span>
           </div>
           <div class="hero-stat">
             <strong>10</strong>
@@ -1645,7 +1645,7 @@
             <p class="section-kicker" id="phase-code">PHASE 0</p>
             <h3 id="phase-title">先校验仓库接入，再冻结 Story 起点</h3>
             <p id="phase-purpose" class="phase-purpose">
-              仓库 baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。
+              app baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。
             </p>
             <div class="handoff">
               <span class="handoff-label">交接给下一步</span>
@@ -1695,7 +1695,7 @@
 
           <div class="scope-core">
             <div>
-              <strong>一个前端仓<br>×<br>一个 Story</strong>
+              <strong>一个独立前端 app<br>×<br>一个 Story</strong>
               <span>跨仓与多 Story 交给外层调度</span>
             </div>
           </div>
@@ -2345,7 +2345,7 @@
         p0: {
           code: "PHASE 0",
           title: "先校验仓库接入，再冻结 Story 起点",
-          purpose: "仓库 baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。",
+          purpose: "app baseline 缺失或失效时自动初始化；随后记录本 Story 的场景、base-ref 与质量失败集合。",
           handoff: "dev-baseline.md 的“执行起点（环境）”",
           outputs: [
             "REPO-1～REPO-3 readiness",
