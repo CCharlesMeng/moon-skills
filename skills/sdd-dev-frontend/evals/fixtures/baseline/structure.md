@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | `STRUCT-1` | 仓根 `package.json` 与 `vite.config.ts` | **栈 = React 18 + TypeScript + Vite；形态 = 应用**。栈的判据是源码里具名函数返回 JSX、构建配置挂 React 插件；形态的判据是 `src/main.tsx` 挂载到 DOM 根节点，且包清单没有对外导出入口、没有远端暴露配置、没有平台配置文件。选检视判据、选测试写法都以这条为准 | 全仓 |
 | `STRUCT-2` | `src/` 下三层：`components/`、`features/`、`lib/` | 目录实况：**按角色分层**，通用构件、业务特性、共享底座各一层；没有页面平铺，也没有领域层。**消费单元 = `src/features/<领域>/` 目录**，分层判据按它数引用 | 全仓 |
-| `STRUCT-3` | 仓根 `tsconfig.json` | `strict` 与 `noUnusedLocals` 已开；类型检查的基准在这里 | 全仓 |
+| `STRUCT-3` | 仓根 `tsconfig.json` | `strict` 与 `noUnusedLocals` 已开；类型检查与检查抑制的基准在这里。本仓抑制注释只见有理由的 `@ts-expect-error`，未见 `@ts-ignore` / `@ts-nocheck` | 全仓 |
 
 ## 规范
 

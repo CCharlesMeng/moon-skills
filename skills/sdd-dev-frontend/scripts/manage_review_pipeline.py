@@ -621,7 +621,7 @@ def merge_evidence_additions(
     return output, rewritten
 
 
-NORM_CANDIDATE_KINDS = {"broken", "new-pattern", "exemption-recurring"}
+NORM_CANDIDATE_KINDS = {"broken", "new-pattern", "exemption-recurring", "runtime-trap"}
 
 
 def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
@@ -632,16 +632,19 @@ def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
     也只有 suggestion / open_question / deferred 三类，装不下它。结果是一句「攒进
     handoff」到不了任何人手里。
 
-    两条校验是这个通道能用的前提：
+    三条校验是这个通道能用的前提：
 
     - **必须点名依据样本。** init 归纳规范要的就是「看了哪几处」；只说「这条规范
       不成立了」而不给样本，维护者得从零重扫，那还不如没有这条回流。
     - **必须指名 `target_id`（`broken` 与 `exemption-recurring`）。** 说不出质疑的是
       哪一条，就没法判断它是同一条的第 n 次复发还是一条新发现——而复发计数正是
       init 决定要不要动规范节的唯一依据。
+    - **`runtime-trap` 必须附可复现现象。** 这类知识的根因在第三方库或构建工具的
+      运行行为里，代码样本撑不住根因；没有现象，init 无法在门槛 1 次时落规范。
 
     刻意**不**要求样本数 ≥ 2：跨 Story 的复发计数只有 init 能做，单个 Story 手里
-    永远只有自己那一次。在这里卡门槛等于把计数依据吞掉。
+    永远只有自己那一次。在这里卡门槛等于把计数依据吞掉。`runtime-trap` 的门槛是
+    1 次，补偿约束就是现象字段，不是样本数。
     """
     items = require_list(raw, "norm_candidates")
     seen: set[str] = set()
@@ -666,6 +669,8 @@ def validate_norm_candidates(raw: Any) -> list[dict[str, Any]]:
             require_text(sample, f"{label}.samples[{sample_index}]")
         if kind in {"broken", "exemption-recurring"}:
             require_text(item.get("target_id"), f"{label}.target_id")
+        if kind == "runtime-trap":
+            require_text(item.get("phenomenon"), f"{label}.phenomenon")
         validated.append(item)
     return validated
 
@@ -865,6 +870,7 @@ def aggregate_results(
             "user_visible_text": (
                 f"{display(item['kind'])}：{item['claim']}"
                 + (f"（质疑 {item['target_id']}）" if item.get("target_id") else "")
+                + (f"；现象 {item['phenomenon']}" if item.get("phenomenon") else "")
                 + f"；依据样本 {len(item['samples'])} 处"
             ),
             "needs_decision": True,
@@ -989,6 +995,7 @@ DISPLAY = {
     # 规范候选类别
     "broken": "规范不再成立",
     "exemption-recurring": "豁免反复出现",
+    "runtime-trap": "运行时陷阱",
     # 声明状态（与 references/execution-contract.md 的状态表同一套词）
     "PROVEN": "已验证",
     "UNVERIFIED": "未验证",
@@ -1168,7 +1175,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         lines += ["", "## 交 sdd-init-frontend 的规范候选", ""]
         lines += markdown_table(
             aggregate["norm_candidates"],
-            [("编号", "id"), ("类别", "kind"), ("质疑对象", "target_id"), ("结论", "claim"), ("依据样本", "samples")],
+            [("编号", "id"), ("类别", "kind"), ("质疑对象", "target_id"), ("结论", "claim"), ("现象", "phenomenon"), ("依据样本", "samples")],
         )
 
     lines += [

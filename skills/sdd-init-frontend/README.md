@@ -20,9 +20,9 @@
 | `styles.md` | 样式值从哪来，允许怎么写？ |
 | `tests.md` | 测试用什么写、怎么定位元素、怎么跑？ |
 
-每份文件里分「清单」（事实：指路 + 何时用 + 被几处引用）和「规范」（规则：怎么判违例）。
+每份文件里分「清单」（事实：指路 + 何时用 + 被几处引用）和「规范」（规则：怎么判违例）。禁止项写在规则里，违例判定写成可检索的反向条件，不加「红线」栏。
 
-表单、i18n、权限、监控埋点、性能预算**不各自开文件**——它们是横跨多个问句的场景，按段拆进上面的文件，靠 `index.md` 的场景索引串起来。
+表单、i18n、权限、监控埋点、性能预算**不各自开文件**——它们是横跨多个问句的场景，按段拆进上面的文件，靠 `index.md` 的场景索引串起来。仓内已有的规范文档只当线索，进 baseline 的必须能被代码验证；验证不了的（典型是运行时陷阱的根因）正文留在文档，baseline 只留指针。踩坑留下的痕迹按化石分流：有注释的写成规范，三处以上重复但无注释的进 `.learnings/frontend-baseline-candidates.md` 等人审。
 
 ## 先定形态，因为它改判据
 
@@ -74,7 +74,7 @@ monorepo 检出多个 app 时会一次列出每个 app，并额外提供“整�
 
 ## 会发生什么
 
-产物固定写到 `<frontend-root>/frontend-baselines/`。大仓首扫**只扫当前 app 的通用层目录**加上你这次涉及的业务模块，业务侧靠后续增量长——每个清单节头部都写着它扫过哪些目录，所以下游能分清「仓里没有」和「还没扫过」。
+产物固定写到 `<frontend-root>/frontend-baselines/`。大仓首扫**只扫当前 app 的通用层目录**加上你这次涉及的业务模块，以及仓内规范文档里被规范性陈述引用为依据的模块；业务侧靠后续增量长——每个清单节头部都写着它扫过哪些目录，所以下游能分清「仓里没有」和「还没扫过」。方法行数、圈复杂度这类量化上限不从代码样本推断。
 
 然后真的装依赖、起服务、跑质量命令；涉及下载、登录这类有副作用的动作会先请求你授权。浏览器截图与 DOM 采集不在这里做，那是 `sdd-dev-frontend` 按当次 Story 是否需要视觉能力才做的事。
 
@@ -82,4 +82,4 @@ monorepo 检出多个 app 时会一次列出每个 app，并额外提供“整�
 
 ## 了解更多
 
-12 条硬门禁与四个 Phase：[SKILL.md](./SKILL.md)。产物契约与分类依据：[references/baseline-contract.md](./references/baseline-contract.md)。怎么发现资产（为什么不按文件名猜）：[references/discovery-rules.md](./references/discovery-rules.md)。
+14 条硬门禁与四个 Phase：[SKILL.md](./SKILL.md)。产物契约与分类依据：[references/baseline-contract.md](./references/baseline-contract.md)。怎么发现资产（为什么不按文件名猜、规范文档怎么当线索、化石怎么分流）：[references/discovery-rules.md](./references/discovery-rules.md)。

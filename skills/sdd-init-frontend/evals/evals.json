@@ -107,12 +107,12 @@
       "name": "pattern-body-lives-only-at-repo-level",
       "target": "SKILL.md",
       "prompt": "一个 Requirement 有三个 Story，都要沿用仓库现有的取数封装与样式 token。另外本次勘察还发现两处看起来像新惯例、但只有一个样例支持。请说明仓库级、Requirement 级、Story 级分别保存什么。",
-      "expected_output": "规范正文只在 app 级九份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的候选不落盘。",
+      "expected_output": "规范正文只在 app 级九份文件里；Requirement 仅在有跨 Story 决策时引用 ID；Story 只记录采用的 ID；只有一个样例的 new-pattern 候选不进九份文件。",
       "expectations": [
         "不为每个 Story 生成范式卡片或额外的勘察文档",
         "Requirement 不复制仓库规范正文，完全沿用时连工程决策章节也省略",
         "Story 的工程依据只写 ID，不记录任何指纹",
-        "只有一个样例支持的候选不写进 baseline，也不长期维护候选清单"
+        "只有一个样例支持的 new-pattern 不写进 baseline 规范节；候选台账只收化石（三处以上重复、无注释），不收这种单一样例"
       ]
     },
     {
@@ -197,7 +197,8 @@
         "tests.md 写出框架是 Vitest 但无既有测试与元素定位约定，并指明实现阶段的影响",
         "data.md 显式写出无取数缓存库、无全局 store、无表单机制三条「无统一做法」规范",
         "全文不出现方法签名、props 列表、token 具体数值或目录树",
-        "index.md 只有指向 ID 的行，速查节含栈与形态各一行"
+        "index.md 只有指向 ID 的行，速查节含栈与形态各一行",
+        "structure.md 根据 tsconfig strict 与源码抑制惯例写出类型抑制规范或显式「无统一做法」，依据清单指向 STRUCT 里的 tsconfig 条目"
       ]
     },
     {
@@ -211,7 +212,8 @@
         "库的主题机制正文归 styles.md，components.md 只留 ID 引用，不把主题值复制两处",
         "包着库表格的自研构件按「被两个以上消费单元引用」判进通用详表",
         "写出「直接引库与经封装混用，无统一做法」规范，并指明检视不得据此判「绕过封装」",
-        "不列举库导出了哪些组件、不抄 props，只写库是哪个、怎么用、封装在哪"
+        "不列举库导出了哪些组件、不抄 props，只写库是哪个、怎么用、封装在哪",
+        "若多个使用点共享同一属性或配置写法，再写一条仓内使用惯例规范；只有一个使用点则不写惯例"
       ]
     },
     {
@@ -280,6 +282,96 @@
         "旧九文件目录保留正文、ID 与覆盖声明迁入 canonical，消费者之后只读 canonical",
         "旧两文件 repo-baseline.md/onboarding-report.md 不冒充九文件契约，改在 canonical 完整生成",
         "新旧内容冲突时不覆盖、不按 mtime 猜，批量展示冲突并请求选择"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "in-repo-docs-are-clues-not-source-of-truth",
+      "target": "references/discovery-rules.md",
+      "prompt": "仓根有 docs/coding-guidelines.md，写着「UseCase 必须以单例导出、禁止在 setup 层 new」以及「i18n 导入禁用 as t，否则 TinySearchBox 会白屏」。代码里 8 处 UseCase 确实都是文件底单例导出，setup 层没有 new；as t 那条在代码里找不到对应写法或注释。请说明 baseline 怎么处理这两条，以及要不要改 docs。",
+      "expected_output": "单例导出经代码验证后写成规范，依据样本填那 8 处代码而不是文档章节；as t 验证不了，不写规范，只在对应文件留一条指向该文档章节的指针。不改用户的 docs。",
+      "expectations": [
+        "探测到 docs/ 后把它当线索，不把文档原文抄进规范节",
+        "有代码支撑的那条写成 PATTERN，依据样本是验证时看的代码位置",
+        "代码里查不到样本的那条不写规范、不算冲突，只留一条指针清单条目",
+        "用户文档不被修改；收尾回话列出已进 baseline 的 ID"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "fossil-needs-strong-evidence",
+      "target": "references/discovery-rules.md",
+      "prompt": "三个现场：A 处抽屉写着 :visible + @close，上一行注释「不能用 v-model，组件不支持」；B 处同样写法出现在 4 个文件但没有任何注释；C 处只有一处 Math.max(total, 1) 且无注释。请说明各进哪里。",
+      "expected_output": "A 写成 components.md 规范；B 只进 .learnings/frontend-baseline-candidates.md 等人审，不写进规范节；C 丢掉。",
+      "expectations": [
+        "有解释性注释的反常写法直接写成规范，依据样本即该注释所在处",
+        "三处以上重复但无注释的只进候选台账，状态 pending，不升规范",
+        "孤例且无注释的丢掉，不从单独的防御写法推测根因",
+        "化石规范只写现象与正确写法，注释没写根因就留空"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "runtime-trap-lands-on-first-occurrence",
+      "target": "SKILL.md",
+      "prompt": "acceptance.md 交来三条规范候选：broken 质疑 PATTERN-API-1，两处新的请求出口；new-pattern 说列表查询都改用对象入参，只有一处样本；runtime-trap 说 i18n 导入 as t 会导致白屏，附了 Console 报错现象和一处复现路径。请说明刷新动作。",
+      "expected_output": "broken 重新归纳 PATTERN-API-1；new-pattern 样本不足两处，不进规范节；runtime-trap 附了可复现现象，门槛 1 次，按问句写进对应文件的规范节。",
+      "expectations": [
+        "broken 立即重归纳，不数复发",
+        "new-pattern 与 exemption-recurring 仍要跨 Story 两处以上独立样本",
+        "runtime-trap 门槛 1 次，但必须有可复现现象；没有现象不得落规范",
+        "复发计数只在 init 侧做，Story 侧不得自行判定新规范已成立"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "no-redline-column-and-no-invented-limits",
+      "target": "references/baseline-contract.md",
+      "prompt": "有人建议每个 PATTERN 加一栏「红线」，并把「方法不超过 30 行、圈复杂度 15、if 嵌套 2 层、组件 200 行」写进 structure.md。仓内 eslint 只配了 complexity，没有 max-lines。请评价并给出处理。",
+      "expected_output": "拒绝加红线栏；违例判定写成可检索的反向条件即可。量化上限不从代码样本推断；complexity 指路到 eslint 配置归 runtime.md，其余没有执行面的数字不写。",
+      "expectations": [
+        "明确拒绝「红线」栏，理由是它与违例判定是同一事实的两种语气，会制造第二事实源",
+        "要求违例判定写成「源码里出现 X 且未满足 Y」这类可检索反向条件",
+        "不把 30 行 / 嵌套 2 层 / 200 行写成规范",
+        "已配的 complexity 指路到配置文件，归 runtime.md，不转述数字为「本仓上限」"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "mock-data-convention-lives-in-tests",
+      "target": "references/discovery-rules.md",
+      "prompt": "仓内有 MSW handler 放在 src/mocks/handlers.ts，由入口启动；单测的假数据文件放在 test/unitTest/infrastructure/impl/{module}/{Repository}/{method}/ 下，文件名 {method}{行为}MockData.ts，一律 export default，字段蛇形。请说明这两套分别记在哪份文件。",
+      "expected_output": "拦截层启动与 handler 位置归 api.md；fixture 的目录、命名、字段风格、导出方式归 tests.md。不把两套写进同一份文件。",
+      "expectations": [
+        "api.md 只写拦截层怎么启动、handler 放哪",
+        "tests.md 写 mock 数据的目录位置、命名规则、字段风格、导出方式",
+        "点明二者一个回答「请求怎么被拦下来」，一个回答「假数据文件放哪、怎么命名」",
+        "不抄具体 fixture 的字段内容"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "scene-index-lists-patterns-not-rule-bodies",
+      "target": "references/baseline-contract.md",
+      "prompt": "有人要把 index.md 的「新增页面 / 路由」行改成再写「红线：路由 name 驼峰；陷阱：新 domain 字段后必须重启 Vite；量化：组件 ≤200 行」。请评价并给出 index.md 该怎么写。",
+      "expected_output": "拒绝把规则正文抄进 index.md。场景索引把该场景的清单 ID 和 PATTERN-* 一并列出，仍然只写 ID。",
+      "expectations": [
+        "index.md 仍然零事实正文，只写指向 ID 的行",
+        "场景索引必须带上该场景相关的 PATTERN-*，不能只引清单 ID",
+        "不把红线、陷阱、量化数字写进 index.md"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "doc-versus-code-conflict-goes-to-the-user",
+      "target": "SKILL.md",
+      "prompt": "docs/coding-guidelines.md 写着「所有请求必须走 shared/request 单例」，但代码里 9 处走该单例、3 处在业务模块里直接 new 了 axios 实例。另外该文档提到「参见 src/features/probe 的分层做法」，而 probe 不在本次首扫范围内。请说明怎么处理这两件事。",
+      "expected_output": "请求出口这条是文档与代码结论不一致，进冲突清单，一轮批量展示让用户裁决，不静默采信任何一边、不按 mtime 猜；probe 被规范性陈述引用为依据，并进首扫范围并同步覆盖声明。",
+      "expectations": [
+        "不因为文档写了「必须」就写成统一出口规范，也不因为有 3 处绕过就直接判文档失效",
+        "冲突批量展示给用户裁决，裁决前不落盘任何一边的结论",
+        "被规范性陈述引用为依据的模块并进首扫范围，纯举例提及的不扫",
+        "额外并进来的业务模块要同步该节的覆盖声明"
       ]
     }
   ]

@@ -46,7 +46,7 @@ python3 setup.py --case convention-01
     └── risk-brief/
 ```
 
-九份 baseline 里有六条正向 `PATTERN-*`：`PATTERN-COMP-1` 组件写法与命名、`PATTERN-COMP-2` 数值展示口径、`PATTERN-API-1` 请求统一出口、`PATTERN-DATA-1` 取数三态与取消、`PATTERN-STYLE-1` token 与样式落地、`PATTERN-STRUCT-1` 类型来源与检查抑制。**这六条是检视类模块的全部判据来源**，它们依据清单条目指的路径在 `repo/` 里都真实存在，可以逐条打开核对。
+九份 baseline 里有六条正向 `PATTERN-*`：`PATTERN-COMP-1` 组件写法与命名、`PATTERN-COMP-2` 数值展示口径、`PATTERN-API-1` 请求统一出口、`PATTERN-DATA-1` 取数三态与取消、`PATTERN-STYLE-1` token 与样式落地、`PATTERN-STRUCT-1` 类型来源与检查抑制。**这六条是检视类模块的全部判据来源**，它们依据清单条目指的路径在 `repo/` 里都真实存在，可以逐条打开核对。`PATTERN-STRUCT-1` 对应 `sdd-init-frontend` 的类型抑制判据（`tsconfig` 严格度 + 抑制注释惯例），不是夹具自造的落点。
 
 另有五条**「无统一做法」规范**同样是判据：`PATTERN-API-2` 无 mock 层、`PATTERN-DATA-2` 无缓存无 store、`PATTERN-DATA-3` 无表单机制、`PATTERN-STYLE-2` 阴影没有基准、`PATTERN-STYLE-3` 无主题机制、`PATTERN-TEST-1` 无既有测试与定位约定。它们决定的是**不得**判什么违规，漏读会造成编造基准。
 

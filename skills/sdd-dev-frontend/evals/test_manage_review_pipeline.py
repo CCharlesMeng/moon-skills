@@ -765,6 +765,40 @@ class NormCandidateTests(unittest.TestCase):
         item["kind"] = "new-pattern"
         self.assertEqual(MODULE.validate_norm_candidates([item])[0]["kind"], "new-pattern")
 
+    def test_runtime_trap_requires_phenomenon(self):
+        """门槛 1 次的补偿是可复现现象，不是样本数。"""
+        item = {k: v for k, v in self.BASE.items() if k != "target_id"}
+        item["kind"] = "runtime-trap"
+        item["claim"] = "i18n 导入不能 as t"
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "phenomenon"):
+            MODULE.validate_norm_candidates([item])
+        item["phenomenon"] = "页面白屏，Console: TypeError: 'set' on proxy"
+        validated = MODULE.validate_norm_candidates([item])[0]
+        self.assertEqual(validated["kind"], "runtime-trap")
+        self.assertEqual(validated["phenomenon"], item["phenomenon"])
+
+    def test_runtime_trap_reaches_handoff_with_phenomenon(self):
+        item = {
+            "id": "NC-2",
+            "kind": "runtime-trap",
+            "claim": "抽屉不用 v-model",
+            "phenomenon": "弹窗 display:none 不展示",
+            "samples": ["src/features/risk/Drawer.vue:18"],
+        }
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            norm_candidates=[item],
+        )
+        entry = next(
+            row for row in aggregate["handoff"] if row["kind"] == "norm_candidate"
+        )
+        self.assertTrue(entry["needs_decision"])
+        self.assertIn("运行时陷阱", entry["user_visible_text"])
+        self.assertIn("弹窗 display:none 不展示", entry["user_visible_text"])
+        body = MODULE.render_markdown(aggregate)
+        self.assertIn("运行时陷阱", body)
+        self.assertNotIn("runtime-trap", body)
+
     def test_single_sample_is_allowed(self):
         """跨 Story 的复发计数只有 init 能做；在这里卡样本数等于把计数依据吞掉。"""
         item = {**self.BASE, "samples": ["src/features/export/api.ts:12"]}
