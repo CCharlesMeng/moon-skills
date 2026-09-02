@@ -1433,7 +1433,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
                 f"- **在哪**：`{item['location']}`",
                 f"- **影响**：{item['impact']}",
                 f"- **建议**：{item['suggested_action']}",
-                f"- 依据与完整证据：`review-results.json` 的 `{'/'.join(item['source_ids'])}`",
+                f"- 依据与完整证据：`evidence/review-results.json` 的 `{'/'.join(item['source_ids'])}`",
                 "",
             ]
         for item in decisions:
@@ -1577,7 +1577,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         "", "## 要往下追的话", "",
         "- 冻结的验收基线：`dev-baseline.md`",
         "- 逐条声明与它的证据：`alpha-tests.md`",
-        f"- 全部覆盖明细与结构化结论：`review-results.json`（共 {counts.get('handoff', 0)} 条交接项、"
+        f"- 全部覆盖明细与结构化结论：`evidence/review-results.json`（共 {counts.get('handoff', 0)} 条交接项、"
         f"{counts.get('skipped', 0)} 条判定不适用）",
         "",
     ]
