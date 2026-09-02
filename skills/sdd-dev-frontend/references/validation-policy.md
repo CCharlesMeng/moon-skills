@@ -1,6 +1,6 @@
 # 声明驱动的验证策略
 
-本文件是 `sdd-dev-frontend` 选择验证动作的唯一规则源。进入 Phase 0 编译初始验证组合、进入 Phase C 按最终 diff 重编译时完整读取；其他阶段只引用已经落盘的组合。
+本文件解释验证组合**为什么**这样编译；**怎么**编译由 `<skill-dir>/scripts/compile_portfolio.py` 按 `<skill-dir>/scripts/portfolio-rules.json` 机械完成。Phase 0 与 Phase C 跑脚本，不通读本文件；只有识别第三节的判断型触发器、或读不懂脚本输出时才回到这里。
 
 ## 一、总纲
 
@@ -13,68 +13,70 @@
 3. **证据诚信**：`PROVEN` 的证据覆盖该声明、使用正确环境，并对最终相关依赖仍新鲜。
 4. **缺陷诚信**：声明范围内已确证的阻断缺陷清零；未清零就不能把受影响声明写成 `PROVEN`。
 
-RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略，不是声明诚信门。按下文触发，未触发即不执行、不生成空工件。
+RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略，不是声明诚信门。按规则表触发，未触发即不执行、不生成空工件。
 
 每条声明还要选一个 `verification_method`。选法在[第七节](#七验证方法的判定规则)，那是人工资格门禁与自动化强制触发器的唯一事实源；风险选动作、门禁约束声明这条总纲对它同样成立。
 
-## 二、输入与输出
+## 二、编译
 
-从 `tasks.md` 读取 AC/AT、`affected_routes`、`required_states`、`risk_triggers` 与文件范围；再用当前 app baseline、实际 diff 和运行限制校正。上游字段是候选事实，实测冲突时以实测为准并登记原因。
+```bash
+# Phase 0：还没有 diff，文件数取计划清单
+python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase initial \
+  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<story-dir>/portfolio-initial.json" --markdown
 
-把结果写入 `dev-baseline.md / 验证组合`，候选稳定后把同一结构写入 `review-evidence.json / validation_portfolio`：
-
-```json
-{
-  "risk_triggers": ["visual", "interaction"],
-  "portfolio_narrowed": [{"trigger": "build-config", "reason": "<收窄理由>"}],
-  "modules": ["causal", "render", "targeted-quality"],
-  "review_roles": ["review-layout"],
-  "review_dimensions": {"review-layout": ["L2", "L3"]},
-  "claims": [
-    {"id": "AC-1", "modules": ["causal", "render"], "status": "UNVERIFIED"}
-  ]
-}
+# Phase C：按最终 diff 复编译，只允许在 Phase 0 的基础上增加
+python3 "<skill-dir>/scripts/classify_diff.py" --repo-root "<repo-root>" --base-ref "<base-ref>" --out "<临时目录>/diff-facts.json"
+python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase final \
+  --diff-facts "<临时目录>/diff-facts.json" --qa-baseline "<story-dir>/dev-baseline.md" \
+  [--trigger ...] [--narrow <触发器>=<理由>] [--dimension <角色>=<维度,...>] [--reg REG-n] \
+  --previous "<story-dir>/portfolio-initial.json" --out "<story-dir>/portfolio-final.json" --markdown
 ```
+
+脚本读的全是已经存在的事实：`tasks.md` 的 TaskPacket 与「用例追溯」、`classify_diff.py` 的下限与反驳、`dev-baseline.md` 里已冻结的 R/F 行号。它输出执行档位、触发器（带来源）、模块、角色、维度和逐声明挂载；`--markdown` 直接给 `dev-baseline.md / 验证组合` 那张表，JSON 原样进 `review-evidence.json / validation_portfolio`。
+
+agent 只提供脚本判不了的三样：`--trigger`（第三节的判断型触发器）、`--dimension`（读代码后认为还该看的维度）、`--narrow`（要收窄某条 diff 下限触发器的署名理由）。三样都只能**加**或**署名减下限**，没有任何一条能让脚本少选一个模块。退出码 3 表示违反只升不降。
 
 `review_roles` 只列本 Story 适用且需要独立判断的角色；`review_dimensions` 只列该角色真正被风险触发的维度。未列出的角色或维度不是“未执行”，也不生成占位结果。
 
 ## 三、风险触发器
 
-取上游声明、仓库事实与最终 diff 的并集：
+十二个触发器按谁能判分三类；这一分类就是脚本与 agent 的分工线：
 
-| 触发器 | 命中条件 |
-| --- | --- |
-| `visual` | 改 DOM 静态结构、样式、token 或可见文案 |
-| `interaction` | 改用户操作、条件渲染或状态迁移 |
-| `navigation` | 改路由、入口、查询参数或跨页流程 |
-| `shared-boundary` | 改公共组件、公共样式、全局状态、请求封装或共享类型 |
-| `auth` | 改权限、身份、租户或鉴权失败路径 |
-| `write` | 产生服务端写入、提交、删除或不可逆副作用 |
-| `async-state` | 改并发、取消、竞态、重试、轮询或多阶段异步状态 |
-| `new-pattern` | 仓库没有唯一可复用 `PATTERN-*`，或本 Story 引入新范式 |
-| `spec-gap` | AC、设计事实、参照页或工作假设冲突/缺失，且会影响判定 |
-| `unknown-deps` | 无法可靠确定改动的依赖闭包或回归半径 |
-| `build-config` | 改构建、测试、类型、lint、打包或运行配置 |
-| `performance` | AC 明示性能目标，或改列表规模、缓存、虚拟化、昂贵计算 |
+| 触发器 | 命中条件 | 谁判 |
+| --- | --- | --- |
+| `visual` | 改 DOM 静态结构、样式、token 或可见文案 | diff 下限 + 计划 |
+| `navigation` | 改路由、入口、查询参数或跨页流程 | diff 下限 + 计划 |
+| `shared-boundary` | 改公共组件、公共样式、全局状态、请求封装或共享类型 | diff 下限 + 计划 |
+| `build-config` | 改构建、测试、类型、lint、打包或运行配置 | diff 下限 |
+| `interaction` | 改用户操作、条件渲染或状态迁移 | 计划 |
+| `auth` | 改权限、身份、租户或鉴权失败路径 | 计划 |
+| `write` | 产生服务端写入、提交、删除或不可逆副作用 | 计划 |
+| `async-state` | 改并发、取消、竞态、重试、轮询或多阶段异步状态 | **agent 读代码后 `--trigger`** |
+| `new-pattern` | 仓库没有唯一可复用 `PATTERN-*`，或本 Story 引入新范式 | 同上 |
+| `spec-gap` | AC、设计事实、参照页或工作假设冲突/缺失，且会影响判定 | 同上 |
+| `unknown-deps` | 无法可靠确定改动的依赖闭包或回归半径 | 同上 |
+| `performance` | AC 明示性能目标，或改列表规模、缓存、虚拟化、昂贵计算 | 同上 |
 
 拿不准是否命中时加入触发器；不得用 Task 数量或文件数量代替风险事实。
 
-`visual` / `navigation` / `shared-boundary` / `build-config` 的下限由 `<skill-dir>/scripts/classify_diff.py --repo-root <repo-root> --base-ref <base-ref> --out <临时目录>/diff-facts.json` 从 diff 机械给出，组合只能在下限之上扩；确要收窄某条下限触发器时写入 `portfolio_narrowed[]` 并给出理由，它会进 `acceptance.md`。聚合器拒绝既不承接也未署名收窄的组合。
+diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narrow` 署名理由，它会进 `acceptance.md`；计划或 agent 也断言过的触发器不能收窄。聚合器拒绝既不承接也未署名收窄的组合。
 
 ## 四、验证模块
 
-| 模块 | 触发 | 最小充分证据 |
-| --- | --- | --- |
-| `causal` | 每个被实现改动的验收声明 | 改动前能暴露缺口、改动后能证明声明的同一通道；`test_case` 与 `restore_contract` 声明优先测试 RED/GREEN 或冻结契约，类型/构建类可用编译失败→通过，`manual_acceptance` 声明用最终人工证据收口、不要求伪造自动化 RED |
-| `render` | `visual` | 变更区块的冻结契约；只执行规则要求的 static/render 层，视觉盲区才截图。机器盲区剩余项留在契约 `visual` 层，只有该区块没有冻结契约时才允许生成 `manual_acceptance` 声明 |
-| `story` | `interaction` / `navigation` / `auth` / `write`，且自动化 causal 证据不足以覆盖真实运行时 | 合并后的最短用户操作序列，覆盖受影响 AC 与必要异常路径 |
-| `targeted-quality` | 改产品代码 | 覆盖改动依赖闭包的最窄 test/typecheck/lint/build 子集；仓库没有可安全收窄的入口时升级 |
-| `regression` | `shared-boundary` / `navigation` / `auth` / `write` / `unknown-deps` / `build-config` | 受影响入口与下游消费者的回归；依赖闭包不可靠时运行 `runtime.md` 记录的全部质量命令 |
-| `review-restore` | `visual` 且存在冻结 R 行 | 按最终 diff 重跑**全部已冻结区块**的契约，再从 R1–R6 中分配这些区块涉及的维度 |
-| `review-layout` | `visual` 且跨页、跨视口、共享样式或 `required_states` 含 overflow | 从 L1–L6 中只分配命中风险的维度，页面范围只覆盖风险闭包 |
-| `review-convention` | `new-pattern`、`shared-boundary`、`build-config`，或 diff 触碰 PATTERN 约束且没有确定性检查覆盖 | 从 C1–C7 中只分配 diff 真正触碰的 PATTERN 维度 |
-| `review-quality` | `async-state` / `auth` / `write` / `performance` / `shared-boundary`，或实现引入非平凡状态与副作用 | 从 Q1–Q8 中只分配实际风险维度 |
-| `self-test` | **验证组合含 `story` 模块**且现有自动化证据不能直接证明全部受影响声明 | 独立判断对应 F/REG 行；只覆盖验证组合列出的声明 |
+触发→模块→角色→维度的映射表只在 `portfolio-rules.json`，这里只说每个模块**被选中后要做什么**：
+
+| 模块 | 最小充分证据 |
+| --- | --- |
+| `causal` | 改动前能暴露缺口、改动后能证明声明的同一通道；`test_case` 与 `restore_contract` 声明优先测试 RED/GREEN 或冻结契约，类型/构建类可用编译失败→通过，`manual_acceptance` 声明用最终人工证据收口、不要求伪造自动化 RED |
+| `render` | 变更区块的冻结契约；只执行规则要求的 static/render 层，视觉盲区才截图。机器盲区剩余项留在契约 `visual` 层，只有该区块没有冻结契约时才允许生成 `manual_acceptance` 声明 |
+| `story` | 合并后的最短用户操作序列，覆盖受影响 AC 与必要异常路径。**`navigation` / `auth` / `write` 命中即选中，没有「causal 证据已足够」的裁量**——跑不了（无浏览器驱动、后端不可达）是执行结果，记 unrun 并让依赖声明保持 `UNVERIFIED` 或 `DEFERRED`，不是编译时少选 |
+| `targeted-quality` | 覆盖改动依赖闭包的最窄 test/typecheck/lint/build 子集；仓库没有可安全收窄的入口时升级 |
+| `regression` | 受影响入口与下游消费者的回归；依赖闭包不可靠时运行 `runtime.md` 记录的全部质量命令 |
+| `review-restore` | 按最终 diff 重跑**全部已冻结区块**的契约，维度是冻结基线里实际存在的 R 行 |
+| `review-layout` | 只跑分配到的 L 维度，页面范围只覆盖风险闭包 |
+| `review-convention` | 只跑分配到的 C 维度；被 diff 反驳 `skip_when` 的维度一定在分配里 |
+| `review-quality` | 只跑分配到的 Q 维度 |
+| `self-test` | 独立判断分配到的 F/REG 行；只覆盖验证组合列出的声明 |
 
 模块 key `story` 指的是「当前 Story 的完整用户路径」这一取证动作，不是需求单元本身。散文里引用它一律写作「验证组合含 `story` 模块」，带反引号和量词；需求单元写「Story」不加反引号，TaskPacket 字段仍是 `story=`。它与验收声明的观察范围 `S3_STORY` 分属两轴——前者决定要不要跑真实路径，后者描述某条声明在多大范围内被观察——不得互相替代或当成同义词。
 

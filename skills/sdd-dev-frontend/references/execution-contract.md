@@ -41,7 +41,7 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 两条不放松：承接必须**登记**，未登记的计划外改动仍按越界处理；承接不豁免证据，被承接的文件同样进入依赖闭包与失效判断。
 
-**权威登记只有 `alpha-tests.md` 一处。** `acceptance.md` 里那份摘要由 `manage_review_pipeline.py aggregate --unplanned-carry` 从同一批数据渲染，不手写——那个文件是聚合器整文件覆盖的，往里手写的内容会被下一次 aggregate（Phase C 生成、Phase D 更新各一次）冲掉。一个文件一个写入者，这条问题才不会靠纪律去防。
+**权威登记只有 `alpha-tests.md` 一处。** `acceptance.md` 里那份摘要由 `manage_review_pipeline.py aggregate --alpha-tests` 直接读账本的「计划外承接」表渲染，不手写——那个文件是聚合器整文件覆盖的，往里手写的内容会被下一次 aggregate（Phase C 生成、Phase D 更新各一次）冲掉。一个文件一个写入者，这条问题才不会靠纪律去防。
 
 ## 验证模型
 
@@ -144,6 +144,8 @@ standard  ⇔  其余
 ```
 
 **只能升不能降。** Phase 0 按 TaskPacket 判一次，Phase C 按最终 diff 复判一次；复判只允许 lite → standard，出现任一新触发器或文件数越界即升档，升档后补齐被省掉的动作。这与「新增触发器只能增加模块」是同一条原则。
+
+判定由 `<skill-dir>/scripts/compile_portfolio.py` 完成（`<skill-dir>` 指 `sdd-dev-frontend`），判据表在同目录 `portfolio-rules.json` 的 `tier` 节；上面的公式是它的解释，不是第二份规则。
 
 `navigation` 踢出 lite 是刻意的：改路由几乎总牵连入口与守卫，「加一个查询参数」也走 standard 是可接受的代价。
 

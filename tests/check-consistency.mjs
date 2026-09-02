@@ -99,6 +99,7 @@ const OWNED_SCRIPTS = [
   "extract_design_spec.py",
   "verify_restore_contract.py",
   "collect_restore_facts.js",
+  "compile_portfolio.py",
   "manage_review_pipeline.py",
 ];
 

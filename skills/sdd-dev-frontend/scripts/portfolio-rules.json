@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "_comment": "compile_portfolio.py 的唯一规则表。改触发→模块→角色→维度的映射只改这里；validation-policy.md 只解释为什么。",
+  "triggers": {
+    "diff_derived": ["visual", "navigation", "shared-boundary", "build-config"],
+    "plan_derived": ["visual", "interaction", "navigation", "shared-boundary", "auth", "write"],
+    "agent_judged": ["async-state", "new-pattern", "spec-gap", "unknown-deps", "performance"]
+  },
+  "tier": {
+    "blocking_triggers": ["auth", "write", "navigation", "shared-boundary", "new-pattern", "unknown-deps"],
+    "max_changed_files": 5
+  },
+  "modules": {
+    "causal": {"always": true},
+    "targeted-quality": {"always": true},
+    "render": {"any_trigger": ["visual"]},
+    "story": {"any_trigger": ["navigation", "auth", "write"], "any_claim_scope": ["S3_STORY"]},
+    "regression": {"any_trigger": ["shared-boundary", "navigation", "auth", "write", "unknown-deps", "build-config"]},
+    "review-restore": {"any_trigger": ["visual"], "all_facts": ["frozen_r"]},
+    "review-layout": {"any_trigger": ["visual"], "any_fact": ["cross_page", "shared_style", "overflow_state", "frozen_r6"]},
+    "review-convention": {"any_trigger": ["new-pattern", "shared-boundary", "build-config"], "any_rebuttal_prefix": ["C"]},
+    "review-quality": {"any_trigger": ["async-state", "auth", "write", "performance", "shared-boundary"]},
+    "self-test": {"all_modules": ["story"]}
+  },
+  "review_roles": ["review-restore", "review-layout", "review-convention", "review-quality", "self-test"],
+  "dimensions": {
+    "review-restore": {
+      "R1": {"frozen_rows": "R1"},
+      "R2": {"frozen_rows": "R2"},
+      "R3": {"frozen_rows": "R3"},
+      "R4": {"frozen_rows": "R4"},
+      "R5": {"frozen_rows": "R5"},
+      "R6": {"frozen_rows": "R6"}
+    },
+    "review-layout": {
+      "L1": {"any_fact": ["cross_page", "shared_style"]},
+      "L2": {"any_state": ["overflow", "long-copy", "large-list"], "any_fact": ["frozen_r5"]},
+      "L3": {"any_fact": ["frozen_r6"]},
+      "L4": {"any_fact": ["shared_style"]},
+      "L5": {"any_state": ["hover", "focus", "disabled", "selected", "loading"]},
+      "L6": {"agent_only": true}
+    },
+    "review-convention": {
+      "C1": {"rebuttal": "C1"},
+      "C2": {"any_trigger": ["new-pattern"]},
+      "C3": {"rebuttal": "C3", "any_fact": ["shared_style"]},
+      "C4": {"rebuttal": "C4"},
+      "C5": {"any_trigger": ["shared-boundary"]},
+      "C6": {"rebuttal": "C6"},
+      "C7": {"rebuttal": "C7"}
+    },
+    "review-quality": {
+      "Q1": {"agent_only": true},
+      "Q2": {"any_trigger": ["shared-boundary"]},
+      "Q3": {"agent_only": true},
+      "Q4": {"agent_only": true},
+      "Q5": {"any_trigger": ["async-state", "write"]},
+      "Q6": {"any_trigger": ["auth", "write"], "any_fact": ["has_f3"]},
+      "Q7": {"rebuttal": "Q7"},
+      "Q8": {"any_trigger": ["performance"]}
+    },
+    "self-test": {"_from": "f_rows_and_reg"}
+  },
+  "claim_modules": {
+    "test_case": ["causal", "targeted-quality"],
+    "restore_contract": ["causal", "render"],
+    "manual_acceptance": ["causal"],
+    "quality_gate": ["targeted-quality"],
+    "scope_S3_STORY_adds": ["story"]
+  }
+}

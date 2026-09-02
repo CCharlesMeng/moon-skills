@@ -97,14 +97,14 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 
 ### 人工验收记录
 
-只在本 Story 有 `verification_method=manual_acceptance` 的声明时才建这一节。**这里是待人工验收项的权威登记**，`acceptance.md` 里那份由聚合器 `--manual-acceptance` 从同一批数据渲染，不手写。
+只在本 Story 有 `verification_method=manual_acceptance` 的声明时才建这一节。**这里是待人工验收项的权威登记**，`acceptance.md` 里那份由聚合器 `aggregate --alpha-tests --tasks` 直接读本表渲染，不手写、不另做 JSON 投影。
 
 ```markdown
 | 声明 | 追溯 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ```
 
-中文列名只为好读，投影成 JSON 时必须回到契约字段名：`id`、`trace`、`manual_basis`、`required_environment`、`required_evidence`、`manual_outcome`、`claim_status`、`manual_checked_by`、`manual_checked_at`、`evidence_refs`；`verification_scope` 从 `tasks.md` 的「用例追溯」取，账本不抄。字段语义见[执行契约的验证模型](../execution-contract.md#验证模型)，`manual_basis` 枚举与资格门禁见 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)。
+**列名与列序是聚合器的解析契约，不要改。** 脚本把它们映射回契约字段名 `id`、`trace`、`manual_basis`、`required_environment`、`required_evidence`、`manual_outcome`、`claim_status`、`manual_checked_by`、`manual_checked_at`、`evidence_refs`；`verification_scope` 从 `tasks.md` 的「用例追溯」取，账本不抄；`DEFERRED` 项的解除条件从下面「Deferred」表取。空格写 `—`，多条证据引用用逗号分隔。字段语义见[执行契约的验证模型](../execution-contract.md#验证模型)，`manual_basis` 枚举与资格门禁见 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)。
 
 计划阶段落 `NOT_RUN` + `UNVERIFIED`，验收人与验收时间留空——**不写人名占位符**。只有真实人员执行后才回填后三列；agent 不代签。`PASSED` 但证据不齐仍是 `UNVERIFIED`，`FAILED` 与 RED 同级、不得改写为通过。
 
@@ -164,8 +164,8 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 
 | 原先手写在这里的 | 现在在哪 |
 | --- | --- |
-| 计划外承接 | 权威登记在 `alpha-tests.md`；这里的摘要由 `aggregate --unplanned-carry` 从同一批数据渲染 |
-| 待人工验收 | 同上：权威登记在 `alpha-tests.md` 的人工验收记录，`aggregate --manual-acceptance` 渲染成「需要你处理」里的动作条目。未收口的人工项会让摘要首行不再是无条件「可验收」 |
+| 计划外承接 | 权威登记在 `alpha-tests.md`；`aggregate --alpha-tests` 直接读那张表渲染 |
+| 待人工验收 | 同上：权威登记在 `alpha-tests.md` 的人工验收记录，`aggregate --alpha-tests --tasks` 直接读表，渲染成「需要你处理」里的动作条目。未收口的人工项会让摘要首行不再是无条件「可验收」 |
 | 收口结论 | 逐声明状态在 `alpha-tests.md`，阻断清零与退出门禁结论走[最终三行](../../SKILL.md#最终输出)；聚合器不再留「待 Phase D 填写」这类占位，因为占位本身就会被重跑冲掉 |
 
 ## 四、Phase 0 自动起草

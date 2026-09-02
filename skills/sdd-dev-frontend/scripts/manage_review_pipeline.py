@@ -63,6 +63,13 @@ def read_json(path: Path) -> Any:
         raise ReviewPipelineError(f"cannot read JSON {path}: {error}") from error
 
 
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise ReviewPipelineError(f"cannot read {path}: {error}") from error
+
+
 def atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
@@ -705,8 +712,9 @@ def validate_unplanned_carry(raw: Any) -> list[dict[str, Any]]:
     登记会被 Phase C 冲掉，Phase D 再跑一次 aggregate 又冲一次。两个写入者、一个文件、
     没有裁决规则，和这个仓修过的「末步两次写入不是原子的」是同一类。
 
-    现在的分工：**`alpha-tests.md` 是权威登记**（agent 写、脚本从不碰），聚合器从同一批
-    数据渲染一份摘要进 `acceptance.md`。每个文件只有一个写入者，覆盖问题从构造上消失。
+    现在的分工：**`alpha-tests.md` 是权威登记**（agent 写、脚本只读），聚合器用
+    `project_alpha_tests` 直接读它的表并渲染一份摘要进 `acceptance.md`。每个文件只有一个
+    写入者，覆盖问题从构造上消失；JSON 形态只留给没有账本的调用方。
 
     只要求契约明写的那两项（文件、原因）加模板已有的 Task。**不收「失效了哪些证据」**——
     契约说「被承接的文件同样进入依赖闭包与失效判断」，那是 `depends_on` 算出来的，
@@ -749,10 +757,9 @@ MANUAL_PAIRS = {
 def validate_manual_acceptance(raw: Any) -> list[dict[str, Any]]:
     """校验待人工验收项的投影。
 
-    和 `--unplanned-carry` 走同一个模式：**权威登记在 `alpha-tests.md`**（agent 写、
-    脚本从不碰），传进来的是主 agent 从同一批事实做的 JSON 投影。所以这里不解析
-    Markdown——那份账本的表头归上游 `schema_alpha_tests` 所有，本脚本无权固定它，
-    建成「表头漂移即失败」的解析器只会让外部一次 schema 调整打断整条流水线。
+    权威登记在 `alpha-tests.md`；`--alpha-tests` 时由 `project_alpha_tests` 读表投影到这里，
+    否则接受调用方给的 JSON。两条路进的都是同一形状，校验只写一遍。表头按
+    `references/templates/story-artifacts.md` 固定，漂移在解析处报错而不是在人手投影里静默丢字段。
 
     省略参数按零人工项处理，v1 Story 因此天然兼容，不需要「无人工节」特判。
 
@@ -802,6 +809,99 @@ def validate_manual_acceptance(raw: Any) -> list[dict[str, Any]]:
             require_text(item.get("resume_condition"), f"{label}.resume_condition")
         validated.append(item)
     return validated
+
+
+# ---------------------------------------------------------------- Markdown 账本投影
+#
+# 权威登记在 alpha-tests.md / tasks.md（agent 写）。原先要求 agent 把表投影成 JSON 再传进来，
+# 那是一次「同一事实的手工搬运」，搬错了脚本也校不出来。现在脚本直接读两份 Markdown，
+# 列名固定按 references/templates/story-artifacts.md 与 sdd-task-frontend 的模板；表头漂移
+# 在这里报错，比在人手投影里静默漂移要好。
+
+def parse_markdown_table(markdown: str, heading: str) -> list[dict[str, str]]:
+    """Rows of the first pipe table under `## <heading>` (any heading depth)."""
+    section = re.search(rf"^#{{2,3}}\s+{re.escape(heading)}\s*$(.*?)(?=^#{{2,3}}\s|\Z)", markdown, re.M | re.S)
+    if not section:
+        return []
+    lines = [line.strip() for line in section.group(1).splitlines() if line.strip().startswith("|")]
+    if len(lines) < 2:
+        return []
+    header = [cell.strip() for cell in lines[0].strip("|").split("|")]
+    rows: list[dict[str, str]] = []
+    for line in lines[2:]:
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) != len(header):
+            raise ReviewPipelineError(
+                f"alpha-tests table '{heading}': row has {len(cells)} cells, header has {len(header)}: {line}"
+            )
+        rows.append(dict(zip(header, cells)))
+    return rows
+
+
+def _cell(row: dict[str, str], column: str, table: str) -> str:
+    if column not in row:
+        raise ReviewPipelineError(f"table '{table}' lacks column '{column}'; keep the template header")
+    value = row[column].strip()
+    return "" if value in {"—", "-", "无", ""} else value
+
+
+def _split_refs(value: str) -> list[str]:
+    return [item.strip() for item in re.split(r"[,，;；]", value) if item.strip()]
+
+
+def claim_scopes_from_tasks(tasks_md: str) -> dict[str, str]:
+    """AT → verification_scope from tasks.md 用例追溯，the single author of that field."""
+    scopes: dict[str, str] = {}
+    for row in parse_markdown_table(tasks_md, "用例追溯"):
+        at = _cell(row, "AT", "用例追溯")
+        if at:
+            scopes[at] = _cell(row, "验证范围", "用例追溯")
+    return scopes
+
+
+def project_alpha_tests(alpha_md: str, tasks_md: str | None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(unplanned_carry, manual_acceptance) projected from the ledger, already validated."""
+    carry = [
+        {
+            "file": _cell(row, "文件", "计划外承接"),
+            "task": _cell(row, "Task", "计划外承接"),
+            "reason": _cell(row, "原因", "计划外承接"),
+        }
+        for row in parse_markdown_table(alpha_md, "计划外承接")
+    ]
+    manual_rows = parse_markdown_table(alpha_md, "人工验收记录")
+    manual: list[dict[str, Any]] = []
+    if manual_rows:
+        if tasks_md is None:
+            raise ReviewPipelineError("人工验收记录 present but --tasks not given; verification_scope lives in tasks.md")
+        scopes = claim_scopes_from_tasks(tasks_md)
+        resume = {
+            _cell(row, "AT", "Deferred"): _cell(row, "解除条件", "Deferred")
+            for row in parse_markdown_table(alpha_md, "Deferred")
+        }
+        for row in manual_rows:
+            at = _cell(row, "声明", "人工验收记录")
+            if at not in scopes:
+                raise ReviewPipelineError(f"人工验收记录 {at}: no such AT in tasks.md 用例追溯")
+            item: dict[str, Any] = {
+                "id": at,
+                "trace": _cell(row, "追溯", "人工验收记录"),
+                "verification_scope": scopes[at],
+                "manual_basis": _cell(row, "依据", "人工验收记录"),
+                "required_environment": _cell(row, "验收环境", "人工验收记录"),
+                "required_evidence": _cell(row, "需留下的证据", "人工验收记录"),
+                "manual_outcome": _cell(row, "人工结果", "人工验收记录"),
+                "claim_status": _cell(row, "声明状态", "人工验收记录"),
+                "evidence_refs": _split_refs(_cell(row, "证据引用", "人工验收记录")),
+            }
+            for column, field in (("验收人", "manual_checked_by"), ("验收时间", "manual_checked_at")):
+                value = _cell(row, column, "人工验收记录")
+                if value:
+                    item[field] = value
+            if item["claim_status"] == "DEFERRED" and resume.get(at):
+                item["resume_condition"] = resume[at]
+            manual.append(item)
+    return validate_unplanned_carry(carry), validate_manual_acceptance(manual)
 
 
 def manual_is_settled(item: dict[str, Any]) -> bool:
@@ -1436,6 +1536,20 @@ def command_aggregate(args: argparse.Namespace) -> None:
     }
     diff_facts = require_dict(read_json(Path(args.diff_facts)), "diff_facts")
     narrowed = check_portfolio_floor(portfolio, diff_facts)
+    if args.alpha_tests and (args.unplanned_carry or args.manual_acceptance):
+        raise ReviewPipelineError("--alpha-tests already carries unplanned_carry and manual_acceptance; drop the JSON flags")
+    if args.alpha_tests:
+        unplanned_carry, manual_acceptance = project_alpha_tests(
+            read_text(Path(args.alpha_tests)),
+            read_text(Path(args.tasks)) if args.tasks else None,
+        )
+    else:
+        unplanned_carry = (
+            validate_unplanned_carry(read_json(Path(args.unplanned_carry))) if args.unplanned_carry else []
+        )
+        manual_acceptance = (
+            validate_manual_acceptance(read_json(Path(args.manual_acceptance))) if args.manual_acceptance else []
+        )
     evidence, results = merge_evidence_additions(
         source_evidence, results
     )
@@ -1456,16 +1570,8 @@ def command_aggregate(args: argparse.Namespace) -> None:
             if args.norm_candidates
             else []
         ),
-        unplanned_carry=(
-            validate_unplanned_carry(read_json(Path(args.unplanned_carry)))
-            if args.unplanned_carry
-            else []
-        ),
-        manual_acceptance=(
-            validate_manual_acceptance(read_json(Path(args.manual_acceptance)))
-            if args.manual_acceptance
-            else []
-        ),
+        unplanned_carry=unplanned_carry,
+        manual_acceptance=manual_acceptance,
         decisions=(
             validate_decisions(read_json(Path(args.decisions))) if args.decisions else []
         ),
@@ -1518,12 +1624,20 @@ def parser() -> argparse.ArgumentParser:
         help="JSON array：Dev 发现的仓库级规范变化，回流给 sdd-init-frontend；无则省略",
     )
     aggregate.add_argument(
+        "--alpha-tests",
+        help="alpha-tests.md：脚本直接读「计划外承接」「人工验收记录」「Deferred」三张表；给了它就不要再传下面两个 JSON",
+    )
+    aggregate.add_argument(
+        "--tasks",
+        help="tasks.md：人工验收项的 verification_scope 从「用例追溯」取；有人工验收记录时必填",
+    )
+    aggregate.add_argument(
         "--unplanned-carry",
-        help="JSON array：计划外承接的连带改动，权威登记在 alpha-tests.md；无则省略",
+        help="JSON array：计划外承接；只在不传 --alpha-tests 时用",
     )
     aggregate.add_argument(
         "--manual-acceptance",
-        help="JSON array：待人工验收项，权威登记在 alpha-tests.md；无则省略",
+        help="JSON array：待人工验收项；只在不传 --alpha-tests 时用",
     )
     aggregate.add_argument(
         "--decisions",

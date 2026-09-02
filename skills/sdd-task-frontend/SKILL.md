@@ -79,7 +79,7 @@ description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 al
 
 起草前先按[执行契约的执行档位](../sdd-dev-frontend/references/execution-contract.md#执行档位)预判：无还原 Task、风险 token 不含 `auth` / `write` / `navigation` / `shared-boundary` / `new-pattern` / `unknown-deps`、文件 ≤ 5 的 Story 是 `lite`——组件树、状态与数据流、锚点三节按条件直接省，Task 通常只有一两个。档位由 Dev 落定，计划不写这个字段。
 
-**`tasks.md` 的「用例追溯」是 AT 的 `verification_scope` / `verification_method` 唯一作者。** `alpha-tests.md` 计划侧只写：AC ↔ 证据映射（按 AT 引用，不抄范围与方法）、Deferred AC，本 Story 有人工验收声明时另写人工验收记录。只写初始 `UNVERIFIED` 状态，不伪造证据。GWT 已在 `story-delta-spec.md`，不再复制成 S1/S2/S3 三节。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳。表格列名与投影字段见 [story-artifacts 第二节](../sdd-dev-frontend/references/templates/story-artifacts.md)。
+**`tasks.md` 的「用例追溯」是 AT 的 `verification_scope` / `verification_method` 唯一作者。** `alpha-tests.md` 计划侧只写：AC ↔ 证据映射（按 AT 引用，不抄范围与方法）、Deferred AC，本 Story 有人工验收声明时另写人工验收记录。只写初始 `UNVERIFIED` 状态，不伪造证据。GWT 已在 `story-delta-spec.md`，不再复制成 S1/S2/S3 三节。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳。表格列名是聚合器的解析契约，见 [story-artifacts 第二节](../sdd-dev-frontend/references/templates/story-artifacts.md)。
 
 ## 完成标准
 

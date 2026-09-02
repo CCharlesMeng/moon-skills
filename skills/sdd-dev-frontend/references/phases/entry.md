@@ -54,9 +54,14 @@
 
 ### 5. 判档并编译初始验证组合
 
-先按[执行契约的执行档位](../execution-contract.md#执行档位)从 `restore_tasks`、`risk_triggers` 与计划文件清单判出 `lite` / `standard`，三项取值一并记下。
+档位与组合都由脚本算，命令见 [validation-policy.md 第二节](../validation-policy.md#二编译)：
 
-再完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、当前 app baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
+```bash
+python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase initial \
+  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<story-dir>/portfolio-initial.json" --markdown
+```
+
+进脚本前只做一件判断：按 [validation-policy.md 第三节](../validation-policy.md#三风险触发器)看本 Story 是否命中 `async-state` / `new-pattern` / `spec-gap` / `unknown-deps` / `performance`，命中的以 `--trigger` 传入。其余触发器、档位、模块、角色与维度不手判。`--markdown` 的输出直接贴进 `dev-baseline.md`。每条声明初始为 `UNVERIFIED`。
 
 只有组合含命令模块时才实跑已选的质量命令一次，取得**起点失败集合**（REG 判据的可比起点）；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。续跑时 `dev-baseline.md` 已有起点失败集合就直接沿用，不重跑。
 

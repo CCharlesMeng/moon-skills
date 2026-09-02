@@ -7,7 +7,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 ## 核心契约
 
-一次只处理一个独立前端 app × 一个 Story。计划/执行所有权、TaskPacket、基线源、[验证模型](./references/execution-contract.md#验证模型)（验证范围、验证方法、人工验收字段）和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块、升级规则与[验证方法判定](./references/validation-policy.md#七验证方法的判定规则)只定义在 [validation-policy.md](./references/validation-policy.md)。
+一次只处理一个独立前端 app × 一个 Story。计划/执行所有权、TaskPacket、基线源、[验证模型](./references/execution-contract.md#验证模型)（验证范围、验证方法、人工验收字段）、声明状态与[执行档位](./references/execution-contract.md#执行档位)以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源。验证组合（档位、触发器、模块、角色、维度、逐声明挂载）由 `<skill-dir>/scripts/compile_portfolio.py` 按 `<skill-dir>/scripts/portfolio-rules.json` 编译，agent 只识别判断型触发器；规则为什么这样、以及[验证方法判定](./references/validation-policy.md#七验证方法的判定规则)在 [validation-policy.md](./references/validation-policy.md)。
 
 `tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。当前 app 的公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 

@@ -851,6 +851,24 @@
         "classify_diff 的 shared-boundary 下限触发升档，不能以「只是类型对齐」为由收窄回 lite",
         "文件数 4 未越界不是继续 lite 的理由——任一判据不满足即 standard"
       ]
+    },
+    {
+      "id": 56,
+      "name": "portfolio-is-compiled-by-script-agent-only-names-judged-triggers",
+      "target": "scripts/compile_portfolio.py",
+      "gates": [
+        "硬门禁 3",
+        "硬门禁 15"
+      ],
+      "prompt": "Phase 0：tasks.md 的 risk_triggers=interaction,write，用例追溯有两条 S1 test_case 与一条 S3 test_case，计划 4 个文件。你读了相关代码，发现新提交流程有取消与重试逻辑。Phase C：classify_diff 报 shared-boundary 下限（src/lib/request.ts）与 C4 反驳；你认为 request.ts 只是加了一个类型导出。请给出两次编译的调用与处置。",
+      "expected_output": "Phase 0 以 --trigger async-state 跑 compile_portfolio --phase initial --plan-files 4，档位 standard（write），模块含 story/self-test/regression/review-quality；不手写模块表。Phase C 跑 --phase final --diff-facts --previous portfolio-initial.json，shared-boundary 若要收窄必须 --narrow shared-boundary=<理由> 且进 acceptance.md；C4 被反驳，review-convention 的 C4 一定在分配里，不能因「只是类型」省掉。",
+      "expectations": [
+        "agent 只传判断型触发器（async-state），不自行决定模块、角色或维度",
+        "story 因 write 命中直接选中，不以「组件测试已覆盖」为由不选",
+        "Phase C 带 --previous，脚本退出码 3 时不得手工调低组合，先查输入",
+        "收窄 diff 下限只能用 --narrow 署名，理由进 acceptance.md",
+        "被 diff 反驳 skip_when 的维度（C4）一定在 review_dimensions 里"
+      ]
     }
   ]
 }

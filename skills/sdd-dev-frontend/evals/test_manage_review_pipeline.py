@@ -818,6 +818,84 @@ class ManualAcceptanceTests(unittest.TestCase):
         self.assertEqual(first, self._render([self.PENDING]))
 
 
+class LedgerProjectionTests(unittest.TestCase):
+    """聚合器直接读 alpha-tests.md / tasks.md，人手 JSON 投影这一步消失。
+
+    表头按 story-artifacts.md 固定；漂移在这里报错，而不是在 agent 的手工投影里静默丢字段。
+    """
+
+    TASKS = """# demo
+
+**TaskPacket:** project=demo | story=US1
+
+## 用例追溯
+
+| AT | 标题 | 验证范围 | 验证方法 | Task |
+| --- | --- | --- | --- | --- |
+| AT-US1-001 | 点击刷新 | S1_COMPONENT | test_case | T1 |
+| AT-US1-002 | 滚动是否舒服 | S2_PAGE | manual_acceptance | T2 |
+| AT-US1-003 | SSO 真实账号 | S3_STORY | manual_acceptance | T3 |
+"""
+
+    ALPHA = """# US1 · Alpha Tests
+
+## 计划外承接
+| 文件 | Task | 原因 |
+| --- | --- | --- |
+| src/types/order.ts | T1 | 字段类型对齐 |
+
+## 人工验收记录
+| 声明 | 追溯 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AT-US1-002 | SC-2 | motion_judgment | 移动端 Safari | 录屏 | PASSED | PROVEN | qa-li | 2026-08-30T10:00:00+08:00 | artifacts/a.mp4, artifacts/b.png |
+| AT-US1-003 | SC-3 | external_dependency | 真实 SSO 账号 | 登录截图 | NOT_RUN | DEFERRED | — | — | — |
+
+## AC ↔ 证据映射
+| AT | 状态 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- |
+| AT-US1-001 | PROVEN | test:refresh | fresh | 无 |
+
+## Deferred
+| AT | 外部依赖 | 当前证据 | 解除条件 | 恢复入口 |
+| --- | --- | --- | --- | --- |
+| AT-US1-003 | SSO 测试租户 | 无 | 测试租户开通后 | Phase C 只重跑 story |
+"""
+
+    def test_projects_both_tables_and_pulls_scope_from_tasks(self):
+        carry, manual = MODULE.project_alpha_tests(self.ALPHA, self.TASKS)
+        self.assertEqual(carry, [{"file": "src/types/order.ts", "task": "T1", "reason": "字段类型对齐"}])
+        by_id = {item["id"]: item for item in manual}
+        proven = by_id["AT-US1-002"]
+        self.assertEqual(proven["verification_scope"], "S2_PAGE")
+        self.assertEqual(proven["evidence_refs"], ["artifacts/a.mp4", "artifacts/b.png"])
+        self.assertEqual(proven["manual_checked_by"], "qa-li")
+        deferred = by_id["AT-US1-003"]
+        self.assertEqual(deferred["verification_scope"], "S3_STORY")
+        self.assertEqual(deferred["resume_condition"], "测试租户开通后")
+        self.assertNotIn("manual_checked_by", deferred)
+
+    def test_manual_rows_need_tasks_for_scope(self):
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "--tasks not given"):
+            MODULE.project_alpha_tests(self.ALPHA, None)
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "no such AT"):
+            MODULE.project_alpha_tests(self.ALPHA, self.TASKS.replace("AT-US1-003", "AT-US1-009"))
+
+    def test_header_drift_fails_loudly(self):
+        drifted = self.ALPHA.replace("| 声明 | 追溯 |", "| 声明 | trace |")
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "lacks column '追溯'"):
+            MODULE.project_alpha_tests(drifted, self.TASKS)
+
+    def test_projection_goes_through_the_same_validators(self):
+        """账本里写了 NOT_RUN + PROVEN，读出来一样被挡，不因为来源是 Markdown 就放过。"""
+        bad = self.ALPHA.replace("| NOT_RUN | DEFERRED |", "| NOT_RUN | PROVEN |")
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "illegal pairing"):
+            MODULE.project_alpha_tests(bad, self.TASKS)
+
+    def test_ledger_without_those_sections_projects_nothing(self):
+        carry, manual = MODULE.project_alpha_tests("# US1\n\n## AC ↔ 证据映射\n| AT | 状态 |\n| --- | --- |\n", None)
+        self.assertEqual((carry, manual), ([], []))
+
+
 class DisplayVocabularyTests(unittest.TestCase):
     """`acceptance.md` 里给人读的格子必须是中文，而线上值一个字不动。
 
