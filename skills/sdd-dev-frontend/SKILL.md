@@ -106,6 +106,7 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 | `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
 | `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
 | `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |
+| `portfolio-initial.json` / `portfolio-final.json` | `compile_portfolio.py` 在 Phase 0 / Phase C 的输出；后者以前者为 `--previous` 守只升不降。`validation_portfolio` 抄进 `review-evidence.json`，`--markdown` 抄进 `dev-baseline.md` |
 | `review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |
 | `review-results.json` / `acceptance.md` | 适用角色聚合与给人的收口摘要 |
 | `tasks.md` | 只勾 checkbox，不改验收内容 |
