@@ -4,7 +4,7 @@
 
 ## Phase C — 候选验证
 
-1. 先用 `classify_diff.py` 取最终 diff 的机械事实，再从初始风险、仓库事实、运行限制和已有证据重编译验证组合；下限与收窄规则见 [validation-policy.md](../validation-policy.md#三风险触发器)。结构同时写入 `dev-baseline.md` 与 `review-evidence.json / validation_portfolio`。
+1. 先用 `classify_diff.py` 取最终 diff 的机械事实，据此复判[执行档位](../execution-contract.md#执行档位)——只允许 `lite` → `standard`，升档就补齐 Phase A2 被省掉的勘察产物；再从初始风险、仓库事实、运行限制和已有证据重编译验证组合，下限与收窄规则见 [validation-policy.md](../validation-policy.md#三风险触发器)。结构同时写入 `dev-baseline.md` 与 `review-evidence.json / validation_portfolio`。
 2. 计算证据新鲜度，先复用有效命令和 scenario，再执行真正缺失的已选模块。质量命令先于浏览器采集；同页面/fixture/runtime/reset 边界批量执行。
 3. 首次新增浏览器模块时解析并实测 `<browser-driver>`；不可用则模块记未执行，依赖声明保持 `UNVERIFIED`。
 4. 组合含 `review-restore` 时，先按最终 diff 用 `--phase green` 重跑**全部已冻结区块**的还原契约（命令见 [restore/run.md](../restore/run.md)），报告写 `<story-dir>/restore-report-review.json`。冻结区块跨页面时按页面各注入一次、`--render-results` 重复传，否则其他页面的规则会以「定位不到」冒充实现偏差。Phase B 只跑过当前变更区块，先前区块的 GREEN 在这里才会被最终 diff 推翻。

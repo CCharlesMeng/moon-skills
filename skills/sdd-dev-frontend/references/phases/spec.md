@@ -2,9 +2,11 @@
 
 只在进入 Phase A 时读取。基线源语义来自 [共享执行契约](../execution-contract.md)，QA 声明形状来自 [qa-baseline.md](../templates/qa-baseline.md)。
 
-## 代码侧勘察模式
+## 勘察模式
 
-`lite` 只在 Story 范围明确、采用规范均可按 ID 定位且其依据清单条目指路仍有效、无公共边界/新规范/未知依赖、无需参照页实测且没有冲突时使用。主 agent 机械收集相关路径、采用的 `PATTERN-*` / `REQ-DEC-*` 与证据。任一条件不满足即 `full`，派 `recon-codebase`；不得为了少派角色压低风险。
+执行档位为 `lite`（判据见[执行契约的执行档位](../execution-contract.md#执行档位)）时，规格侧与代码侧都由主 agent 自做：按 [agents/recon-spec.md](../../agents/recon-spec.md) 的产物形状直接生成适用的 F 表、已知缺口与豁免表，按下面的代码侧 `lite` 机械收集依据。不派子代理，产物形状与校验标准不变。
+
+`standard` 档一律派 `recon-spec`；代码侧再分两种：`lite` 只在 Story 范围明确、采用规范均可按 ID 定位且其依据清单条目指路仍有效、无公共边界/新规范/未知依赖、无需参照页实测且没有冲突时使用，主 agent 机械收集相关路径、采用的 `PATTERN-*` / `REQ-DEC-*` 与证据。任一条件不满足即 `full`，派 `recon-codebase`；不得为了少派角色压低风险。
 
 ## Phase A1 — 规格抽取
 
@@ -24,7 +26,7 @@ A1 完成后再派 `recon-spec`，因为它的期望来源是完整设计事实�
 
 ## Phase A2 — 勘察与确认
 
-1. 派 `recon-spec`；代码侧 `full` 时并行派 `recon-codebase`，`lite` 时由主 agent提交机械结果。无原型档先完成代码侧，再把参照页事实或采用 token 交给规格侧。
+1. 按上节勘察模式取得规格侧与代码侧结果：`standard` 派 `recon-spec`，代码侧 `full` 时并行派 `recon-codebase`；执行档位 `lite` 或代码侧 `lite` 的部分由主 agent 提交机械结果。无原型档先完成代码侧，再把参照页事实或采用 token 交给规格侧。
 2. 校验回传：范围、来源、适用 QA 行、豁免、已知缺口齐全，逐行符合 [qa-baseline.md](../templates/qa-baseline.md) 的填写规则；不合格只退回一次。
 3. 合并到 `dev-baseline.md`：工程依据、功能理解、适用 QA 声明、已知缺口、摘要与指纹。Story 只保存采用的 PATTERN/REQ-DEC ID，不复制正文。
 4. 对每个缺口按 QA 模板完成 `repo / prototype / user-only / conflict / 工作假设` 分类。只有 user-only/conflict 进入 P7；工作假设随确认门展示。

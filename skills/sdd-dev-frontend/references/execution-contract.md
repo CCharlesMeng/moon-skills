@@ -132,6 +132,33 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 这条界线的作用是让读的人不必学三个英文常量，同时不把账本值变成会随文案漂移的东西。
 
+## 执行档位
+
+一个改错误码映射的 Story 和一个新增提交流程的 Story 不该付同样的仪式成本。档位只有两档，判据全部机械，agent 没有裁量空间：
+
+```text
+lite      ⇔  restore_tasks 为空（没有还原 Task，也就没有 R 行）
+          ∧  risk_triggers ∩ { auth, write, navigation, shared-boundary, new-pattern, unknown-deps } = ∅
+          ∧  改动文件 ≤ 5（Phase 0 按计划文件清单，Phase C 按 classify_diff 的实际 diff）
+standard  ⇔  其余
+```
+
+**只能升不能降。** Phase 0 按 TaskPacket 判一次，Phase C 按最终 diff 复判一次；复判只允许 lite → standard，出现任一新触发器或文件数越界即升档，升档后补齐被省掉的动作。这与「新增触发器只能增加模块」是同一条原则。
+
+`navigation` 踢出 lite 是刻意的：改路由几乎总牵连入口与守卫，「加一个查询参数」也走 standard 是可接受的代价。
+
+档位**只裁仪式，不裁证据**。四条声明诚信门、RED/GREEN 因果、新鲜度、账本、退出门禁、QA 基线确认门在两档完全相同。lite 省的是：
+
+| 项 | standard | lite |
+| --- | --- | --- |
+| Phase A2 勘察 | 派 `recon-spec`；代码侧按 lite/full 派 `recon-codebase` | 主 agent 自做规格侧与代码侧，不派子代理 |
+| `dev-baseline.md` | 全部节 | 头表、执行起点、起点质量、验证组合、QA 基线；工程依据缩成一行采用的 ID，不写「功能理解」（`tasks.md` 的 Goal 已答） |
+| `tasks.md` | 全部节 | 没有新增节点就删组件树，纯同步删「状态与数据流」，没有新增锚点删「testability 锚点」——这些本来就是条件节，lite 只是让计划侧在起草时直接判 |
+| Task 数 | ≤ 7 | 同 ≤ 7；通常 1–2 |
+| 独立检视 | 由验证组合决定 | 同；lite 的触发器集合天然不会选中 `review-convention` / `review-quality` 的多数维度 |
+
+档位写在 `dev-baseline.md` 文档头表的「执行档位」行，附判据三项的实际取值；复判升档时同一行追加「Phase C 升为 standard：<原因>」。
+
 ## TaskPacket
 
 接缝沿用 `tasks.md` 的 `TaskPacket` 头，不新增第三份文件。字段缺席表示旧格式输入，由 Dev 按实际事实补判；不表示低风险。

@@ -833,6 +833,24 @@
         "--decisions 不能把任一人工声明改成 PROVEN",
         "最终三行带「待 2 项人工验收」限定，唯一下一步指向具体的人工验收动作"
       ]
+    },
+    {
+      "id": 55,
+      "name": "execution-tier-is-mechanical-and-only-upgrades",
+      "target": "references/execution-contract.md",
+      "gates": [
+        "硬门禁 3",
+        "硬门禁 6"
+      ],
+      "prompt": "TaskPacket：restore_tasks 为空，risk_triggers=interaction，计划文件清单 3 个文件，baseline_source=text_spec。Phase 0 该判哪一档、A2 派不派 recon-spec、dev-baseline.md 写哪几节？Phase C classify_diff 发现实际 diff 触碰了 src/lib/request.ts（shared-boundary 下限命中）且文件数为 4，该怎么处理？",
+      "expected_output": "Phase 0 判 lite：主 agent 自做 recon-spec 与代码侧勘察，不派子代理；dev-baseline.md 只写头表、执行起点、起点质量、验证组合、QA 基线，工程依据缩成一行 ID；QA 基线确认门照常。Phase C 因 shared-boundary 升为 standard，头表同行追加原因，补齐 A2 被省掉的勘察产物并重编译组合；不允许反向降档。",
+      "expectations": [
+        "档位判据只用 restore_tasks、risk_triggers 集合与文件数三项，不引入 agent 主观判断",
+        "lite 不省任何证据动作：RED/GREEN、账本、新鲜度、退出门禁与确认门与 standard 相同",
+        "Phase C 复判只允许 lite → standard；升档写进 dev-baseline.md 头表「执行档位」行并补齐 A2 产物",
+        "classify_diff 的 shared-boundary 下限触发升档，不能以「只是类型对齐」为由收窄回 lite",
+        "文件数 4 未越界不是继续 lite 的理由——任一判据不满足即 standard"
+      ]
     }
   ]
 }

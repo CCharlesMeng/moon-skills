@@ -17,10 +17,10 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 | Phase | 动作与出口 | 细则 |
 | --- | --- | --- |
-| -1 / 0 | 校验 app baseline；定位 Story；核实上游字段；编译初始验证组合；只为已选模块取得起点证据 | [phases/entry.md](./references/phases/entry.md) |
-| A1 / A2 | 按基线源抽取规格；按风险选择 `lite/full` 勘察；生成 QA 基线；用户确认后冻结并编译还原契约 | [phases/spec.md](./references/phases/spec.md) |
+| -1 / 0 | 校验 app baseline；定位 Story；核实上游字段；按机械判据定[执行档位](./references/execution-contract.md#执行档位)；编译初始验证组合；只为已选模块取得起点证据 | [phases/entry.md](./references/phases/entry.md) |
+| A1 / A2 | 按基线源抽取规格；按档位与风险决定勘察由主 agent 自做还是派子代理；生成 QA 基线；用户确认后冻结并编译还原契约 | [phases/spec.md](./references/phases/spec.md) |
 | B | 按 Task 实现，只取得本 Task 改变声明的因果证据；checkbox 与证据账本同步 | [phases/implementation.md](./references/phases/implementation.md) |
-| C / D | 按最终 diff 重编译组合；执行适用模块和角色；修确证阻断；按依赖重取失效证据；逐声明收口 | [phases/review-closeout.md](./references/phases/review-closeout.md) |
+| C / D | 按最终 diff 复判档位（只升不降）并重编译组合；执行适用模块和角色；修确证阻断；按依赖重取失效证据；逐声明收口 | [phases/review-closeout.md](./references/phases/review-closeout.md) |
 
 正常主干只有 QA 基线确认需要用户决策。路径歧义、外部授权、无安全默认值的规格缺口、连续三次修复失败、越界改动和未决阻断按所在阶段一次性批量上报。
 

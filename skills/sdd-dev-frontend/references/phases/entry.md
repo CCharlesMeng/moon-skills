@@ -52,14 +52,16 @@
 
 按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `acceptance.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
 
-### 5. 编译初始验证组合
+### 5. 判档并编译初始验证组合
 
-完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、当前 app baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
+先按[执行契约的执行档位](../execution-contract.md#执行档位)从 `restore_tasks`、`risk_triggers` 与计划文件清单判出 `lite` / `standard`，三项取值一并记下。
+
+再完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、当前 app baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
 
 只有组合含命令模块时才实跑已选的质量命令一次，取得**起点失败集合**（REG 判据的可比起点）；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。续跑时 `dev-baseline.md` 已有起点失败集合就直接沿用，不重跑。
 
 ### 6. 写 `dev-baseline.md`
 
-按 [templates/story-artifacts.md](../templates/story-artifacts.md) 第一节写执行起点与初始组合。
+按 [templates/story-artifacts.md](../templates/story-artifacts.md) 第一节写执行起点与初始组合；`lite` 档只写该节标明的必需部分。
 
-退出：路径唯一、上游事实已核、初始组合与执行起点已落盘。
+退出：路径唯一、上游事实已核、档位已判、初始组合与执行起点已落盘。
