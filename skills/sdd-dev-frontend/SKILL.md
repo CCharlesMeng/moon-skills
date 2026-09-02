@@ -77,8 +77,6 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 | `<base-ref>` | 可选 Story 起点 git 引用 |
 | `<browser-driver>` | 被选浏览器能力及已验证启动方式 |
 | `<review-evidence>` | `<story-dir>/review-evidence.json` |
-| `<preflight-cache>` | Git metadata 下的起点质量缓存 |
-| `<execution-telemetry>` | 可选 `<story-dir>/execution-telemetry.json` |
 
 唯一命中时静默继续；不可推导或多候选的变量按 P7 一次问完。`search_paths` 横跨多个独立 app 时不选 monorepo 根兜底，回流 `sdd-task` 拆分 app 范围。正式 Story 工件写 `<story-dir>`，Requirement 级设计事实写 `<design-spec-dir>`，app baseline 写 `<repo-baseline-dir>`。
 
@@ -112,7 +110,6 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 | `review-results.json` / `acceptance.md` | 适用角色聚合与给人的收口摘要 |
 | `tasks.md` | 只勾 checkbox，不改验收内容 |
 | `alpha-tests.md` | 回填证据、声明状态与 Deferred |
-| `execution-telemetry.json` | 仅流程优化明确需要时开启；缺席不是降级 |
 
 模板只在创建对应工件时读取 [templates/story-artifacts.md](./references/templates/story-artifacts.md)。还原契约、QA 基线和证据字段分别以其 reference 或脚本 schema 为唯一事实源，不在本文件展开。
 

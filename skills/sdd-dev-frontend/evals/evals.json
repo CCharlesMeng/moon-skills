@@ -328,47 +328,6 @@
       "note": "这是经济性改写的正向护栏；原有 1–13 仍需作为完整回归套件继续通过。"
     },
     {
-      "id": 21,
-      "name": "exact-final-quality-evidence-is-reused-at-next-story-start",
-      "target": "references/preflight-and-telemetry.md",
-      "prompt": "上一个 Story 的一组已选命令记录于 2 小时前，source=phase-d。当前 Story 初始验证组合也选中这三条命令；HEAD、三类工作区、质量命令版本号、命令与 scope、toolchain/runtime 都逐项相同，每条缓存有 exit_code、duration_ms 和 failures[]。请完成 Phase 0 并说明后续怎么处理。",
-      "expected_output": "精确判定 cache HIT，Phase 0 复用完整失败集合而不重跑同一命令；后续按最终 diff 重编译验证组合，只执行它选中且无新鲜证据的命令，不固定加一次 Phase C/D 全量门。",
-      "expectations": [
-        "通过脚本逐项校验 HEAD、三类工作区状态、质量命令版本号、命令、toolchain、runtime 和 24h TTL，不凭主观判断命中",
-        "Phase 0 不再执行这三条命令，而是把缓存的逐命令退出码、耗时和具体失败集合写入 dev-baseline.md",
-        "dev-baseline.md 标明获取方式=复用、状态指纹、source=phase-d、记录时间与 Git metadata 缓存路径；telemetry 记录 result=reuse",
-        "明确 Phase C/D 的命令集由最终风险组合与证据新鲜度决定，不因阶段存在就固定全量执行"
-      ],
-      "note": "正确行为正例：复用已经证明过的完全相同起点事实。"
-    },
-    {
-      "id": 22,
-      "name": "worktree-or-quality-contract-drift-invalidates-preflight-cache",
-      "target": "scripts/manage_execution_evidence.py",
-      "prompt": "已有 1 小时前的起点质量缓存，HEAD 没变。请分别判断三个其余字段均不变的变体：A 新增未跟踪文件 src/debug.ts；B 只把 npm test 命令增加 --runInBand，Node 仍为 24.1；C 命令完全不变，只把 Node 从 24.1 升到 25.0。",
-      "expected_output": "三个变体都为 MISS：A 因 untracked 路径/内容改变，B 因命令契约改变，C 因 toolchain 改变；分别实跑完整适用命令并更新缓存。",
-      "expectations": [
-        "未跟踪文件的相对路径、类型和内容哈希参与状态指纹，不能因 HEAD 相同而命中",
-        "只有完整命令字符串改变、toolchain 不变的 B 仍为 MISS，并记录 quality-commands-changed",
-        "只有 Node toolchain 改变、命令不变的 C 仍为 MISS，并记录 toolchains-changed",
-        "MISS 后运行本次全部适用质量命令，保留具体 miss 原因并记 telemetry result=run",
-        "只有命令运行期间仓库状态仍与 snapshot 一致才允许 record；状态漂移就重新 probe，不能写入错配缓存"
-      ]
-    },
-    {
-      "id": 23,
-      "name": "external-or-expired-quality-evidence-never-partially-reuses",
-      "target": "references/preflight-and-telemetry.md",
-      "prompt": "runtime.md 本次适用三条质量命令，其中两条是确定性本地 test/check，一条会调用外部测试服务；缓存已有前两条结果。另一个场景三条都是本地命令，但缓存已 25 小时。请决定起点门。",
-      "expected_output": "两个场景都是整组 MISS：有外部时变命令不做部分拼接，TTL 超 24h 也不命中；实跑完整命令集合并记录原因，外部命令使本轮结果不进入可复用缓存。",
-      "expectations": [
-        "外部、网络或时变命令通过 uncacheable-command 明示，整组固定 MISS",
-        "不得把两条旧本地结果与一条新外部结果拼成新的起点证据",
-        "记录超过 24 小时时即使其余指纹完全相同也判 ttl-expired",
-        "不可缓存命令的 snapshot 不允许 record；缓存不可用不成为开工阻断"
-      ]
-    },
-    {
       "id": 24,
       "name": "lite-code-recon-uses-unique-existing-patterns",
       "target": "references/phases/spec.md",
@@ -376,12 +335,12 @@
         "硬门禁 13"
       ],
       "prompt": "一个 Story 只改现有页面的两个私有文件，tasks 文件清单完整。Requirement 明确沿用仓库默认，工程需要是取数三态与样式 token，并显式给出 PATTERN-DATA-1、PATTERN-STYLE-1。两条规范的依据清单条目指路仍有效，未命中 shared-boundary、new-pattern、spec-gap 或 unknown-deps。请完成代码侧勘察。",
-      "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确回读并机械核验证据，不派 recon-codebase；仍写同结构工程依据与 telemetry，不写指纹。",
+      "expected_output": "所有 lite 适用条件成立，主 agent 只按两个 PATTERN ID 精确回读并机械核验证据，不派 recon-codebase；仍写同结构工程依据，不写指纹。",
       "expectations": [
         "逐项核对 lite 适用条件，而不是用 Task 数或文件数当风险代理",
         "只 grep 两个 PATTERN ID 精确回读，并为每条规范核验至少一个依据清单条目的指路",
         "不开放式搜索相邻源码、不派 recon-codebase，也不创建 Story 范式正文或 codebase-brief.md",
-        "dev-baseline.md 标记勘察模式=lite，保留 Story 需要到 PATTERN/REQ-DEC 的映射，不写 baseline 指纹；telemetry 记录 lite 及选择/核验数量"
+        "dev-baseline.md 标记勘察模式=lite，保留 Story 需要到 PATTERN/REQ-DEC 的映射，不写 baseline 指纹"
       ],
       "note": "正确行为正例：小范围且工程依据已经唯一时消除开放式重复勘察。"
     },
@@ -398,20 +357,7 @@
         "公共组件变更命中 shared-boundary，tag 多结果使唯一映射条件失败",
         "参照页固定 full，因为完整勘察必须收集候选路由与结构化事实",
         "派 agents/recon-codebase.md 并按其完整输出、校验和重试规则执行",
-        "telemetry 记录 fallback-to-full 的具体原因；不得猜一个 PATTERN 或自行决定参照页来强保 lite"
-      ]
-    },
-    {
-      "id": 26,
-      "name": "front-phase-telemetry-separates-actions-reuse-retries-and-human-wait",
-      "target": "references/preflight-and-telemetry.md",
-      "prompt": "本轮 Phase -1 status 实跑一次；初始验证组合选择 render，所以 Phase 0 browser probe 重试一次，起点质量精确复用；A1 设计抽取命中缓存、区块规格跳过、代码侧 lite；A2 recon-spec 第一次回传不合格后重跑成功，随后等待用户确认 8 分钟，冻结与契约编译又用 40 秒。Phase D 要生成执行量账本。",
-      "expected_output": "逐动作增量记录稳定 ID 和 attempt，run/reuse/skip 分明；8 分钟只属于 human_wait，40 秒另属 agent；Phase D 从 JSON 机械生成子步骤与汇总，不靠 LOC、回忆或估算。",
-      "expectations": [
-        "至少记录 phase-1.status、phase-0.browser-probe、phase-0.context/quality-gate、phase-a1.extract/block-specs/recon-codebase、phase-a2.recon-spec/merge-validate 和 human.qa-confirmation",
-        "browser probe 与 recon-spec 的重试用递增 attempt 追加，不能覆盖失败轮",
-        "已选命令模块记 result=reuse，抽取记 reuse，区块规格记 skip，代码勘察 note=lite；各类数量可机械汇总",
-        "用户等待单独记 kind=human_wait；冻结/编译 40 秒作为 phase-a2.merge-validate 的 agent attempt，最终账本不把两者混合，也不估算缺失时间"
+        "不得猜一个 PATTERN 或自行决定参照页来强保 lite"
       ]
     },
     {
@@ -442,8 +388,7 @@
       "expectations": [
         "逐场景核 depends_on 与 captured_dependency_hashes，而不是只核 HEAD 或全局指纹",
         "A 因依赖交集失效，B/C 继续提升；补采清单只有 A",
-        "若修改的是 C 使用的共享 theme.css，才让 C 及实际依赖它的下游场景失效",
-        "stale/promote/run/reuse 数量可从 telemetry 机械汇总"
+        "若修改的是 C 使用的共享 theme.css，才让 C 及实际依赖它的下游场景失效"
       ]
     },
     {
@@ -458,8 +403,7 @@
       "expectations": [
         "初始填满 3 个槽位，任一完成即动态补位，不以整波全部完成作为启动条件",
         "后启动角色与前两份引用同一 evidence_epoch、code_fingerprint 和冻结基线",
-        "先完成角色的 findings/级别/建议不传给后启动角色；只可合并其补采的原始 scenario",
-        "telemetry 记录各 role start/complete 与 phase-c.review-refill，不把合法的非同时并发判失败"
+        "先完成角色的 findings/级别/建议不传给后启动角色；只可合并其补采的原始 scenario"
       ]
     },
     {
@@ -512,8 +456,7 @@
         "在改产品代码前分别完成还原 ①② 与逻辑 ①②，并确认两个 RED 的失败原因互不冒充",
         "只做一次共同的最小产品实现，但分别把该实现关联到两个 RED，不把一边 GREEN 当另一边 GREEN",
         "GREEN 波分别运行同一冻结契约和逻辑测试；环境安全时可并行，结果仍分别记录",
-        "两边都 GREEN 后只重构一次，按 depends_on 只重跑受影响通道；逐轮勾 checkbox 并保留各自 AC 证据链",
-        "execution-telemetry.json 分别记录 phase-b.task.T3.restore.red/green 与 phase-b.task.T3.logic.red/green；共享实现只通过相同 implementation fingerprint 关联，不合并通道 telemetry"
+        "两边都 GREEN 后只重构一次，按 depends_on 只重跑受影响通道；逐轮勾 checkbox 并保留各自 AC 证据链"
       ]
     },
     {
@@ -579,7 +522,7 @@
         "visual YELLOW 必须先处置（补证或落 UNVERIFIED 并写补验方式），不能作为 RED 进入实现，也使双通道条件失败",
         "回退到先还原后逻辑不算流程失败；还原 GREEN 后重新取得原因正确的逻辑 RED",
         "仍保留两轮独立 6 步、证据与 AC 映射，不为追求少一轮而放宽 RED/GREEN 语义",
-        "telemetry 记录双通道条件失败与 visual YELLOW 的回退原因；之后还原/逻辑通道的 RED/GREEN 仍使用各自稳定 ID 和 attempt"
+        "还原/逻辑通道的 RED/GREEN 仍使用各自稳定 ID 和 attempt"
       ]
     },
     {

@@ -1,4 +1,0 @@
-interface:
-  display_name: "SDD Frontend Development"
-  short_description: "按声明与风险执行前端 Story，生成最小充分验收证据"
-  default_prompt: "Use $sdd-dev-frontend to implement this frontend Story and compile claim-driven, risk-scaled acceptance evidence."

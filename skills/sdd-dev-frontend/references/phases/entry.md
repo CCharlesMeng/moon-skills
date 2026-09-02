@@ -56,10 +56,10 @@
 
 完整读取 [validation-policy.md](../validation-policy.md)，从 AC/AT、Task 范围、上游风险事实、当前 app baseline 和运行限制编译初始组合。每条声明初始为 `UNVERIFIED`。
 
-只有组合含命令模块时才读取 [preflight-and-telemetry.md](../preflight-and-telemetry.md) 的缓存节并取得起点失败集合；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。
+只有组合含命令模块时才实跑已选的质量命令一次，取得**起点失败集合**（REG 判据的可比起点）；只有组合含浏览器模块时才解析、实测 `<browser-driver>`。未选能力不探测、不生成空表。续跑时 `dev-baseline.md` 已有起点失败集合就直接沿用，不重跑。
 
 ### 6. 写 `dev-baseline.md`
 
-按 [templates/story-artifacts.md](../templates/story-artifacts.md) 第一节写执行起点与初始组合。若本次明确要为流程优化取数，再读取 telemetry 节并开启 `<execution-telemetry>`；默认关闭。
+按 [templates/story-artifacts.md](../templates/story-artifacts.md) 第一节写执行起点与初始组合。
 
 退出：路径唯一、上游事实已核、初始组合与执行起点已落盘。
