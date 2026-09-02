@@ -67,5 +67,19 @@
     "manual_acceptance": ["causal"],
     "quality_gate": ["targeted-quality"],
     "scope_S3_STORY_adds": ["story"]
+  },
+  "execution_profile": {
+    "_comment": "每条声明要多强的执行环境才算 PROVEN。mock < contract < live；agent 只能用 --profile 抬高，不能降。",
+    "order": ["mock", "contract", "live"],
+    "by_method": {
+      "restore_contract": "mock",
+      "manual_acceptance": "live"
+    },
+    "test_case": {
+      "S1_COMPONENT": "mock",
+      "S2_PAGE": "mock",
+      "S3_STORY": "contract",
+      "S3_STORY_with_any_trigger": {"triggers": ["auth", "write"], "profile": "live"}
+    }
   }
 }

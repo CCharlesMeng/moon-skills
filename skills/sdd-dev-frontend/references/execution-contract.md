@@ -86,6 +86,27 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 **已进入冻结还原契约的视觉声明写 `restore_contract`，机器盲区剩余项由契约的 `visual` 层承接并落 YELLOW，不转 `manual_acceptance`。** 这条防的是同一条视觉声明出现两条合法路径：人工那条成本更低，分类会稳定偏向它，结果是绕过 R1–R6、冻结哈希与契约校验器。
 
+### 执行环境档
+
+三轴之外每条声明还带一个**执行环境档**，回答「要在多真实的环境里通过才算证明」。它不是第四轴——不改变声明是什么、怎么取证，只改变 `PROVEN` 的门：
+
+| 档 | 含义 | 能证明 | 证明不了 |
+| --- | --- | --- | --- |
+| `mock` | 组件/浏览器通道 + 后端全 mock | 交互、三态、格式化、请求构造、错误映射 | 接口是否存在、字段是否对、服务端是否接受 |
+| `contract` | mock 或 fixture server，但请求/响应形状对照仓内正式契约断言 | 前端请求与响应处理符合契约 | 鉴权、服务端副作用、幂等、并发 |
+| `live` | 真实后端、真实身份、可重复测试数据 | 以上全部 + 真实接缝 | — |
+
+两个字段：
+
+| 字段 | 谁写 | 写法 |
+| --- | --- | --- |
+| `required_profile` | `compile_portfolio.py` 按 `portfolio-rules.json` 推导：`S1`/`S2` → `mock`；`S3_STORY` → `contract`；`S3_STORY` 且命中 `auth`/`write` → `live`；`manual_acceptance` → `live` | agent 只能用 `--profile AT=<档>` 抬高，不能降；Phase C 相对 Phase 0 也只能升 |
+| `actual_profile` | Dev 在 `alpha-tests.md`「AC ↔ 证据映射」的「执行环境」列记实际取证环境 | 三个值之一；未取证写 `—` |
+
+**`PROVEN` 要求 `actual_profile ≥ required_profile`。** 达不到时诚实的值只有两个：环境本可以搭却没搭 → `UNVERIFIED`；后端/身份/数据不可用 → `DEFERRED` 并写解除条件。`aggregate` 读账本时机械核这一条，`mock` 下通过却记 `PROVEN` 的 `live` 声明直接拒绝聚合。这条防的是「保存成功」一句话同时覆盖按钮行为、请求构造与服务端副作用——后端不在时前端声明照样能 `PROVEN`，接缝声明明确 `DEFERRED`，整条 Story 不会全绿也不会全灰。
+
+`contract` 档的事实源优先级：仓内后端生成的 OpenAPI / JSON Schema / protobuf → `story-delta-design.md` / `requirement-design.md` 的接口契约节 → 无。没有契约事实源时不得从 mock 反推契约，该声明停在 `DEFERRED`。取证时把契约文件加进 scenario 的 `depends_on`，后端契约变了旧证据自然失效。
+
 ### 人工验收声明的附加字段
 
 `verification_method=manual_acceptance` 的声明必须补齐下列字段；其他方法留空：
@@ -120,11 +141,11 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 | 状态 | 对人怎么说 | 判据 |
 | --- | --- | --- |
-| `PROVEN` | 已验证 | 有覆盖该声明、环境正确、对最终相关依赖仍新鲜的证据，且没有未清零的确证阻断 |
-| `UNVERIFIED` | 未验证 | 本阶段做得到但未执行、证据不足或工具能力不可用 |
-| `DEFERRED` | 已暂缓 | 外部依赖未就绪；必须写明解除条件 |
+| `PROVEN` | 已验证 | 有覆盖该声明、`actual_profile ≥ required_profile`、对最终相关依赖仍新鲜的证据，且没有未清零的确证阻断 |
+| `UNVERIFIED` | 未验证 | 本阶段做得到但未执行、证据不足、工具能力不可用，或取证环境低于所需档而环境本可搭建 |
+| `DEFERRED` | 已暂缓 | 外部依赖（后端、身份、测试数据、第三方）未就绪；必须写明外部依赖、解除条件与恢复入口 |
 
-`UNVERIFIED` 与 `DEFERRED` 都不计已验收。缺少某种证据只影响依赖它的声明，不扩大到无关声明。
+`UNVERIFIED` 与 `DEFERRED` 都不计已验收。缺少某种证据只影响依赖它的声明，不扩大到无关声明。两者对读者的意义不同——前者是「前端还没做完」，后者是「前端做完了、等接缝」——`acceptance.md` 首句与最终三行必须分开说，不压成一个「部分验收」。
 
 **没有第四种状态。** `MANUAL` 不是状态而是验证方法，写进本列即非法：人工验收在计划阶段生成时同样是 `UNVERIFIED`，只有拿到合格人工证据后才进 `PROVEN`。`manual_outcome` 是人工执行结果，与本列各自独立，不得互相代替。合法配对只有 `PASSED + PROVEN`、`PASSED + UNVERIFIED`（证据不足）、`FAILED + UNVERIFIED`、`NOT_RUN + UNVERIFIED`，以及外部依赖未就绪时的 `NOT_RUN + DEFERRED`。`PROVEN` 还要求 `manual_checked_by`、`manual_checked_at`、`required_environment` 齐全且至少有一条 `evidence_refs`。
 

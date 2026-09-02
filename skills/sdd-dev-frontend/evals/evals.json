@@ -869,6 +869,43 @@
         "收窄 diff 下限只能用 --narrow 署名，理由进 acceptance.md",
         "被 diff 反驳 skip_when 的维度（C4）一定在 review_dimensions 里"
       ]
+    },
+    {
+      "id": 57,
+      "name": "mock-pass-cannot-prove-a-live-seam-claim",
+      "target": "scripts/manage_review_pipeline.py",
+      "gates": [
+        "硬门禁 4",
+        "硬门禁 5",
+        "退出门禁 3"
+      ],
+      "prompt": "Story 命中 write。AT-1（S1，点击提交按钮发出 POST）在组件测试 + MSW 下 GREEN；AT-2（S3，提交后刷新列表可见新订单）在浏览器 mock 路径下也走通了。后端测试环境本周不可用。请回填账本并给最终三行。",
+      "expected_output": "AT-1 required_profile=mock，actual=mock → PROVEN。AT-2 required_profile=live（S3 + write），只有 mock 场景 → 不得 PROVEN；后端不可用属外部依赖 → DEFERRED，Deferred 表写外部依赖=订单后端测试环境、解除条件、恢复入口=解除 DEFERRED。aggregate 首句「前端已验证，1 条真实接缝待外部依赖（订单后端测试环境）」，最终三行同样措辞，写明可先合并。",
+      "expectations": [
+        "AT-2 若被写成 PROVEN + 执行环境 mock，aggregate --alpha-tests 直接拒绝，不是警告",
+        "AT-2 记 DEFERRED 而不是 UNVERIFIED：后端不可用是外部依赖，不是本阶段做得到没做",
+        "Deferred 表有 AT-2 一行，外部依赖写具体是哪个环境，恢复入口写「解除 DEFERRED」",
+        "首句和最终三行区分「前端已验证、接缝待外部依赖」与「声明未验证」，不写成笼统的部分验收",
+        "浏览器 mock 场景的 profile=mock 被原样记录，不改成 live"
+      ]
+    },
+    {
+      "id": 58,
+      "name": "deferred-release-reruns-only-affected-modules",
+      "target": "references/phases/review-closeout.md",
+      "gates": [
+        "硬门禁 3",
+        "退出门禁 3"
+      ],
+      "prompt": "三周前收口的 Story 有两条 DEFERRED：AT-2（写入接缝，待订单后端测试环境）、AT-5（SSO 真实账号，待测试租户）。用户说订单后端测试环境今天可用了，测试租户还没批。请处理。",
+      "expected_output": "走「解除 DEFERRED」入口：先 classify_diff 确认前端代码相对收口无变化；只对 AT-2 执行它在 validation_portfolio 里挂的模块（story + self-test + regression），live 档取证并把契约文件加进 depends_on；AT-2 转 PROVEN、执行环境 live、从 Deferred 表删行；AT-5 原样留下；aggregate --alpha-tests 重渲染。不重开 Phase A/B，不重跑全量门。",
+      "expectations": [
+        "不重开 Phase A/B，不改 tasks.md 与冻结基线",
+        "前端代码有变化时不走这条短路径，回 Phase C 完整复编译",
+        "只执行 AT-2 挂载的模块；AT-5 的解除条件未成立则原样保留，不改成 UNVERIFIED 让它消失",
+        "写操作无 sandbox 或回滚手段时不跑，缺口写进解除条件",
+        "重聚合后首句由「前端已验证，2 条真实接缝待…」变为「…1 条真实接缝待外部依赖（SSO 测试租户）」"
+      ]
     }
   ]
 }

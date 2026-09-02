@@ -43,6 +43,7 @@
 每个 Task 的末步（回填账本并提交）：
 
 - 在 `alpha-tests.md` 回填声明、状态、证据 ID/路径、环境和相关依赖；还原记录按[还原证据记录](../templates/story-artifacts.md#还原证据记录)。
+- 「执行环境」列写本次取证实际处在的档（`mock` / `contract` / `live`）。它低于 portfolio 里该声明的 `required_profile` 时**不得写 `PROVEN`**：环境本可搭建写 `UNVERIFIED`，后端/身份/数据不可用写 `DEFERRED` 并在 Deferred 表补外部依赖与解除条件。判据见[执行契约的执行环境档](../execution-contract.md#执行环境档)。
 - 状态按 [共享执行契约的状态表](../execution-contract.md#声明与状态)判定，本文件不复制判据。
 - 先回填账本、后勾 checkbox；checkbox 是本 Task 的 commit point。勾选已实际完成的项，验证结果不替代实现进度。人工验收 Task 的 checkbox 只表示实现完成，**不表示该声明已通过验收**；账本状态继续独立演进。
 - 同一动作可被多条声明引用，不复制输出。依赖文件变化时只失效命中的证据。

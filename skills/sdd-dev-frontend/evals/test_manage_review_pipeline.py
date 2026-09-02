@@ -215,7 +215,7 @@ class AggregateTests(unittest.TestCase):
         aggregate = MODULE.aggregate_results(results)
         self.assertEqual(
             aggregate["counts"],
-            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "manual_acceptance": 0, "manual_pending": 0, "decided": 0, "handoff": 3, "skipped": 0},
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "manual_acceptance": 0, "manual_pending": 0, "claims_unverified": 0, "claims_deferred": 0, "decided": 0, "handoff": 3, "skipped": 0},
         )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
@@ -851,19 +851,25 @@ class LedgerProjectionTests(unittest.TestCase):
 | AT-US1-003 | SC-3 | external_dependency | 真实 SSO 账号 | 登录截图 | NOT_RUN | DEFERRED | — | — | — |
 
 ## AC ↔ 证据映射
-| AT | 状态 | 证据记录 | 新鲜度 | 说明 |
-| --- | --- | --- | --- | --- |
-| AT-US1-001 | PROVEN | test:refresh | fresh | 无 |
+| AT | 状态 | 执行环境 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| AT-US1-001 | PROVEN | mock | test:refresh | fresh | 无 |
+| AT-US1-004 | DEFERRED | — | 无 | — | 待后端 |
 
 ## Deferred
 | AT | 外部依赖 | 当前证据 | 解除条件 | 恢复入口 |
 | --- | --- | --- | --- | --- |
 | AT-US1-003 | SSO 测试租户 | 无 | 测试租户开通后 | Phase C 只重跑 story |
+| AT-US1-004 | 订单后端 | 无 | 后端部署到测试环境 | 解除 DEFERRED 入口 |
 """
 
     def test_projects_both_tables_and_pulls_scope_from_tasks(self):
-        carry, manual = MODULE.project_alpha_tests(self.ALPHA, self.TASKS)
+        carry, manual, ledger = MODULE.project_alpha_tests(self.ALPHA, self.TASKS)
         self.assertEqual(carry, [{"file": "src/types/order.ts", "task": "T1", "reason": "字段类型对齐"}])
+        by_at = {item["id"]: item for item in ledger}
+        self.assertEqual(by_at["AT-US1-001"]["actual_profile"], "mock")
+        self.assertEqual(by_at["AT-US1-004"]["external_dependency"], "订单后端")
+        self.assertEqual(by_at["AT-US1-004"]["resume_condition"], "后端部署到测试环境")
         by_id = {item["id"]: item for item in manual}
         proven = by_id["AT-US1-002"]
         self.assertEqual(proven["verification_scope"], "S2_PAGE")
@@ -892,8 +898,59 @@ class LedgerProjectionTests(unittest.TestCase):
             MODULE.project_alpha_tests(bad, self.TASKS)
 
     def test_ledger_without_those_sections_projects_nothing(self):
-        carry, manual = MODULE.project_alpha_tests("# US1\n\n## AC ↔ 证据映射\n| AT | 状态 |\n| --- | --- |\n", None)
-        self.assertEqual((carry, manual), ([], []))
+        carry, manual, ledger = MODULE.project_alpha_tests("# US1\n\n## AC ↔ 证据映射\n| AT | 状态 | 证据记录 |\n| --- | --- | --- |\n", None)
+        self.assertEqual((carry, manual, ledger), ([], [], []))
+
+    def test_proven_below_required_profile_is_refused(self):
+        """mock 下通过不能给需要 live 的接缝声明记 PROVEN——这就是 required/actual 两档存在的理由。"""
+        portfolio = {"claims": [{"id": "AT-US1-001", "required_profile": "live"}]}
+        _, _, ledger = MODULE.project_alpha_tests(self.ALPHA, self.TASKS)
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "actual_profile=mock but the portfolio requires live"):
+            MODULE.check_claim_profiles(ledger, portfolio)
+        MODULE.check_claim_profiles(ledger, {"claims": [{"id": "AT-US1-001", "required_profile": "mock"}]})
+        # v1 ledgers without the column skip the gate instead of failing
+        legacy = """# US1
+## AC ↔ 证据映射
+| AT | 状态 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- |
+| AT-US1-001 | PROVEN | test:refresh | fresh | 无 |
+"""
+        _, _, old = MODULE.project_alpha_tests(legacy, self.TASKS)
+        self.assertIsNone(old[0]["actual_profile"])
+        MODULE.check_claim_profiles(old, portfolio)
+
+    def test_deferred_claim_must_have_a_deferred_row(self):
+        broken = self.ALPHA.replace("| AT-US1-004 | 订单后端 | 无 | 后端部署到测试环境 | 解除 DEFERRED 入口 |\n", "")
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "no row in the Deferred table"):
+            MODULE.project_alpha_tests(broken, self.TASKS)
+
+    def _headline(self, ledger, manual=()):
+        return MODULE.render_markdown(MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            claim_ledger=ledger, manual_acceptance=list(manual),
+        )).splitlines()[2]
+
+    def test_headline_separates_backend_only_deferral_from_unfinished_frontend(self):
+        deferred = {"id": "AT-4", "claim_status": "DEFERRED", "actual_profile": None, "evidence": "", "note": "",
+                    "external_dependency": "订单后端", "resume_condition": "后端部署到测试环境"}
+        proven = {"id": "AT-1", "claim_status": "PROVEN", "actual_profile": "mock", "evidence": "t", "note": ""}
+        unverified = {"id": "AT-2", "claim_status": "UNVERIFIED", "actual_profile": None, "evidence": "", "note": ""}
+        only_seam = self._headline([proven, deferred])
+        self.assertIn("前端已验证，1 条真实接缝待外部依赖", only_seam)
+        self.assertIn("订单后端", only_seam)
+        self.assertIn("可先合并", only_seam)
+        unfinished = self._headline([proven, deferred, unverified])
+        self.assertIn("部分验证：1 条声明未验证", unfinished)
+        self.assertIn("1 条真实接缝待外部依赖", unfinished)
+        self.assertNotIn("可先合并", unfinished)
+        self.assertIn("**可验收**", self._headline([proven]))
+
+    def test_ledger_deferred_rows_reach_the_deferred_section(self):
+        deferred = {"id": "AT-4", "claim_status": "DEFERRED", "actual_profile": None, "evidence": "", "note": "",
+                    "external_dependency": "订单后端", "resume_condition": "后端部署到测试环境"}
+        body = MODULE.render_markdown(MODULE.aggregate_results([], evidence_epoch="e", code_fingerprint="c", claim_ledger=[deferred]))
+        self.assertIn("## 暂缓的验收项", body)
+        self.assertIn("后端部署到测试环境", body)
 
 
 class DisplayVocabularyTests(unittest.TestCase):

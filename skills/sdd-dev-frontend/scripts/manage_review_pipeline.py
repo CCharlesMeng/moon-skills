@@ -859,8 +859,10 @@ def claim_scopes_from_tasks(tasks_md: str) -> dict[str, str]:
     return scopes
 
 
-def project_alpha_tests(alpha_md: str, tasks_md: str | None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """(unplanned_carry, manual_acceptance) projected from the ledger, already validated."""
+def project_alpha_tests(
+    alpha_md: str, tasks_md: str | None
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """(unplanned_carry, manual_acceptance, claim_ledger) projected from the ledger, already validated."""
     carry = [
         {
             "file": _cell(row, "文件", "计划外承接"),
@@ -901,7 +903,71 @@ def project_alpha_tests(alpha_md: str, tasks_md: str | None) -> tuple[list[dict[
             if item["claim_status"] == "DEFERRED" and resume.get(at):
                 item["resume_condition"] = resume[at]
             manual.append(item)
-    return validate_unplanned_carry(carry), validate_manual_acceptance(manual)
+    return validate_unplanned_carry(carry), validate_manual_acceptance(manual), project_claim_ledger(alpha_md)
+
+
+PROFILE_ORDER = ("mock", "contract", "live")
+
+
+def project_claim_ledger(alpha_md: str) -> list[dict[str, Any]]:
+    """AC ↔ 证据映射 + Deferred → one row per AT with status, actual profile and external dependency.
+
+    The 执行环境 column is what lets a mock pass and a live pass stop sharing one PROVEN:
+    it is compared against the portfolio's required_profile in `check_claim_profiles`.
+    Ledgers written before that column existed project with actual_profile=None and skip the gate.
+    """
+    rows = parse_markdown_table(alpha_md, "AC ↔ 证据映射")
+    deferred = {
+        _cell(row, "AT", "Deferred"): {
+            "external_dependency": _cell(row, "外部依赖", "Deferred"),
+            "resume_condition": _cell(row, "解除条件", "Deferred"),
+            "resume_entry": _cell(row, "恢复入口", "Deferred"),
+        }
+        for row in parse_markdown_table(alpha_md, "Deferred")
+    }
+    ledger: list[dict[str, Any]] = []
+    for row in rows:
+        at = _cell(row, "AT", "AC ↔ 证据映射")
+        if not at:
+            continue
+        status = _cell(row, "状态", "AC ↔ 证据映射")
+        if status not in CLAIM_STATUSES:
+            raise ReviewPipelineError(f"AC ↔ 证据映射 {at}: 状态 must be one of {list(CLAIM_STATUSES)}, got {status!r}")
+        actual = row.get("执行环境", "").strip() if "执行环境" in row else None
+        actual = None if actual in {"", "—", "-"} else actual
+        if actual is not None and actual not in PROFILE_ORDER:
+            raise ReviewPipelineError(f"AC ↔ 证据映射 {at}: 执行环境 must be one of {list(PROFILE_ORDER)}, got {actual!r}")
+        item: dict[str, Any] = {
+            "id": at,
+            "claim_status": status,
+            "actual_profile": actual,
+            "evidence": _cell(row, "证据记录", "AC ↔ 证据映射"),
+            "note": row.get("说明", "").strip(),
+        }
+        if status == "DEFERRED":
+            if at not in deferred:
+                raise ReviewPipelineError(f"AC ↔ 证据映射 {at} is DEFERRED but has no row in the Deferred table")
+            item.update(deferred[at])
+        ledger.append(item)
+    return ledger
+
+
+def check_claim_profiles(ledger: list[dict[str, Any]], portfolio: dict[str, Any]) -> None:
+    """PROVEN needs actual_profile ≥ required_profile. Below that the honest value is UNVERIFIED or DEFERRED."""
+    required = {
+        claim["id"]: claim.get("required_profile")
+        for claim in portfolio.get("claims", [])
+        if isinstance(claim, dict) and claim.get("id")
+    }
+    for item in ledger:
+        need = required.get(item["id"])
+        if need is None or item["actual_profile"] is None or item["claim_status"] != "PROVEN":
+            continue
+        if PROFILE_ORDER.index(item["actual_profile"]) < PROFILE_ORDER.index(need):
+            raise ReviewPipelineError(
+                f"{item['id']} is PROVEN with actual_profile={item['actual_profile']} but the portfolio requires "
+                f"{need}; a mock pass does not prove a live seam — record UNVERIFIED or DEFERRED"
+            )
 
 
 def manual_is_settled(item: dict[str, Any]) -> bool:
@@ -941,6 +1007,7 @@ def aggregate_results(
     unplanned_carry: list[dict[str, Any]] | None = None,
     manual_acceptance: list[dict[str, Any]] | None = None,
     decisions: list[dict[str, Any]] | None = None,
+    claim_ledger: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     if skip_rebuttals:
@@ -1121,6 +1188,7 @@ def aggregate_results(
         "norm_candidates": list(norm_candidates or []),
         "unplanned_carry": list(unplanned_carry or []),
         "manual_acceptance": list(manual_acceptance or []),
+        "claim_ledger": list(claim_ledger or []),
         "decisions": list(decisions or []),
         "handoff": handoff,
         "counts": {
@@ -1134,6 +1202,8 @@ def aggregate_results(
             "manual_pending": sum(
                 not manual_is_settled(item) for item in (manual_acceptance or [])
             ),
+            "claims_unverified": sum(item["claim_status"] == "UNVERIFIED" for item in (claim_ledger or [])),
+            "claims_deferred": sum(item["claim_status"] == "DEFERRED" for item in (claim_ledger or [])),
             "decided": len(decisions or []),
             "handoff": len(handoff),
             "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
@@ -1298,12 +1368,23 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         item for item in aggregate.get("manual_acceptance", []) if not manual_is_settled(item)
     ]
     manual_failed = [item for item in manual_open if item["manual_outcome"] == "FAILED"]
+    ledger = aggregate.get("claim_ledger", [])
+    manual_ids = {item["id"] for item in aggregate.get("manual_acceptance", [])}
+    # 人工项已有自己的措辞；账本里的其余声明按状态分两堆，因为它们对读者的意义完全不同：
+    # UNVERIFIED 是「前端还没做完」，DEFERRED 是「前端做完了，等外部接缝」。压成一个词就没法决定能不能先合。
+    unverified_claims = [i for i in ledger if i["claim_status"] == "UNVERIFIED" and i["id"] not in manual_ids]
+    deferred_claims = [i for i in ledger if i["claim_status"] == "DEFERRED" and i["id"] not in manual_ids]
+    deferred_deps = sorted({i.get("external_dependency", "") for i in deferred_claims if i.get("external_dependency")})
 
     lines = ["# 验收摘要", ""]
 
     # 第一句必须是结论本身，不是计数。读的人先要知道能不能收。
     # 人工验收未完成时这里绝不能出现无条件「可验收」——实现完成不等于验收通过，
     # 而这份摘要是唯一会被当成验收结论读的东西。
+    seam_tail = (
+        f"；{len(deferred_claims)} 条真实接缝待外部依赖（{'、'.join(deferred_deps) or '见暂缓表'}）"
+        if deferred_claims else ""
+    )
     if blockers or manual_failed:
         reasons = []
         if blockers:
@@ -1311,11 +1392,26 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         if manual_failed:
             reasons.append(f"{len(manual_failed)} 项人工验收未通过")
         lines += [f"**暂不可验收**：有{'、'.join(reasons)}需要先修。逐条见下。"]
+    elif unverified_claims:
+        lines += [
+            f"**部分验证：{len(unverified_claims)} 条声明未验证**"
+            + (f"；待 {len(manual_open)} 项人工验收" if manual_open else "")
+            + seam_tail
+            + (f"；另有 {len(pending)} 件需要你定" if pending else "")
+            + "。未验证项是本阶段做得到但还没做的，先补证再谈收口。",
+        ]
     elif manual_open:
         lines += [
             f"**实现完成，待 {len(manual_open)} 项人工验收**"
+            + seam_tail
             + (f"；另有 {len(pending)} 件需要你定" if pending else "")
             + "。人工验收通过并留下证据后才可收口。",
+        ]
+    elif deferred_claims:
+        lines += [
+            f"**前端已验证，{len(deferred_claims)} 条真实接缝待外部依赖**（{'、'.join(deferred_deps) or '见暂缓表'}）"
+            + (f"；另有 {len(pending)} 件需要你定" if pending else "")
+            + "。前端范围内的声明全部已验证，可先合并；接缝声明的解除条件见「暂缓的验收项」，外部依赖就绪后按「解除 DEFERRED」入口复跑。",
         ]
     elif pending:
         lines += [
@@ -1438,10 +1534,18 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         for item in aggregate.get("manual_acceptance", [])
         if item.get("claim_status") == "DEFERRED"
     ]
-    if aggregate["deferred_candidates"] or manual_deferred:
+    ledger_deferred = [
+        {
+            "ac": item["id"],
+            "reason": f"外部依赖未就绪：{item.get('external_dependency') or '未写明'}",
+            "resume_condition": item.get("resume_condition", ""),
+        }
+        for item in deferred_claims
+    ]
+    if aggregate["deferred_candidates"] or manual_deferred or ledger_deferred:
         lines += ["", "## 暂缓的验收项", ""]
         lines += markdown_table(
-            list(aggregate["deferred_candidates"]) + manual_deferred,
+            list(aggregate["deferred_candidates"]) + ledger_deferred + manual_deferred,
             [("验收标准", "ac"), ("为什么缓", "reason"), ("什么条件下解除", "resume_condition")],
         )
 
@@ -1538,11 +1642,13 @@ def command_aggregate(args: argparse.Namespace) -> None:
     narrowed = check_portfolio_floor(portfolio, diff_facts)
     if args.alpha_tests and (args.unplanned_carry or args.manual_acceptance):
         raise ReviewPipelineError("--alpha-tests already carries unplanned_carry and manual_acceptance; drop the JSON flags")
+    claim_ledger: list[dict[str, Any]] = []
     if args.alpha_tests:
-        unplanned_carry, manual_acceptance = project_alpha_tests(
+        unplanned_carry, manual_acceptance, claim_ledger = project_alpha_tests(
             read_text(Path(args.alpha_tests)),
             read_text(Path(args.tasks)) if args.tasks else None,
         )
+        check_claim_profiles(claim_ledger, portfolio)
     else:
         unplanned_carry = (
             validate_unplanned_carry(read_json(Path(args.unplanned_carry))) if args.unplanned_carry else []
@@ -1572,6 +1678,7 @@ def command_aggregate(args: argparse.Namespace) -> None:
         ),
         unplanned_carry=unplanned_carry,
         manual_acceptance=manual_acceptance,
+        claim_ledger=claim_ledger,
         decisions=(
             validate_decisions(read_json(Path(args.decisions))) if args.decisions else []
         ),

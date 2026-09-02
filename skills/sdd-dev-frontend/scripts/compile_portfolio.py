@@ -291,20 +291,67 @@ def _dimension_key(value: str) -> tuple[str, int, int]:
     return (match.group(1), int(match.group(2)), int(match.group(3) or 0))
 
 
-def attach_claim_modules(rules: dict[str, Any], claims: list[dict[str, str]], modules: list[str]) -> list[dict[str, Any]]:
+def profile_rank(rules: dict[str, Any], profile: str) -> int:
+    order = rules["execution_profile"]["order"]
+    if profile not in order:
+        raise PortfolioError(f"unknown execution profile {profile!r}; expected one of {order}")
+    return order.index(profile)
+
+
+def required_profile(rules: dict[str, Any], claim: dict[str, str], triggers: list[str]) -> str:
+    """How strong an environment this claim needs before it may be PROVEN.
+
+    The rule is deliberately coarse: component/page claims are provable against mocks,
+    story-scope claims need the formal contract, and story-scope claims behind auth or
+    write need the live seam. Anything finer is the agent's call via --profile, and
+    that call can only raise the bar.
+    """
+    cfg = rules["execution_profile"]
+    method = claim["method"]
+    if method in cfg["by_method"]:
+        return cfg["by_method"][method]
+    table = cfg["test_case"]
+    base = table[claim["scope"]]
+    if claim["scope"] == "S3_STORY":
+        rule = table["S3_STORY_with_any_trigger"]
+        if set(triggers) & set(rule["triggers"]):
+            return rule["profile"]
+    return base
+
+
+def attach_claim_modules(
+    rules: dict[str, Any],
+    claims: list[dict[str, str]],
+    modules: list[str],
+    triggers: list[str],
+    raised_profiles: dict[str, str],
+) -> list[dict[str, Any]]:
     cfg = rules["claim_modules"]
+    known = {claim["id"] for claim in claims}
+    unknown = set(raised_profiles) - known
+    if unknown:
+        raise PortfolioError(f"--profile names unknown claims {sorted(unknown)}")
     out = []
     for claim in claims:
         wanted = list(cfg[claim["method"]])
         if claim["scope"] == "S3_STORY":
             wanted += cfg["scope_S3_STORY_adds"]
         attached = [module for module in wanted if module in modules]
+        profile = required_profile(rules, claim, triggers)
+        if claim["id"] in raised_profiles:
+            raised = raised_profiles[claim["id"]]
+            if profile_rank(rules, raised) < profile_rank(rules, profile):
+                raise PortfolioError(
+                    f"--profile {claim['id']}={raised} is below the derived {profile}; profiles can only be raised"
+                )
+            profile = raised
         out.append({
             "id": claim["id"],
             "verification_scope": claim["scope"],
             "verification_method": claim["method"],
             "task": claim["task"],
             "modules": attached,
+            "required_profile": profile,
             "status": "UNVERIFIED",
         })
     return out
@@ -320,6 +367,12 @@ def check_monotonic(previous: dict[str, Any], current: dict[str, Any]) -> list[s
     dropped_roles = set(previous["review_roles"]) - set(current["review_roles"])
     if dropped_roles:
         problems.append(f"review roles dropped: {sorted(dropped_roles)}")
+    order = ["mock", "contract", "live"]
+    before = {claim["id"]: claim.get("required_profile", "mock") for claim in previous.get("claims", [])}
+    for claim in current.get("claims", []):
+        prior = before.get(claim["id"])
+        if prior and order.index(claim["required_profile"]) < order.index(prior):
+            problems.append(f"{claim['id']} required_profile lowered {prior} → {claim['required_profile']}")
     return problems
 
 
@@ -335,6 +388,7 @@ def compile_portfolio(
     agent_dimensions: dict[str, set[str]] | None = None,
     reg_rows: list[str] | None = None,
     plan_file_count: int | None = None,
+    raised_profiles: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     packet = parse_task_packet(tasks_md)
     claims = parse_claims(tasks_md)
@@ -361,7 +415,7 @@ def compile_portfolio(
         "modules": modules,
         "review_roles": roles,
         "review_dimensions": dimensions,
-        "claims": attach_claim_modules(rules, claims, modules),
+        "claims": attach_claim_modules(rules, claims, modules, triggers, raised_profiles or {}),
     }
 
 
@@ -377,7 +431,7 @@ def render_markdown(portfolio: dict[str, Any]) -> str:
         "| --- | --- | --- | --- | --- |",
     ]
     dims = "；".join(f"{role}: {', '.join(d)}" for role, d in portfolio["review_dimensions"].items()) or "无"
-    claims = ", ".join(claim["id"] for claim in portfolio["claims"]) or "无"
+    claims = ", ".join(f"{claim['id']}({claim['required_profile']})" for claim in portfolio["claims"]) or "无"
     triggers = ", ".join(portfolio["risk_triggers"]) or "无"
     sources = "；".join(f"{t}: {'/'.join(s)}" for t, s in portfolio["trigger_sources"].items()) or "—"
     lines.append(f"| {triggers} | {sources} | {', '.join(portfolio['modules'])} | {dims} | {claims} |")
@@ -409,6 +463,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--narrow", action="append", default=[], help="trigger=reason; only diff-derived floor triggers")
     p.add_argument("--dimension", action="append", default=[], help="role=D1,D2 extra dimensions the agent judged applicable")
     p.add_argument("--reg", action="append", default=[], help="REG row id selected for self-test; repeatable")
+    p.add_argument("--profile", action="append", default=[], help="AT=mock|contract|live to raise a claim's required execution profile")
     p.add_argument("--plan-files", type=int, help="file count from the plan when there is no diff yet")
     p.add_argument("--previous", help="earlier portfolio JSON; enforces lite→standard and module growth only")
     p.add_argument("--out", help="write portfolio JSON here")
@@ -439,6 +494,7 @@ def main(argv: list[str] | None = None) -> int:
             agent_dimensions=agent_dims,
             reg_rows=args.reg,
             plan_file_count=args.plan_files,
+            raised_profiles=parse_kv_list(args.profile, "--profile"),
         )
         if args.previous:
             previous = json.loads(Path(args.previous).read_text(encoding="utf-8"))

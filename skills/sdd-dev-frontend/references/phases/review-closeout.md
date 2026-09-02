@@ -25,3 +25,16 @@
 6. 逐条核对 SKILL.md 的退出门禁。存在 `UNVERIFIED` / `DEFERRED` 时可交付“部分验收”，但必须带状态限定和补验/解除方式；存在待人工验收项时不写无条件“可验收”。
 
 退出：每条声明状态唯一且诚实；确证阻断与依赖失效已收口；所有遗留项可操作且已对账。
+
+## 解除 DEFERRED
+
+`DEFERRED` 是唯一在 Story 收口后仍会变化的状态。没有专门入口时它会永久沉淀——Story 已经交付，没人会为了几条接缝声明重走一遍 Phase A/B。所以这是一条独立的、只碰证据的短路径：
+
+1. **入口条件**：用户说明某个外部依赖已就绪（后端部署到测试环境、测试租户开通、可回滚数据就位），或续跑时 `alpha-tests.md` Deferred 表非空且解除条件可核。只处理 Deferred 表里的声明，不重开 Phase A/B，不改 `tasks.md`、不改冻结基线。
+2. **核解除条件**：逐行看 Deferred 表的「解除条件」是否成立。不成立的原样留下，不猜。
+3. **只编译受影响模块**：从 `review-evidence.json / validation_portfolio.claims` 取这些声明的 `modules` 与 `required_profile`，只执行它们（通常是 `story` + `self-test`，`write` 类再加 `regression`）。先跑 `classify_diff.py` 确认前端代码相对上次收口没有变化；变了就不是解除 DEFERRED，回 Phase C 完整复编译。
+4. **按所需档取证**：`live` 档要真实后端、真实身份、可重复且写后可清理的数据（入口见 app baseline `runtime.md` 的「服务与身份」节）；`contract` 档对照仓内正式契约并把契约文件加进 `depends_on`。scenario 的 `profile` 记实际档。写操作没有 sandbox 或回滚手段时不跑，留 `DEFERRED` 并把缺口写进解除条件。
+5. **回填**：`alpha-tests.md` 对应行改状态、填「执行环境」，从 Deferred 表删掉已解除的行；`actual_profile` 仍低于 `required_profile` 的不得写 `PROVEN`。
+6. **重聚合**：`aggregate --alpha-tests --tasks` 重渲染 `acceptance.md`，首句从「前端已验证，N 条真实接缝待…」变为「可验收」或剩余项的表述。最终三行照常输出。
+
+不接受的做法：用 mock 场景「顺便」把 `DEFERRED` 改成 `PROVEN`；为了解除一条声明重跑全量门；把解除不了的声明改成 `UNVERIFIED` 让它从暂缓表消失。

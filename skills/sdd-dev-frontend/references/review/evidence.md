@@ -61,7 +61,21 @@
       "fixture": {"name": "<名称>", "sha256": "<sha256>"},
       "viewport": {"width": 1200, "height": 800},
       "steps": ["<实际执行步骤>"],
-      "observations": ["<原始文案、数值、网络请求或几何事实>"],
+      "observations": ["<原始文案、数值或几何事实>"],
+      "network": [
+        {
+          "method": "POST",
+          "path": "/api/orders",
+          "query": "<非敏感 query 或空>",
+          "request_header_names": ["Authorization", "X-Tenant"],
+          "request_schema_ref": "<契约锚点或 request body 的 sha256>",
+          "status": 201,
+          "response_schema_ref": "<契约锚点或 response 形状摘要>",
+          "correlation_id": "<响应头里的追踪 ID，无则省略>",
+          "side_effect": "<刷新后可观察到的服务端结果；mock 下写 mocked>"
+        }
+      ],
+      "profile": "mock | contract | live",
       "artifacts": ["<截图或结构化结果路径>"],
       "depends_on": ["src/view.tsx", "src/view.module.css"],
       "captured_dependency_hashes": {
@@ -87,6 +101,10 @@
 ```
 
 证据包只保存**原始事实**，不保存 `通过 / 不通过` 或级别。否则后来的检视只是复述证据所有者的判断，不再独立。
+
+**接口事实结构化，不写进 `observations[]` 的散文里。** `self-test` 的 F4 判据是「请求头、字段映射或错误码与冻结契约不符 → P0」，判据是结构化的，证据是散文就判不出来。凡是声明依赖接口行为的 scenario 都填 `network[]`：method / path / query / 非敏感 header **名**（不记值）/ request 与 response 的契约锚点或哈希 / status / correlation ID / 副作用观察。`profile` 记这次采集实际处在哪一档，回填账本「执行环境」列时抄它。
+
+**契约文件进 `depends_on`。** `contract` 与 `live` 档的 scenario 把它对照的契约文件（OpenAPI / schema / design 的接口契约节所在文件）列进 `depends_on` 并记哈希；后端契约一变，旧证据按第五节自然失效，不需要另一套「后端指纹」。
 
 ## 三、Phase B 场景就地入包
 
@@ -122,7 +140,8 @@ Phase B 的行为结论（RED/GREEN、逐项失败集合）仍只在 `alpha-test
 - 它的 `depends_on` 文件内容哈希；
 - fixture 名称与内容哈希；
 - 页面 / 路由、viewport、DPR、浏览器引擎与版本、字体指纹；
-- 会影响观察结果的账号、角色、租户与 API/mock 模式。
+- 会影响观察结果的账号、角色、租户与 API/mock 模式；
+- `profile`——`mock` 下采的场景不能复用给需要 `contract` / `live` 的声明。
 
 代码变化后按依赖交集失效：
 

@@ -13,6 +13,15 @@
 | `RUN-3` | 仓根 `package.json` 的 `test` / `typecheck` / `lint` / `format` / `build` script | 五条质量命令；`targeted-quality` 与全量门都从这里选 | — |
 | `RUN-4` | `src/lib/request.ts` 读的两个 `VITE_` 前缀环境变量 | 接口 base 与租户标识，**非敏感、无模板默认值**；缺失时请求会打到相对路径且租户头为空 | 1 处 |
 
+## 服务与身份
+
+| 项 | 内容 |
+| --- | --- |
+| 后端可达方式 | `RUN-4` 的 base URL 键名；仓内无代理配置、无 mock 开关，后端不在本仓 |
+| 正式契约事实源 | 无正式契约事实源；只有 design 文档的接口契约节 |
+| 测试身份 | 无登录流程；租户由 `RUN-4` 的租户键名注入 |
+| 测试数据 | 无 seed/reset 入口 |
+
 ## 规范
 
 #### `PATTERN-RUN-1` · 质量命令的适用范围

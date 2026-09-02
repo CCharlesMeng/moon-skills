@@ -222,6 +222,43 @@ class ClaimTests(unittest.TestCase):
             MODULE.compile_portfolio(RULES, tasks_md(claims=[("AT-1", "x", "S1_COMPONENT", "quality_gate", "T1")]), phase="initial", plan_file_count=1)
 
 
+class ExecutionProfileTests(unittest.TestCase):
+    """required_profile 是「mock 下通过」与「真实接缝通过」不再压进同一个 PROVEN 的那道闸。"""
+
+    def _profiles(self, triggers, claims):
+        p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers=triggers, claims=claims), phase="initial", plan_file_count=2)
+        return {c["id"]: c["required_profile"] for c in p["claims"]}
+
+    def test_scope_and_seam_triggers_derive_the_profile(self):
+        claims = [
+            ("AT-1", "组件", "S1_COMPONENT", "test_case", "T1"),
+            ("AT-2", "页面", "S2_PAGE", "test_case", "T1"),
+            ("AT-3", "跨页", "S3_STORY", "test_case", "T1"),
+            ("AT-4", "区块", "S2_PAGE", "restore_contract", "T2"),
+            ("AT-5", "体感", "S2_PAGE", "manual_acceptance", "T3"),
+        ]
+        self.assertEqual(self._profiles("interaction", claims), {"AT-1": "mock", "AT-2": "mock", "AT-3": "contract", "AT-4": "mock", "AT-5": "live"})
+        self.assertEqual(self._profiles("interaction,write", claims)["AT-3"], "live")
+        self.assertEqual(self._profiles("interaction,write", claims)["AT-1"], "mock")
+
+    def test_agent_can_only_raise_a_profile(self):
+        claims = [("AT-1", "组件", "S1_COMPONENT", "test_case", "T1"), ("AT-3", "跨页", "S3_STORY", "test_case", "T1")]
+        p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="write", claims=claims), phase="initial", plan_file_count=1, raised_profiles={"AT-1": "contract"})
+        self.assertEqual({c["id"]: c["required_profile"] for c in p["claims"]}, {"AT-1": "contract", "AT-3": "live"})
+        with self.assertRaisesRegex(MODULE.PortfolioError, "can only be raised"):
+            MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="write", claims=claims), phase="initial", plan_file_count=1, raised_profiles={"AT-3": "mock"})
+        with self.assertRaisesRegex(MODULE.PortfolioError, "unknown claims"):
+            MODULE.compile_portfolio(RULES, tasks_md(claims=claims), phase="initial", plan_file_count=1, raised_profiles={"AT-9": "live"})
+        with self.assertRaisesRegex(MODULE.PortfolioError, "unknown execution profile"):
+            MODULE.compile_portfolio(RULES, tasks_md(claims=claims), phase="initial", plan_file_count=1, raised_profiles={"AT-1": "real"})
+
+    def test_previous_portfolio_pins_profiles_from_below(self):
+        claims = [("AT-3", "跨页", "S3_STORY", "test_case", "T1")]
+        initial = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="write", claims=claims), phase="initial", plan_file_count=1)
+        final = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="interaction", claims=claims), phase="final", diff_facts=diff_facts(["src/a.ts"]))
+        self.assertIn("AT-3 required_profile lowered live → contract", MODULE.check_monotonic(initial, final))
+
+
 class CliTests(unittest.TestCase):
     def test_cli_writes_json_and_markdown_and_enforces_previous(self):
         with tempfile.TemporaryDirectory() as tmp:
