@@ -4,7 +4,7 @@
 
 **关键结构决策:** <!-- 只写会影响验收或文件划分的决策，例如新建 feature 目录、状态提到哪一层、复用哪套请求封装 -->
 
-**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks= | risk_triggers=
+**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | component_test_status= | component_test_framework= | browser_test_status= | browser_test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks= | risk_triggers=
 
 **知识 trace:** <!-- 上游 consume 的 entries[].id；gaps 非空则一并列出 -->
 
@@ -88,14 +88,18 @@
 
 ## 用例追溯
 
-| AT | 标题 | Task |
-| --- | --- | --- |
+| AT | 标题 | 验证范围 | 验证方法 | Task |
+| --- | --- | --- | --- | --- |
+
+验证范围写 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，验证方法写 `test_case` / `restore_contract` / `manual_acceptance`；判据见 [validation-policy 第七节](../../sdd-dev-frontend/references/validation-policy.md#七验证方法的判定规则)。机械 Task 的 `quality_gate` 不产生 AT，不进这张表。
+
+`manual_acceptance` 的 AT 另在 `alpha-tests.md` 的人工验收记录里写依据、验收环境与需留下的证据；这里只标方法。
 
 ## Task List
 
 顺序：跨页公共骨架 → 每页还原 → 该页逻辑。规模按[执行契约](../../sdd-dev-frontend/references/execution-contract.md#规模)：一个 Story 3–7 个 Task，单 Task ≤ 5 个文件、2–5 步，每个 Task 都改到产品代码或测试代码——确认、勘察、评审、补文档不占编号。
 
-下面三种形状按 Task 形态选一份复制，步骤数不凑齐成一样多；改造既有行为或修缺陷时可在暴露缺口后追加一步「确认原因」，实现后确有必要重构时可追加一步「重构」，其余情况不加编号。
+下面四种形状按 Task 形态与验证方法选一份复制，步骤数不凑齐成一样多；改造既有行为或修缺陷时可在暴露缺口后追加一步「确认原因」，实现后确有必要重构时可追加一步「重构」，其余情况不加编号。人工验收形状仍属逻辑形态，不是第四种形态。
 
 `**可能扩散:**` 三种形状通用，只在确有没定论的连带范围时写一行，无则整行删除。
 
@@ -116,6 +120,26 @@
 - [ ] **Step 1: 暴露缺口** — 在哪个测试文件断言什么行为，改动前应该怎么失败
 - [ ] **Step 2: 实现并转绿** — 改哪些文件、达成什么可观察行为；同一断言转绿后哪些声明应为 `PROVEN`
 - [ ] **Step 3: 记录证据并提交** — 回填 `alpha-tests.md`，沿用 `sdd-task` 提交规范
+
+### Task N: <名称> [用例: AT-...]
+
+**形态:** 逻辑（人工验收）
+
+**受影响声明:** <!-- AC / AT，全部为 verification_method=manual_acceptance -->
+
+**人工依据:** <!-- manual_basis 枚举值 + 为什么这条声明机器判不了 -->
+
+**验收环境与所需证据:** <!-- required_environment / required_evidence，与 alpha-tests.md 一致 -->
+
+**Files:**
+
+- Create / Modify: `<精确路径>` — <实现什么>
+
+**可能扩散:** <!-- 无则删这行 -->
+
+- [ ] **Step 1: 实现人工验收候选** — 达成哪些可观察结果；本 Task 不新增自动化测试文件
+- [ ] **Step 2: 让受影响范围的编译/类型/lint/构建通过**
+- [ ] **Step 3: 登记待人工验收并提交** — 回填 `alpha-tests.md`，`manual_outcome=NOT_RUN`、`claim_status=UNVERIFIED`；不填验收人与验收时间，agent 不代签
 
 ### Task N: <名称> [用例: AT-...]
 
@@ -160,6 +184,10 @@
 - [ ] 没有外部基线时全文没有 px、色值、字号、圆角、阴影或自创响应式规格。
 - [ ] Task 数 3–7、单 Task ≤ 5 个文件、2–5 步；每个 Task 都改到代码，没有确认/勘察/评审/文档类 Task。
 - [ ] 每个 Task 只有一种形态；步骤按形态裁过；多轮有不可拆理由并分别引用声明。
+- [ ] 每条 AT 都填了验证范围与验证方法，且都能说出判据；`S1_COMPONENT` / `S2_PAGE` 重叠的按 tie-break 定，没有二选一写法。
+- [ ] 每条 `manual_acceptance` 都过了六条资格门禁、没命中自动化强制触发器，且写清依据、环境与所需证据；「不新增自动化测试文件」只出现在这类 Task 里。
+- [ ] 已进入冻结还原契约的视觉声明写的是 `restore_contract`，没有改判成人工。
+- [ ] 缺测试通道的声明按降级登记并记入「风险与回滚」，没有因为缺通道就改判成人工。
 - [ ] 每页还原先于逻辑；还原 Task 独占样式文件；同页还原轮的取证归属唯一，没有收尾样式 Task。
 - [ ] 全文没有精确验证命令、状态矩阵、全量回归、浏览器矩阵或独立检视安排。
 - [ ] 文件清单只含已确认范围，没定论的落在「可能扩散」。

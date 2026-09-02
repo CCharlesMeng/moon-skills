@@ -122,7 +122,21 @@
 - 复杂场景（多 API 编排）拆分为多条 AT- 用例，用"预置数据"衔接
 - **后端用例必须是 API 接口级**（通过 API 端点调用，验证完整调用链），不是内部类单测
 
-## 4. 前端 mock 集成级用例提炼规则
+## 4. 前端用例提炼规则
+
+前端 AT 的观察范围不是固定的一层。每条声明按 [执行契约的验证模型](../../sdd-dev-frontend/references/execution-contract.md#验证模型)填 `verification_scope`（`S1_COMPONENT` / `S2_PAGE` / `S3_STORY`）与 `verification_method`（`test_case` / `restore_contract` / `quality_gate` / `manual_acceptance`），取能覆盖它的最小范围。方法怎么选只有一份判据：[validation-policy 第七节](../../sdd-dev-frontend/references/validation-policy.md#七验证方法的判定规则)，本文件不复制它的门禁。
+
+- `S1_COMPONENT` 用组件通道 + 后端 API 全 mock，就是下面 §4.1、§4.2 描述的形态；它是最常见的一档，但不是默认档。
+- `S2_PAGE` 用于必须整页渲染才能观察的声明（页面布局、溢出、页面内跨组件协作）。
+- `S3_STORY` 用于 Story 内跨页面、跨路由、鉴权与提交链路；需要浏览器通道，`browser_test_status` 不是 `available` 时按 §7.6 登记降级并保持 `UNVERIFIED`，不改判成人工。
+- `S1_COMPONENT` 与 `S2_PAGE` 重叠时：能在单组件挂载下观察的写 `S1_COMPONENT`，必须整页渲染的写 `S2_PAGE`；单条声明不写二选一。
+- 视觉声明所在区块已进入冻结还原契约时写 `restore_contract`，机器盲区留在契约 `visual` 层，**不转 `manual_acceptance`**。
+- 没有行为分支的机械改动写 `quality_gate` 且不产生 AT；需求锚点仍必须由真正承载用户行为的 AT 覆盖，`quality_gate` 不顶替覆盖。
+- 拿不准时用 `test_case`，不静默放宽。
+
+`manual_acceptance` 的 AT 同样要有完整 GWT、预期结果与追溯关系，另填 `manual_basis`、`required_environment`、`required_evidence`，初始 `manual_outcome=NOT_RUN` + `claim_status=UNVERIFIED`。**不分派验收人**，`manual_checked_by` / `manual_checked_at` 留空，不写人名占位符。
+
+§2 的六大技术对四种方法一样适用：一条声明如果能用等价类、边界值、决策表或状态迁移系统枚举，它就命中 §7.2 自动化强制触发器，必须是 `test_case`。
 
 ### 4.1 从 SC- 提炼组件交互用例
 1. 识别 SC- 场景涉及的前端组件/页面（从 story-delta-frontend-design 组件树）
@@ -135,9 +149,14 @@
 5. Then 写渲染结果断言 + API 调用断言（调用次数/请求体）
 
 ### 4.2 mock 策略
-- 后端 API 全部 mock（前端用例不依赖真实后端）
+
+适用于 `S1_COMPONENT` 与 `S2_PAGE` 的 `test_case` 声明：
+
+- 后端 API 全部 mock（这两档用例不依赖真实后端）
 - mock 响应数据从 story-delta-spec §6 对外接口契约推导
 - 标注 mock 的 API 路径 + 响应码 + 响应体
+
+`S3_STORY` 声明按仓内浏览器通道的既有做法决定 mock 边界，不强制全 mock——它要证明的正是真实接缝。`manual_acceptance` 声明不写 mock 策略，写 `required_environment`。
 
 ## 5. AT- 标识分配规则
 
@@ -155,6 +174,8 @@
 - 每条 SC- 至少被一条 AT- 覆盖
 - 每条 BR- 至少被一条 AT- 覆盖
 - 落入 alpha-tests.md §3 覆盖矩阵，缺口列标注未覆盖锚点
+- **`quality_gate` 不计入覆盖**：机械 Task 不产生 AT，锚点必须由承载用户行为的声明覆盖
+- 前端另查：每条 AT 的 `verification_scope` 与 `verification_method` 都已填；`manual_acceptance` 项的依据、环境与所需证据齐全，且没有一条命中 §7.2 自动化强制触发器
 
 ### 6.2 API 维度 checklist 闭合（endpoint → 维度）
 - 每个对外 API endpoint 按 §3.3 维度 checklist 逐一确认

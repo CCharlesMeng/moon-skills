@@ -215,7 +215,7 @@ class AggregateTests(unittest.TestCase):
         aggregate = MODULE.aggregate_results(results)
         self.assertEqual(
             aggregate["counts"],
-            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "decided": 0, "handoff": 3, "skipped": 0},
+            {"blocker": 1, "suggestion": 1, "open_question": 1, "deferred": 1, "norm_candidate": 0, "unplanned_carry": 0, "manual_acceptance": 0, "manual_pending": 0, "decided": 0, "handoff": 3, "skipped": 0},
         )
         self.assertEqual(aggregate["findings"][0]["level"], "blocker")
         self.assertEqual(aggregate["findings"][0]["roles"], ["review-convention", "review-quality"])
@@ -654,6 +654,170 @@ class UnplannedCarryTests(unittest.TestCase):
         self.assertNotIn("待 Phase D 填写", body)
 
 
+class ManualAcceptanceTests(unittest.TestCase):
+    """待人工验收项走 JSON 投影，权威登记仍在 alpha-tests.md。
+
+    这条通道和 `--unplanned-carry` 同构：脚本不解析 Markdown。那份账本的表头归上游
+    `schema_alpha_tests` 所有，建成「表头漂移即失败」的解析器只会让外部一次 schema
+    调整打断整条流水线。
+
+    人工验收是这条流水线里唯一没有可复算外部产物的证据——命令能重跑、契约能重判，
+    「人看过了」不能。所以这里的 PROVEN 门比别处紧，而 `--decisions` 够不到人工项。
+    """
+
+    PENDING = {
+        "id": "AT-US12-003",
+        "trace": "SC-2",
+        "verification_scope": "S2_PAGE",
+        "manual_basis": "motion_judgment",
+        "required_environment": "移动端 Safari，已登录的运营账号",
+        "required_evidence": "滚动过程录屏",
+        "manual_outcome": "NOT_RUN",
+        "claim_status": "UNVERIFIED",
+        "evidence_refs": [],
+    }
+
+    def _proven(self, **overrides):
+        item = dict(
+            self.PENDING,
+            manual_outcome="PASSED",
+            claim_status="PROVEN",
+            manual_checked_by="qa-zhang",
+            manual_checked_at="2026-08-31T14:20:00+08:00",
+            evidence_refs=["artifacts/scroll.mp4"],
+        )
+        item.update(overrides)
+        return item
+
+    def test_accepts_a_well_formed_pending_entry(self):
+        self.assertEqual(MODULE.validate_manual_acceptance([self.PENDING]), [self.PENDING])
+
+    def test_planning_fields_are_all_mandatory(self):
+        """没有环境和所需证据的人工项等于「人工看一下」，不算验收声明。"""
+        for field in ("id", "trace", "verification_scope", "manual_basis",
+                      "required_environment", "required_evidence"):
+            with self.subTest(field=field):
+                item = {k: v for k, v in self.PENDING.items() if k != field}
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, field):
+                    MODULE.validate_manual_acceptance([item])
+
+    def test_manual_basis_is_a_closed_enum(self):
+        """自由文本会把例外无限扩大，所以依据只能从枚举里选。"""
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "manual_basis"):
+            MODULE.validate_manual_acceptance([dict(self.PENDING, manual_basis="css")])
+
+    def test_manual_status_is_not_a_claim_status(self):
+        """`MANUAL` 不是第四种状态，两根轴也不能互相顶替。"""
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "claim_status"):
+            MODULE.validate_manual_acceptance([dict(self.PENDING, claim_status="MANUAL")])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "manual_outcome"):
+            MODULE.validate_manual_acceptance([dict(self.PENDING, manual_outcome="UNVERIFIED")])
+
+    def test_illegal_pairings_are_rejected(self):
+        """没跑过却说已验证、判失败却说已验证，都是这张表要挡的。"""
+        for outcome, status in (("NOT_RUN", "PROVEN"), ("FAILED", "PROVEN"),
+                                ("PASSED", "DEFERRED"), ("FAILED", "DEFERRED")):
+            with self.subTest(pair=(outcome, status)):
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, "illegal pairing"):
+                    MODULE.validate_manual_acceptance(
+                        [dict(self.PENDING, manual_outcome=outcome, claim_status=status)]
+                    )
+
+    def test_proven_requires_signature_time_and_artifact(self):
+        """四项缺一就退回 UNVERIFIED——签名不带产物不是证据。"""
+        for field in ("manual_checked_by", "manual_checked_at"):
+            with self.subTest(field=field):
+                item = {k: v for k, v in self._proven().items() if k != field}
+                with self.assertRaisesRegex(MODULE.ReviewPipelineError, field):
+                    MODULE.validate_manual_acceptance([item])
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "no evidence_refs"):
+            MODULE.validate_manual_acceptance([self._proven(evidence_refs=[])])
+
+    def test_deferred_requires_a_resume_condition(self):
+        item = dict(self.PENDING, claim_status="DEFERRED")
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "resume_condition"):
+            MODULE.validate_manual_acceptance([item])
+        MODULE.validate_manual_acceptance(
+            [dict(item, resume_condition="待第三方账号开通")]
+        )
+
+    def _render(self, items):
+        return MODULE.render_markdown(MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            manual_acceptance=items,
+        ))
+
+    def test_pending_item_blocks_an_unconditional_pass(self):
+        """实现完成不等于验收通过，这份摘要不许把两件事说成一件。"""
+        body = self._render([self.PENDING])
+        self.assertIn("待 1 项人工验收", body)
+        self.assertNotIn("**可验收**", body)
+        self.assertIn("需要你处理", body)
+        self.assertIn("AT-US12-003", body)
+
+    def test_pending_item_is_an_action_not_a_heads_up(self):
+        """待人工验收要人去做；落到「不用动」那节就自我矛盾了。"""
+        body = self._render([self.PENDING])
+        head, _, tail = body.partition("## 你该知道，但不用动")
+        self.assertIn("AT-US12-003", head)
+        self.assertNotIn("AT-US12-003", tail)
+
+    def test_failed_manual_acceptance_blocks_acceptance(self):
+        body = self._render([dict(self.PENDING, manual_outcome="FAILED")])
+        self.assertIn("暂不可验收", body)
+        self.assertIn("1 项人工验收未通过", body)
+
+    def test_passed_without_evidence_asks_for_the_artifact_not_a_pass(self):
+        """人判过了不能丢掉，但证据不齐也不能提前渲染成已证明。"""
+        body = self._render([self._proven(claim_status="UNVERIFIED")])
+        self.assertIn("补齐", body)
+        self.assertNotIn("**可验收**", body)
+
+    def test_settled_item_needs_no_action(self):
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a",
+            manual_acceptance=[self._proven()],
+        )
+        self.assertEqual(aggregate["counts"]["manual_pending"], 0)
+        self.assertEqual(aggregate["counts"]["manual_acceptance"], 1)
+        body = MODULE.render_markdown(aggregate)
+        self.assertIn("**可验收**", body)
+        self.assertIn("人工验收总表", body)
+
+    def test_deferred_item_also_reaches_the_deferred_section(self):
+        """找「什么被缓了」只该看一个地方。"""
+        body = self._render([dict(
+            self.PENDING, claim_status="DEFERRED", resume_condition="待第三方账号开通"
+        )])
+        self.assertIn("暂缓的验收项", body)
+        self.assertIn("待第三方账号开通", body)
+
+    def test_decisions_cannot_settle_a_manual_claim(self):
+        """一句「可以了」不能顶替人工证据，所以答复够不到人工项。"""
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "not awaiting a decision"):
+            MODULE.aggregate_results(
+                [], evidence_epoch="review-1", code_fingerprint="code-a",
+                manual_acceptance=[self.PENDING],
+                decisions=[{
+                    "item": "AT-US12-003", "answer": "可以了", "decided_at": "2026-08-31",
+                }],
+            )
+
+    def test_absent_manual_items_keep_existing_output(self):
+        """v1 Story 不传这个参数，输出必须与从前一致。"""
+        aggregate = MODULE.aggregate_results(
+            [], evidence_epoch="review-1", code_fingerprint="code-a"
+        )
+        self.assertEqual(aggregate["counts"]["manual_acceptance"], 0)
+        body = MODULE.render_markdown(aggregate)
+        self.assertNotIn("人工验收", body)
+        self.assertIn("**可验收**", body)
+
+    def test_projection_is_stable_across_two_aggregates(self):
+        first = self._render([self.PENDING])
+        self.assertEqual(first, self._render([self.PENDING]))
+
+
 class DisplayVocabularyTests(unittest.TestCase):
     """`acceptance.md` 里给人读的格子必须是中文，而线上值一个字不动。
 
@@ -672,9 +836,11 @@ class DisplayVocabularyTests(unittest.TestCase):
             | {"executed", "not_applicable", "unexecuted"}
             | {"clear", "finding", "unrun", "skipped"}
             | {"blocker", "suggestion"}
-            | {"open_question", "deferred", "norm_candidate"}
+            | {"open_question", "deferred", "norm_candidate", "manual_acceptance"}
             | MODULE.NORM_CANDIDATE_KINDS
-            | {"PROVEN", "UNVERIFIED", "DEFERRED"}
+            | set(MODULE.CLAIM_STATUSES)
+            | set(MODULE.MANUAL_OUTCOMES)
+            | set(MODULE.MANUAL_BASES)
         )
         missing = sorted(term for term in expected if term not in MODULE.DISPLAY)
         self.assertEqual(missing, [], f"缺中文词条：{missing}")

@@ -872,6 +872,24 @@
         "search_paths 横跨 apps/web 与 apps/mobile 时回流 sdd-task 拆分 app 范围",
         "不把 monorepo 根当成混合 frontend-root，也不选择任一 app 的 baseline 代表另一个 app"
       ]
+    },
+    {
+      "id": 54,
+      "name": "manual-acceptance-ledger-reconciles-pairings-before-closeout",
+      "target": "scripts/manage_review_pipeline.py",
+      "gates": [
+        "硬门禁 5",
+        "退出门禁 6"
+      ],
+      "prompt": "Story 有三条 manual_acceptance 声明：AT-1 已由 qa-li 于 2026-08-30 执行 PASSED，evidence_refs 有一段录屏；AT-2 人工 PASSED 但 evidence_refs 为空、验收人未填；AT-3 manual_outcome=NOT_RUN，账本里却写着 claim_status=PROVEN。请做 Phase D 收口并给出最终三行。",
+      "expected_output": "AT-1 进 PROVEN；AT-2 保持 UNVERIFIED 并登记缺证据与验收人；AT-3 是非法配对，改回 UNVERIFIED 并作为确证阻断记录。最终三行写「实现完成，待 2 项人工验收」，不写无条件可验收。",
+      "expectations": [
+        "只有 PASSED + 验收人 + 验收时间 + 至少一条 evidence_refs 四项齐全的 AT-1 记为 PROVEN",
+        "AT-2 的 PASSED 保留，但 claim_status 仍是 UNVERIFIED，acceptance.md 里要求补齐证据与验收人，而不是渲染成已验证",
+        "AT-3 的 NOT_RUN + PROVEN 被 validate_manual_acceptance 拒绝为 illegal pairing；agent 改回 UNVERIFIED，不用自己的浏览器观察代签",
+        "--decisions 不能把任一人工声明改成 PROVEN",
+        "最终三行带「待 2 项人工验收」限定，唯一下一步指向具体的人工验收动作"
+      ]
     }
   ]
 }

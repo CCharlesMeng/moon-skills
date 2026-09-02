@@ -94,7 +94,7 @@ metadata:
    1. `codespec knowledge consume --stage task --projects "<关联 Story 设计表格中的代码仓>" --keywords "<组件/技术关键词>" --json`（引擎从 code-repository-index 查各 repo 的 `language`，按 `(stage=task, kind=specification, scope=coding|testing, language=<repo>)` 过滤——Java 仓只命中 Java 规范，TS 仓只命中 TS 规范）
    2. 按 `must_read` 读原文；`browse` 条目已带 `summary`/`retrieval_hint`，据此判断是否需要进入目录精读，不必先手工 ls；裁剪规范写入 tasks.md「知识 trace」小节（列出 `entries[].id`）
    3. `gaps` 非空 → 记入 knowledge-gaps 降级继续。Dev 阶段会直接 consume 语言规范主规范原文（不再只依赖 trace）。**禁止**手工过滤 index entries。
-8. **测试框架探测（新增）**：对每个目标代码仓，按 `references/test-framework-detection.md` 的探测规则扫描构建文件（pom.xml/build.gradle/go.mod/package.json）与测试目录结构，识别测试框架（后端 JUnit/Mockito/Karate/Spock/TestNG/RestAssured；前端 Jest/Vitest/Mocha/Cypress/Playwright/@testing-library），将探测结果写入 tasks.md TaskPacket 头的 `test_framework` 字段。探测失败 → Stop 并回流 Design。
+8. **测试框架探测（新增）**：对每个目标代码仓，按 `references/test-framework-detection.md` 的探测规则扫描构建文件（pom.xml/build.gradle/go.mod/package.json）与测试目录结构，识别测试框架（后端 JUnit/Mockito/Karate/Spock/TestNG/RestAssured；前端分组件通道 Jest/Vitest/Mocha/@testing-library 与浏览器通道 Cypress/Playwright）。后端写入 TaskPacket 头的 `test_framework` 字段，前端写入两条通道各自的 `*_test_status` 与 `*_test_framework`。探测失败 → Stop 并回流 Design。
 9. **验收标准提炼（新增）**：按 `references/acceptance-criteria-extraction.md` 的业界需求分析方法，从 `story-delta-spec.md` 的 SC-/BR- 提炼单仓功能级验收用例（后端=API 接口级契约，前端=mock 集成级），分配 `AT-{story_id}-NNN` 标识，写入 alpha-tests.md 的 GWT 用例章节。
 
 ---
@@ -179,8 +179,8 @@ codespec new change <requirement-id>-<requirement-name>/<us-id>-<us-name> \
 对当前 `(Story, 代码仓)` 组合，执行测试框架探测：
 
 1. 按 `references/test-framework-detection.md` 扫描仓根构建文件（pom.xml/build.gradle/go.mod/package.json）与测试目录结构。
-2. 识别主测试框架 + 辅助测试框架 + 测试目录结构（后端双轨：集成框架用于 L3 API 测试，单测框架用于 L4 UT；前端组件测试框架）。
-3. 将探测结果记为 `test_framework` 字段，写入 tasks.md TaskPacket 头（如 `test_framework=JUnit5+Mockito+Karate`）。
+2. 识别测试框架与测试目录结构。后端双轨：集成框架用于 L3 API 测试，单测框架用于 L4 UT。前端双通道：组件通道与浏览器通道分别判定，Cypress/Playwright 属浏览器通道，不得当作组件测试主框架。
+3. 后端将结果记为 `test_framework` 字段写入 tasks.md TaskPacket 头（如 `test_framework=JUnit5+Mockito+Karate`）；前端另写 `component_test_status/framework` 与 `browser_test_status/framework` 四个字段，状态只取 `available|absent|unknown`，框架字段只填真实框架名。
 4. 探测失败（仓内无可识别测试框架信号）→ Stop 并回流 Design，标注"仓内无可识别测试框架"；不得默认 JUnit/Jest。
 
 ### Step 3: 汇总产物路径与执行结果

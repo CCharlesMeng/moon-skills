@@ -10,6 +10,9 @@
 
 **TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | search_paths= | project_type=backend|frontend | frontend_design_path=
 
+<!-- project_type=frontend 时另填两条测试通道（判据见 sdd-task/references/test-framework-detection.md §2）：
+     component_test_status= | component_test_framework= | browser_test_status= | browser_test_framework= -->
+
 ---
 
 ## 1. 项目边界

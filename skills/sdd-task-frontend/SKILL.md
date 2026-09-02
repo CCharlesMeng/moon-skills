@@ -43,8 +43,8 @@ description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 al
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | 1   | 判断本 Story 是否产生或改变静态形态，据此选视觉基线来源 `baseline_source`：有 HTML 原型 → `prototype`；无原型但仓内有同类已上线页面 → `reference_page`；只有可逐条落地的文字规格 → `text_spec`；纯逻辑 → `none` | 档位、来源候选与缺口可追溯                 |
 | 2   | 从前端设计与仓内代码定出受影响路由、组件层级与挂载点（新增节点在此定名，既有节点用仓内真名）、状态归属、数据流、可复用的既有资产与仓库范式、样式文件归属，以及 AT 需要定位的 testability 锚点                                            | 每个受影响文件都能说出它实现什么、导出什么；沿用既有做法的地方只留引用 |
-| 3   | 按 `detection_ref` 的规则扫仓根 `package.json` 与测试目录结构，填 `test_framework`                                                                                  | 有仓库证据；探测失败则停止，不默认 Jest/Vitest |
-| 4   | 按 `extraction_ref` 的规则把 `SC-`/`BR-`/GWT 提炼为 mock 集成级 AT                                                                                             | 每条需求锚点至少被一条 AT 覆盖             |
+| 3   | 按 `detection_ref` 的规则扫仓根 `package.json` 与测试目录结构，**分别**填组件通道与浏览器通道的 `*_test_status` 与 `*_test_framework`                                             | 两条通道各有仓库证据；状态与框架分字段；只有一条通道存在时不用它冒充另一条；两条都无信号则停止，不默认 Jest/Vitest |
+| 4   | 按 `extraction_ref` 的规则把 `SC-`/`BR-`/GWT 提炼为 AT，逐条定 `verification_scope` 与 `verification_method`                                                     | 每条需求锚点至少被一条 AT 覆盖；两个字段都有判据，机械项不产生 AT |
 | 5   | 按共享契约切还原、逻辑与必要的机械 Task                                                                                                                              | 顺序、样式文件归属和例外明确                |
 | 6   | 按形态给每个 Task 裁步骤（2–5 步），并标出还原轮的取证归属                                                                                                                  | 每步可判定；没有为凑步数补的空步骤             |
 | 7   | 填 TaskPacket、每个 Task 的「可能扩散」与风险 token                                                                                                               | 只写已知事实，未定论的交给 Dev             |
@@ -61,6 +61,7 @@ description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 al
 4. 既有做法默认沿用且只写引用，按[执行契约](../sdd-dev-frontend/references/execution-contract.md#计划与实现的分层边界)。三态处理、请求封装、通用组件、测试定位约定只在本 Story 偏离它们、或被某条 AC/AT 直接断言时才展开。
 5. 不写可以直接粘贴运行的代码：函数体、JSX/模板片段、CSS 规则、对象字面量、具体 API 调用语句、内部子组件与 helper 怎么拆，一律属于 Dev。
 6. 视觉数值只来自外部基线。无外部基线时不写 px、色值、字号、圆角、阴影，也不自创响应式规格。
+6b. 人工验收是例外而不是选项。`verification_method=manual_acceptance` 只在 `extraction_ref` 与 [validation-policy 第七节](../sdd-dev-frontend/references/validation-policy.md#七验证方法的判定规则)的资格门禁全部满足时才写，且必须写出 `manual_basis`、`required_environment`、`required_evidence`；拿不准写 `test_case`。不分派验收人、不建角色模型、不写人名占位符。仓库缺某条测试通道是能力缺口，按降级登记，**不构成人工资格**。
 7. `baseline_source` 必填但只是下游确认输入；参照页只给候选。
 8. 一个 Task 一种形态；切不开时写明理由并分轮。样式集中在还原 Task，不设收尾样式 Task。
 9. 每个 Task 都改到产品代码或测试代码；确认、勘察、评审、补文档不占 Task 编号。Task 数、单 Task 文件数与步骤数按[执行契约的规模判据](../sdd-dev-frontend/references/execution-contract.md#规模)，越界先切分，切不动就回流拆 Story。
@@ -76,11 +77,16 @@ description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 al
 
 以 [tasks-frontend.md](./templates/tasks-frontend.md) 生成 `tasks.md`。
 
-`alpha-tests.md` 计划侧只写四节：L4 单元测试记录、L3 单服务单接口集成测试记录（前端即 mock 集成级）、AC ↔ 证据映射、Deferred AC；只写用例与初始 `UNVERIFIED` 状态，不伪造证据。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳。
+`alpha-tests.md` 计划侧写：S1 组件验证记录、S2 页面验证记录、S3 用户路径验证记录、AC ↔ 证据映射、Deferred AC，本 Story 有人工验收声明时另写人工验收记录。只写用例与初始 `UNVERIFIED` 状态，不伪造证据。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳；没有对应范围声明的节也不建。
+
+节名按观察范围命名而不是按 L3/L4——前端 AT 的范围是 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，沿用后端的层级名会让读的人以为前端也有一条固定的「L3 默认档」。表格列名与投影字段见 [story-artifacts 第二节](../sdd-dev-frontend/references/templates/story-artifacts.md)。
 
 ## 完成标准
 
-- 所有 `SC-`/`BR-`/GWT 均可追到 AT，再追到具体 Task。
+- 所有 `SC-`/`BR-`/GWT 均可追到 AT，再追到具体 Task；机械 Task 的 `quality_gate` 不计入覆盖。
+- 每条 AT 都有 `verification_scope` 与 `verification_method`，且都能说出判据；人工验收声明的依据、环境与所需证据齐全，验收人与验收时间留空。
+- 没有一条 `manual_acceptance` 命中自动化强制触发器；已进入冻结还原契约的视觉声明写的是 `restore_contract`。
+- 两条测试通道的四个字段与仓库事实一致；有通道缺口的声明已显式登记降级并记入「风险与回滚」。
 - 每个 Task 都有精确文件范围、每个文件的职责、受影响声明、形态和按形态裁过的步骤，且都改到代码；Task 数、文件数、步骤数在规模判据内。
 - 受影响路由、组件层级（新增节点已定名且与文件行一一对应）、状态归属、数据流与复用决策齐全；复用不了的写明原因。
 - 沿用既有做法的部分只写了引用；展开描述的三态与 testability 锚点都能指出是偏离还是被 AT 断言。

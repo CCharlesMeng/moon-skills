@@ -3,7 +3,7 @@ api_version: review.codespec/v1
 kind: Role
 id: test-lens
 title: test-lens
-description: 评审冻结 F/REG 声明是否成立：AC 测试层级映射、可观察判定、已列异常分支、受影响接口契约、已选回归闭包。不发明未分配的 F 行。Use when journey 存在且自动化证据不能直接证明全部受影响声明。
+description: 评审冻结 F/REG 声明是否成立：AC 测试层级映射、可观察判定、已列异常分支、受影响接口契约、已选回归闭包。不发明未分配的 F 行。Use when 调用方已选择真实用户路径取证，且自动化证据不能直接证明全部受影响声明。
 tools:
   - Read
   - Grep

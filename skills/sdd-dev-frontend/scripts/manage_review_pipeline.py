@@ -723,6 +723,111 @@ def validate_unplanned_carry(raw: Any) -> list[dict[str, Any]]:
     return validated
 
 
+# 声明状态只有这三个，与 references/execution-contract.md 的状态表同一套。
+# `MANUAL` 不在其中：人工验收是验证方法，不是第四种状态。
+CLAIM_STATUSES = ("PROVEN", "UNVERIFIED", "DEFERRED")
+MANUAL_OUTCOMES = ("NOT_RUN", "PASSED", "FAILED")
+MANUAL_BASES = (
+    "visual_judgment",
+    "motion_judgment",
+    "device_dependency",
+    "external_dependency",
+    "content_approval",
+    "automation_cost_exception",
+)
+# 人工执行结果与声明状态是两根轴，只有这五种配对合法。缺了这张表，
+# 「人看过了」就能直接写成 PROVEN，而三态状态机里没有任何东西挡得住它。
+MANUAL_PAIRS = {
+    ("PASSED", "PROVEN"),
+    ("PASSED", "UNVERIFIED"),   # 人判过了但证据不齐，先补证据
+    ("FAILED", "UNVERIFIED"),   # 确证阻断，不许写成通过
+    ("NOT_RUN", "UNVERIFIED"),  # 计划态与待执行态
+    ("NOT_RUN", "DEFERRED"),    # 外部依赖未就绪
+}
+
+
+def validate_manual_acceptance(raw: Any) -> list[dict[str, Any]]:
+    """校验待人工验收项的投影。
+
+    和 `--unplanned-carry` 走同一个模式：**权威登记在 `alpha-tests.md`**（agent 写、
+    脚本从不碰），传进来的是主 agent 从同一批事实做的 JSON 投影。所以这里不解析
+    Markdown——那份账本的表头归上游 `schema_alpha_tests` 所有，本脚本无权固定它，
+    建成「表头漂移即失败」的解析器只会让外部一次 schema 调整打断整条流水线。
+
+    省略参数按零人工项处理，v1 Story 因此天然兼容，不需要「无人工节」特判。
+
+    人工验收是这条流水线里唯一没有可复算外部产物的证据：命令能重跑、契约能重判，
+    而「人看过了」不能。所以 `PROVEN` 的门在这里收得比别处紧——执行人、执行时间、
+    环境和至少一条证据引用四项齐全才放过，缺一项就退回 `UNVERIFIED`。
+    """
+    items = require_list(raw, "manual_acceptance")
+    validated: list[dict[str, Any]] = []
+    for index, entry in enumerate(items):
+        label = f"manual_acceptance[{index}]"
+        item = require_dict(entry, label)
+        for field in ("id", "trace", "verification_scope", "manual_basis",
+                      "required_environment", "required_evidence"):
+            require_text(item.get(field), f"{label}.{field}")
+        if item["manual_basis"] not in MANUAL_BASES:
+            raise ReviewPipelineError(
+                f"{label}.manual_basis must be one of {list(MANUAL_BASES)}, got {item['manual_basis']!r}"
+            )
+        outcome = item.get("manual_outcome")
+        status = item.get("claim_status")
+        if outcome not in MANUAL_OUTCOMES:
+            raise ReviewPipelineError(
+                f"{label}.manual_outcome must be one of {list(MANUAL_OUTCOMES)}, got {outcome!r}"
+            )
+        if status not in CLAIM_STATUSES:
+            raise ReviewPipelineError(
+                f"{label}.claim_status must be one of {list(CLAIM_STATUSES)}, got {status!r}"
+            )
+        if (outcome, status) not in MANUAL_PAIRS:
+            raise ReviewPipelineError(
+                f"{label} illegal pairing {outcome} + {status}; "
+                f"manual_outcome and claim_status are separate axes and cannot substitute for each other"
+            )
+        evidence_refs = item.get("evidence_refs", [])
+        if not isinstance(evidence_refs, list):
+            raise ReviewPipelineError(f"{label}.evidence_refs must be a list")
+        if status == "PROVEN":
+            for field in ("manual_checked_by", "manual_checked_at"):
+                require_text(item.get(field), f"{label}.{field}")
+            if not evidence_refs:
+                raise ReviewPipelineError(
+                    f"{label} is PROVEN but carries no evidence_refs; "
+                    f"a human signature without an artifact is not evidence"
+                )
+        if status == "DEFERRED":
+            require_text(item.get("resume_condition"), f"{label}.resume_condition")
+        validated.append(item)
+    return validated
+
+
+def manual_is_settled(item: dict[str, Any]) -> bool:
+    """只有「人判过、通过、证据齐」才算收口；其余都还欠一个动作。"""
+    return item.get("manual_outcome") == "PASSED" and item.get("claim_status") == "PROVEN"
+
+
+def manual_action_text(item: dict[str, Any]) -> str:
+    """把人工项翻成一句「要谁做什么」。
+
+    三种未收口形态要的动作完全不同，写成同一句话读的人就得自己去账本里分辨：
+    没执行的要去执行，判过但证据不齐的要去补证据，失败的要去修。
+    """
+    outcome = item.get("manual_outcome")
+    status = item.get("claim_status")
+    if outcome == "FAILED":
+        action = "人工验收未通过，先修复再复验"
+    elif outcome == "PASSED":
+        action = f"人工已判通过但证据不齐，补齐{item['required_evidence']}后才能记为已验证"
+    elif status == "DEFERRED":
+        action = f"外部依赖未就绪，解除条件：{item['resume_condition']}"
+    else:
+        action = f"待人工验收，环境：{item['required_environment']}；需留下{item['required_evidence']}"
+    return f"{item['id']}（{item['trace']}）{action}"
+
+
 def aggregate_results(
     results: list[dict[str, Any]],
     expected_roles: list[str] | tuple[str, ...] | None = None,
@@ -734,6 +839,7 @@ def aggregate_results(
     skip_rebuttals: dict[str, list[Any]] | None = None,
     norm_candidates: list[dict[str, Any]] | None = None,
     unplanned_carry: list[dict[str, Any]] | None = None,
+    manual_acceptance: list[dict[str, Any]] | None = None,
     decisions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
@@ -876,6 +982,18 @@ def aggregate_results(
             "needs_decision": True,
         }
         for item in (norm_candidates or [])
+    ] + [
+        # 待人工验收是**动作**而不是决策：要人去执行验收、补证据或修失败，
+        # 不是要人在几个选项里拍板。所以 needs_decision=False——`--decisions`
+        # 因此够不到它，一句「可以了」不能把人工声明改成 PROVEN。
+        {
+            "kind": "manual_acceptance",
+            "id": item["id"],
+            "user_visible_text": manual_action_text(item),
+            "needs_decision": False,
+        }
+        for item in (manual_acceptance or [])
+        if not manual_is_settled(item)
     ]
     # 答复必须挂在一条真实的待决项上。挂不上的答复要么是编号写错、要么是那条待决项
     # 已经消失（比如修完之后不再需要决定）——两种都不能静默收下，否则报告里会出现一条
@@ -902,6 +1020,7 @@ def aggregate_results(
         "deferred_candidates": deferred,
         "norm_candidates": list(norm_candidates or []),
         "unplanned_carry": list(unplanned_carry or []),
+        "manual_acceptance": list(manual_acceptance or []),
         "decisions": list(decisions or []),
         "handoff": handoff,
         "counts": {
@@ -911,6 +1030,10 @@ def aggregate_results(
             "deferred": len(deferred),
             "norm_candidate": len(norm_candidates or []),
             "unplanned_carry": len(unplanned_carry or []),
+            "manual_acceptance": len(manual_acceptance or []),
+            "manual_pending": sum(
+                not manual_is_settled(item) for item in (manual_acceptance or [])
+            ),
             "decided": len(decisions or []),
             "handoff": len(handoff),
             "skipped": sum(len(by_role[role].get("skipped", [])) for role in expected),
@@ -973,6 +1096,18 @@ DISPLAY = {
     "open_question": "未决问题",
     "deferred": "暂缓候选",
     "norm_candidate": "规范候选",
+    "manual_acceptance": "待人工验收",
+    # 人工执行结果（与声明状态分属两轴，各自有自己的词条）
+    "NOT_RUN": "未执行",
+    "PASSED": "通过",
+    "FAILED": "未通过",
+    # 人工例外依据
+    "visual_judgment": "视觉判断",
+    "motion_judgment": "动效体验判断",
+    "device_dependency": "真机或系统能力依赖",
+    "external_dependency": "外部环境依赖",
+    "content_approval": "内容确认",
+    "automation_cost_exception": "自动化成本例外",
     # 风险触发器
     "visual": "视觉",
     "interaction": "交互",
@@ -989,7 +1124,7 @@ DISPLAY = {
     # 验证模块
     "causal": "因果证据",
     "render": "结构化渲染",
-    "journey": "用户路径",
+    "story": "用户路径",
     "regression": "回归",
     "targeted-quality": "定向质量",
     # 规范候选类别
@@ -1008,7 +1143,10 @@ DISPLAY = {
 # 只有这些列装枚举值，才翻。自由文本（summary / reason / basis / scope）与标识符
 # （dimension / evidence_ids / source_ids / target_id / samples / 路径）一律原样——
 # 把翻译无差别套到所有格子上，会把「R1-1」「BE-2」这类锚点和人写的句子一起弄坏。
-TRANSLATED_KEYS = {"result", "kind", "level", "trigger", "needs_decision", "status", "role"}
+TRANSLATED_KEYS = {
+    "result", "kind", "level", "trigger", "needs_decision", "status", "role",
+    "manual_outcome", "claim_status", "manual_basis",
+}
 
 
 def display(value: Any) -> str:
@@ -1056,13 +1194,28 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     answers = {item["item"]: item for item in aggregate.get("decisions", [])}
     # 已答复的不再算「待你定」——否则答完一轮，顶上那句还在催同一件事。
     pending = [item for item in decisions if item["id"] not in answers]
+    manual_open = [
+        item for item in aggregate.get("manual_acceptance", []) if not manual_is_settled(item)
+    ]
+    manual_failed = [item for item in manual_open if item["manual_outcome"] == "FAILED"]
 
     lines = ["# 验收摘要", ""]
 
     # 第一句必须是结论本身，不是计数。读的人先要知道能不能收。
-    if blockers:
+    # 人工验收未完成时这里绝不能出现无条件「可验收」——实现完成不等于验收通过，
+    # 而这份摘要是唯一会被当成验收结论读的东西。
+    if blockers or manual_failed:
+        reasons = []
+        if blockers:
+            reasons.append(f"{len(blockers)} 条阻断级问题")
+        if manual_failed:
+            reasons.append(f"{len(manual_failed)} 项人工验收未通过")
+        lines += [f"**暂不可验收**：有{'、'.join(reasons)}需要先修。逐条见下。"]
+    elif manual_open:
         lines += [
-            f"**暂不可验收**：有 {len(blockers)} 条阻断级问题需要先修。逐条见下。",
+            f"**实现完成，待 {len(manual_open)} 项人工验收**"
+            + (f"；另有 {len(pending)} 件需要你定" if pending else "")
+            + "。人工验收通过并留下证据后才可收口。",
         ]
     elif pending:
         lines += [
@@ -1071,7 +1224,7 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     else:
         lines += ["**可验收**：本次检视没有阻断级问题，也没有需要你决定的事项。"]
 
-    if blockers or decisions:
+    if blockers or decisions or manual_open:
         # 逐项分块而不是表格：中文一句 60–100 字塞进单元格，三列一起就没法读了。
         # 表格适合短枚举，不适合成句。
         lines += ["", "## 需要你处理", ""]
@@ -1103,13 +1256,29 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
             else:
                 lines.append("- **要你定**：见下方提问，回答后会记回本文件")
             lines.append("")
+        for item in manual_open:
+            index += 1
+            lines += [
+                f"### {index}. {item['id']}：{item['trace']}",
+                "",
+                f"- **类型**：{display('manual_acceptance')}（{display(item['manual_basis'])}）",
+                f"- **当前**：人工结果 {display(item['manual_outcome'])}、声明状态 {display(item['claim_status'])}",
+                f"- **在哪验**：{item['required_environment']}",
+                f"- **要留下什么**：{item['required_evidence']}",
+                f"- **要做什么**：{manual_action_text(item)}",
+                "- 回填后由主 agent 重新聚合；agent 不能代签",
+                "",
+            ]
 
     # 建议只在这一节出现。原先它同时进「你该知道」和一张「改进建议」表，
     # 同一条被说两遍——正是要避免的那种重复。
+    # 人工验收虽然 needs_decision=False，但它是要人去做的动作，已在「需要你处理」
+    # 逐条展开，不能再落到「不用动」这一节里自我矛盾。
     heads_up = [
         item
         for item in aggregate["handoff"]
-        if not item.get("needs_decision") and item["kind"] != "suggestion"
+        if not item.get("needs_decision")
+        and item["kind"] not in ("suggestion", "manual_acceptance")
     ]
     if suggestions or heads_up:
         lines += ["", "## 你该知道，但不用动", ""]
@@ -1157,11 +1326,33 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
         lines += ["", "## 未决问题", ""]
         lines += [f"- {item['summary']}" for item in aggregate["open_questions"]]
 
-    if aggregate["deferred_candidates"]:
+    # 人工项里被暂缓的那些也在这一节露出：读的人找「什么被缓了」只该看一个地方。
+    # 只在渲染层合并，结构化输出里两者仍各归各处——人工暂缓不是角色回传的 deferred
+    # 候选，不能混进那条需要决策的通道。
+    manual_deferred = [
+        {
+            "ac": f"{item['id']}（{item['trace']}）",
+            "reason": f"待人工验收：{display(item['manual_basis'])}",
+            "resume_condition": item.get("resume_condition", ""),
+        }
+        for item in aggregate.get("manual_acceptance", [])
+        if item.get("claim_status") == "DEFERRED"
+    ]
+    if aggregate["deferred_candidates"] or manual_deferred:
         lines += ["", "## 暂缓的验收项", ""]
         lines += markdown_table(
-            aggregate["deferred_candidates"],
+            list(aggregate["deferred_candidates"]) + manual_deferred,
             [("验收标准", "ac"), ("为什么缓", "reason"), ("什么条件下解除", "resume_condition")],
+        )
+
+    if aggregate.get("manual_acceptance"):
+        lines += ["", "## 人工验收总表", ""]
+        lines += markdown_table(
+            aggregate["manual_acceptance"],
+            [("声明", "id"), ("追溯", "trace"), ("范围", "verification_scope"),
+             ("依据", "manual_basis"), ("人工结果", "manual_outcome"),
+             ("声明状态", "claim_status"), ("验收人", "manual_checked_by"),
+             ("验收时间", "manual_checked_at"), ("证据", "evidence_refs")],
         )
 
     if aggregate.get("unplanned_carry"):
@@ -1270,6 +1461,11 @@ def command_aggregate(args: argparse.Namespace) -> None:
             if args.unplanned_carry
             else []
         ),
+        manual_acceptance=(
+            validate_manual_acceptance(read_json(Path(args.manual_acceptance)))
+            if args.manual_acceptance
+            else []
+        ),
         decisions=(
             validate_decisions(read_json(Path(args.decisions))) if args.decisions else []
         ),
@@ -1324,6 +1520,10 @@ def parser() -> argparse.ArgumentParser:
     aggregate.add_argument(
         "--unplanned-carry",
         help="JSON array：计划外承接的连带改动，权威登记在 alpha-tests.md；无则省略",
+    )
+    aggregate.add_argument(
+        "--manual-acceptance",
+        help="JSON array：待人工验收项，权威登记在 alpha-tests.md；无则省略",
     )
     aggregate.add_argument(
         "--decisions",

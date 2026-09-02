@@ -24,7 +24,14 @@
 
 ## test_framework
 
-来自 sdd-task 测试框架探测结果（见 `references/test-framework-detection.md`）。声明主 + 辅助测试框架（如 `JUnit5+Mockito+Karate` 或 `Jest+@testing-library/react`）。tasks.md Step 1 RED 测试代码须基于此框架生成。
+来自 sdd-task 测试框架探测结果（见 `references/test-framework-detection.md`）。后端声明主 + 辅助测试框架（如 `JUnit5+Mockito+Karate`）；前端此字段是派生摘要，判据以下面四个通道字段为准。tasks.md Step 1 RED 测试代码须基于探测结果生成。
+
+## component_test_status / component_test_framework / browser_test_status / browser_test_framework
+
+仅 `project_type=frontend` 填写。前端探测输出两条独立通道：组件通道跑模拟 DOM，浏览器通道驱动真实浏览器，一条存在不能推断另一条存在（Cypress 不构成组件测试能力，Vitest 不构成浏览器能力）。
+
+- `*_test_status` 只取 `available` / `absent` / `unknown`；`absent` 是扫描过确认没有，`unknown` 是信号矛盾或无法判定，两者含义不同。
+- `*_test_framework` 只在对应 status 为 `available` 时填真实框架名，其余留空。禁止把状态值写进框架字段。
 
 ## frontend_design_path
 

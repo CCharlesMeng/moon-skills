@@ -7,7 +7,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 ## 核心契约
 
-一次只处理一个独立前端 app × 一个 Story。计划/执行所有权、TaskPacket、基线源和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块与升级规则只定义在 [validation-policy.md](./references/validation-policy.md)。
+一次只处理一个独立前端 app × 一个 Story。计划/执行所有权、TaskPacket、基线源、[验证模型](./references/execution-contract.md#验证模型)（验证范围、验证方法、人工验收字段）和声明状态以 [前端 SDD 执行契约](./references/execution-contract.md) 为共享事实源；验证触发器、模块、升级规则与[验证方法判定](./references/validation-policy.md#七验证方法的判定规则)只定义在 [validation-policy.md](./references/validation-policy.md)。
 
 `tasks.md` 是实现进度真相，`alpha-tests.md` 是声明状态与证据账本。当前 app 的公共事实来自 `sdd-init-frontend` 产出的九份按问句分类的 baseline 文件；本 skill 只产生当前需求的 `DEMAND-1～3`。
 
@@ -46,7 +46,8 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 2. **期望先冻结。** QA 基线未经用户确认不得进入 Phase B。
 3. **声明按需生成。** R/F 是分类表；只生成需求与风险实际要求的行，不造 N/A 空壳。
 4. **限制可见。** 只登记影响已选模块的 Story 限制；模块不可执行时只降级依赖声明，不用源码检查冒充浏览器或截图证据。
-5. **状态诚实。** `PROVEN / UNVERIFIED / DEFERRED` 严格遵守共享契约。
+5. **状态诚实。** `PROVEN / UNVERIFIED / DEFERRED` 严格遵守共享契约；`MANUAL` 不是状态。
+5b. **人工验收不代签。** `manual_acceptance` 声明只能由真实人员执行并回填 `manual_checked_by` / `manual_checked_at` / `evidence_refs`；agent、自测试与独立检视只能准备候选实现并交出待验收项，不得用自己的观察替代签字。存在人工验收 `UNVERIFIED` 时只能交付部分验收。
 6. **子代理只读。** 子代理只回传正文；检视截图可写临时目录，正式工件由主 agent 落盘。
 7. **范围受控。** 执行上游设计和对接模式，不改设计、不发明响应式规格、不跨仓。计划文件清单外的连带改动按共享契约的扩散承接规则处理并登记；未登记的计划外改动仍按越界处理。
 8. **冻结可追溯。** 开工后放宽期望必须记录理由并重新确认。
@@ -83,7 +84,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 
 ## 浏览器驱动
 
-只在验证组合含 `render`、`journey`、`review-layout` 或浏览器型 `self-test` 时解析。按可用性依次选择现有浏览器控制工具、仓内既有 E2E 驱动、用户提供的可复现实测方式；必须能打开页面、触发状态、注入采集并在需要时截图。缺任一能力就把相应模块记为未执行。
+只在验证组合含 `render`、`story`、`review-layout` 或浏览器型 `self-test` 时解析。按可用性依次选择现有浏览器控制工具、仓内既有 E2E 驱动、用户提供的可复现实测方式；必须能打开页面、触发状态、注入采集并在需要时截图。缺任一能力就把相应模块记为未执行。
 
 同页面、fixture、runtime 与 reset 边界尽量单连接批量采集；每个 scenario 仍记录独立步骤、断言和 `depends_on`，便于精确失效。
 
@@ -124,12 +125,15 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 | 3 | 每条 `PROVEN` 都有覆盖它且仍新鲜的证据 |
 | 4 | 未清零阻断不影响任何 `PROVEN` 声明 |
 | 5 | 验证组合、模块执行状态、`UNVERIFIED`、`DEFERRED`、Open Question 和建议级均已对账 |
+| 6 | 待人工验收项已逐条对账；每条 `manual_acceptance` 的 `manual_outcome` 与 `claim_status` 是合法配对，`PROVEN` 的四项人工字段齐全 |
 
 YELLOW 按原因转为补证、`UNVERIFIED`、`DEFERRED` 或真实 RED；不就地新增豁免。修复只失效依赖改动文件的证据，出现新风险触发器时才扩大组合。
 
 ## 最终输出
 
 先输出三行：带验收限定的完成状态、`<story-dir>/acceptance.md`、唯一下一步。全部 `PROVEN` 时写“可验收”；有 `UNVERIFIED` 时写补验方式；有 `DEFERRED` 时写解除条件。
+
+**存在待人工验收项时不写无条件“可验收”**，只写「实现完成，待 N 项人工验收」或「部分验收」，且唯一下一步优先指向具体的人工验收动作而不是泛化的「补测试」。
 
 **跟用户说话时用中文状态词**（已验证 / 未验证 / 已暂缓），账本里的值仍是英文常量；两列对照见[执行契约的状态表](./references/execution-contract.md#声明与状态)。
 

@@ -94,14 +94,29 @@
 
 RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未解决 YELLOW 都不能支持 `PROVEN`。视觉截图只在契约要求 visual 且结构化事实不足时记录。
 
+### 人工验收记录
+
+只在本 Story 有 `verification_method=manual_acceptance` 的声明时才建这一节。**这里是待人工验收项的权威登记**，`acceptance.md` 里那份由聚合器 `--manual-acceptance` 从同一批数据渲染，不手写。
+
+```markdown
+| 声明 | 追溯 | 范围 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+```
+
+中文列名只为好读，投影成 JSON 时必须回到契约字段名：`id`、`trace`、`verification_scope`、`manual_basis`、`required_environment`、`required_evidence`、`manual_outcome`、`claim_status`、`manual_checked_by`、`manual_checked_at`、`evidence_refs`。字段语义见[执行契约的验证模型](../execution-contract.md#验证模型)，`manual_basis` 枚举与资格门禁见 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)。
+
+计划阶段落 `NOT_RUN` + `UNVERIFIED`，验收人与验收时间留空——**不写人名占位符**。只有真实人员执行后才回填后三列；agent 不代签。`PASSED` 但证据不齐仍是 `UNVERIFIED`，`FAILED` 与 RED 同级、不得改写为通过。
+
 ### AC ↔ 证据映射
 
 ```markdown
-| AC / AT | 声明 | 状态 | 证据记录 | 新鲜度 | 说明 |
-| --- | --- | --- | --- | --- | --- |
+| AC / AT | 声明 | 验证范围 | 验证方法 | 状态 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 ```
 
 每条声明恰有一个状态。同一证据可被多条声明引用，不复制报告内容。依赖变化时把命中声明改回 `UNVERIFIED`，重取证后再更新。
+
+「验证范围」写 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，「验证方法」写 `test_case` / `restore_contract` / `quality_gate` / `manual_acceptance`。`verification_schema` 不是 `v2` 的旧 Story 这两列留空，不回填、不追溯映射旧的 L3/L4 记录。
 
 ### Deferred
 
@@ -118,6 +133,8 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 - [ ] `PROVEN` 的证据覆盖声明且对最终依赖新鲜。
 - [ ] RED/YELLOW 没有被摘要成 GREEN。
 - [ ] `UNVERIFIED` 与 `DEFERRED` 原因和下一步明确。
+- [ ] 人工项的 `manual_outcome` 与状态是合法配对；`PROVEN` 的验收人、验收时间、环境与证据引用齐全，且没有人名占位符。
+- [ ] 视觉声明没有在已冻结区块上从 `restore_contract` 改判成 `manual_acceptance`。
 
 ## 三、`acceptance.md`
 
@@ -154,6 +171,7 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 | 原先手写在这里的 | 现在在哪 |
 | --- | --- |
 | 计划外承接 | 权威登记在 `alpha-tests.md`；这里的摘要由 `aggregate --unplanned-carry` 从同一批数据渲染 |
+| 待人工验收 | 同上：权威登记在 `alpha-tests.md` 的人工验收记录，`aggregate --manual-acceptance` 渲染成「需要你处理」里的动作条目。未收口的人工项会让摘要首行不再是无条件「可验收」 |
 | 收口结论 | 逐声明状态在 `alpha-tests.md`，阻断清零与退出门禁结论走[最终三行](../../SKILL.md#最终输出)；聚合器不再留「待 Phase D 填写」这类占位，因为占位本身就会被重跑冲掉 |
 
 ## 四、Phase 0 自动起草
@@ -170,9 +188,12 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 ## 计划外承接
 | 文件 | Task | 原因 |
 | --- | --- | --- |
+## 人工验收记录
+| 声明 | 追溯 | 范围 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ## AC ↔ 证据映射
-| AC / AT | 状态 | 证据 | 说明 |
-| --- | --- | --- | --- |
+| AC / AT | 验证范围 | 验证方法 | 状态 | 证据 | 说明 |
+| --- | --- | --- | --- | --- | --- |
 ## Deferred AC
 | AC | 原因 | 解除条件 |
 | --- | --- | --- |

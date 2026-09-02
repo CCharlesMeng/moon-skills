@@ -7,11 +7,20 @@
 
 ## 1. 测试框架声明
 
-> 来自 tasks.md TaskPacket 头的 `test_framework` 字段（sdd-task 探测结果，见 `references/test-framework-detection.md`）。
+> 来自 tasks.md TaskPacket 头的探测结果字段（见 `references/test-framework-detection.md`）。后端读 `test_framework`；前端读组件通道与浏览器通道各自的 `*_test_status` 与 `*_test_framework`。
+
+后端：
 
 | project_type | 主测试框架 | 辅助测试框架 | 测试目录 | 探测信号 |
 |--------------|-----------|-------------|----------|----------|
-| backend\|frontend |  |  |  |  |
+| backend |  |  |  |  |
+
+前端：两条通道分别记录，一条存在不代表另一条存在；`status` 只取 `available` / `absent` / `unknown`，框架列只在 `available` 时填真实框架名。
+
+| 通道 | status | 框架 | 测试目录 | 探测信号 |
+|------|--------|------|----------|----------|
+| 组件通道 |  |  |  |  |
+| 浏览器通道 |  |  |  |  |
 
 ## 2. GWT 功能验收用例
 

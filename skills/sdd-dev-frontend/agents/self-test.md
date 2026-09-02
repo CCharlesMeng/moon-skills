@@ -27,6 +27,7 @@
 1. 从 `validation_portfolio.review_dimensions.self-test` 取得精确 F/REG 集合；`dimension` 直接用这些基线行号。
 2. 先复用新鲜场景与已选命令，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。
 3. 逐行执行被分配的声明，判据与定级按 self-test checklist 与 test-lens ROLE。
+4. 你产生的浏览器场景证据只能覆盖 `S3_STORY` 范围的自动化声明或本角色的检视结论。**`manual_acceptance` 声明必须由真实人员执行**，不得用你的观察替代签字，也不得把它推为 `PROVEN`；审批记录可以作为它的 `evidence_refs`，但那是主 agent 回填的事。
 
 ## 四、输出格式
 

@@ -42,6 +42,9 @@
 - `prototype` 必须实测目录存在且包含相关 HTML，否则重新判档并记录冲突。
 - `reference_route` 仍是待确认候选。
 - 风险 token 与 Task 正文、仓库事实冲突时以可验证事实为准。
+- 读 `verification_schema`：缺席或非 `v2` 按 v1 原语义读，不把旧 L3/L4 记录映射成三层范围、也不推断为人工验收。
+- `v2` 时校验每条声明的 `verification_scope` 与 `verification_method` 齐全，人工验收声明另校验 `manual_basis`、`required_environment`、`required_evidence`。环境或所需证据缺失的保持 `UNVERIFIED` 并回流计划补齐；`manual_checked_by` 未填不阻断进入实现，也不写人名占位符。
+- 两条测试通道字段缺席按 `unknown` 处理；某条 `test_case` 声明的范围没有对应通道时按 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)登记降级，不因此停下。
 
 ### 4. 建立执行上下文
 
