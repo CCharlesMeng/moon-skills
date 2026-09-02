@@ -783,6 +783,203 @@
       line-height: 1.45;
     }
     .scenario-prompt strong { color: var(--ink); }
+    .phase-skill.confirm {
+      display: inline-block;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,200,107,.34);
+      color: var(--amber) !important;
+      background: rgba(255,200,107,.07);
+      font-family: inherit;
+      font-weight: 760;
+    }
+    .file-ref {
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .92em;
+      font-weight: 700;
+    }
+    .file-ref.blue { color: var(--blue); }
+    .file-ref.amber { color: var(--amber); }
+    .review-table .mapping-row {
+      min-height: 82px;
+      grid-template-columns: .68fr 1.15fr .87fr;
+    }
+    .review-table .mapping-row .problem {
+      font-size: 17px;
+      line-height: 1.28;
+    }
+    .review-table .mapping-row .problem .concept {
+      display: block;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 760;
+    }
+    .review-table .mapping-row .problem .file-ref {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+    .state-row { grid-template-columns: 205px 1fr; }
+    .state-key { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    .state-key .status-code {
+      display: block;
+      margin-top: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 14px;
+      letter-spacing: .08em;
+    }
+    .gated-process {
+      display: grid;
+      grid-template-columns: 1fr .86fr 1fr .86fr 1fr .86fr 1fr;
+      align-items: stretch;
+      margin-top: 58px;
+      min-height: 300px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .process-stage,
+    .process-gate {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 27px 22px;
+    }
+    .process-stage {
+      background: rgba(255,255,255,.018);
+    }
+    .process-stage + .process-gate,
+    .process-gate + .process-stage { border-left: 1px solid var(--line); }
+    .process-stage .stage-index {
+      color: var(--faint);
+      font-size: 14px;
+      font-weight: 740;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .process-stage .stage-title {
+      margin-top: 13px;
+      color: var(--ink);
+      font-size: 25px;
+      line-height: 1.25;
+      font-weight: 760;
+    }
+    .process-stage p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.45;
+    }
+    .process-gate {
+      border-top: 3px solid var(--amber);
+      background: linear-gradient(180deg, rgba(255,200,107,.11), rgba(255,255,255,.018));
+    }
+    .process-gate .gate-index {
+      color: var(--amber);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .10em;
+    }
+    .process-gate .gate-title {
+      margin-top: 12px;
+      color: var(--ink);
+      font-size: 23px;
+      line-height: 1.25;
+      font-weight: 780;
+    }
+    .process-gate p {
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.42;
+    }
+    .process-outcome {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 28px;
+      margin-top: 32px;
+    }
+    .process-outcome div {
+      padding-left: 20px;
+      border-left: 2px solid var(--cyan);
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.4;
+    }
+    .process-outcome strong { color: var(--ink); }
+    .confirmation-flow {
+      margin-top: 30px;
+      border-top: 1px solid var(--line);
+    }
+    .confirm-row {
+      display: grid;
+      grid-template-columns: 1.24fr 34px .95fr 34px 1.22fr;
+      align-items: stretch;
+      min-height: 128px;
+      border-bottom: 1px solid var(--line);
+    }
+    .confirm-stage,
+    .confirm-gate,
+    .confirm-artifacts {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 18px 22px;
+    }
+    .confirm-stage { background: rgba(255,255,255,.018); }
+    .confirm-gate {
+      border-left: 3px solid var(--amber);
+      background: linear-gradient(90deg, rgba(255,200,107,.10), rgba(255,255,255,.018));
+    }
+    .confirm-label {
+      color: var(--faint);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .confirm-gate .confirm-label { color: var(--amber); }
+    .confirm-title {
+      margin-top: 7px;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 770;
+    }
+    .confirm-row p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.36;
+    }
+    .confirm-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--faint);
+      font-size: 24px;
+    }
+    .confirm-artifacts .file-ref {
+      display: block;
+      font-size: 15px;
+      line-height: 1.42;
+    }
+    .confirm-artifacts .file-ref + .file-ref { margin-top: 5px; }
+    .design-handoff {
+      display: grid;
+      grid-template-columns: 1.25fr auto 1fr;
+      gap: 26px;
+      align-items: center;
+      margin-top: 22px;
+      padding: 18px 22px;
+      border-left: 3px solid var(--cyan);
+      background: rgba(96,230,210,.045);
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .design-handoff strong { color: var(--ink); }
+    .design-handoff .handoff-arrow { color: var(--cyan); font-size: 24px; }
 
     /* Controls */
     #controls {
@@ -895,7 +1092,7 @@
         </div>
       </section>
 
-      <section class="slide" data-title="一套 Skill 覆盖前端 Story 的完整交付" data-desc="使用者按阶段给目标，Skill 负责读仓、产出工件、执行验证并形成验收结论">
+      <section class="slide" data-title="一套 Skill 覆盖前端 Story 的完整交付" data-desc="使用者按阶段给目标，Skill 负责读仓、生成真实文件、执行验证并形成 acceptance.md">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">WHAT YOU GET</div></div>
         <div class="slide-body verdict-layout">
           <div>
@@ -904,12 +1101,12 @@
             <p class="lead support">使用者不需要记住内部编排，只需要确认目标 app、Story、设计来源，以及关键阶段产出的内容是否正确。</p>
           </div>
           <div class="proof-stack">
-            <div class="proof-item"><span class="pill good">APP 级</span><div class="proof-title">建立可复用的仓库公共事实</div><p>识别技术栈与应用形态，准备开发环境，产出九份 baseline。</p></div>
-            <div class="proof-item"><span class="pill cyan">STORY 级</span><div class="proof-title">完成设计、计划和受控实现</div><p>组件、数据、对接、文件职责、验收声明和执行顺序都能落盘。</p></div>
-            <div class="proof-item"><span class="pill amber">验收级</span><div class="proof-title">用证据回答“哪些已经成立”</div><p>按风险选择验证与五格检视，最终生成可接手的验收结论。</p></div>
+            <div class="proof-item"><span class="pill good">APP 级</span><div class="proof-title">建立可复用的仓库公共事实</div><p>识别技术栈与应用形态，准备开发环境，产出 <span class="file-ref">frontend-baselines/</span> 下的九类基线文件。</p></div>
+            <div class="proof-item"><span class="pill cyan">STORY 级</span><div class="proof-title">完成设计、计划和受控实现</div><p>前端设计写入 <span class="file-ref">requirement-frontend-design.md</span> / <span class="file-ref">story-delta-frontend-design.md</span>，执行清单与声明账本写入 <span class="file-ref">tasks.md</span> / <span class="file-ref">alpha-tests.md</span>。</p></div>
+            <div class="proof-item"><span class="pill amber">验收级</span><div class="proof-title">用证据回答“哪些已经成立”</div><p>检视证据与结果分别进入 <span class="file-ref">review-evidence.json</span> / <span class="file-ref">review-results.json</span>，验收结论写入 <span class="file-ref">acceptance.md</span>。</p></div>
           </div>
         </div>
-        <div class="slide-footer"><span>使用方式：按当前问题选择入口，不必每次从头跑完整链路</span><span class="slide-no">02 / 12</span></div>
+        <div class="slide-footer"><span>阅读约定：中文描述职责概念；等宽英文表示真实 Skill、文件或目录名称</span><span class="slide-no">02 / 12</span></div>
       </section>
 
       <section class="slide" data-title="按当前要解决的问题选择入口" data-desc="五个 Skill 分别处理接入、设计、计划、执行和独立检视">
@@ -924,8 +1121,8 @@
           </div>
           <div class="usage-list">
             <div class="usage-row header"><div>我要做什么</div><div>可以这样说</div><div>入口</div></div>
-            <div class="usage-row"><div class="usage-scene">首次接入</div><div class="usage-prompt">“为 apps/web 建立 baseline，并准备到可开发状态。”</div><div class="usage-entry">sdd-init-frontend</div></div>
-            <div class="usage-row"><div class="usage-scene">前端设计</div><div class="usage-prompt">“为这个 Requirement / Story 完成前端设计。”</div><div class="usage-entry">sdd-design-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">首次接入</div><div class="usage-prompt">“为 apps/web 建立 app 基线文件（frontend-baselines/），并准备到可开发状态。”</div><div class="usage-entry">sdd-init-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">前端设计</div><div class="usage-prompt">“为这个 Requirement / Story 生成 requirement-frontend-design.md 与 Story 设计增量。”</div><div class="usage-entry">sdd-design-frontend</div></div>
             <div class="usage-row"><div class="usage-scene">生成计划</div><div class="usage-prompt">“根据设计生成 tasks.md 和 alpha-tests.md。”</div><div class="usage-entry">sdd-task-frontend</div></div>
             <div class="usage-row"><div class="usage-scene">执行 Story</div><div class="usage-prompt">“执行 / 继续这个前端 Story。”</div><div class="usage-entry">sdd-dev-frontend</div></div>
             <div class="usage-row"><div class="usage-scene">单独检视</div><div class="usage-prompt">“用五格 lens 检视这个 diff / PR。”</div><div class="usage-entry">sdd-review-frontend</div></div>
@@ -934,15 +1131,15 @@
         <div class="slide-footer"><span>一个独立 app × 一个 Story 是最清晰、最稳定的使用范围</span><span class="slide-no">03 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="首次接入先建立 app 级公共事实" data-desc="sdd-init-frontend 识别仓库、准备机器并产出九份 baseline">
+      <section class="slide" data-title="首次接入先建立 app 级公共事实" data-desc="sdd-init-frontend 识别仓库、准备机器并产出 frontend-baselines/ 下的九类基线文件">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-INIT-FRONTEND</div></div>
         <h2 class="slide-title">首次接入先建立<span class="accent"> app 级公共事实</span></h2>
         <div class="slide-body baseline-layout">
           <div>
             <div class="nine-number">9</div>
-            <div class="nine-label">份按使用问题组织的 baseline</div>
-            <div class="nine-note">适合新仓接入、baseline 缺失，或需要把本机准备到能装、能起、能跑质量命令。</div>
-            <div class="example-strip"><div class="label">示例指令</div><div class="text">“扫描 apps/web，建立前端 baseline，并验证启动和质量命令。”</div></div>
+            <div class="nine-label">类 app 基线文件<br /><span class="file-ref">frontend-baselines/</span></div>
+            <div class="nine-note">适合新仓接入、app 基线目录缺失，或需要把本机准备到能装、能起、能跑质量命令。</div>
+            <div class="example-strip"><div class="label">示例指令</div><div class="text">“扫描 apps/web，生成 frontend-baselines/ 下的 app 基线文件，并验证启动和质量命令。”</div></div>
           </div>
           <div>
             <div class="baseline-files">
@@ -959,10 +1156,10 @@
             <div class="baseline-principle"><strong>开发者重点确认：</strong>框架与应用形态是否判断正确；命令是否真的可运行；monorepo 是否选中了正确 app。</div>
           </div>
         </div>
-        <div class="slide-footer"><span>Baseline 只负责公共事实；具体接口字段和 Story 需求留在需求级工件</span><span class="slide-no">04 / 12</span></div>
+        <div class="slide-footer"><span>app 基线文件只保存公共事实；具体接口字段和 Story 需求进入对应设计文件</span><span class="slide-no">04 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="前端设计把需求变成组件、数据和对接方案" data-desc="Requirement 级设计给出共享方案，Story delta 给出当前页面的可实施切片">
+      <section class="slide" data-title="前端设计把需求变成组件、数据和对接方案" data-desc="requirement-frontend-design.md 给出共享方案，story-delta-frontend-design.md 给出 Story 切片">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DESIGN-FRONTEND</div></div>
         <h2 class="slide-title">前端设计把需求变成<span class="accent">组件、数据和对接方案</span></h2>
         <div class="slide-body plan-layout">
@@ -979,13 +1176,13 @@
             </div>
           </div>
           <div>
-            <div class="plan-point"><div class="point-title">Requirement 级产物</div><p>模式、技术栈、共享 IFC、对接策略、模块与路由总览、共享组件和 Story 索引。</p></div>
-            <div class="plan-point"><div class="point-title">Story 级产物</div><p>页面组件树、SC 对齐的契约切片、数据映射、testability 锚点和 examples。</p></div>
+            <div class="plan-point"><div class="point-title">Requirement 级前端设计</div><p><span class="file-ref">requirement-frontend-design.md</span>：模式、技术栈、共享 IFC、对接策略、模块与路由总览、共享组件和 Story 索引。</p></div>
+            <div class="plan-point"><div class="point-title">Story 级前端设计增量</div><p><span class="file-ref blue">story-delta-frontend-design.md</span> 给出 Story 切片；配套文件包括 <span class="file-ref">testability-map.md</span>、<span class="file-ref">examples/*.json</span> 与 <span class="file-ref">prototype/index.html</span>。</p></div>
             <div class="plan-point"><div class="point-title">开发者审查重点</div><p>复用结论是否符合仓库事实；API 缺口是否显式；组件树和数据流是否能直接用于拆任务。</p></div>
             <div class="example-strip"><div class="label">示例指令</div><div class="text">“根据 ux-decode、需求设计和现有代码，为风险简报 Story 产出前端设计。”</div></div>
           </div>
         </div>
-        <div class="slide-footer"><span>设计产物回答：组件怎么拆、数据从哪来怎么转、拼起来能不能跑</span><span class="slide-no">05 / 12</span></div>
+        <div class="slide-footer"><span>设计文件回答：组件怎么拆、数据从哪来怎么转、拼起来能不能跑</span><span class="slide-no">05 / 12</span></div>
       </section>
 
       <section class="slide" data-title="实现计划落到文件职责、验收声明和顺序" data-desc="sdd-task-frontend 产出 tasks.md 与 alpha-tests.md，两份工件互相追踪">
@@ -994,7 +1191,7 @@
         <div class="slide-body">
           <div class="deliverable-pair" style="height:auto">
             <div class="deliverable-column">
-              <div class="deliverable-name">tasks.md</div>
+              <div class="deliverable-name">执行清单 · tasks.md</div>
               <div class="deliverable-purpose">告诉开发“改哪里、做什么、按什么顺序”</div>
               <ul class="deliverable-list">
                 <li>TaskPacket：app、Story、基线来源与风险事实</li>
@@ -1005,7 +1202,7 @@
               <div class="developer-check">开发者检查：文件清单是否完整但不过宽；每个 Task 是否真的会改代码；计划是否忠于设计。</div>
             </div>
             <div class="deliverable-column">
-              <div class="deliverable-name">alpha-tests.md</div>
+              <div class="deliverable-name">声明与证据账本 · alpha-tests.md</div>
               <div class="deliverable-purpose">告诉团队“每条需求准备怎样证明”</div>
               <ul class="deliverable-list">
                 <li>SC / BR / GWT 到 AT，再到具体 Task 的映射</li>
@@ -1021,20 +1218,20 @@
         <div class="slide-footer"><span>计划写到文件职责，不提前写 JSX、CSS、函数体或具体测试实现</span><span class="slide-no">06 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="执行阶段只在一个 Story 内冻结、实现和取证" data-desc="sdd-dev-frontend 以 QA 基线确认为关键门，按 Task 实现并按最终 diff 收口">
+      <section class="slide" data-title="执行阶段只在一个 Story 内冻结、实现和取证" data-desc="sdd-dev-frontend 确认 dev-baseline.md 中的 QA 基线，按 tasks.md 实现并按最终 diff 收口">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DEV-FRONTEND</div></div>
         <h2 class="slide-title">执行阶段只在一个 Story 内<span class="accent">冻结、实现和取证</span></h2>
-        <p class="slide-subtitle">可以从头执行，也可以续跑；`tasks.md` 管进度，`alpha-tests.md` 管声明状态与证据。</p>
+        <p class="slide-subtitle">可以从头执行，也可以续跑；执行清单 <span class="file-ref">tasks.md</span> 管进度，声明与证据账本 <span class="file-ref blue">alpha-tests.md</span> 管状态与证据。</p>
         <div class="slide-body">
           <div class="execution-track">
-            <div class="execution-phase"><div class="phase-code">PHASE -1 / 0</div><div class="phase-title">进入与校验</div><p>定位 app 与 Story，校验 baseline、任务计划和起点质量能力，确定需要哪些验证。</p><div class="output">dev-baseline.md</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE A1 / A2</div><div class="phase-title">规格与冻结</div><p>从原型、参照页或文字规格抽取 QA 基线；由使用者确认后冻结期望。</p><div class="output">design-spec/* · restore-contract.json</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE B</div><div class="phase-title">按 Task 实现</div><p>逐 Task 修改代码、回填因果证据并更新 checkbox，不把勘察或评审伪装成实现 Task。</p><div class="output">code · tasks.md · alpha-tests.md</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE C / D</div><div class="phase-title">检视与收口</div><p>按最终 diff 执行适用检视；修复阻断项，重取失效证据并逐声明收口。</p><div class="output">review-* · acceptance.md</div></div>
+            <div class="execution-phase"><div class="phase-code">PHASE -1 / 0</div><div class="phase-title">进入与校验</div><p>定位 app 与 Story，校验 app 基线文件、执行清单和起点质量能力，确定验证组合。</p><div class="output">执行起点 · dev-baseline.md</div></div>
+            <div class="execution-phase"><div class="phase-code">PHASE A1 / A2</div><div class="phase-title">规格与冻结</div><p>把原型或文字规格抽成设计事实；将 QA 基线写入 dev-baseline.md，确认后冻结。</p><div class="output">design-spec/ · restore-contract.json</div></div>
+            <div class="execution-phase"><div class="phase-code">PHASE B</div><div class="phase-title">按 Task 实现</div><p>按 tasks.md 修改业务代码，回填因果证据并同步 checkbox 与 alpha-tests.md。</p><div class="output">业务代码 · tasks.md · alpha-tests.md</div></div>
+            <div class="execution-phase"><div class="phase-code">PHASE C / D</div><div class="phase-title">检视与收口</div><p>按最终 diff 取证、检视和修复，最后逐条收口声明状态。</p><div class="output">review-evidence.json · review-results.json · acceptance.md</div></div>
           </div>
-          <div class="single-gate">使用者最重要的一次参与：认真确认 <strong>QA 基线</strong>；它会成为后续实现与还原的共同期望。</div>
+          <div class="single-gate">执行阶段的确认门：确认 <strong>QA 基线（dev-baseline.md 的“QA 基线”章节）</strong>；它是后续实现与还原的共同期望。</div>
         </div>
-        <div class="slide-footer"><span>示例：“执行这个 Story；HTML 原型是设计基线，先给我确认 QA 基线。”</span><span class="slide-no">07 / 12</span></div>
+        <div class="slide-footer"><span>示例：“执行这个 Story；HTML 原型是设计来源，先确认 dev-baseline.md 中的 QA 基线。”</span><span class="slide-no">07 / 12</span></div>
       </section>
 
       <section class="slide" data-title="执行产物把期望、事实和结论分开保存" data-desc="遇到争议、续跑、修复或验收时，可以直接定位对应工件">
@@ -1043,13 +1240,13 @@
         <div class="slide-body">
           <div class="mapping-table artifact-table">
             <div class="mapping-row header"><div>产物</div><div>重点内容</div><div>什么时候看</div></div>
-            <div class="mapping-row"><div class="problem">dev-baseline.md</div><div class="mechanism">环境起点、质量能力、确认后的 QA 基线</div><div class="value">开工与期望争议</div></div>
-            <div class="mapping-row"><div class="problem">design-spec/*</div><div class="mechanism">从原型或规格抽出的确定性设计事实</div><div class="value">还原与局部回查</div></div>
-            <div class="mapping-row"><div class="problem">restore-contract.json</div><div class="mechanism">区块、顺序、数量、样式与容差规则</div><div class="value">视觉还原验证</div></div>
+            <div class="mapping-row"><div class="problem">dev-baseline.md</div><div class="mechanism">执行起点，以及确认后冻结的“QA 基线”章节</div><div class="value">开工与期望争议</div></div>
+            <div class="mapping-row"><div class="problem">design-spec/</div><div class="mechanism">设计事实目录：design-facts.json、block-index.md 与区块规格</div><div class="value">还原与局部回查</div></div>
+            <div class="mapping-row"><div class="problem">restore-contract.json<br />restore-adapter.json</div><div class="mechanism">冻结的还原期望，以及实现 locator / 采集方式</div><div class="value">视觉还原验证</div></div>
             <div class="mapping-row"><div class="problem">restore-report-*.json</div><div class="mechanism">RED / YELLOW / GREEN 的逐项比对结果</div><div class="value">定位还原偏差</div></div>
             <div class="mapping-row"><div class="problem">review-evidence.json</div><div class="mechanism">命令、场景、截图、DOM 与代码的原始事实</div><div class="value">追查证据来源</div></div>
-            <div class="mapping-row"><div class="problem">review-results.json</div><div class="mechanism">五格检视的 Finding、问题和覆盖范围</div><div class="value">修复与复检</div></div>
-            <div class="mapping-row"><div class="problem">acceptance.md</div><div class="mechanism">完成范围、声明状态、待处理项与唯一下一步</div><div class="value">最终验收与交接</div></div>
+            <div class="mapping-row"><div class="problem">review-results.json</div><div class="mechanism">检视发现（Finding）、问题等级和覆盖范围</div><div class="value">修复与复检</div></div>
+            <div class="mapping-row"><div class="problem">acceptance.md</div><div class="mechanism">验收结论：完成范围、声明状态、待处理项与下一步</div><div class="value">最终验收与交接</div></div>
           </div>
         </div>
         <div class="slide-footer"><span>续跑先看 tasks.md 与 alpha-tests.md；最终交接先看 acceptance.md</span><span class="slide-no">08 / 12</span></div>
@@ -1060,27 +1257,27 @@
         <h2 class="slide-title">五格审查分别回答<span class="accent">五类问题</span></h2>
         <div class="slide-body">
           <div class="mapping-table review-table">
-            <div class="mapping-row header"><div>LENS</div><div>审查什么</div><div>开发者重点看</div></div>
-            <div class="mapping-row"><div class="problem">RESTORE</div><div class="mechanism">冻结区块、顺序、父子关系、数量和样式容差是否成立</div><div class="value">RED / YELLOW 原因与契约 ID</div></div>
-            <div class="mapping-row"><div class="problem">LAYOUT</div><div class="mechanism">不同视口、跨页结构、真实数据与层叠关系是否稳定</div><div class="value">触发场景与可复现影响</div></div>
-            <div class="mapping-row"><div class="problem">CONVENTION</div><div class="mechanism">是否遵守 app baseline 中的 PATTERN 与 Requirement 决策</div><div class="value">适用场景、依据 ID 与豁免</div></div>
-            <div class="mapping-row"><div class="problem">QUALITY</div><div class="mechanism">职责、重复、状态归属、副作用、复杂度和性能是否有可观察问题</div><div class="value">不要只看风格，要看真实后果</div></div>
-            <div class="mapping-row"><div class="problem">TEST</div><div class="mechanism">冻结功能声明、异常分支、接口契约与回归闭包是否被证据覆盖</div><div class="value">证据是否真正覆盖声明</div></div>
+            <div class="mapping-row header"><div>概念 / LENS · CELL</div><div>审查什么</div><div>开发者重点看</div></div>
+            <div class="mapping-row"><div class="problem"><span class="concept">还原检视</span><span class="file-ref">restore-lens · CODE-RESTORE</span></div><div class="mechanism">冻结区块、顺序、父子关系、数量和样式容差是否成立</div><div class="value">RED / YELLOW 原因与契约 ID</div></div>
+            <div class="mapping-row"><div class="problem"><span class="concept">布局检视</span><span class="file-ref">layout-lens · CODE-LAYOUT</span></div><div class="mechanism">不同视口、跨页结构、真实数据与层叠关系是否稳定</div><div class="value">触发场景与可复现影响</div></div>
+            <div class="mapping-row"><div class="problem"><span class="concept">规范检视</span><span class="file-ref">convention-lens · CODE-CONVENTION</span></div><div class="mechanism">是否遵守 app 基线文件中的 PATTERN 与 Requirement 工程决策</div><div class="value">适用场景、依据 ID 与豁免</div></div>
+            <div class="mapping-row"><div class="problem"><span class="concept">质量检视</span><span class="file-ref">quality-lens · CODE-QUALITY</span></div><div class="mechanism">职责、重复、状态归属、副作用、复杂度和性能是否有可观察问题</div><div class="value">不要只看风格，要看真实后果</div></div>
+            <div class="mapping-row"><div class="problem"><span class="concept">功能声明检视</span><span class="file-ref">test-lens · CODE-TEST</span></div><div class="mechanism">冻结功能声明、异常分支、接口契约与回归闭包是否被证据覆盖</div><div class="value">证据是否真正覆盖声明</div></div>
           </div>
-          <div class="example-strip"><div class="label">示例指令</div><div class="text">“以这个 Story 的冻结声明和 base-ref 为准，执行适用的五格检视并返回可复现 Finding。”</div></div>
+          <div class="example-strip"><div class="label">示例指令</div><div class="text">“以这个 Story 的冻结声明和 base-ref 为准，执行适用 lens，并把可复现的检视发现（Finding）写入 review-results.json。”</div></div>
         </div>
         <div class="slide-footer"><span>审查只判断；选哪些 lens、采集哪些事实、如何汇总由执行阶段负责</span><span class="slide-no">09 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="最终交付是一份可接手的验收结论" data-desc="acceptance.md 用三种状态说明哪些已证明、哪些待补验、哪些已暂缓">
+      <section class="slide" data-title="最终交付是一份可接手的验收结论" data-desc="acceptance.md 用已验证（PROVEN）、未验证（UNVERIFIED）、已暂缓（DEFERRED）说明交付状态">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">ACCEPTANCE</div></div>
         <h2 class="slide-title">最终交付是一份<span class="accent">可接手的验收结论</span></h2>
         <div class="slide-body evidence-layout">
           <div>
             <div class="state-list">
-              <div class="state-row"><div class="state-key proven">PROVEN</div><p>已有覆盖声明、并且仍然新鲜的证据。</p></div>
-              <div class="state-row"><div class="state-key unverified">UNVERIFIED</div><p>尚未证明，同时给出需要怎样补验。</p></div>
-              <div class="state-row"><div class="state-key deferred">DEFERRED</div><p>明确暂缓，并记录影响范围与解除条件。</p></div>
+              <div class="state-row"><div class="state-key proven">已验证<span class="status-code">PROVEN</span></div><p>已有覆盖声明、并且仍然新鲜的证据。</p></div>
+              <div class="state-row"><div class="state-key unverified">未验证<span class="status-code">UNVERIFIED</span></div><p>尚未证明，同时给出需要怎样补验。</p></div>
+              <div class="state-row"><div class="state-key deferred">已暂缓<span class="status-code">DEFERRED</span></div><p>明确暂缓，并记录影响范围与解除条件。</p></div>
             </div>
             <div class="manual-note">人工验收只能由真实人员执行并签署；Agent 负责准备环境、步骤和所需证据。</div>
           </div>
@@ -1092,49 +1289,67 @@
               <div class="acceptance-section"><strong>声明状态</strong><br />哪些已验证、未验证、已暂缓</div>
               <div class="acceptance-section"><strong>需要你处理</strong><br />待决项与人工验收动作</div>
               <div class="acceptance-section"><strong>你该知道</strong><br />建议级问题与已知限制</div>
-              <div class="acceptance-section"><strong>证据索引</strong><br />如何回到命令、场景和 Finding</div>
+              <div class="acceptance-section"><strong>证据索引</strong><br />如何回到命令、场景和检视发现</div>
               <div class="acceptance-section"><strong>唯一下一步</strong><br />现在最该执行的动作</div>
             </div>
-            <div class="developer-check">收口检查：每条 PROVEN 都有新鲜证据；每条 UNVERIFIED 有补验方式；每条 DEFERRED 有解除条件。</div>
+            <div class="developer-check">收口检查：已验证（PROVEN）有新鲜证据；未验证（UNVERIFIED）有补验方式；已暂缓（DEFERRED）有解除条件。</div>
           </div>
         </div>
         <div class="slide-footer"><span>不是把“完成”说得更好听，而是让完成范围和剩余动作都可追溯</span><span class="slide-no">10 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="示例：一条风险简报 Story 如何走完全程" data-desc="从首次接入到 acceptance.md，每一步都有用户指令和明确产物">
+      <section class="slide" data-title="示例：一条风险简报 Story 如何走完全程" data-desc="从 frontend-baselines/ 到 acceptance.md，每一步都有明确文件和确认门">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">END-TO-END EXAMPLE</div></div>
         <h2 class="slide-title">示例：一条风险简报 Story 如何<span class="accent">走完全程</span></h2>
         <p class="slide-subtitle">示例需求：为“客户风险简报”增加高风险客户筛选，并按 HTML 原型还原页面。</p>
         <div class="slide-body">
           <div class="pipeline" style="margin-top:34px">
-            <div class="phase-node"><div class="phase-id">01 · INIT</div><div class="phase-dot"></div><div class="phase-name">接入 app</div><div class="phase-skill">“建立 baseline”</div><div class="phase-desc">产物：frontend-baselines/ 九份文件</div></div>
-            <div class="phase-node"><div class="phase-id">02 · DESIGN</div><div class="phase-dot"></div><div class="phase-name">完成设计</div><div class="phase-skill">“做前端设计”</div><div class="phase-desc">产物：Requirement 设计 + Story delta</div></div>
-            <div class="phase-node"><div class="phase-id">03 · PLAN</div><div class="phase-dot"></div><div class="phase-name">拆任务</div><div class="phase-skill">“只规划，不写代码”</div><div class="phase-desc">产物：tasks.md + alpha-tests.md</div></div>
-            <div class="phase-node"><div class="phase-id">04 · BUILD</div><div class="phase-dot"></div><div class="phase-name">确认并实现</div><div class="phase-skill">“先确认 QA 基线”</div><div class="phase-desc">产物：代码、还原报告与证据账本</div></div>
-            <div class="phase-node"><div class="phase-id">05 · ACCEPT</div><div class="phase-dot"></div><div class="phase-name">检视与验收</div><div class="phase-skill">“按最终 diff 收口”</div><div class="phase-desc">产物：review-results.json + acceptance.md</div></div>
+            <div class="phase-node"><div class="phase-id">01 · INIT</div><div class="phase-dot"></div><div class="phase-name">接入 app</div><div class="phase-skill">sdd-init-frontend</div><div class="phase-desc">产物：app 基线文件<br /><span class="file-ref">frontend-baselines/</span></div></div>
+            <div class="phase-node"><div class="phase-id">02 · DESIGN</div><div class="phase-dot"></div><div class="phase-name">完成设计</div><div class="phase-skill confirm">设计确认门 ① / ② / ③</div><div class="phase-desc"><span class="file-ref">requirement-frontend-design.md</span><br /><span class="file-ref">story-delta-frontend-design.md</span></div></div>
+            <div class="phase-node"><div class="phase-id">03 · PLAN</div><div class="phase-dot"></div><div class="phase-name">拆任务</div><div class="phase-skill">sdd-task-frontend</div><div class="phase-desc">执行清单 <span class="file-ref">tasks.md</span><br />声明账本 <span class="file-ref">alpha-tests.md</span></div></div>
+            <div class="phase-node"><div class="phase-id">04 · BUILD</div><div class="phase-dot"></div><div class="phase-name">确认并实现</div><div class="phase-skill confirm">执行确认门 · QA 基线</div><div class="phase-desc">确认 <span class="file-ref">dev-baseline.md</span> 后实现；证据回填 <span class="file-ref">alpha-tests.md</span></div></div>
+            <div class="phase-node"><div class="phase-id">05 · ACCEPT</div><div class="phase-dot"></div><div class="phase-name">检视与验收</div><div class="phase-skill">sdd-review-frontend</div><div class="phase-desc">检视结果 <span class="file-ref">review-results.json</span><br />验收结论 <span class="file-ref">acceptance.md</span></div></div>
           </div>
-          <div class="scenario-prompt"><strong>续跑示例：</strong>“继续客户风险简报 Story；从未完成 Task 开始，保留已冻结 QA 基线，只重取受本次修改影响的证据。”</div>
+          <div class="scenario-prompt"><strong>续跑示例：</strong>“继续客户风险简报 Story；从 tasks.md 的未完成 Task 开始，保留 dev-baseline.md 中已冻结的 QA 基线，只重取受影响证据。”</div>
         </div>
         <div class="slide-footer"><span>每一步都可以独立进入；已有合格产物时直接消费，不重复生成</span><span class="slide-no">11 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="使用者做好三次确认，就能把链路用好" data-desc="开始前确认范围，开工前确认 QA 基线，交付前确认 acceptance.md">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">USER CHECKLIST</div></div>
-        <h2 class="slide-title">使用者做好三次确认，就能把链路<span class="accent">用好</span></h2>
-        <div class="slide-body roadmap-layout">
-          <div class="roadmap-steps">
-            <div class="roadmap-step"><div class="roadmap-label">开始前</div><div class="roadmap-title">确认范围与输入</div><p>目标 app 唯一、Story / AC 明确、设计来源可定位；需要安装、登录或外部副作用时及时授权。</p></div>
-            <div class="roadmap-step"><div class="roadmap-label">开工前</div><div class="roadmap-title">确认 QA 基线</div><p>逐项检查必须出现的内容、状态、行为和视觉期望；有歧义当场改，不在实现阶段放宽。</p></div>
-            <div class="roadmap-step"><div class="roadmap-label">交付前</div><div class="roadmap-title">确认 acceptance.md</div><p>检查声明状态、证据、人工验收、待处理项和唯一下一步；不要只看“代码已经写完”。</p></div>
+      <section class="slide" data-title="三次确认嵌在前端设计流程中" data-desc="确认门①组件架构，确认门②接口与对接，确认门③静态原型视觉结果">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">CONFIRMATION GATES</div></div>
+        <h2 class="slide-title">三次确认嵌在<span class="accent">前端设计流程</span>中</h2>
+        <p class="slide-subtitle">这里的确认门①–③属于 <span class="file-ref">sdd-design-frontend</span>；执行阶段的 QA 基线确认另见第 7 页。</p>
+        <div class="slide-body">
+          <div class="confirmation-flow">
+            <div class="confirm-row">
+              <div class="confirm-stage"><div class="confirm-label">STEP ② · 设计动作</div><div class="confirm-title">组件架构与存量盘点</div><p>形成组件树，标出复用、新增和扩展。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-gate"><div class="confirm-label">确认门 ①</div><div class="confirm-title">组件树与复用结论</div><p>确认结构、粒度、交互组件及扩展决策。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">requirement-frontend-design.md · 第 2 节</span><span class="file-ref">testability-map.md</span></div>
+            </div>
+            <div class="confirm-row">
+              <div class="confirm-stage"><div class="confirm-label">STEP ③–⑥ · 设计动作</div><div class="confirm-title">接口、数据与对接策略</div><p>定义 API / IFC、字段映射、缺口、时序与示例数据。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-gate"><div class="confirm-label">确认门 ②</div><div class="confirm-title">契约与对接决策</div><p>逐条确认关键接口与前后端边界。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">requirement-frontend-design.md · 第 3–6 节</span><span class="file-ref">examples/*.json</span></div>
+            </div>
+            <div class="confirm-row">
+              <div class="confirm-stage"><div class="confirm-label">STEP ⑧ · 设计动作</div><div class="confirm-title">生成静态原型</div><p>用组件树、前端数据契约和示例数据生成可视页面。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-gate"><div class="confirm-label">确认门 ③</div><div class="confirm-title">静态原型视觉确认</div><p>确认布局、粒度、数据 shape、缺口与设计稿对照。</p></div>
+              <div class="confirm-arrow">→</div>
+              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">prototype/index.html</span><span class="file-ref">requirement-frontend-design.md</span></div>
+            </div>
           </div>
-          <div class="closing">
-            <div class="closing-kicker">使用原则</div>
-            <div class="closing-title">给清楚目标，<br />认真确认期望，<br />按证据完成验收。</div>
-            <p>Skill 负责读仓、编排、实现和取证；使用者对目标范围、关键期望和最终人工签字负责。</p>
-            <div class="final-line">从正确入口开始，按产物完成交接。</div>
+          <div class="design-handoff">
+            <div><strong>设计交付：</strong><span class="file-ref">requirement-frontend-design.md</span> + 按需的 <span class="file-ref">story-delta-frontend-design.md</span></div>
+            <div class="handoff-arrow">→</div>
+            <div><strong>计划输入：</strong><span class="file-ref">tasks.md</span> + <span class="file-ref">alpha-tests.md</span></div>
           </div>
         </div>
-        <div class="slide-footer"><span>Frontend SDD · Capability &amp; Usage Guide</span><span class="slide-no">12 / 12</span></div>
+        <div class="slide-footer"><span>三次确认通过后，前端设计文件才进入 sdd-task-frontend 生成 tasks.md 与 alpha-tests.md</span><span class="slide-no">12 / 12</span></div>
       </section>
     </div>
   </main>
