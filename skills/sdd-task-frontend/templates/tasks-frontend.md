@@ -1,14 +1,18 @@
 # {{project}} / {{story_name}} — 单仓实现计划
 
+<!--
+  本模板的 HTML 注释是填表指导，不进产物：落盘前全部删除，只留表和正文。
+  字段含义见 sdd-dev-frontend/references/execution-contract.md#taskpacket；
+  计划写到哪一层见同文件的「计划与实现的分层边界」。
+-->
+
 **Goal:** <!-- 本仓这个 Story 让用户能做到什么 -->
 
 **关键结构决策:** <!-- 只写会影响验收或文件划分的决策，例如新建 feature 目录、状态提到哪一层、复用哪套请求封装 -->
 
-**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | test_framework= | component_test_status= | component_test_framework= | browser_test_status= | browser_test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks= | risk_triggers=
+**TaskPacket:** project={{project}} | codespec_path= | story={{story_name}} | verification_schema=v2 | test_framework= | component_test_status= | component_test_framework= | browser_test_status= | browser_test_framework= | search_paths= | project_type=frontend | frontend_design_path= | baseline_source= | prototype_dir= | reference_route= | affected_routes= | required_states= | restore_tasks= | risk_triggers=
 
 **知识 trace:** <!-- 上游 consume 的 entries[].id；gaps 非空则一并列出 -->
-
-字段含义见 [前端 SDD 执行契约 / TaskPacket](../../sdd-dev-frontend/references/execution-contract.md#taskpacket)；计划写到哪一层见[分层边界](../../sdd-dev-frontend/references/execution-contract.md#计划与实现的分层边界)。
 
 ## 项目边界
 
@@ -17,17 +21,18 @@
 
 ## 页面、路由与组件层级
 
-与 `affected_routes` 一致。只画本 Story 触及的节点，复用既有节点标「复用」。
+<!--
+  与 affected_routes 一致。只画本 Story 触及的节点，复用既有节点标「复用」。
+  组件名按顺序取：上游前端设计已命名的沿用；仓内既有节点用代码里的真名；本 Story 新增且上游未命名的在这里定名，
+  定名后与文件的绑定写在「模块与文件」的「职责与对外导出」列，同一个名字不在两处各定义一次。
+  只给「模块与文件」里有对应文件行的节点定名；实现时才会拆出的内部子组件不预先起名，那是写法。
+  纯逻辑 Story 没有新增或改变节点时，只留路由表，删掉组件树。
+-->
 
 | 路由 | 页面 / 入口 | 本 Story 的变化 |
 | --- | --- | --- |
 
-组件名按顺序取：上游前端设计已命名的沿用；仓内既有节点用代码里的真名；本 Story 新增且上游未命名的，在这里定名。定名后与文件的绑定写在下面「模块与文件」的「职责与对外导出」列，同一个名字不在两处各定义一次。
-
-只给「模块与文件」里有对应文件行的节点定名。实现时才会拆出的内部子组件不预先起名，那是写法。
-
 ```text
-写组件名，不是文件路径；标出新增节点挂在哪个既有节点下。
 <Page>
 ├── <既有节点>（复用）
 └── <新增节点>
@@ -36,9 +41,11 @@
 
 ## 模块与文件
 
-先看当前 app baseline `components.md` / `routes.md` / `api.md` / `data.md` / `styles.md` 的 `PATTERN-*` 与清单条目，再在 `search_paths` 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写明原因，不是只写「新建」。样式文件归属还原 Task。
-
-**新增页面时读 `routes.md`**：路由注册在哪、挂哪个布局、要不要守卫，按它写；写着「无路由机制」时不要发明一个路由入口。
+<!--
+  先看当前 app baseline components.md / routes.md / api.md / data.md / styles.md 的 PATTERN-* 与清单条目，
+  再在 search_paths 内找可复用的组件、路由入口、hook、请求封装与样式 token；复用不了的在「职责与对外导出」里写原因。
+  样式文件归属还原 Task。新增页面时按 routes.md 写路由注册、布局与守卫；它写着「无路由机制」时不要发明一个。
+-->
 
 | 文件 | 类型 | 新建/修改 | 职责与对外导出 | 复用的既有资产 | Task |
 | --- | --- | --- | --- | --- | --- |
@@ -46,28 +53,29 @@
 
 ## 状态与数据流
 
+<!--
+  纯同步 Story 删除整节。
+  有异步取数时默认沿用 data.md 三态规范、api.md 请求出口、components.md 通用构件，写一行「三态沿用：<PATTERN-ID 或路径>」即可。
+  data.md 写「无统一做法」时如实写成缺口并按 AT 需要定出本 Story 的做法，不假装沿用不存在的约定。
+  第二张表只在本 Story 与既有做法不同、或该态被某条 AT 直接断言时才补，且只补命中的那一态；都不命中就删表。视觉数值不写。
+-->
+
 | 状态 | 归属节点 | 来源 | 消费方 | 变化 / 失效时机 |
 | --- | --- | --- | --- | --- |
-
-有异步取数时先认既有做法：当前 app baseline `data.md` 的三态规范、`api.md` 的请求出口、`components.md` 的通用列表/表格/骨架构件。**默认沿用，写一行「三态沿用：<PATTERN-ID 或路径>」就够**，不复述既有行为。
-
-`data.md` 写的是「无统一做法」时，结论是本仓没有三态基准：如实写成缺口并按 AT 需要定出本 Story 的做法，**不要假装在沿用一条不存在的约定**。
-
-只有两种情况才补下表，且只补命中的那一态：本 Story 与既有做法不同；或该态被某条 AT 直接断言。都不命中就删掉下表；纯同步 Story 删除整节。视觉数值不写。
 
 | 态 | 为什么不沿用 / 哪条 AT 断言 | 可观察结果 |
 | --- | --- | --- |
 
 ## 接口对接
 
-后端契约只引用不重定义；字段与枚举以领域 design 为准。
+<!-- 后端契约只引用不重定义；字段与枚举以领域 design 为准。 -->
 
 | 方法 + URL | 触发时机 | 请求字段 | 响应字段与枚举 | 失败时的可观察结果 |
 | --- | --- | --- | --- | --- |
 
 ## 视觉基线来源
 
-`baseline_source = none` 时删除本节，并在「项目边界」写明为什么没有还原 Task。
+<!-- baseline_source = none 时删除本节，并在「项目边界」写明为什么没有还原 Task。 -->
 
 | 项 | 内容 |
 | --- | --- |
@@ -79,29 +87,35 @@
 
 ## testability 锚点
 
-只为 AT 需要定位的对象建锚点，AT 不引用的元素不预先分配。仓内已有定位约定（属性名叫什么、列表行怎么区分）时沿用，本节只列本 Story 新增的锚点。
-
-「定位什么」写语义（提交按钮、批次列表的一行），不写 DOM 结构（外层 div、第二个 span）：锚点名和它定位什么是契约，挂在哪个元素上是 Dev 的写法。列表类只给一个锚点并说明按什么区分行，不逐行枚举。
+<!--
+  只为 AT 需要定位的对象建锚点。仓内已有定位约定时沿用，本节只列本 Story 新增的锚点。
+  「定位什么」写语义（提交按钮、批次列表的一行），不写 DOM 结构；锚点挂在哪个元素上是 Dev 的写法。
+  列表类只给一个锚点并说明按什么区分行。没有新增锚点时删除整节。
+-->
 
 | 锚点 | 定位什么 | 用它的 AT |
 | --- | --- | --- |
 
 ## 用例追溯
 
+<!--
+  这张表是 AT 的 verification_scope / verification_method 的唯一作者；alpha-tests.md 只按 AT 引用，不再抄这两列。
+  范围写 S1_COMPONENT / S2_PAGE / S3_STORY，方法写 test_case / restore_contract / manual_acceptance；
+  判据见 sdd-dev-frontend/references/validation-policy.md#七验证方法的判定规则。机械 Task 的 quality_gate 不产生 AT。
+  manual_acceptance 的 AT 另在 alpha-tests.md 的人工验收记录里写依据、验收环境与需留下的证据。
+-->
+
 | AT | 标题 | 验证范围 | 验证方法 | Task |
 | --- | --- | --- | --- | --- |
 
-验证范围写 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，验证方法写 `test_case` / `restore_contract` / `manual_acceptance`；判据见 [validation-policy 第七节](../../sdd-dev-frontend/references/validation-policy.md#七验证方法的判定规则)。机械 Task 的 `quality_gate` 不产生 AT，不进这张表。
-
-`manual_acceptance` 的 AT 另在 `alpha-tests.md` 的人工验收记录里写依据、验收环境与需留下的证据；这里只标方法。
-
 ## Task List
 
-顺序：跨页公共骨架 → 每页还原 → 该页逻辑。规模按[执行契约](../../sdd-dev-frontend/references/execution-contract.md#规模)：一个 Story 3–7 个 Task，单 Task ≤ 5 个文件、2–5 步，每个 Task 都改到产品代码或测试代码——确认、勘察、评审、补文档不占编号。
-
-下面四种形状按 Task 形态与验证方法选一份复制，步骤数不凑齐成一样多；改造既有行为或修缺陷时可在暴露缺口后追加一步「确认原因」，实现后确有必要重构时可追加一步「重构」，其余情况不加编号。人工验收形状仍属逻辑形态，不是第四种形态。
-
-`**可能扩散:**` 三种形状通用，只在确有没定论的连带范围时写一行，无则整行删除。
+<!--
+  顺序：跨页公共骨架 → 每页还原 → 该页逻辑。规模按 execution-contract.md#规模：一个 Story ≤ 7 个 Task（1 个也可以），
+  单 Task ≤ 5 个文件、2–5 步，每个 Task 都改到产品代码或测试代码。
+  下面四种形状按 Task 形态与验证方法选一份复制；步骤数不凑齐。改造既有行为或修缺陷时可在暴露缺口后追加「确认原因」，
+  实现后确有必要重构时可追加「重构」。「可能扩散」只在确有没定论的连带范围时写，无则删行。
+-->
 
 ### Task N: <名称> [用例: AT-...]
 
@@ -172,27 +186,6 @@
 
 - [ ] **Step 1: 改动并让编译/类型/引用通过**
 - [ ] **Step 2: 记录证据并提交** — 回填 `alpha-tests.md`，沿用 `sdd-task` 提交规范
-
-## 计划自审
-
-- [ ] 每条需求锚点 → AT → Task 的追溯完整。
-- [ ] 每个受影响文件都写了位置、职责与对外导出；能复用的已指到既有资产，不能复用的写了原因。
-- [ ] 组件层级、状态归属与数据流齐全且与 `affected_routes` 一致；新增节点都已定名，且每个定名节点在「模块与文件」里有对应文件行。
-- [ ] 沿用既有做法的地方只写了引用；展开的三态和 testability 锚点都能说清是偏离既有做法还是被 AT 直接断言。
-- [ ] 锚点只写了名字与语义定位，没有写它挂在哪个 DOM 元素上。
-- [ ] 全文没有可直接运行的代码：函数体、JSX/模板片段、CSS 规则、对象字面量、具体 API 调用语句。
-- [ ] 没有外部基线时全文没有 px、色值、字号、圆角、阴影或自创响应式规格。
-- [ ] Task 数 3–7、单 Task ≤ 5 个文件、2–5 步；每个 Task 都改到代码，没有确认/勘察/评审/文档类 Task。
-- [ ] 每个 Task 只有一种形态；步骤按形态裁过；多轮有不可拆理由并分别引用声明。
-- [ ] 每条 AT 都填了验证范围与验证方法，且都能说出判据；`S1_COMPONENT` / `S2_PAGE` 重叠的按 tie-break 定，没有二选一写法。
-- [ ] 每条 `manual_acceptance` 都过了六条资格门禁、没命中自动化强制触发器，且写清依据、环境与所需证据；「不新增自动化测试文件」只出现在这类 Task 里。
-- [ ] 已进入冻结还原契约的视觉声明写的是 `restore_contract`，没有改判成人工。
-- [ ] 缺测试通道的声明按降级登记并记入「风险与回滚」，没有因为缺通道就改判成人工。
-- [ ] 每页还原先于逻辑；还原 Task 独占样式文件；同页还原轮的取证归属唯一，没有收尾样式 Task。
-- [ ] 全文没有精确验证命令、状态矩阵、全量回归、浏览器矩阵或独立检视安排。
-- [ ] 文件清单只含已确认范围，没定论的落在「可能扩散」。
-- [ ] 同一契约只写一次；没有 TBD、TODO、空步骤或「类似任务」。
-- [ ] TaskPacket 与正文一致，风险 token 有直接计划事实。
 
 ## 风险与回滚
 

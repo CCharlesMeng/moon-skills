@@ -25,7 +25,7 @@ A1 完成后再派 `recon-spec`，因为它的期望来源是完整设计事实�
 ## Phase A2 — 勘察与确认
 
 1. 派 `recon-spec`；代码侧 `full` 时并行派 `recon-codebase`，`lite` 时由主 agent提交机械结果。无原型档先完成代码侧，再把参照页事实或采用 token 交给规格侧。
-2. 校验回传：范围、来源、适用 QA 行、豁免、已知缺口和自检齐全；不合格只退回一次。
+2. 校验回传：范围、来源、适用 QA 行、豁免、已知缺口齐全，逐行符合 [qa-baseline.md](../templates/qa-baseline.md) 的填写规则；不合格只退回一次。
 3. 合并到 `dev-baseline.md`：工程依据、功能理解、适用 QA 声明、已知缺口、摘要与指纹。Story 只保存采用的 PATTERN/REQ-DEC ID，不复制正文。
 4. 对每个缺口按 QA 模板完成 `repo / prototype / user-only / conflict / 工作假设` 分类。只有 user-only/conflict 进入 P7；工作假设随确认门展示。
 5. 确认门只展示用户需要判断的内容：做什么、标准来源、适用声明、豁免、工作假设和未决问题。用户确认后记录时间与摘要并冻结；指出修改则更新后重新确认。

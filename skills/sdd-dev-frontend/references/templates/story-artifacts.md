@@ -97,42 +97,35 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 只在本 Story 有 `verification_method=manual_acceptance` 的声明时才建这一节。**这里是待人工验收项的权威登记**，`acceptance.md` 里那份由聚合器 `--manual-acceptance` 从同一批数据渲染，不手写。
 
 ```markdown
-| 声明 | 追溯 | 范围 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 声明 | 追溯 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ```
 
-中文列名只为好读，投影成 JSON 时必须回到契约字段名：`id`、`trace`、`verification_scope`、`manual_basis`、`required_environment`、`required_evidence`、`manual_outcome`、`claim_status`、`manual_checked_by`、`manual_checked_at`、`evidence_refs`。字段语义见[执行契约的验证模型](../execution-contract.md#验证模型)，`manual_basis` 枚举与资格门禁见 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)。
+中文列名只为好读，投影成 JSON 时必须回到契约字段名：`id`、`trace`、`manual_basis`、`required_environment`、`required_evidence`、`manual_outcome`、`claim_status`、`manual_checked_by`、`manual_checked_at`、`evidence_refs`；`verification_scope` 从 `tasks.md` 的「用例追溯」取，账本不抄。字段语义见[执行契约的验证模型](../execution-contract.md#验证模型)，`manual_basis` 枚举与资格门禁见 [validation-policy 第七节](../validation-policy.md#七验证方法的判定规则)。
 
 计划阶段落 `NOT_RUN` + `UNVERIFIED`，验收人与验收时间留空——**不写人名占位符**。只有真实人员执行后才回填后三列；agent 不代签。`PASSED` 但证据不齐仍是 `UNVERIFIED`，`FAILED` 与 RED 同级、不得改写为通过。
 
 ### AC ↔ 证据映射
 
 ```markdown
-| AC / AT | 声明 | 验证范围 | 验证方法 | 状态 | 证据记录 | 新鲜度 | 说明 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
+| AT | 状态 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- |
 ```
 
 每条声明恰有一个状态。同一证据可被多条声明引用，不复制报告内容。依赖变化时把命中声明改回 `UNVERIFIED`，重取证后再更新。
 
-「验证范围」写 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，「验证方法」写 `test_case` / `restore_contract` / `quality_gate` / `manual_acceptance`。`verification_schema` 不是 `v2` 的旧 Story 这两列留空，不回填、不追溯映射旧的 L3/L4 记录。
+**声明的范围与方法只在 `tasks.md` 的「用例追溯」写一次**，这里按 AT 编号引用；`quality_gate` 机械 Task 没有 AT，不进本表。三处各抄一份范围与方法的代价是改一处漏两处，而账本要回答的只有「证到哪了」。
 
 ### Deferred
 
 ```markdown
-| AC / AT | 外部依赖 | 当前证据 | 解除条件 | 恢复入口 |
+| AT | 外部依赖 | 当前证据 | 解除条件 | 恢复入口 |
 | --- | --- | --- | --- | --- |
 ```
 
 本阶段做得到但没执行属于 `UNVERIFIED`，不写 Deferred。旧 Story 缺还原节时按上述形状增量新增，不迁移既有 L4/L3 记录。
 
-### 自检
-
-- [ ] 每条记录有声明、契约/环境、证据路径、依赖与状态。
-- [ ] `PROVEN` 的证据覆盖声明且对最终依赖新鲜。
-- [ ] RED/YELLOW 没有被摘要成 GREEN。
-- [ ] `UNVERIFIED` 与 `DEFERRED` 原因和下一步明确。
-- [ ] 人工项的 `manual_outcome` 与状态是合法配对；`PROVEN` 的验收人、验收时间、环境与证据引用齐全，且没有人名占位符。
-- [ ] 视觉声明没有在已冻结区块上从 `restore_contract` 改判成 `manual_acceptance`。
+账本的合格判据是 [SKILL.md 的退出门禁](../../SKILL.md#退出门禁)，不在这里再放一份自检。
 
 ## 三、`acceptance.md`
 
@@ -180,22 +173,15 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 
 ```markdown
 # <Story> · Alpha Tests
-## L4 单元测试记录
-## L3 单服务单接口集成测试记录
-## 还原证据记录
-## 计划外承接
-| 文件 | Task | 原因 |
-| --- | --- | --- |
-## 人工验收记录
-| 声明 | 追溯 | 范围 | 依据 | 验收环境 | 需留下的证据 | 人工结果 | 声明状态 | 验收人 | 验收时间 | 证据引用 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 ## AC ↔ 证据映射
-| AC / AT | 验证范围 | 验证方法 | 状态 | 证据 | 说明 |
-| --- | --- | --- | --- | --- | --- |
-## Deferred AC
-| AC | 原因 | 解除条件 |
-| --- | --- | --- |
+| AT | 状态 | 证据记录 | 新鲜度 | 说明 |
+| --- | --- | --- | --- | --- |
+## Deferred
+| AT | 外部依赖 | 当前证据 | 解除条件 | 恢复入口 |
+| --- | --- | --- | --- | --- |
 ```
+
+有 `manual_acceptance` 声明时再加「人工验收记录」；还原证据记录与计划外承接由 Phase B 首次落账时追加，不预建空节。
 
 缺 `story-delta-frontend-design.md` 时只写已知事实，不补设计：
 

@@ -156,7 +156,6 @@
 | 日期 | 变更项（编号） | 变更内容 | 理由 | 确认状态 | 新指纹 |
 | --- | --- | --- | --- | --- | --- |
 
-<!-- 交付前自检：逐条勾选 qa-baseline.md 第七节。主 agent 校验后删除本段再落盘 -->
 <!-- artifact: restore-contract-rules.json -->
 ```json
 {

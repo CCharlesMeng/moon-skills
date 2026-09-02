@@ -75,23 +75,23 @@ description: 为单个独立前端 app 与 Story 生成或更新 tasks.md 和 al
 
 ## 产物
 
-以 [tasks-frontend.md](./templates/tasks-frontend.md) 生成 `tasks.md`。
+以 [tasks-frontend.md](./templates/tasks-frontend.md) 生成 `tasks.md`。模板里的 HTML 注释是填表指导，落盘前全部删掉；不适用的节整节删，不留空表。
 
-`alpha-tests.md` 计划侧写：S1 组件验证记录、S2 页面验证记录、S3 用户路径验证记录、AC ↔ 证据映射、Deferred AC，本 Story 有人工验收声明时另写人工验收记录。只写用例与初始 `UNVERIFIED` 状态，不伪造证据。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳；没有对应范围声明的节也不建。
-
-节名按观察范围命名而不是按 L3/L4——前端 AT 的范围是 `S1_COMPONENT` / `S2_PAGE` / `S3_STORY`，沿用后端的层级名会让读的人以为前端也有一条固定的「L3 默认档」。表格列名与投影字段见 [story-artifacts 第二节](../sdd-dev-frontend/references/templates/story-artifacts.md)。
+**`tasks.md` 的「用例追溯」是 AT 的 `verification_scope` / `verification_method` 唯一作者。** `alpha-tests.md` 计划侧只写：AC ↔ 证据映射（按 AT 引用，不抄范围与方法）、Deferred AC，本 Story 有人工验收声明时另写人工验收记录。只写初始 `UNVERIFIED` 状态，不伪造证据。GWT 已在 `story-delta-spec.md`，不再复制成 S1/S2/S3 三节。还原证据记录与计划外承接两节由 Dev 追加，计划不建空壳。表格列名与投影字段见 [story-artifacts 第二节](../sdd-dev-frontend/references/templates/story-artifacts.md)。
 
 ## 完成标准
 
+本节是自审的唯一清单，不复制进产物。
+
 - 所有 `SC-`/`BR-`/GWT 均可追到 AT，再追到具体 Task；机械 Task 的 `quality_gate` 不计入覆盖。
-- 每条 AT 都有 `verification_scope` 与 `verification_method`，且都能说出判据；人工验收声明的依据、环境与所需证据齐全，验收人与验收时间留空。
-- 没有一条 `manual_acceptance` 命中自动化强制触发器；已进入冻结还原契约的视觉声明写的是 `restore_contract`。
-- 两条测试通道的四个字段与仓库事实一致；有通道缺口的声明已显式登记降级并记入「风险与回滚」。
-- 每个 Task 都有精确文件范围、每个文件的职责、受影响声明、形态和按形态裁过的步骤，且都改到代码；Task 数、文件数、步骤数在规模判据内。
+- 每条 AT 都有 `verification_scope` 与 `verification_method`，且都能说出判据；`S1_COMPONENT` / `S2_PAGE` 重叠的按 tie-break 定，没有二选一写法。人工验收声明的依据、环境与所需证据齐全，验收人与验收时间留空。
+- 没有一条 `manual_acceptance` 命中自动化强制触发器；已进入冻结还原契约的视觉声明写的是 `restore_contract`；「不新增自动化测试文件」只出现在人工验收 Task 里。
+- 两条测试通道的四个字段与仓库事实一致；有通道缺口的声明已显式登记降级并记入「风险与回滚」，没有因为缺通道就改判成人工。
+- 每个 Task 都有精确文件范围、每个文件的职责、受影响声明、形态和按形态裁过的步骤，且都改到代码；Task 数、文件数、步骤数在规模判据内；每页还原先于逻辑，还原 Task 独占样式文件，同页取证归属唯一。
 - 受影响路由、组件层级（新增节点已定名且与文件行一一对应）、状态归属、数据流与复用决策齐全；复用不了的写明原因。
-- 沿用既有做法的部分只写了引用；展开描述的三态与 testability 锚点都能指出是偏离还是被 AT 断言。
+- 沿用既有做法的部分只写了引用；展开描述的三态与 testability 锚点都能指出是偏离还是被 AT 断言；锚点只写名字与语义定位，不写挂在哪个 DOM 元素上。
 - 静态形态的基线来源、区块、必测状态与缺口明确；纯逻辑 Story 写明没有还原 Task 的理由。
-- TaskPacket 字段与正文一致，风险 token 与「可能扩散」只来自可见计划事实。
-- 全文没有占位符、可运行代码、重复契约或固定验证动作。
+- TaskPacket 字段与正文一致，风险 token 与「可能扩散」只来自可见计划事实；文件清单只含已确认范围。
+- 全文没有占位符、可运行代码、重复契约、固定验证动作或模板注释。
 
 完成后只回传两份路径和降级项，由 `sdd-task` 继续公共汇总。
