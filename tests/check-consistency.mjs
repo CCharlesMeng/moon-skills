@@ -396,6 +396,45 @@ function checkFrontendScriptPaths(files) {
   }
 }
 
+// Story 目录只分两层：根下是给人读的 Markdown，机器件在 <evidence-dir>，过程件在
+// <work-dir>。这条边界只靠提示词维持——某处命令把 JSON 写回 <story-dir>/ 根，或者
+// 又写成「临时目录」这种没有定义的地方，运行时不会报错，只会让目录慢慢回到平铺。
+const STORY_ROOT_MACHINE_FILE = /<story-dir>\/[A-Za-z0-9_.-]+\.(json|png)/g;
+const UNDEFINED_SCRATCH_TERMS = ["临时目录", "<临时目录>"];
+
+function checkFrontendStoryLayout(files) {
+  const devDir = join(SKILLS_DIR, "sdd-dev-frontend");
+  let failed = 0;
+  let count = 0;
+  for (const file of files) {
+    if (!file.startsWith(devDir)) continue;
+    // evals/ 是样本数据与用例说明，fixture README 里解释「临时目录建现场」是正常的。
+    if (file.startsWith(join(devDir, "evals"))) continue;
+    count++;
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(STORY_ROOT_MACHINE_FILE)) {
+      report(
+        "fail",
+        "fe-story-layout",
+        `${rel(file)} writes machine file to story root "${m[0]}" — JSON and screenshots live in <evidence-dir>/ or <work-dir>/`
+      );
+      failed++;
+    }
+    for (const term of UNDEFINED_SCRATCH_TERMS) {
+      if (!content.includes(term)) continue;
+      report(
+        "fail",
+        "fe-story-layout",
+        `${rel(file)} uses "${term}" — scratch files go to <work-dir> so they can be deleted at closeout`
+      );
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    report("pass", "fe-story-layout", `${count} runtime files keep machine files out of the story root`);
+  }
+}
+
 // 一份脚本没有任何提示词再调用它，等于判据从确定性退回散文，而脚本和它的单测
 // 还在绿着——瘦身时真出过一次：preflight 缓存的四处调用点被删，命中判据变成
 // 提示词里让主 agent 手工比对的一段话。
@@ -766,6 +805,7 @@ function checkFrontendChain() {
   checkFrontendIdPrefixes(files);
   checkFrontendAgentStructure();
   checkFrontendScriptPaths(files);
+  checkFrontendStoryLayout(files);
   checkFrontendScriptOwners(files);
   checkFrontendRegistryTargets();
   checkFrontendGateCoverage();

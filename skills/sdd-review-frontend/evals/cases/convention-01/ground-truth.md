@@ -57,7 +57,7 @@
 | OPT-3 | `riskbrief_panel.tsx` L18 用箭头函数常量而非具名函数声明 | `PATTERN-COMP-1` 的另一条不变量，与 GT-3 同源（都由 `React.FC` 那一行引起），合并报或单独报都不影响计分 |
 | OPT-4 | `useRiskBrief.ts` L24–L27 `response.json()` 带来的隐式 `any` | 与 GT-10 同源（走 `request<T>()` 后自动消解），报成建议级正确，报成阻断级计一次级别错误 |
 | OPT-5 | `riskbrief_panel.module.css` L20 `repeat(auto-fill, …)` 与仓内 `repeat(3, …)` 的写法差异 | 无 `PATTERN-*` 覆盖栅格模板，按规则 4 记建议级或不记都可以，判成违规并升阻断级计一次级别错误。注意与 NG-2 的区别：NG-2 禁的是把 `220px` 当硬编码报 |
-| OPT-6 | `<story-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
+| OPT-6 | `<evidence-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
 
 ## 四、必须出现的行为（格式合规，6 项）
 

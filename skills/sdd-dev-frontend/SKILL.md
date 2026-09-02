@@ -49,7 +49,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 4. **限制可见。** 只登记影响已选模块的 Story 限制；模块不可执行时只降级依赖声明，不用源码检查冒充浏览器或截图证据。
 5. **状态诚实。** `PROVEN / UNVERIFIED / DEFERRED` 严格遵守共享契约；`MANUAL` 不是状态。
 5b. **人工验收不代签。** `manual_acceptance` 声明只能由真实人员执行并回填 `manual_checked_by` / `manual_checked_at` / `evidence_refs`；agent、自测试与独立检视只能准备候选实现并交出待验收项，不得用自己的观察替代签字。存在人工验收 `UNVERIFIED` 时只能交付部分验收。
-6. **子代理只读。** 子代理只回传正文；检视截图可写临时目录，正式工件由主 agent 落盘。
+6. **子代理只读。** 子代理只回传正文；检视截图可写 `<work-dir>`，正式工件由主 agent 落盘。
 7. **范围受控。** 执行上游设计和对接模式，不改设计、不发明响应式规格、不跨仓。计划文件清单外的连带改动按共享契约的扩散承接规则处理并登记；未登记的计划外改动仍按越界处理。
 8. **冻结可追溯。** 开工后放宽期望必须记录理由并重新确认。
 9. **原型隔离。** 仅 `extract-prototype` / `extract-block-spec` 读取原型源码；其他角色只读 `<design-spec-dir>` 产物。争议时只回查一个区块并登记。
@@ -77,9 +77,11 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 | `<review-pack-dir>` | `<skill-dir>/../sdd-review-frontend/` |
 | `<base-ref>` | 可选 Story 起点 git 引用 |
 | `<browser-driver>` | 被选浏览器能力及已验证启动方式 |
-| `<review-evidence>` | `<story-dir>/review-evidence.json` |
+| `<evidence-dir>` | `<story-dir>/evidence/`；本 skill 产出的全部机器工件（JSON 与归档截图） |
+| `<work-dir>` | `<story-dir>/.work/`；只活在阶段内的过程件，收口后整目录删 |
+| `<review-evidence>` | `<evidence-dir>/review-evidence.json` |
 
-唯一命中时静默继续；不可推导或多候选的变量按 P7 一次问完。`search_paths` 横跨多个独立 app 时不选 monorepo 根兜底，回流 `sdd-task` 拆分 app 范围。正式 Story 工件写 `<story-dir>`，Requirement 级设计事实写 `<design-spec-dir>`，app baseline 写 `<repo-baseline-dir>`。
+唯一命中时静默继续；不可推导或多候选的变量按 P7 一次问完。`search_paths` 横跨多个独立 app 时不选 monorepo 根兜底，回流 `sdd-task` 拆分 app 范围。给人读的 Story Markdown 写 `<story-dir>` 根，机器工件写 `<evidence-dir>`，过程件写 `<work-dir>`；Requirement 级设计事实写 `<design-spec-dir>`，app baseline 写 `<repo-baseline-dir>`。
 
 ## 浏览器驱动
 
@@ -101,19 +103,51 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 
 ## 工件管理
 
+`<story-dir>` 只分两层：根下全是给人读的 Markdown，`evidence/` 里全是机器件，`.work/` 里全是过程件。分法的判据是「验收的人要不要主动打开它」，不是「哪条流水线产的」。
+
+```text
+<story-dir>/
+├── tasks.md · story-delta-frontend-design.md      上游：做什么、怎么设计
+├── dev-baseline.md                                怎样算做完（Phase A 冻结的标准）
+├── alpha-tests.md                                 做到哪了（证据账本）
+├── acceptance.md                                  能不能验收（收口入口）
+├── evidence/                                      机器件；acceptance.md 会指路进来
+│   ├── restore-contract.json · restore-adapter.json
+│   ├── restore-report-red.json · restore-report-green.json · restore-report-review.json
+│   ├── portfolio.json · review-evidence.json · review-results.json
+│   └── artifacts/                                 被结论引用的截图与结构化结果
+└── .work/                                         过程件；Phase D 退出后整目录删
+```
+
 | 工件 | 所有权与生命周期 |
 | --- | --- |
 | 九份 app baseline 文件 | `sdd-init-frontend` 所有；本 skill 按 ID 选读，只可就地修清单单条 |
-| `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
-| `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新 |
-| `restore-contract.json` / `restore-adapter.json` / `restore-report-*.json` | A2 冻结后编译；Phase B 对同一契约生成报告 |
-| `portfolio-initial.json` / `portfolio-final.json` | `compile_portfolio.py` 在 Phase 0 / Phase C 的输出；后者以前者为 `--previous` 守只升不降。`validation_portfolio` 抄进 `review-evidence.json`，`--markdown` 抄进 `dev-baseline.md` |
-| `review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |
-| `review-results.json` / `acceptance.md` | 适用角色聚合与给人的收口摘要 |
 | `tasks.md` | 只勾 checkbox，不改验收内容 |
 | `alpha-tests.md` | 回填证据、声明状态与 Deferred |
+| `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
+| `acceptance.md` | 给人的收口摘要，由 `aggregate` 整文件渲染，不手写 |
+| `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新。`visual-baseline/` 下原型指纹已不匹配当前 `design-facts.json` 的缓存目录，在下一次 A1 抽取时删除 |
+| `evidence/restore-contract.json` / `restore-adapter.json` | A2 冻结后编译；Phase B / C 跑的永远是这一份 |
+| `evidence/restore-report-{red,green,review}.json` | Phase B 的 RED / GREEN 与 Phase C 的重跑。三份都被 `alpha-tests.md` 的还原证据记录按路径与指纹引用，是证据不是过程件，不删 |
+| `evidence/portfolio.json` | `compile_portfolio.py` 的唯一输出：Phase 0 写 initial，Phase C 以同一文件为 `--previous` 原地覆盖成 final，被比较过的 Phase 0 快照留在 `previous` 字段。`validation_portfolio` 抄进 `review-evidence.json`，`--markdown` 抄进 `dev-baseline.md` |
+| `evidence/review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |
+| `evidence/review-results.json` | 适用角色聚合与结构化结论；`acceptance.md` 的机器侧 |
+| `evidence/artifacts/` | 被 scenario `artifacts[]` 引用的截图与结构化结果；未被任何结论引用的不归档 |
 
 模板只在创建对应工件时读取 [templates/story-artifacts.md](./references/templates/story-artifacts.md)。还原契约、QA 基线和证据字段分别以其 reference 或脚本 schema 为唯一事实源，不在本文件展开。
+
+### 过程件
+
+过程件只在一个阶段内活着，写 `<work-dir>`。它们全部能从正式工件与代码重算，丢了不构成证据缺口。**Phase D 退出门禁全部通过后整目录删除**；中断续跑期间保留，续跑从上次阶段接着用。
+
+| 文件 | 创建 | 消费点 | 之后 |
+| --- | --- | --- | --- |
+| `restore-contract-rules.json` | A2 `recon-spec` 回传的规则草稿落盘 | `verify_restore_contract.py contract` | 契约已含全部规则 |
+| `static-results.json` / `render-results*.json` / `visual-results.json` | 每次还原轮 | 同轮 `report` | 报告已含逐规则结论；下一轮直接覆盖 |
+| `diff-facts.json` | Phase C 第 1 步 | `compile_portfolio.py --phase final`、`aggregate --diff-facts` | 解除 DEFERRED 时重算 |
+| `code-manifest.json` / `runtime.json` | 每次采集前 | `manage_review_pipeline.py scenarios` | 已并入 `review-evidence.json` |
+| `review-<角色>.json`（RoleResult） / `norm-candidates.json` / `decisions.json` | 子代理回传、用户答复后落盘 | `aggregate` | 已并入 `review-results.json` 与 `acceptance.md` |
+| 子代理补证截图 | 检视期间 | `merge-additions` 校验后归档到 `evidence/artifacts/` | 未被引用的随目录删 |
 
 ## 退出门禁
 

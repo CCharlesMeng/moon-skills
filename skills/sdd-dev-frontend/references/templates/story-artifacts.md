@@ -18,7 +18,7 @@
 | 执行档位 | lite / standard；附三项判据取值（还原 Task、命中的触发器、文件数）。Phase C 升档时同行追加原因 |
 | app baseline | <目录 + 本次读过的关注点文件；app baseline 没有 readiness 字段> |
 | 设计事实 / 区块规格 | <路径；基线源非原型时写“无（基线源为 …）”> |
-| 还原契约 | <story-dir>/restore-contract.json；无还原声明时写“无” |
+| 还原契约 | <evidence-dir>/restore-contract.json；无还原声明时写“无” |
 
 ## 给人的摘要
 
@@ -85,9 +85,9 @@
 | 受影响声明 | <AC / AT / R 行> |
 | 基线与契约 | <baseline fingerprint / contract sha256> |
 | 环境 | <route / fixture / viewport / runtime> |
-| RED | <report path + fingerprint + 三色摘要> |
-| GREEN | <report path + fingerprint + 三色摘要> |
-| 视觉补证 | <无；或 cache/screenshot path + fingerprint> |
+| RED | <evidence/restore-report-red.json + fingerprint + 三色摘要> |
+| GREEN | <evidence/restore-report-green.json + fingerprint + 三色摘要> |
+| 视觉补证 | <无；或 design-spec 视觉缓存 / evidence/artifacts 路径 + fingerprint> |
 | 相关依赖 | <depends_on + captured hashes> |
 | 状态 | PROVEN / UNVERIFIED / DEFERRED |
 | 说明 | <未证原因或解除条件；无则“无”> |
@@ -134,7 +134,7 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 
 ## 三、`acceptance.md`
 
-**这份文件的主体由 `manage_review_pipeline.py aggregate` 渲染，不要手写。** 它是**人验收时的入口**，所以顺序固定为「能不能验收 → 有什么必须你处理 → 有什么你该知道但不用动 → 往下追的路径」；机器对账细节（代码指纹、证据纪元、逐条覆盖明细）一律不进这份文件，它们在 `review-results.json` 里。
+**这份文件的主体由 `manage_review_pipeline.py aggregate` 渲染，不要手写。** 它是**人验收时的入口**，所以顺序固定为「能不能验收 → 有什么必须你处理 → 有什么你该知道但不用动 → 往下追的路径」；机器对账细节（代码指纹、证据纪元、逐条覆盖明细）一律不进这份文件，它们在 `evidence/review-results.json` 里。
 
 聚合器渲染的节：
 
@@ -157,7 +157,7 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 <各节有内容才出现>
 
 ## 要往下追的话
-<指向 dev-baseline.md、alpha-tests.md、review-results.json 的路径>
+<指向 dev-baseline.md、alpha-tests.md、evidence/review-results.json 的路径>
 ```
 
 **这个文件没有手写节。** 聚合器整文件覆盖它，所以往里手写的东西会被下一次 aggregate（Phase C 生成、Phase D 更新各一次）冲掉——一个文件只能有一个写入者。

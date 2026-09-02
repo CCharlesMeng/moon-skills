@@ -861,7 +861,7 @@
         "硬门禁 15"
       ],
       "prompt": "Phase 0：tasks.md 的 risk_triggers=interaction,write，用例追溯有两条 S1 test_case 与一条 S3 test_case，计划 4 个文件。你读了相关代码，发现新提交流程有取消与重试逻辑。Phase C：classify_diff 报 shared-boundary 下限（src/lib/request.ts）与 C4 反驳；你认为 request.ts 只是加了一个类型导出。请给出两次编译的调用与处置。",
-      "expected_output": "Phase 0 以 --trigger async-state 跑 compile_portfolio --phase initial --plan-files 4，档位 standard（write），模块含 story/self-test/regression/review-quality；不手写模块表。Phase C 跑 --phase final --diff-facts --previous portfolio-initial.json，shared-boundary 若要收窄必须 --narrow shared-boundary=<理由> 且进 acceptance.md；C4 被反驳，review-convention 的 C4 一定在分配里，不能因「只是类型」省掉。",
+      "expected_output": "Phase 0 以 --trigger async-state 跑 compile_portfolio --phase initial --plan-files 4，档位 standard（write），模块含 story/self-test/regression/review-quality；不手写模块表。Phase C 跑 --phase final --diff-facts --previous evidence/portfolio.json --out evidence/portfolio.json（同一文件原地覆盖，Phase 0 快照留在 previous 字段），shared-boundary 若要收窄必须 --narrow shared-boundary=<理由> 且进 acceptance.md；C4 被反驳，review-convention 的 C4 一定在分配里，不能因「只是类型」省掉。",
       "expectations": [
         "agent 只传判断型触发器（async-state），不自行决定模块、角色或维度",
         "story 因 write 命中直接选中，不以「组件测试已覆盖」为由不选",

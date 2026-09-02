@@ -14,7 +14,7 @@
 - 本 Story 改动文件的仓库相对路径与内容 SHA-256（含未跟踪文件），以及所有待提升 / 当前有效 scenario 的 `depends_on` 文件哈希；
 - 由上述字段确定性计算的 `code_fingerprint`。
 
-只记 `HEAD` 不合格：工作区与未跟踪文件可能还没提交；只列 diff 文件也不足以精确验证未改但被 scenario 依赖的公共文件。主 agent 把包写入 `<story-dir>/review-evidence.json`，机器细节只在这里保存，不复制进 `acceptance.md`。
+只记 `HEAD` 不合格：工作区与未跟踪文件可能还没提交；只列 diff 文件也不足以精确验证未改但被 scenario 依赖的公共文件。主 agent 把包写入 `<evidence-dir>/review-evidence.json`，机器细节只在这里保存，不复制进 `acceptance.md`。
 
 ## 二、最小结构
 
@@ -76,7 +76,7 @@
         }
       ],
       "profile": "mock | contract | live",
-      "artifacts": ["<截图或结构化结果路径>"],
+      "artifacts": ["<evidence-dir>/artifacts/ 下的截图或结构化结果路径"],
       "depends_on": ["src/view.tsx", "src/view.module.css"],
       "captured_dependency_hashes": {
         "src/view.tsx": "<sha256>",
@@ -130,6 +130,7 @@ Phase B 的行为结论（RED/GREEN、逐项失败集合）仍只在 `alpha-test
 2. 会重载页面或清空内存态的质量命令先跑，浏览器场景后采集；不得在两者之间反复生成同一个临时页面。
 3. 主 agent 是证据包所有者；被触发的布局检视与功能自测试是独立判定者。收到包后先核新鲜度与覆盖，**有效场景不得重跑**。
 4. 检视角色只有在下列情况才补跑：缺目标行需要的场景；原始事实不足以下结论；证据已按第五节失效。角色先收齐自己的全部缺口，按页面 / fixture / runtime / reset 边界组成批次后再启动浏览器；不得发现一行就调用一次。补跑后把完整原始场景记录放进结构化结果的 `evidence_added`，由聚合脚本校验、分配 `BE-n` 并入同一证据包。
+5. `artifacts[]` 只指向 `<evidence-dir>/artifacts/`。采集时先落 `<work-dir>`，被结论引用的才由主 agent 搬进去并改路径；没被任何 finding 或声明引用的截图不是证据，随 `<work-dir>` 一起删。
 
 检视独立性的判据是「各自回到冻结基线与本角色规则作判断」，不是「各自重新点击一次页面」。
 

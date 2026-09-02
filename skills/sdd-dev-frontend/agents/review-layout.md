@@ -20,7 +20,7 @@
 
 ## 二、只读声明
 
-只读项目与正式工件。可把补证截图写临时目录，并在 `evidence_added` 回传原始 scenario；主 agent 负责归档与合并。
+只读项目与正式工件。可把补证截图写 `<work-dir>`，并在 `evidence_added` 回传原始 scenario；主 agent 负责归档与合并。
 
 ## 三、检视
 

@@ -11,11 +11,13 @@
 ```bash
 python3 "<skill-dir>/scripts/verify_restore_contract.py" static \
   --baseline <story-dir>/dev-baseline.md \
-  --contract <story-dir>/restore-contract.json \
-  --adapter <story-dir>/restore-adapter.json \
+  --contract <evidence-dir>/restore-contract.json \
+  --adapter <evidence-dir>/restore-adapter.json \
   --repo-root <repo-root> \
-  --out <临时目录>/static-results.json
+  --out <work-dir>/static-results.json
 ```
+
+三层采集结果都是过程件，写 `<work-dir>`；同轮 `report` 把它们合并进正式报告后就没人再读，下一轮直接覆盖。
 
 ### 2. 结构化渲染
 
@@ -29,7 +31,7 @@ window.__SDD_RESTORE_INPUT__ = {
 };
 ```
 
-然后注入 `<skill-dir>/scripts/collect_restore_facts.js`，把返回 JSON 保存为 `render-results.json`。页面无法启动时如实写：
+然后注入 `<skill-dir>/scripts/collect_restore_facts.js`，把返回 JSON 保存为 `<work-dir>/render-results.json`。页面无法启动时如实写：
 
 ```json
 {
@@ -50,24 +52,24 @@ window.__SDD_RESTORE_INPUT__ = {
 python3 "<skill-dir>/scripts/verify_restore_contract.py" report \
   --phase red \
   --baseline <story-dir>/dev-baseline.md \
-  --contract <story-dir>/restore-contract.json \
-  --adapter <story-dir>/restore-adapter.json \
-  --static-results <临时目录>/static-results.json \
-  --render-results <临时目录>/render-results.json \
-  --visual-results <临时目录>/visual-results.json \
-  --out <story-dir>/restore-report-red.json
+  --contract <evidence-dir>/restore-contract.json \
+  --adapter <evidence-dir>/restore-adapter.json \
+  --static-results <work-dir>/static-results.json \
+  --render-results <work-dir>/render-results.json \
+  --visual-results <work-dir>/visual-results.json \
+  --out <evidence-dir>/restore-report-red.json
 ```
 
 跨页时把 `--render-results` 按页面重复传（顺序不影响结论）：
 
 ```bash
-  --render-results <临时目录>/render-results-<页面A>.json \
-  --render-results <临时目录>/render-results-<页面B>.json \
+  --render-results <work-dir>/render-results-<页面A>.json \
+  --render-results <work-dir>/render-results-<页面B>.json \
 ```
 
 GREEN 阶段只改 `--phase green` 与输出路径，契约、adapter 和采集方式保持相同——**包括注入了哪几个页面**。GREEN 相少注入一页会让那一页的规则从「已绿」变成 RED。
 
-Phase C 组合含 `review-restore` 时，按最终 diff 用 `--phase green` 重跑**全部已冻结区块**，报告写 `<story-dir>/restore-report-review.json`。
+Phase C 组合含 `review-restore` 时，按最终 diff 用 `--phase green` 重跑**全部已冻结区块**，报告写 `<evidence-dir>/restore-report-review.json`。
 
 ### 4. 退出码
 
@@ -109,7 +111,7 @@ Phase C 组合含 `review-restore` 时，按最终 diff 用 `--phase green` 重�
 
 **visual YELLOW 默认落 `UNVERIFIED` 并写补验方式，不默认截图。** 要把该声明收成 `PROVEN` 才走本节，且同一页面的多条 visual 只截一张整页图共用——逐规则截图付的是每处两张（原型 + 实现）的成本，换来的仍然是同一个人看同一个页面。
 
-需要截图时调 `python3 "<skill-dir>/scripts/extract_design_spec.py" visual-cache --report <restore-report-red.json>`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
+需要截图时调 `python3 "<skill-dir>/scripts/extract_design_spec.py" visual-cache --report <evidence-dir>/restore-report-red.json`。脚本自行只数当前区块锚点且 `required_layers` 含 visual 的 YELLOW，机器可检 YELLOW 不会触发截图。缓存键固定包含：
 
 1. 原型指纹；
 2. 区块锚点；
@@ -118,7 +120,7 @@ Phase C 组合含 `review-restore` 时，按最终 diff 用 `--phase green` 重�
 5. 浏览器引擎与版本；
 6. 字体指纹。
 
-命中只读复用；未命中先返回 `needs-capture`，截图后带 `--png` 创建 `<design-spec-dir>/visual-baseline/<缓存指纹>/prototype.png` 与 `manifest.json`。不覆盖旧目录。报告中当前锚点没有 visual YELLOW 时返回 `not-needed`，不创建目录。
+命中只读复用；未命中先返回 `needs-capture`，截图后带 `--png` 创建 `<design-spec-dir>/visual-baseline/<缓存指纹>/prototype.png` 与 `manifest.json`。不覆盖旧目录——同一原型在不同浏览器版本或字体指纹下的缓存并存，各自都还可能被命中。只有 `manifest.json` 里的原型指纹已经不等于当前 `design-facts.json` 的指纹时，这个缓存才永远命不中，在下一次 A1 抽取时删掉。报告中当前锚点没有 visual YELLOW 时返回 `not-needed`，不创建目录。
 
 ## 五、历史兼容
 

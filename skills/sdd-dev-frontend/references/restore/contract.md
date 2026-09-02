@@ -9,10 +9,12 @@
 | 工件 | 生命周期 | 作用 |
 | --- | --- | --- |
 | `<design-spec-dir>/design-facts.json` | Requirement 级 | 确定性原型事实：归一化 DOM/CSS、资源内容/缺失状态、区块、结构、静态文案、token、布局声明 |
-| `<story-dir>/restore-contract.json` | Story 级 | 冻结 R1–R6 与 `dev-baseline.md` SHA-256 |
-| `<story-dir>/restore-adapter.json` | Story 级运行适配 | 实现 locator、源码扫描范围、浏览器采集模式；不含期望值 |
-| `<story-dir>/restore-report-red.json` | Story 级证据 | Step ① 运行结果 |
-| `<story-dir>/restore-report-green.json` | Story 级证据 | Step ④ / ⑤ 运行结果 |
+| `<work-dir>/restore-contract-rules.json` | 过程件 | `recon-spec` 回传的规则草稿；编译进契约后随 `<work-dir>` 删 |
+| `<evidence-dir>/restore-contract.json` | Story 级 | 冻结 R1–R6 与 `dev-baseline.md` SHA-256 |
+| `<evidence-dir>/restore-adapter.json` | Story 级运行适配 | 实现 locator、源码扫描范围、浏览器采集模式；不含期望值 |
+| `<evidence-dir>/restore-report-red.json` | Story 级证据 | Step ① 运行结果 |
+| `<evidence-dir>/restore-report-green.json` | Story 级证据 | Step ④ / ⑤ 运行结果 |
+| `<evidence-dir>/restore-report-review.json` | Story 级证据 | Phase C 按最终 diff 重跑全部冻结区块的结果 |
 
 ## 二、规则草稿
 
@@ -207,15 +209,17 @@
 ```bash
 python3 "<skill-dir>/scripts/verify_restore_contract.py" contract \
   --baseline <story-dir>/dev-baseline.md \
-  --baseline-ref dev-baseline.md \
-  --rules <临时规则草稿.json> \
-  --out <story-dir>/restore-contract.json
+  --baseline-ref ../dev-baseline.md \
+  --rules <work-dir>/restore-contract-rules.json \
+  --out <evidence-dir>/restore-contract.json
 
 python3 "<skill-dir>/scripts/verify_restore_contract.py" validate \
   --baseline <story-dir>/dev-baseline.md \
-  --contract <story-dir>/restore-contract.json \
-  --adapter <story-dir>/restore-adapter.json
+  --contract <evidence-dir>/restore-contract.json \
+  --adapter <evidence-dir>/restore-adapter.json
 ```
+
+`--baseline-ref` 写的是契约文件到基线的相对路径，契约在 `evidence/` 里、基线在上一层，所以是 `../dev-baseline.md`；校验时真正读的仍是 `--baseline` 传的路径。
 
 `dev-baseline.md` 任一字节变化都会使校验硬失败。确需修改时，先走基线变更记录与重新确认，再带 `--after-reconfirmation` 重新编译——没有这个开关时，`contract` 拒绝覆盖一份记录了不同基线哈希的既有契约（基线正文里的「已冻结 ✅」不会因为内容被改就消失，拦不住就等于冻结名存实亡）。基线没变时重复编译是幂等的，不需要开关。
 

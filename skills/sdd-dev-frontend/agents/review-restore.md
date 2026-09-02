@@ -13,8 +13,8 @@
 | 前置 | 来源 |
 | --- | --- |
 | 已冻结 R 声明与 `EX-n` 豁免 | `<story-dir>/dev-baseline.md` |
-| 按最终 diff 重跑的三色报告 | `<story-dir>/restore-report-review.json` |
-| 冻结契约与 adapter | `<story-dir>/restore-contract.json`、`<story-dir>/restore-adapter.json` |
+| 按最终 diff 重跑的三色报告 | `<evidence-dir>/restore-report-review.json` |
+| 冻结契约与 adapter | `<evidence-dir>/restore-contract.json`、`<evidence-dir>/restore-adapter.json` |
 | 当前证据包、代码指纹和 R 维度分配 | `<review-evidence>` |
 | 需补视觉证据时可用驱动 | `<browser-driver>` |
 | 判据 | `<review-pack-dir>/frontend-code-checklists/restore.md`（YAML 头、格子边界、禁止与检查项） |
@@ -23,7 +23,7 @@
 
 ## 二、只读声明
 
-只读项目与正式工件。不重跑比对器、不改契约、不补豁免——可用的豁免只有 `dev-baseline.md` 里已冻结的 `EX-n`。可把补证截图写临时目录，并在 `evidence_added` 回传原始 scenario；主 agent 负责归档与合并。
+只读项目与正式工件。不重跑比对器、不改契约、不补豁免——可用的豁免只有 `dev-baseline.md` 里已冻结的 `EX-n`。可把补证截图写 `<work-dir>`，并在 `evidence_added` 回传原始 scenario；主 agent 负责归档与合并。
 
 ## 三、检视
 

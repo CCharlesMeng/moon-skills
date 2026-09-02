@@ -28,7 +28,7 @@
 
 **还原格分两半。** 比对由本 Skill 的 `verify_restore_contract.py` 做（见 [restore/run.md](../restore/run.md)），它产出的是**颜色**；`review-restore` 只把颜色翻成**级别**与处置——同一个 `red`，关键区块缺失与数量越界不是同一件事。
 
-主 agent 在派发前按最终 diff 用 `--phase green` 重跑全部已冻结区块的契约，报告写到 `<story-dir>/restore-report-review.json`，子代理只读它。Phase B 的 `render` 只跑当前区块，所以后续 Task 改了公共样式时，先前区块的 GREEN 只在这里才会被推翻。
+主 agent 在派发前按最终 diff 用 `--phase green` 重跑全部已冻结区块的契约，报告写到 `<evidence-dir>/restore-report-review.json`，子代理只读它。Phase B 的 `render` 只跑当前区块，所以后续 Task 改了公共样式时，先前区块的 GREEN 只在这里才会被推翻。
 
 ## 三、派发时给子代理的读取清单
 

@@ -22,17 +22,19 @@ RED/GREEN、命令、浏览器矩阵、截图和独立检视都是证据策略�
 ```bash
 # Phase 0：还没有 diff，文件数取计划清单
 python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase initial \
-  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<story-dir>/portfolio-initial.json" --markdown
+  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<evidence-dir>/portfolio.json" --markdown
 
-# Phase C：按最终 diff 复编译，只允许在 Phase 0 的基础上增加
-python3 "<skill-dir>/scripts/classify_diff.py" --repo-root "<repo-root>" --base-ref "<base-ref>" --out "<临时目录>/diff-facts.json"
+# Phase C：按最终 diff 复编译，只允许在 Phase 0 的基础上增加；同一文件原地覆盖
+python3 "<skill-dir>/scripts/classify_diff.py" --repo-root "<repo-root>" --base-ref "<base-ref>" --out "<work-dir>/diff-facts.json"
 python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase final \
-  --diff-facts "<临时目录>/diff-facts.json" --qa-baseline "<story-dir>/dev-baseline.md" \
+  --diff-facts "<work-dir>/diff-facts.json" --qa-baseline "<story-dir>/dev-baseline.md" \
   [--trigger ...] [--narrow <触发器>=<理由>] [--dimension <角色>=<维度,...>] [--reg REG-n] \
-  --previous "<story-dir>/portfolio-initial.json" --out "<story-dir>/portfolio-final.json" --markdown
+  --previous "<evidence-dir>/portfolio.json" --out "<evidence-dir>/portfolio.json" --markdown
 ```
 
 脚本读的全是已经存在的事实：`tasks.md` 的 TaskPacket 与「用例追溯」、`classify_diff.py` 的下限与反驳、`dev-baseline.md` 里已冻结的 R/F 行号。它输出执行档位、触发器（带来源）、模块、角色、维度和逐声明挂载；`--markdown` 直接给 `dev-baseline.md / 验证组合` 那张表，JSON 原样进 `review-evidence.json / validation_portfolio`。
+
+`portfolio.json` 只有一份：Phase C 以它为 `--previous` 又写回它，脚本先读后写，被比较过的 Phase 0 档位、模块、角色与逐声明档留在输出的 `previous` 字段里——「当时初始组合是什么」查这一个字段就够，不另存一份 initial。
 
 agent 只提供脚本判不了的三样：`--trigger`（第三节的判断型触发器）、`--dimension`（读代码后认为还该看的维度）、`--narrow`（要收窄某条 diff 下限触发器的署名理由）。三样都只能**加**或**署名减下限**，没有任何一条能让脚本少选一个模块。退出码 3 表示违反只升不降。
 

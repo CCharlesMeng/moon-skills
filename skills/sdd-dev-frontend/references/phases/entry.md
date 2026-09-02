@@ -58,8 +58,10 @@
 
 ```bash
 python3 "<skill-dir>/scripts/compile_portfolio.py" --tasks "<story-dir>/tasks.md" --phase initial \
-  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<story-dir>/portfolio-initial.json" --markdown
+  --plan-files <计划文件数> [--trigger <判断型触发器>]... --out "<evidence-dir>/portfolio.json" --markdown
 ```
+
+`<evidence-dir>` 与 `<work-dir>` 不存在就在这里建；Story 目录的分层见 [SKILL.md 工件管理](../../SKILL.md#工件管理)。
 
 进脚本前只做一件判断：按 [validation-policy.md 第三节](../validation-policy.md#三风险触发器)看本 Story 是否命中 `async-state` / `new-pattern` / `spec-gap` / `unknown-deps` / `performance`，命中的以 `--trigger` 传入。其余触发器、档位、模块、角色与维度不手判。`--markdown` 的输出直接贴进 `dev-baseline.md`。每条声明初始为 `UNVERIFIED`。
 

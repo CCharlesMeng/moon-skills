@@ -12,7 +12,7 @@
 | 设计事实 | 无（基线源为 `文字规格`） |
 | 区块规格 | 无（基线源为 `文字规格`） |
 | 原型切分表版本 | 无（基线源为 `文字规格`） |
-| 还原契约 | `{{STORY_DIR}}/restore-contract.json` |
+| 还原契约 | `{{STORY_DIR}}/evidence/restore-contract.json` |
 
 ## 执行起点（环境）
 

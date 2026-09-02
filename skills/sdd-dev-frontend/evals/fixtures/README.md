@@ -40,7 +40,8 @@ python3 setup.py --case convention-01
 ├── story/
 │   ├── tasks.md
 │   ├── dev-baseline.md            工程依据 + 已冻结的 QA 基线
-│   └── review-evidence.json        当前 diff 指纹；静态 fixture 的场景与质量命令为空
+│   └── evidence/
+│       └── review-evidence.json   当前 diff 指纹；静态 fixture 的场景与质量命令为空
 └── design-spec/                   仅 --with-design-spec
     ├── standard/
     └── risk-brief/
@@ -54,7 +55,7 @@ python3 setup.py --case convention-01
 
 `repo/` 没有 `node_modules`，依赖没装、页面没起、质量命令没跑、浏览器能力没探测。这不影响 baseline——baseline 只装跨需求契约，机器实证本来就不落在那里。
 
-`story/` 下也没有 `restore-contract.json`——`dev-baseline.md` 的表头引用了它，但现场不编译还原契约（那需要一份规则草稿，而规则草稿本身是 `recon-spec` 的产物）。检视类模块的判据不读它，所以不影响用例；子代理把它记进「已知缺口」是正确行为。
+`story/evidence/` 下也没有 `restore-contract.json`——`dev-baseline.md` 的表头引用了它，但现场不编译还原契约（那需要一份规则草稿，而规则草稿本身是 `recon-spec` 的产物）。检视类模块的判据不读它，所以不影响用例；子代理把它记进「已知缺口」是正确行为。
 
 **当前现场只支持判据来自静态文件的模块**：`review-convention`、`review-quality`、`recon-codebase`。需要真跑页面的 `review-layout`、`self-test` 用不了它，那要另建一个装得起依赖的现场。
 

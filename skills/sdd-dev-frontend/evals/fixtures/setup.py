@@ -140,7 +140,9 @@ def build_review_evidence(repo: Path, story_dir: Path, base_ref: str, changed: l
     code["code_fingerprint"] = hashlib.sha256(
         json.dumps(code, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
-    path = story_dir / "review-evidence.json"
+    evidence_dir = story_dir / "evidence"
+    evidence_dir.mkdir(exist_ok=True)
+    path = evidence_dir / "review-evidence.json"
     path.write_text(json.dumps({
         "schema_version": 1,
         "evidence_epoch": "fixture-review-1",
@@ -213,6 +215,8 @@ def main() -> int:
     print(f"| `<repo-root>` | `{repo}` |")
     print(f"| `<repo-baseline-dir>` | `{baseline_dir}` |")
     print(f"| `<story-dir>` | `{story_dir}` |")
+    print(f"| `<evidence-dir>` | `{review_evidence.parent}` |")
+    print(f"| `<work-dir>` | `{story_dir / '.work'}` |")
     print(f"| `<skill-dir>` | `{SKILL_DIR}` |")
     print(f"| `<review-pack-dir>` | `{REVIEW_PACK_DIR}` |")
     print(f"| `<base-ref>` | `{base_ref}` |")

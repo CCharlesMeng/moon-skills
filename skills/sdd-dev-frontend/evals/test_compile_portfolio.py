@@ -273,6 +273,25 @@ class CliTests(unittest.TestCase):
             self.assertEqual(MODULE.main(["--tasks", str(root / "tasks.md"), "--phase", "initial", "--plan-files", "2", "--previous", str(root / "pc.json"), "--out", str(root / "bad.json")]), 3)
             self.assertEqual(MODULE.main(["--tasks", str(root / "tasks.md"), "--phase", "final"]), 2)
 
+    def test_cli_overwrites_previous_in_place_and_keeps_snapshot(self):
+        """Phase 0 and Phase C share one file: --previous and --out are the same path."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "tasks.md").write_text(tasks_md(), encoding="utf-8")
+            (root / "diff.json").write_text(json.dumps(diff_facts(["src/a.ts", "src/lib/x.ts"], triggers={"shared-boundary": ["src/lib/x.ts"]})), encoding="utf-8")
+            out = root / "portfolio.json"
+            self.assertEqual(MODULE.main(["--tasks", str(root / "tasks.md"), "--phase", "initial", "--plan-files", "2", "--out", str(out)]), 0)
+            initial = json.loads(out.read_text())
+            self.assertIsNone(initial["previous"])
+            self.assertEqual(MODULE.main(["--tasks", str(root / "tasks.md"), "--phase", "final", "--diff-facts", str(root / "diff.json"), "--previous", str(out), "--out", str(out)]), 0)
+            final = json.loads(out.read_text())
+            self.assertEqual(final["phase"], "final")
+            self.assertEqual(final["previous"]["phase"], "initial")
+            self.assertEqual(final["previous"]["tier"], "lite")
+            self.assertEqual(final["previous"]["modules"], initial["modules"])
+            self.assertEqual(final["previous"]["required_profiles"], {c["id"]: c["required_profile"] for c in initial["claims"]})
+            self.assertNotIn("previous", final["previous"])
+
     def test_markdown_render_names_tier_and_table(self):
         p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="write"), phase="initial", plan_file_count=1)
         text = MODULE.render_markdown(p)

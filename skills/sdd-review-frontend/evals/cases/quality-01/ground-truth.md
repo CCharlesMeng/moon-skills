@@ -43,7 +43,7 @@
 | --- | --- | --- |
 | OPT-1 | `useHoldings.ts` 整份文件缺少取消（`AbortController`） | 与 GT-2 同源——缺取消是竞态的根因之一。单独作为 Q5「清理」子项报出、不单独计分；判成阻断级理由若只写"没清理"而没给出 GT-2 的具体触发序列，不满足 Q5 阻断级"确证"要求，应判建议级 |
 | OPT-2 | `HoldingsTable.tsx` L5 `REGIONS` 数组每次模块加载只创建一次（模块级常量），不在渲染路径内 | 提及"这不是性能问题"是正确的范围说明，不计误报也不计命中 |
-| OPT-3 | `<story-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
+| OPT-3 | `<evidence-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
 | OPT-4 | Open Question 里问「500 条持仓要不要虚拟化」 | 呼应 GT-6，属于加分的范围说明，不是必须项 |
 
 ## 四、必须出现的行为（格式合规，6 项）

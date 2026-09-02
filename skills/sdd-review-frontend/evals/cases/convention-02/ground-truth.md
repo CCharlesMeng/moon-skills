@@ -41,7 +41,7 @@
 | OPT-1 | `orderExportFormat.ts` L5 默认导出（不引用 `PATTERN-COMP-1`，只客观描述并存现状） | 按规则 4：`src/lib/` 现有两份样例（`request.ts`、`format.ts`）都用具名导出，"现有代码已成规模"这条件勉强够格，可记建议级并引用这两份路径作证据，不升级；不记也不扣分。**唯一的红线是不能把 `PATTERN-COMP-1` 点名为基准**（见 NG-2） |
 | OPT-2 | `OrderExportPanel.tsx` L20–L21 两行几乎相同的 `Number.isFinite(...) ? String(...) : '--'` | 无 `PATTERN-*` 覆盖是否要抽成小工具，且这属于复杂度/重复维度（Q1/Q2），不在 `review-convention` 的 C1–C7 范围内；作为范围外说明提及不计误报，但不应作为 C 维度违规升级 |
 | OPT-3 | 在 Open Question 或已知缺口里提及「`failedCount` 那一行依赖 `EX-1`，若后端契约变化需重新确认」 | 主动点出这条依赖关系是加分行为，不是必须项；不提不扣分 |
-| OPT-4 | `<story-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
+| OPT-4 | `<evidence-dir>/restore-contract.json` 不存在 | `dev-baseline.md` 表头引用了它，但本现场不生成还原契约（见 [fixture README 第三节](../../../../sdd-dev-frontend/evals/fixtures/README.md)）。记进「已知缺口」是正确行为，不记也不扣分 |
 
 ## 四、必须出现的行为（格式合规，7 项）
 

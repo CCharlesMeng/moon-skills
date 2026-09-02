@@ -357,6 +357,24 @@ def attach_claim_modules(
     return out
 
 
+def previous_snapshot(previous: dict[str, Any]) -> dict[str, Any]:
+    """What the monotonicity check compared against, kept inside the new portfolio.
+
+    The Phase 0 file is overwritten in place by Phase C, so this is the only record
+    of what the initial portfolio was. Only the compared fields are kept; nesting an
+    older `previous` would grow without bound and nobody reads two generations back.
+    """
+    return {
+        "phase": previous.get("phase"),
+        "tier": previous["tier"]["value"],
+        "modules": list(previous["modules"]),
+        "review_roles": list(previous["review_roles"]),
+        "required_profiles": {
+            claim["id"]: claim.get("required_profile", "mock") for claim in previous.get("claims", [])
+        },
+    }
+
+
 def check_monotonic(previous: dict[str, Any], current: dict[str, Any]) -> list[str]:
     problems = []
     if previous["tier"]["value"] == "standard" and current["tier"]["value"] == "lite":
@@ -416,6 +434,7 @@ def compile_portfolio(
         "review_roles": roles,
         "review_dimensions": dimensions,
         "claims": attach_claim_modules(rules, claims, modules, triggers, raised_profiles or {}),
+        "previous": None,
     }
 
 
@@ -465,7 +484,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--reg", action="append", default=[], help="REG row id selected for self-test; repeatable")
     p.add_argument("--profile", action="append", default=[], help="AT=mock|contract|live to raise a claim's required execution profile")
     p.add_argument("--plan-files", type=int, help="file count from the plan when there is no diff yet")
-    p.add_argument("--previous", help="earlier portfolio JSON; enforces lite→standard and module growth only")
+    p.add_argument("--previous", help="earlier portfolio JSON; enforces lite→standard and module growth only, and is kept as `previous` in the output (may be the same path as --out)")
     p.add_argument("--out", help="write portfolio JSON here")
     p.add_argument("--markdown", action="store_true", help="print the dev-baseline.md 验证组合 table to stdout")
     return p
@@ -503,6 +522,7 @@ def main(argv: list[str] | None = None) -> int:
                 for problem in problems:
                     print(f"monotonicity: {problem}", file=sys.stderr)
                 return 3
+            portfolio["previous"] = previous_snapshot(previous)
     except (PortfolioError, OSError, ValueError, KeyError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
