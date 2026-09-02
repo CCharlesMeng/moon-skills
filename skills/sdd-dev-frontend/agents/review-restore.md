@@ -17,7 +17,7 @@
 | 冻结契约与 adapter | `<story-dir>/restore-contract.json`、`<story-dir>/restore-adapter.json` |
 | 当前证据包、代码指纹和 R 维度分配 | `<review-evidence>` |
 | 需补视觉证据时可用驱动 | `<browser-driver>` |
-| 判据 | `<review-pack-dir>/roles/restore-lens/ROLE.md` 与 `frontend-code-checklists/restore.md` |
+| 判据 | `<review-pack-dir>/frontend-code-checklists/restore.md`（YAML 头、格子边界、禁止与检查项） |
 
 报告的 `contract_sha256` 与冻结契约不一致时终止：那说明比对跑的不是被冻结的那份期望，报告里的颜色不可信。
 
@@ -28,7 +28,7 @@
 ## 三、检视
 
 1. 从 `validation_portfolio.review_dimensions.review-restore` 取得精确 R 集合，按 `legacy_id` 对到 restore checklist 的检查项。
-2. 逐条把报告里该规则的颜色翻成级别，判据与定级按 restore checklist 与 restore-lens ROLE。
+2. 逐条把报告里该规则的颜色翻成级别，判据与定级按 restore checklist。
 3. YELLOW 按 checklist 的四路分流处置，**不得改写成 GREEN**。
 4. 报告已判 `green` 的规则不出 Finding，记 `clear`；命中冻结豁免的同理，在 coverage 里留下豁免 ID。
 

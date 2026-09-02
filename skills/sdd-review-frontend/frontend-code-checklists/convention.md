@@ -15,6 +15,12 @@ inputs:
   - artifact: qa_baseline
     sections: ["冻结声明", "冻结豁免"]
     layer: qa_baseline
+cell: CODE-CONVENTION
+task_statement: 代码变更是否遵守工程依据选中的 PATTERN-* / REQ-DEC-*；无基准不判违规；命中冻结声明或 EX-n 时按正向/反向规则定级。
+max_findings: 16
+forbidden_reads:
+  - other_role_findings
+  - full_repo_code
 ---
 
 # 代码规范
@@ -22,6 +28,26 @@ inputs:
 只检 diff 实际触碰、且工程依据已选 `PATTERN-*` 的维度。找不到对应 PATTERN 时该条 `skipped` 或只记 Open Question，不升 P0/P1。
 
 硬编码、检查抑制、裸请求、调试残留**不按类型自动升级**。只有证伪冻结声明或产生确证错误结果时才升到 `max_severity`。
+
+## 格子边界
+
+本格占 `CODE-CONVENTION`。现象归属见 [SKILL.md 的现象归属表](../SKILL.md#现象归属)。
+
+**基准是工程依据选中的 `PATTERN-*` / `REQ-DEC-*`。** 结论必须能被验证对错：每条 Finding 引用范式 ID 与文件行号。升 P0/P1 还要引用被证伪的冻结 R/F 行。
+
+与仓内公共能力 `PATTERN-*` 语义等价的重复实现在本格报（`shared-capability-reuse`），不在 quality-lens 报。无 `PATTERN-*` 覆盖的局部重复、复杂度、状态、副作用属 quality-lens。
+
+栈内信号见 [stack-signals.md](../references/stack-signals.md)；只在 PATTERN 未覆盖且需要识别栈内表现时读对应小节。
+
+## 禁止
+
+- 不把通用最佳实践冒充仓库规范。
+- 不把 `PATTERN-*` 套到其「适用场景」未覆盖的文件（例如组件范式不约束 `src/lib/` 工具函数）。
+- 仓内无对应机制时该维度 `skipped`（例如无 i18n 机制），不建议「引入一套」。
+- 命中 `EX-n` 的偏差任何级别都不报，但必须留痕——沉默无法区分「核过豁免」与「没看见那一行」。
+- 仓内历史违规、本 Story 未改动也未复制进新文件 → 不报。
+- 同类违规分散在多个目录时必须穷尽，找到一处不收敛。
+- 无证据不得判 P0。
 
 ## `directory-file-naming`
 

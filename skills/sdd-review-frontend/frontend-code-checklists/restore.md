@@ -15,6 +15,12 @@ inputs:
   - artifact: qa_baseline
     sections: ["R1-R6", "冻结豁免"]
     layer: qa_baseline
+cell: CODE-RESTORE
+task_statement: 变更区块相对冻结 R1–R6 契约是否成立；RED 未命中豁免不得收口；YELLOW 不得改写成 GREEN。
+max_findings: 12
+forbidden_reads:
+  - other_role_findings
+  - decomposition_layer
 ---
 
 # 样式还原（冻结契约）
@@ -37,6 +43,25 @@ YELLOW 是「判不了」，不是「通过」。四条出路，**没有第五�
 | 按 RED 判 | 补证尝试过并失败，且失败本身证明声明不成立 |
 
 任何情况下不得把 YELLOW 改写成 GREEN、也不得降为 `clear`。
+
+## 格子边界
+
+本格占 `CODE-RESTORE`。现象归属见 [SKILL.md 的现象归属表](../SKILL.md#现象归属)。
+
+本格判**单区块 × 冻结契约**。机器报告是主证据；截图只补 `check_mode: visual` 的盲区。
+
+跨页一致性、真实数据溢出、目标视口在真实数据下的「不破」、栅格、运行时交互态、滚动/固定——这些属 layout-lens，即使看起来也像「还原失败」。
+
+不判 F/REG（属 test-lens），不判 `PATTERN-*`（属 convention-lens）。
+
+## 禁止
+
+- 不发明响应式断点或布局切换。
+- 不把原型示例值当成真实业务数据来判 R2。
+- 不把 YELLOW 改写成 GREEN；缺视觉补证保持 YELLOW，记 `known_gaps`。
+- 命中已冻结 `EX-n` 的偏差不出 Finding，但必须在 `skipped` 或 coverage 留痕。
+- 基线未生成的 R 分类直接 `skipped`，不造 N/A 空壳 Finding。
+- 无证据不得判 P0；`evidence` 必须指向契约 rule id 或报告条目。
 
 ## `block-hierarchy-complete`
 

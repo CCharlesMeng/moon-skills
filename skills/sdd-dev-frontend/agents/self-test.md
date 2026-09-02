@@ -14,7 +14,7 @@
 | 当前证据包、代码指纹和 F/REG 分配 | `<review-evidence>` |
 | 起点失败集合 | `<story-dir>/dev-baseline.md / 执行起点（环境）` |
 | 需补浏览器场景时可用驱动 | `<browser-driver>` |
-| 判据 | `<review-pack-dir>/roles/test-lens/ROLE.md` 与 `frontend-code-checklists/self-test.md` |
+| 判据 | `<review-pack-dir>/frontend-code-checklists/self-test.md`（YAML 头、格子边界、禁止与检查项） |
 
 证据包不新鲜时终止，不绕过它重跑全套场景或命令。
 
@@ -26,7 +26,7 @@
 
 1. 从 `validation_portfolio.review_dimensions.self-test` 取得精确 F/REG 集合；`dimension` 直接用这些基线行号。
 2. 先复用新鲜场景与已选命令，再把缺口按页面、fixture、runtime 与 reset 边界批量补采。
-3. 逐行执行被分配的声明，判据与定级按 self-test checklist 与 test-lens ROLE。
+3. 逐行执行被分配的声明，判据与定级按 self-test checklist。
 4. 你产生的浏览器场景证据只能覆盖 `S3_STORY` 范围的自动化声明或本角色的检视结论。**`manual_acceptance` 声明必须由真实人员执行**，不得用你的观察替代签字，也不得把它推为 `PROVEN`；审批记录可以作为它的 `evidence_refs`，但那是主 agent 回填的事。
 
 ## 四、输出格式

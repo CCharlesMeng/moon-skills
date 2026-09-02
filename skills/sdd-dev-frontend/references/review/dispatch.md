@@ -16,13 +16,13 @@
 
 ## 二、角色映射
 
-| 本 Skill 角色 | lens | ROLE + checklist | 维度 |
+| 本 Skill 角色 | lens | checklist | 维度 |
 | --- | --- | --- | --- |
-| `review-restore` | restore-lens | [ROLE](../../../sdd-review-frontend/roles/restore-lens/ROLE.md) · [restore.md](../../../sdd-review-frontend/frontend-code-checklists/restore.md) | R1–R6 |
-| `review-layout` | layout-lens | [ROLE](../../../sdd-review-frontend/roles/layout-lens/ROLE.md) · [layout.md](../../../sdd-review-frontend/frontend-code-checklists/layout.md) | L1–L6 |
-| `review-convention` | convention-lens | [ROLE](../../../sdd-review-frontend/roles/convention-lens/ROLE.md) · [convention.md](../../../sdd-review-frontend/frontend-code-checklists/convention.md) | C1–C7 |
-| `review-quality` | quality-lens | [ROLE](../../../sdd-review-frontend/roles/quality-lens/ROLE.md) · [quality.md](../../../sdd-review-frontend/frontend-code-checklists/quality.md) | Q1–Q8 |
-| `self-test` | test-lens | [ROLE](../../../sdd-review-frontend/roles/test-lens/ROLE.md) · [self-test.md](../../../sdd-review-frontend/frontend-code-checklists/self-test.md) | 分配的 `F*-n` / `REG-n` |
+| `review-restore` | restore-lens | [restore.md](../../../sdd-review-frontend/frontend-code-checklists/restore.md) | R1–R6 |
+| `review-layout` | layout-lens | [layout.md](../../../sdd-review-frontend/frontend-code-checklists/layout.md) | L1–L6 |
+| `review-convention` | convention-lens | [convention.md](../../../sdd-review-frontend/frontend-code-checklists/convention.md) | C1–C7 |
+| `review-quality` | quality-lens | [quality.md](../../../sdd-review-frontend/frontend-code-checklists/quality.md) | Q1–Q8 |
+| `self-test` | test-lens | [self-test.md](../../../sdd-review-frontend/frontend-code-checklists/self-test.md) | 分配的 `F*-n` / `REG-n` |
 
 维度号是 checklist 每条的 `legacy_id`，`validation_portfolio.review_dimensions` 与回传 JSON 都用它。哪些维度进入分配集由 [validation-policy.md](../validation-policy.md) 决定；触发条件写在 checklist 每条的 `skip_when`。
 
@@ -34,7 +34,7 @@
 
 1. 按下节组装请求：格子、维度分配、交付件路径与约束层。
 2. 角色提示词（`agents/<角色>.md`）与路径变量取值表。
-3. 上表对应的 `ROLE.md` 与 checklist 全文——判据以它们为准。
+3. 上表对应的 checklist 全文（含 YAML 头、格子边界与禁止）——判据以它为准。
 4. [evidence.md](./evidence.md)：共享证据包与新鲜度。
 5. `<review-pack-dir>/references/role-result.md`：回传契约与两档 `level` 映射。
 6. convention / quality 需要识别栈内表现且 `PATTERN-*` 未覆盖时，读 `<review-pack-dir>/references/stack-signals.md` 的对应小节。
@@ -51,7 +51,6 @@
   "gate": "sdd-dev",
   "cell": "CODE-LAYOUT",
   "role": "review-layout",
-  "role_card": "<review-pack-dir>/roles/layout-lens/ROLE.md",
   "checklist": "<review-pack-dir>/frontend-code-checklists/layout.md",
   "output_schema": "<review-pack-dir>/references/role-result.md",
   "assigned_dimensions": ["L2", "L3"],
@@ -81,11 +80,11 @@
 | --- | --- | --- |
 | `gate` | 本 Skill | 固定 `sdd-dev`；包不枚举 gate，见第一节 |
 | `cell` / `role` | 本 Skill | 本次那一格与回填进 `RoleResult` 的角色标识 |
-| `role_card` / `checklist` / `output_schema` | 包 | 三条路径，子代理据此取全部判据 |
+| `checklist` / `output_schema` | 包 | 两条路径，子代理据此取全部判据 |
 | `assigned_dimensions` | 本 Skill | 由[验证组合](../validation-policy.md)算出；它是 `coverage` 与 `skipped` 的全集 |
 | `evidence_epoch` / `code_fingerprint` | 本 Skill | 新鲜度键，见 [evidence.md](./evidence.md) |
 | `review_object` / `anchors` | 本 Skill | 被评审对象与定位锚点 |
-| `deliverables` | 本 Skill | 该格 `ROLE.md` 的 `reads` 所需层，逐层给路径 |
+| `deliverables` | 本 Skill | 该格 checklist `inputs` 所需层，逐层给路径 |
 | `constraints` | 本 Skill | 下节 |
 
 ## 六、约束层

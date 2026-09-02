@@ -14,7 +14,7 @@
 | 采用的工程依据 | `<story-dir>/dev-baseline.md` 的 ID，正文按 ID 回读 `<repo-baseline-dir>` 对应文件 |
 | 已冻结基线与豁免 | `<story-dir>/dev-baseline.md` |
 | 当前证据包、代码指纹和 Q 维度分配 | `<review-evidence>` |
-| 判据 | `<review-pack-dir>/roles/quality-lens/ROLE.md` 与 `frontend-code-checklists/quality.md` |
+| 判据 | `<review-pack-dir>/frontend-code-checklists/quality.md`（YAML 头、格子边界、禁止与检查项） |
 
 ## 二、只读声明
 
@@ -23,7 +23,7 @@
 ## 三、检视
 
 1. 从 `validation_portfolio.review_dimensions.review-quality` 取得精确 Q 集合，按 `legacy_id` 对到 quality checklist 的检查项。
-2. 逐条执行被分配的检查项，判据与定级按 quality checklist 与 quality-lens ROLE。
+2. 逐条执行被分配的检查项，判据与定级按 quality checklist。
 3. 每条结论引用文件行号、量化值或新鲜命令事实。
 
 ## 四、输出格式

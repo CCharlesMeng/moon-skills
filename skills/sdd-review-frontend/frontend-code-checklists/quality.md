@@ -15,11 +15,33 @@ inputs:
   - artifact: code_rules
     sections: ["全文"]
     layer: code_rules
+cell: CODE-QUALITY
+task_statement: 代码变更是否引入可观察的质量缺陷——职责膨胀、重复、过深嵌套、错误状态放置、未管理副作用、缺失边界、死代码、明显性能问题。
+max_findings: 14
+forbidden_reads:
+  - other_role_findings
+  - full_repo_code
 ---
 
 # 工程质量
 
 只检风险实际命中的 Q 项。每条结论必须带可观察后果。栈内表现见 [stack-signals.md](../references/stack-signals.md)。
+
+## 格子边界
+
+本格占 `CODE-QUALITY`。现象归属见 [SKILL.md 的现象归属表](../SKILL.md#现象归属)。
+
+本格**没有仓内规范基准**。每条 Finding 必须写清「什么条件下产生什么可观察后果」，并引用文件行号。说不出后果的风格偏好不进报告。
+
+与工程依据所选公共能力 `PATTERN-*` 语义等价的重复实现属 convention-lens 的 `shared-capability-reuse`。本格遇到时标注「可能与规范检视重叠」，**不**作为 `duplicated-code` 违规。
+
+栈内信号见 [stack-signals.md](../references/stack-signals.md)；只读当前栈小节。信号不是自动升级开关。
+
+## 禁止
+
+- 不把一帧闪烁、人眼不可感知的次帧不一致升到 P0/P1。确证门槛是**持续存在或造成实质破坏**的后果（竞态覆盖、泄漏、无限循环、核心流程不可完成），不是「能编出触发序列」本身。
+- 同一检查项内部也要穷尽：找到一条大的性能问题后继续找同项里较小的第二条。
+- 数嵌套层数时计入防御性判断与早退，漏数最外层不算「未超线」。
 
 ## `component-responsibility-size`
 

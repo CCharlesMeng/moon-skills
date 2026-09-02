@@ -523,9 +523,9 @@ function checkFrontendRegistryTargets() {
 // 检视职责会慢慢漂回去：判据被复制进调用方的设计文档后独立变旧，包里又被写死
 // 只有调用方才知道的阶段与概念，最后没人说得清该改哪一份。两条机械边界钉住它。
 //
-// 判据面 = SKILL.md + roles/ + frontend-code-checklists/ + references/。
+// 判据面 = SKILL.md + frontend-code-checklists/ + references/。
 // evals/ 不算：那是某个调用方 Story 的样本数据，本来就该有 <story-dir> 这类东西。
-const REVIEW_PACK_JUDGMENT_SURFACE = ["SKILL.md", "roles", "frontend-code-checklists", "references"];
+const REVIEW_PACK_JUDGMENT_SURFACE = ["SKILL.md", "frontend-code-checklists", "references"];
 const CALLER_ONLY_TERMS = ["<story-dir>", "验证组合", "Phase C", "sdd-dev"];
 // 只抓「赋值」形态。dev 侧散文里提到字段名是正常的——review-request.md 就要说清
 // 这三个字段不归它管；抓 `字段:` 才能区分「在定级」和「在说别在这里定级」。
@@ -585,7 +585,6 @@ const SKILL_RUNTIME_SURFACE = [
   "references",
   "agents",
   "templates",
-  "roles",
   "frontend-code-checklists",
 ];
 
