@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
-  <title>前端 SDD Skill 能力与使用指南</title>
+  <title>前端 SDD Skill 使用手册</title>
   <style>
     :root {
       --ink: #f5f7fb;
@@ -24,9 +24,9 @@
       --coral: #ff826e;
       --good: #69e29a;
       --surface: rgba(255, 255, 255, 0.045);
-      --shadow: 0 32px 90px rgba(0, 0, 0, 0.34);
-      --slide-w: 1600;
-      --slide-h: 900;
+      --shadow: 0 38.4px 108px rgba(0, 0, 0, 0.34);
+      --slide-w: 1920;
+      --slide-h: 1080;
       --scale: 1;
     }
 
@@ -73,11 +73,11 @@
     .slide {
       position: absolute;
       inset: 0;
-      width: 1600px;
-      height: 900px;
+      width: 1920px;
+      height: 1080px;
       display: none;
       overflow: hidden;
-      padding: 64px 82px 58px;
+      padding: 76.8px 98.4px 69.6px;
       background:
         linear-gradient(135deg, rgba(255,255,255,.018), transparent 36%),
         var(--navy-900);
@@ -88,11 +88,11 @@
     .slide::before {
       content: "";
       position: absolute;
-      top: -220px;
-      right: -150px;
-      width: 620px;
-      height: 620px;
-      border: 1px solid rgba(120, 168, 255, 0.10);
+      top: -264px;
+      right: -180px;
+      width: 744px;
+      height: 744px;
+      border: 1.2px solid rgba(120, 168, 255, 0.10);
       border-radius: 50%;
       pointer-events: none;
     }
@@ -100,11 +100,11 @@
     .slide::after {
       content: "";
       position: absolute;
-      left: -280px;
-      bottom: -480px;
-      width: 760px;
-      height: 760px;
-      border: 1px solid rgba(96, 230, 210, 0.075);
+      left: -336px;
+      bottom: -576px;
+      width: 912px;
+      height: 912px;
+      border: 1.2px solid rgba(96, 230, 210, 0.075);
       border-radius: 50%;
       pointer-events: none;
     }
@@ -119,30 +119,30 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      min-height: 34px;
+      min-height: 40.8px;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 19.2px;
       font-weight: 700;
       letter-spacing: .15em;
       text-transform: uppercase;
     }
 
-    .slide-kicker .brand { display: flex; align-items: center; gap: 13px; }
+    .slide-kicker .brand { display: flex; align-items: center; gap: 15.6px; }
 
     .brand-mark {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: var(--cyan);
-      box-shadow: 0 0 22px rgba(96, 230, 210, .65);
+      box-shadow: 0 0 26.4px rgba(96, 230, 210, .65);
     }
 
     .section-name { color: var(--faint); }
 
     .slide-title {
-      margin: 34px 0 0;
-      max-width: 1320px;
-      font-size: 54px;
+      margin: 40.8px 0 0;
+      max-width: 1584px;
+      font-size: 64.8px;
       line-height: 1.12;
       font-weight: 780;
       letter-spacing: -.035em;
@@ -151,26 +151,26 @@
     .slide-title .accent { color: var(--cyan); }
 
     .slide-subtitle {
-      margin: 18px 0 0;
-      max-width: 1120px;
+      margin: 21.6px 0 0;
+      max-width: 1344px;
       color: var(--muted);
-      font-size: 26px;
+      font-size: 31.2px;
       line-height: 1.55;
     }
 
     .slide-body {
       flex: 1;
       min-height: 0;
-      margin-top: 34px;
+      margin-top: 40.8px;
     }
 
     .slide-footer {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      min-height: 30px;
+      min-height: 36px;
       color: var(--faint);
-      font-size: 15px;
+      font-size: 18px;
       letter-spacing: .02em;
     }
 
@@ -178,16 +178,16 @@
 
     .eyebrow {
       color: var(--cyan);
-      font-size: 18px;
+      font-size: 21.6px;
       font-weight: 760;
       letter-spacing: .14em;
       text-transform: uppercase;
     }
 
     .display {
-      margin: 18px 0 0;
-      max-width: 1300px;
-      font-size: 82px;
+      margin: 21.6px 0 0;
+      max-width: 1560px;
+      font-size: 98.4px;
       line-height: 1.08;
       font-weight: 820;
       letter-spacing: -.052em;
@@ -197,25 +197,25 @@
 
     .lead {
       color: var(--muted);
-      font-size: 28px;
+      font-size: 33.6px;
       line-height: 1.55;
     }
 
     .caption {
       color: var(--faint);
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.45;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      padding: 8px 13px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
+      gap: 10.8px;
+      padding: 9.6px 15.6px;
+      border: 1.2px solid var(--line);
+      border-radius: 1198.8px;
       color: var(--muted);
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: .04em;
       background: rgba(255,255,255,.025);
@@ -223,8 +223,8 @@
 
     .pill::before {
       content: "";
-      width: 7px;
-      height: 7px;
+      width: 8.4px;
+      height: 8.4px;
       border-radius: 50%;
       background: currentColor;
     }
@@ -233,14 +233,14 @@
     .pill.cyan { color: var(--cyan); border-color: rgba(96,230,210,.25); }
     .pill.amber { color: var(--amber); border-color: rgba(255,200,107,.25); }
 
-    .rule { height: 1px; background: var(--line); }
+    .rule { height: 1.2px; background: var(--line); }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 54px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 64.8px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
 
     .number {
       color: var(--cyan);
-      font-size: 84px;
+      font-size: 100.8px;
       line-height: 1;
       font-weight: 820;
       letter-spacing: -.05em;
@@ -248,16 +248,16 @@
     }
 
     .number-label {
-      margin-top: 14px;
+      margin-top: 16.8px;
       color: var(--ink);
-      font-size: 24px;
+      font-size: 28.8px;
       font-weight: 720;
     }
 
     .number-note {
-      margin-top: 8px;
+      margin-top: 9.6px;
       color: var(--muted);
-      font-size: 18px;
+      font-size: 21.6px;
       line-height: 1.45;
     }
 
@@ -269,397 +269,395 @@
 
     .clean-list li {
       position: relative;
-      padding-left: 31px;
+      padding-left: 37.2px;
       color: var(--muted);
-      font-size: 24px;
+      font-size: 28.8px;
       line-height: 1.42;
     }
 
-    .clean-list li + li { margin-top: 19px; }
+    .clean-list li + li { margin-top: 22.8px; }
 
     .clean-list li::before {
       content: "";
       position: absolute;
       left: 0;
       top: .54em;
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 2.4px;
       background: var(--cyan);
-      box-shadow: 0 0 13px rgba(96, 230, 210, .25);
+      box-shadow: 0 0 15.6px rgba(96, 230, 210, .25);
     }
 
     .clean-list strong { color: var(--ink); font-weight: 720; }
 
     .quote-line {
-      padding-left: 28px;
-      border-left: 4px solid var(--cyan);
+      padding-left: 33.6px;
+      border-left: 4.8px solid var(--cyan);
       color: var(--ink);
-      font-size: 35px;
+      font-size: 42px;
       line-height: 1.46;
       font-weight: 640;
     }
 
     /* Slide 1 */
-    .cover { padding: 72px 86px 64px; justify-content: space-between; }
-    .cover::before { width: 900px; height: 900px; top: -460px; right: -320px; }
-    .cover::after { width: 980px; height: 980px; left: -610px; bottom: -630px; }
-    .cover .hero { margin-top: 112px; }
-    .cover .display { max-width: 1180px; font-size: 92px; }
+    .cover { padding: 86.4px 103.2px 76.8px; justify-content: space-between; }
+    .cover::before { width: 1080px; height: 1080px; top: -552px; right: -384px; }
+    .cover::after { width: 1176px; height: 1176px; left: -732px; bottom: -756px; }
+    .cover .hero { margin-top: 134.4px; }
+    .cover .display { max-width: 1416px; font-size: 110.4px; }
     .cover .deck-subtitle {
-      margin-top: 27px;
-      max-width: 1040px;
+      margin-top: 32.4px;
+      max-width: 1248px;
       color: var(--muted);
-      font-size: 30px;
+      font-size: 36px;
       line-height: 1.5;
     }
     .cover .cover-meta {
       display: flex;
       align-items: center;
-      gap: 28px;
+      gap: 33.6px;
       color: var(--muted);
-      font-size: 18px;
+      font-size: 21.6px;
     }
-    .cover .cover-meta .divider { width: 52px; height: 1px; background: var(--line); }
-    .cover .navigation-hint { color: var(--faint); font-size: 15px; }
+    .cover .cover-meta .divider { width: 62.4px; height: 1.2px; background: var(--line); }
+    .cover .navigation-hint { color: var(--faint); font-size: 18px; }
 
     /* Slide 2 */
     .verdict-layout {
       display: grid;
       grid-template-columns: 1.28fr .72fr;
-      gap: 78px;
+      gap: 93.6px;
       height: 100%;
       align-items: center;
     }
     .verdict-layout .statement {
-      font-size: 62px;
+      font-size: 74.4px;
       line-height: 1.15;
       font-weight: 800;
       letter-spacing: -.04em;
     }
     .verdict-layout .statement span { color: var(--cyan); }
-    .verdict-layout .support { margin-top: 29px; max-width: 880px; }
-    .proof-stack { display: flex; flex-direction: column; gap: 24px; }
+    .verdict-layout .support { margin-top: 34.8px; max-width: 1056px; }
+    .proof-stack { display: flex; flex-direction: column; gap: 28.8px; }
     .proof-item {
-      padding: 5px 0 23px;
-      border-bottom: 1px solid var(--line);
+      padding: 6px 0 27.6px;
+      border-bottom: 1.2px solid var(--line);
     }
     .proof-item:last-child { border-bottom: 0; }
-    .proof-item .proof-title { color: var(--ink); font-size: 24px; font-weight: 740; }
-    .proof-item p { margin: 9px 0 0; color: var(--muted); font-size: 19px; line-height: 1.45; }
+    .proof-item .proof-title { color: var(--ink); font-size: 28.8px; font-weight: 740; }
+    .proof-item p { margin: 10.8px 0 0; color: var(--muted); font-size: 22.8px; line-height: 1.45; }
 
     /* Slide 3 */
     .problem-layout {
       display: grid;
       grid-template-columns: .86fr 1.14fr;
-      gap: 82px;
+      gap: 98.4px;
       height: 100%;
       align-items: center;
     }
     .problem-callout {
-      font-size: 58px;
+      font-size: 69.6px;
       line-height: 1.16;
       font-weight: 800;
       letter-spacing: -.04em;
     }
     .problem-callout .small {
       display: block;
-      margin-top: 24px;
+      margin-top: 28.8px;
       color: var(--muted);
-      font-size: 28px;
+      font-size: 33.6px;
       line-height: 1.48;
       font-weight: 500;
       letter-spacing: 0;
     }
-    .failure-chain { position: relative; padding-left: 44px; }
+    .failure-chain { position: relative; padding-left: 52.8px; }
     .failure-chain::before {
       content: "";
       position: absolute;
-      left: 7px;
-      top: 10px;
-      bottom: 10px;
-      width: 2px;
+      left: 8.4px;
+      top: 12px;
+      bottom: 12px;
+      width: 2.4px;
       background: linear-gradient(var(--coral), rgba(255,130,110,.12));
     }
-    .failure-row { position: relative; display: grid; grid-template-columns: 190px 1fr; gap: 24px; }
-    .failure-row + .failure-row { margin-top: 22px; }
+    .failure-row { position: relative; display: grid; grid-template-columns: 228px 1fr; gap: 28.8px; }
+    .failure-row + .failure-row { margin-top: 26.4px; }
     .failure-row::before {
       content: "";
       position: absolute;
-      left: -43px;
-      top: 9px;
-      width: 16px;
-      height: 16px;
+      left: -51.6px;
+      top: 10.8px;
+      width: 19.2px;
+      height: 19.2px;
       border-radius: 50%;
       background: var(--navy-900);
-      border: 3px solid var(--coral);
+      border: 3.6px solid var(--coral);
     }
-    .failure-row .stage { color: var(--ink); font-size: 20px; font-weight: 720; }
-    .failure-row .failure { color: var(--muted); font-size: 20px; line-height: 1.38; }
+    .failure-row .stage { color: var(--ink); font-size: 24px; font-weight: 720; }
+    .failure-row .failure { color: var(--muted); font-size: 24px; line-height: 1.38; }
 
     /* Slide 4 */
     .pipeline {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 18px;
+      gap: 21.6px;
       align-items: stretch;
-      margin-top: 78px;
+      margin-top: 93.6px;
       position: relative;
     }
     .pipeline::before {
       content: "";
       position: absolute;
-      left: 90px;
-      right: 90px;
-      top: 65px;
-      height: 2px;
+      left: 108px;
+      right: 108px;
+      top: 78px;
+      height: 2.4px;
       background: linear-gradient(90deg, var(--cyan), var(--blue));
       opacity: .35;
     }
-    .phase-node { position: relative; text-align: center; padding: 0 12px; }
+    .phase-node { position: relative; text-align: center; padding: 0 14.4px; }
     .phase-dot {
       position: relative;
       z-index: 1;
-      width: 28px;
-      height: 28px;
-      margin: 51px auto 32px;
+      width: 33.6px;
+      height: 33.6px;
+      margin: 61.2px auto 38.4px;
       border-radius: 50%;
-      border: 7px solid var(--navy-900);
+      border: 8.4px solid var(--navy-900);
       background: var(--cyan);
-      box-shadow: 0 0 0 2px rgba(96,230,210,.35), 0 0 28px rgba(96,230,210,.22);
+      box-shadow: 0 0 0 2.4px rgba(96,230,210,.35), 0 0 33.6px rgba(96,230,210,.22);
     }
-    .phase-node:nth-child(n+3) .phase-dot { background: var(--blue); box-shadow: 0 0 0 2px rgba(120,168,255,.35), 0 0 28px rgba(120,168,255,.22); }
-    .phase-id { color: var(--faint); font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
-    .phase-name { margin-top: 9px; color: var(--ink); font-size: 26px; font-weight: 760; }
-    .phase-skill { margin-top: 9px; color: var(--cyan); font-size: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .phase-node:nth-child(n+3) .phase-dot { background: var(--blue); box-shadow: 0 0 0 2.4px rgba(120,168,255,.35), 0 0 33.6px rgba(120,168,255,.22); }
+    .phase-id { color: var(--faint); font-size: 18px; letter-spacing: .14em; text-transform: uppercase; }
+    .phase-name { margin-top: 10.8px; color: var(--ink); font-size: 31.2px; font-weight: 760; }
+    .phase-skill { margin-top: 10.8px; color: var(--cyan); font-size: 19.2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .phase-node:nth-child(n+3) .phase-skill { color: var(--blue); }
-    .phase-desc { margin-top: 15px; color: var(--muted); font-size: 18px; line-height: 1.42; }
+    .phase-desc { margin-top: 18px; color: var(--muted); font-size: 21.6px; line-height: 1.42; }
     .pipeline-note {
-      margin: 58px auto 0;
-      max-width: 1120px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
+      margin: 69.6px auto 0;
+      max-width: 1344px;
+      padding-top: 28.8px;
+      border-top: 1.2px solid var(--line);
       color: var(--muted);
       text-align: center;
-      font-size: 20px;
+      font-size: 24px;
       line-height: 1.45;
     }
 
     /* Slide 5 */
-    .mapping-table { margin-top: 22px; border-top: 1px solid var(--line); }
+    .mapping-table { margin-top: 26.4px; border-top: 1.2px solid var(--line); }
     .mapping-row {
       display: grid;
       grid-template-columns: 1.02fr 1.18fr .82fr;
       align-items: center;
-      min-height: 68px;
-      border-bottom: 1px solid var(--line);
+      min-height: 81.6px;
+      border-bottom: 1.2px solid var(--line);
     }
-    .mapping-row.header { min-height: 46px; color: var(--faint); font-size: 15px; font-weight: 730; letter-spacing: .12em; text-transform: uppercase; }
-    .mapping-row > div { padding-right: 30px; }
-    .mapping-row .problem { color: var(--muted); font-size: 20px; }
-    .mapping-row .mechanism { color: var(--ink); font-size: 20px; font-weight: 680; }
-    .mapping-row .value { color: var(--cyan); font-size: 19px; font-weight: 720; }
+    .mapping-row.header { min-height: 55.2px; color: var(--faint); font-size: 18px; font-weight: 730; letter-spacing: .12em; text-transform: uppercase; }
+    .mapping-row > div { padding-right: 36px; }
+    .mapping-row .problem { color: var(--muted); font-size: 24px; }
+    .mapping-row .mechanism { color: var(--ink); font-size: 24px; font-weight: 680; }
+    .mapping-row .value { color: var(--cyan); font-size: 22.8px; font-weight: 720; }
 
     /* Slide 6 */
-    .baseline-layout { display: grid; grid-template-columns: .83fr 1.17fr; gap: 72px; height: 100%; align-items: center; }
-    .nine-number { color: var(--cyan); font-size: 210px; line-height: .85; font-weight: 850; letter-spacing: -.08em; }
-    .nine-label { margin-top: 30px; max-width: 430px; color: var(--ink); font-size: 30px; line-height: 1.35; font-weight: 720; }
-    .nine-note { margin-top: 18px; max-width: 470px; color: var(--muted); font-size: 21px; line-height: 1.48; }
+    .baseline-layout { display: grid; grid-template-columns: .83fr 1.17fr; gap: 86.4px; height: 100%; align-items: center; }
+    .nine-number { color: var(--cyan); font-size: 252px; line-height: .85; font-weight: 850; letter-spacing: -.08em; }
+    .nine-label { margin-top: 36px; max-width: 516px; color: var(--ink); font-size: 36px; line-height: 1.35; font-weight: 720; }
+    .nine-note { margin-top: 21.6px; max-width: 564px; color: var(--muted); font-size: 25.2px; line-height: 1.48; }
     .baseline-files {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      border-top: 1px solid var(--line);
-      border-left: 1px solid var(--line);
+      border-top: 1.2px solid var(--line);
+      border-left: 1.2px solid var(--line);
     }
     .baseline-file {
-      min-height: 112px;
-      padding: 22px 22px 18px;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
+      min-height: 134.4px;
+      padding: 26.4px 26.4px 21.6px;
+      border-right: 1.2px solid var(--line);
+      border-bottom: 1.2px solid var(--line);
     }
-    .baseline-file .file { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; font-weight: 720; }
-    .baseline-file .meaning { margin-top: 9px; color: var(--muted); font-size: 17px; line-height: 1.35; }
-    .baseline-principle { margin-top: 24px; color: var(--muted); font-size: 19px; line-height: 1.45; }
-    .baseline-principle strong { color: var(--ink); }
+    .baseline-file .file { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 21.6px; font-weight: 720; }
+    .baseline-file .meaning { margin-top: 10.8px; color: var(--muted); font-size: 20.4px; line-height: 1.35; }
 
     /* Slide 7 */
-    .plan-layout { display: grid; grid-template-columns: 1.06fr .94fr; gap: 74px; height: 100%; align-items: center; }
-    .artifact-stack { position: relative; height: 445px; }
+    .plan-layout { display: grid; grid-template-columns: 1.06fr .94fr; gap: 88.8px; height: 100%; align-items: center; }
+    .artifact-stack { position: relative; height: 534px; }
     .artifact-sheet {
       position: absolute;
-      width: 610px;
-      height: 350px;
-      padding: 34px 38px;
-      border: 1px solid var(--line);
+      width: 732px;
+      height: 420px;
+      padding: 40.8px 45.6px;
+      border: 1.2px solid var(--line);
       background: var(--navy-850);
-      box-shadow: 0 22px 48px rgba(0,0,0,.25);
+      box-shadow: 0 26.4px 57.6px rgba(0,0,0,.25);
     }
-    .artifact-sheet.back { left: 64px; top: 68px; transform: rotate(2.5deg); opacity: .48; }
-    .artifact-sheet.mid { left: 31px; top: 35px; transform: rotate(-1.3deg); opacity: .72; }
+    .artifact-sheet.back { left: 76.8px; top: 81.6px; transform: rotate(2.5deg); opacity: .48; }
+    .artifact-sheet.mid { left: 37.2px; top: 42px; transform: rotate(-1.3deg); opacity: .72; }
     .artifact-sheet.front { left: 0; top: 0; }
-    .sheet-name { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 19px; font-weight: 720; }
-    .sheet-line { height: 10px; margin-top: 23px; border-radius: 2px; background: rgba(255,255,255,.08); }
+    .sheet-name { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 22.8px; font-weight: 720; }
+    .sheet-line { height: 12px; margin-top: 27.6px; border-radius: 2.4px; background: rgba(255,255,255,.08); }
     .sheet-line.cyan { background: rgba(96,230,210,.30); }
     .sheet-line.short { width: 58%; }
     .sheet-line.midline { width: 76%; }
-    .sheet-tags { display: flex; gap: 11px; margin-top: 29px; }
-    .sheet-tag { padding: 8px 10px; color: var(--muted); border: 1px solid var(--line); font-size: 14px; }
-    .plan-point { padding: 0 0 22px 26px; border-left: 2px solid var(--line); }
-    .plan-point + .plan-point { margin-top: 20px; }
-    .plan-point .point-title { color: var(--ink); font-size: 25px; font-weight: 740; }
-    .plan-point p { margin: 9px 0 0; color: var(--muted); font-size: 19px; line-height: 1.43; }
-    .internal-tail { margin-top: 27px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--amber); font-size: 18px; line-height: 1.45; }
+    .sheet-tags { display: flex; gap: 13.2px; margin-top: 34.8px; }
+    .sheet-tag { padding: 9.6px 12px; color: var(--muted); border: 1.2px solid var(--line); font-size: 16.8px; }
+    .plan-point { padding: 0 0 26.4px 31.2px; border-left: 2.4px solid var(--line); }
+    .plan-point + .plan-point { margin-top: 24px; }
+    .plan-point .point-title { color: var(--ink); font-size: 30px; font-weight: 740; }
+    .plan-point p { margin: 10.8px 0 0; color: var(--muted); font-size: 22.8px; line-height: 1.43; }
+    .internal-tail { margin-top: 32.4px; padding-top: 26.4px; border-top: 1.2px solid var(--line); color: var(--amber); font-size: 21.6px; line-height: 1.45; }
 
     /* Slide 8 */
-    .execution-track { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0; margin-top: 36px; }
-    .execution-phase { position: relative; min-height: 340px; padding: 36px 32px 28px; border-top: 2px solid var(--line); }
-    .execution-phase + .execution-phase { border-left: 1px solid var(--line); }
+    .execution-track { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0; margin-top: 43.2px; }
+    .execution-phase { position: relative; min-height: 408px; padding: 43.2px 38.4px 33.6px; border-top: 2.4px solid var(--line); }
+    .execution-phase + .execution-phase { border-left: 1.2px solid var(--line); }
     .execution-phase::before {
       content: "";
       position: absolute;
-      top: -9px;
-      left: 31px;
-      width: 16px;
-      height: 16px;
+      top: -10.8px;
+      left: 37.2px;
+      width: 19.2px;
+      height: 19.2px;
       border-radius: 50%;
       background: var(--cyan);
-      box-shadow: 0 0 18px rgba(96,230,210,.35);
+      box-shadow: 0 0 21.6px rgba(96,230,210,.35);
     }
-    .execution-phase:nth-child(n+3)::before { background: var(--blue); box-shadow: 0 0 18px rgba(120,168,255,.35); }
-    .execution-phase .phase-code { color: var(--faint); font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
-    .execution-phase .phase-title { margin-top: 14px; color: var(--ink); font-size: 28px; font-weight: 760; }
-    .execution-phase p { margin: 17px 0 0; color: var(--muted); font-size: 19px; line-height: 1.5; }
-    .execution-phase .output { margin-top: 30px; color: var(--cyan); font-size: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .execution-phase:nth-child(n+3)::before { background: var(--blue); box-shadow: 0 0 21.6px rgba(120,168,255,.35); }
+    .execution-phase .phase-code { color: var(--faint); font-size: 18px; letter-spacing: .14em; text-transform: uppercase; }
+    .execution-phase .phase-title { margin-top: 16.8px; color: var(--ink); font-size: 33.6px; font-weight: 760; }
+    .execution-phase p { margin: 20.4px 0 0; color: var(--muted); font-size: 22.8px; line-height: 1.5; }
+    .execution-phase .output { margin-top: 36px; color: var(--cyan); font-size: 19.2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .execution-phase:nth-child(n+3) .output { color: var(--blue); }
-    .single-gate { margin-top: 27px; text-align: center; color: var(--muted); font-size: 20px; }
+    .single-gate { margin-top: 32.4px; text-align: center; color: var(--muted); font-size: 24px; }
     .single-gate strong { color: var(--amber); }
 
     /* Slide 9 */
-    .evidence-layout { display: grid; grid-template-columns: .83fr 1.17fr; gap: 80px; height: 100%; align-items: center; }
-    .state-list { display: flex; flex-direction: column; gap: 24px; }
-    .state-row { display: grid; grid-template-columns: 180px 1fr; gap: 23px; align-items: start; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
-    .state-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 19px; font-weight: 760; }
+    .evidence-layout { display: grid; grid-template-columns: .83fr 1.17fr; gap: 96px; height: 100%; align-items: center; }
+    .state-list { display: flex; flex-direction: column; gap: 28.8px; }
+    .state-row { display: grid; grid-template-columns: 216px 1fr; gap: 27.6px; align-items: start; padding-bottom: 26.4px; border-bottom: 1.2px solid var(--line); }
+    .state-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 22.8px; font-weight: 760; }
     .state-key.proven { color: var(--good); }
     .state-key.unverified { color: var(--amber); }
     .state-key.deferred { color: var(--blue); }
-    .state-row p { margin: 0; color: var(--muted); font-size: 20px; line-height: 1.42; }
-    .lens-orbit { position: relative; width: 610px; height: 490px; margin: 0 auto; }
+    .state-row p { margin: 0; color: var(--muted); font-size: 24px; line-height: 1.42; }
+    .lens-orbit { position: relative; width: 732px; height: 588px; margin: 0 auto; }
     .lens-center {
       position: absolute;
-      left: 205px;
-      top: 145px;
-      width: 200px;
-      height: 200px;
+      left: 246px;
+      top: 174px;
+      width: 240px;
+      height: 240px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(96,230,210,.32);
+      border: 1.2px solid rgba(96,230,210,.32);
       border-radius: 50%;
       background: var(--cyan-soft);
       text-align: center;
       color: var(--ink);
-      font-size: 24px;
+      font-size: 28.8px;
       line-height: 1.28;
       font-weight: 760;
     }
     .lens-node {
       position: absolute;
-      width: 180px;
-      min-height: 88px;
-      padding: 17px 18px;
-      border: 1px solid var(--line);
+      width: 216px;
+      min-height: 105.6px;
+      padding: 20.4px 21.6px;
+      border: 1.2px solid var(--line);
       background: var(--navy-850);
       text-align: center;
     }
-    .lens-node .lens-name { color: var(--cyan); font-size: 19px; font-weight: 750; }
-    .lens-node p { margin: 7px 0 0; color: var(--muted); font-size: 15px; line-height: 1.3; }
-    .lens-node.restore { left: 215px; top: 0; }
-    .lens-node.layout { right: 0; top: 112px; }
-    .lens-node.convention { right: 36px; bottom: 0; }
-    .lens-node.quality { left: 36px; bottom: 0; }
-    .lens-node.test { left: 0; top: 112px; }
-    .manual-note { margin-top: 26px; color: var(--amber); font-size: 18px; line-height: 1.45; }
+    .lens-node .lens-name { color: var(--cyan); font-size: 22.8px; font-weight: 750; }
+    .lens-node p { margin: 8.4px 0 0; color: var(--muted); font-size: 18px; line-height: 1.3; }
+    .lens-node.restore { left: 258px; top: 0; }
+    .lens-node.layout { right: 0; top: 134.4px; }
+    .lens-node.convention { right: 43.2px; bottom: 0; }
+    .lens-node.quality { left: 43.2px; bottom: 0; }
+    .lens-node.test { left: 0; top: 134.4px; }
+    .manual-note { margin-top: 31.2px; color: var(--amber); font-size: 21.6px; line-height: 1.45; }
 
     /* Slide 10 */
-    .usage-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 74px; height: 100%; align-items: stretch; }
-    .install-block { padding-right: 42px; border-right: 1px solid var(--line); }
-    .install-block h3 { margin: 0 0 17px; color: var(--ink); font-size: 27px; }
+    .usage-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 88.8px; height: 100%; align-items: stretch; }
+    .install-block { padding-right: 50.4px; border-right: 1.2px solid var(--line); }
+    .install-block h3 { margin: 0 0 20.4px; color: var(--ink); font-size: 32.4px; }
     .code-line {
-      padding: 16px 18px;
-      border-left: 3px solid var(--cyan);
+      padding: 19.2px 21.6px;
+      border-left: 3.6px solid var(--cyan);
       background: rgba(255,255,255,.035);
       color: var(--cyan);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.45;
       word-break: break-word;
     }
-    .install-note { margin-top: 18px; color: var(--muted); font-size: 18px; line-height: 1.48; }
-    .input-block { margin-top: 46px; }
-    .input-block h3 { margin: 0 0 16px; color: var(--ink); font-size: 25px; }
-    .input-block p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.5; }
-    .usage-list { border-top: 1px solid var(--line); }
-    .usage-row { display: grid; grid-template-columns: 175px 1fr 190px; gap: 24px; align-items: center; min-height: 80px; border-bottom: 1px solid var(--line); }
-    .usage-row.header { min-height: 44px; color: var(--faint); font-size: 14px; font-weight: 730; letter-spacing: .11em; text-transform: uppercase; }
-    .usage-scene { color: var(--ink); font-size: 19px; font-weight: 720; }
-    .usage-prompt { color: var(--muted); font-size: 18px; line-height: 1.35; }
-    .usage-entry { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; }
+    .install-note { margin-top: 21.6px; color: var(--muted); font-size: 21.6px; line-height: 1.48; }
+    .input-block { margin-top: 55.2px; }
+    .input-block h3 { margin: 0 0 19.2px; color: var(--ink); font-size: 30px; }
+    .input-block p { margin: 0; color: var(--muted); font-size: 22.8px; line-height: 1.5; }
+    .usage-list { border-top: 1.2px solid var(--line); }
+    .usage-row { display: grid; grid-template-columns: 210px 1fr 228px; gap: 28.8px; align-items: center; min-height: 96px; border-bottom: 1.2px solid var(--line); }
+    .usage-row.header { min-height: 52.8px; color: var(--faint); font-size: 16.8px; font-weight: 730; letter-spacing: .11em; text-transform: uppercase; }
+    .usage-scene { color: var(--ink); font-size: 22.8px; font-weight: 720; }
+    .usage-prompt { color: var(--muted); font-size: 21.6px; line-height: 1.35; }
+    .usage-entry { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; }
 
     /* Slide 11 */
-    .status-layout { display: grid; grid-template-columns: .72fr 1.28fr; gap: 70px; height: 100%; align-items: center; }
-    .metric-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 36px 28px; }
-    .metric { padding-bottom: 25px; border-bottom: 1px solid var(--line); }
+    .status-layout { display: grid; grid-template-columns: .72fr 1.28fr; gap: 84px; height: 100%; align-items: center; }
+    .metric-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 43.2px 33.6px; }
+    .metric { padding-bottom: 30px; border-bottom: 1.2px solid var(--line); }
     .metric.wide { grid-column: 1 / -1; }
-    .metric .big { color: var(--cyan); font-size: 68px; line-height: 1; font-weight: 840; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-    .metric .metric-title { margin-top: 13px; color: var(--ink); font-size: 21px; font-weight: 720; }
-    .metric .metric-note { margin-top: 7px; color: var(--muted); font-size: 16px; line-height: 1.4; }
-    .status-column h3 { margin: 0; color: var(--ink); font-size: 27px; }
-    .known-list { margin-top: 21px; }
-    .known-item { display: grid; grid-template-columns: 36px 1fr; gap: 17px; padding: 16px 0; border-bottom: 1px solid var(--line); }
-    .known-index { color: var(--amber); font-size: 17px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .known-item p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.4; }
-    .status-conclusion { margin-top: 24px; padding: 20px 23px; border-left: 3px solid var(--good); background: rgba(105,226,154,.06); color: var(--ink); font-size: 20px; line-height: 1.45; }
+    .metric .big { color: var(--cyan); font-size: 81.6px; line-height: 1; font-weight: 840; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+    .metric .metric-title { margin-top: 15.6px; color: var(--ink); font-size: 25.2px; font-weight: 720; }
+    .metric .metric-note { margin-top: 8.4px; color: var(--muted); font-size: 19.2px; line-height: 1.4; }
+    .status-column h3 { margin: 0; color: var(--ink); font-size: 32.4px; }
+    .known-list { margin-top: 25.2px; }
+    .known-item { display: grid; grid-template-columns: 43.2px 1fr; gap: 20.4px; padding: 19.2px 0; border-bottom: 1.2px solid var(--line); }
+    .known-index { color: var(--amber); font-size: 20.4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .known-item p { margin: 0; color: var(--muted); font-size: 22.8px; line-height: 1.4; }
+    .status-conclusion { margin-top: 28.8px; padding: 24px 27.6px; border-left: 3.6px solid var(--good); background: rgba(105,226,154,.06); color: var(--ink); font-size: 24px; line-height: 1.45; }
 
     /* Slide 12 */
-    .roadmap-layout { display: grid; grid-template-columns: 1.2fr .8fr; gap: 82px; height: 100%; align-items: center; }
-    .roadmap-steps { border-left: 2px solid var(--line); padding-left: 36px; }
-    .roadmap-step { position: relative; padding: 0 0 34px 17px; }
+    .roadmap-layout { display: grid; grid-template-columns: 1.2fr .8fr; gap: 98.4px; height: 100%; align-items: center; }
+    .roadmap-steps { border-left: 2.4px solid var(--line); padding-left: 43.2px; }
+    .roadmap-step { position: relative; padding: 0 0 40.8px 20.4px; }
     .roadmap-step:last-child { padding-bottom: 0; }
     .roadmap-step::before {
       content: "";
       position: absolute;
-      left: -46px;
-      top: 4px;
-      width: 16px;
-      height: 16px;
+      left: -55.2px;
+      top: 4.8px;
+      width: 19.2px;
+      height: 19.2px;
       border-radius: 50%;
       background: var(--cyan);
-      box-shadow: 0 0 0 7px var(--navy-900), 0 0 0 9px rgba(96,230,210,.20);
+      box-shadow: 0 0 0 8.4px var(--navy-900), 0 0 0 10.8px rgba(96,230,210,.20);
     }
-    .roadmap-step:nth-child(2)::before { background: var(--blue); box-shadow: 0 0 0 7px var(--navy-900), 0 0 0 9px rgba(120,168,255,.20); }
-    .roadmap-step:nth-child(3)::before { background: var(--amber); box-shadow: 0 0 0 7px var(--navy-900), 0 0 0 9px rgba(255,200,107,.20); }
-    .roadmap-step .roadmap-label { color: var(--faint); font-size: 14px; font-weight: 740; letter-spacing: .13em; text-transform: uppercase; }
-    .roadmap-step .roadmap-title { margin-top: 8px; color: var(--ink); font-size: 26px; font-weight: 760; }
-    .roadmap-step p { margin: 9px 0 0; color: var(--muted); font-size: 18px; line-height: 1.44; }
+    .roadmap-step:nth-child(2)::before { background: var(--blue); box-shadow: 0 0 0 8.4px var(--navy-900), 0 0 0 10.8px rgba(120,168,255,.20); }
+    .roadmap-step:nth-child(3)::before { background: var(--amber); box-shadow: 0 0 0 8.4px var(--navy-900), 0 0 0 10.8px rgba(255,200,107,.20); }
+    .roadmap-step .roadmap-label { color: var(--faint); font-size: 16.8px; font-weight: 740; letter-spacing: .13em; text-transform: uppercase; }
+    .roadmap-step .roadmap-title { margin-top: 9.6px; color: var(--ink); font-size: 31.2px; font-weight: 760; }
+    .roadmap-step p { margin: 10.8px 0 0; color: var(--muted); font-size: 21.6px; line-height: 1.44; }
     .closing {
-      padding: 35px 0 35px 36px;
-      border-left: 4px solid var(--cyan);
+      padding: 42px 0 42px 43.2px;
+      border-left: 4.8px solid var(--cyan);
     }
-    .closing .closing-kicker { color: var(--cyan); font-size: 17px; font-weight: 760; letter-spacing: .13em; text-transform: uppercase; }
-    .closing .closing-title { margin-top: 16px; color: var(--ink); font-size: 46px; line-height: 1.18; font-weight: 800; letter-spacing: -.035em; }
-    .closing p { margin: 22px 0 0; color: var(--muted); font-size: 21px; line-height: 1.5; }
-    .closing .final-line { margin-top: 34px; color: var(--good); font-size: 21px; font-weight: 740; }
+    .closing .closing-kicker { color: var(--cyan); font-size: 20.4px; font-weight: 760; letter-spacing: .13em; text-transform: uppercase; }
+    .closing .closing-title { margin-top: 19.2px; color: var(--ink); font-size: 55.2px; line-height: 1.18; font-weight: 800; letter-spacing: -.035em; }
+    .closing p { margin: 26.4px 0 0; color: var(--muted); font-size: 25.2px; line-height: 1.5; }
+    .closing .final-line { margin-top: 40.8px; color: var(--good); font-size: 25.2px; font-weight: 740; }
 
     /* User-guide layouts */
     .deliverable-pair {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 48px;
+      gap: 57.6px;
       height: 100%;
       align-items: stretch;
     }
     .deliverable-column {
-      padding: 32px 38px 28px;
-      border-top: 3px solid var(--cyan);
+      padding: 38.4px 45.6px 33.6px;
+      border-top: 3.6px solid var(--cyan);
       background: linear-gradient(180deg, rgba(96,230,210,.06), rgba(255,255,255,.018));
     }
     .deliverable-column:nth-child(2) {
@@ -669,124 +667,133 @@
     .deliverable-name {
       color: var(--cyan);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 23px;
+      font-size: 27.6px;
       font-weight: 760;
     }
     .deliverable-column:nth-child(2) .deliverable-name { color: var(--blue); }
     .deliverable-purpose {
-      margin-top: 13px;
+      margin-top: 15.6px;
       color: var(--ink);
-      font-size: 25px;
+      font-size: 30px;
       line-height: 1.35;
       font-weight: 720;
     }
     .deliverable-list {
       list-style: none;
-      margin: 25px 0 0;
+      margin: 30px 0 0;
       padding: 0;
     }
     .deliverable-list li {
       position: relative;
-      padding-left: 24px;
+      padding-left: 28.8px;
       color: var(--muted);
-      font-size: 19px;
+      font-size: 22.8px;
       line-height: 1.4;
     }
-    .deliverable-list li + li { margin-top: 13px; }
+    .deliverable-list li + li { margin-top: 15.6px; }
     .deliverable-list li::before {
       content: "";
       position: absolute;
       left: 0;
       top: .55em;
-      width: 8px;
-      height: 8px;
+      width: 9.6px;
+      height: 9.6px;
       border-radius: 50%;
       background: var(--cyan);
     }
     .deliverable-column:nth-child(2) .deliverable-list li::before { background: var(--blue); }
     .developer-check {
-      margin-top: 24px;
-      padding-top: 18px;
-      border-top: 1px solid var(--line);
+      margin-top: 28.8px;
+      padding-top: 21.6px;
+      border-top: 1.2px solid var(--line);
       color: var(--amber);
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.42;
     }
     .example-strip {
       display: grid;
-      grid-template-columns: 150px 1fr;
-      gap: 23px;
+      grid-template-columns: 180px 1fr;
+      gap: 27.6px;
       align-items: start;
-      margin-top: 26px;
-      padding: 19px 23px;
-      border-left: 3px solid var(--cyan);
+      margin-top: 31.2px;
+      padding: 22.8px 27.6px;
+      border-left: 3.6px solid var(--cyan);
       background: rgba(255,255,255,.03);
     }
     .example-strip .label {
       color: var(--cyan);
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 760;
       letter-spacing: .10em;
       text-transform: uppercase;
     }
     .example-strip .text {
       color: var(--ink);
-      font-size: 19px;
+      font-size: 22.8px;
       line-height: 1.45;
     }
-    .artifact-table .mapping-row { min-height: 58px; }
+    .artifact-table .mapping-row { min-height: 69.6px; }
     .artifact-table .mapping-row .problem,
     .artifact-table .mapping-row .mechanism,
-    .artifact-table .mapping-row .value { font-size: 17px; }
+    .artifact-table .mapping-row .value { font-size: 20.4px; }
     .artifact-table .mapping-row .problem { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .review-table .mapping-row { min-height: 79px; grid-template-columns: .42fr 1.26fr .92fr; }
+    .artifact-topology .mapping-row {
+      min-height: 110.4px;
+      grid-template-columns: .58fr 1.52fr .72fr;
+    }
+    .artifact-topology .mapping-row.header { min-height: 55.2px; }
+    .artifact-topology .mapping-row .problem,
+    .artifact-topology .mapping-row .mechanism,
+    .artifact-topology .mapping-row .value { line-height: 1.38; }
+    .artifact-topology .mapping-row .mechanism { font-weight: 620; }
+    .review-table .mapping-row { min-height: 94.8px; grid-template-columns: .42fr 1.26fr .92fr; }
     .review-table .mapping-row .problem { color: var(--cyan); font-weight: 760; }
     .acceptance-file {
-      padding: 34px 38px;
-      border: 1px solid var(--line);
+      padding: 40.8px 45.6px;
+      border: 1.2px solid var(--line);
       background: linear-gradient(145deg, rgba(96,230,210,.075), rgba(255,255,255,.018));
     }
     .acceptance-file .file-name {
       color: var(--cyan);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 25px;
+      font-size: 30px;
       font-weight: 760;
     }
     .acceptance-file .file-purpose {
-      margin-top: 12px;
+      margin-top: 14.4px;
       color: var(--ink);
-      font-size: 26px;
+      font-size: 31.2px;
       line-height: 1.35;
       font-weight: 720;
     }
     .acceptance-sections {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0 28px;
-      margin-top: 26px;
+      gap: 0 33.6px;
+      margin-top: 31.2px;
     }
     .acceptance-section {
-      padding: 14px 0;
-      border-bottom: 1px solid var(--line);
+      padding: 16.8px 0;
+      border-bottom: 1.2px solid var(--line);
       color: var(--muted);
-      font-size: 18px;
+      font-size: 21.6px;
       line-height: 1.35;
     }
     .acceptance-section strong { color: var(--ink); }
     .scenario-prompt {
-      margin: 20px 0 0;
-      padding: 17px 21px;
-      border-left: 3px solid var(--cyan);
+      margin: 24px 0 0;
+      padding: 20.4px 25.2px;
+      border-left: 3.6px solid var(--cyan);
       background: rgba(255,255,255,.028);
       color: var(--muted);
-      font-size: 19px;
+      font-size: 22.8px;
       line-height: 1.45;
     }
     .scenario-prompt strong { color: var(--ink); }
     .phase-skill.confirm {
       display: inline-block;
-      padding: 7px 10px;
-      border: 1px solid rgba(255,200,107,.34);
+      padding: 8.4px 12px;
+      border: 1.2px solid rgba(255,200,107,.34);
       color: var(--amber) !important;
       background: rgba(255,200,107,.07);
       font-family: inherit;
@@ -801,42 +808,42 @@
     .file-ref.blue { color: var(--blue); }
     .file-ref.amber { color: var(--amber); }
     .review-table .mapping-row {
-      min-height: 82px;
+      min-height: 86.4px;
       grid-template-columns: .68fr 1.15fr .87fr;
     }
     .review-table .mapping-row .problem {
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.28;
     }
     .review-table .mapping-row .problem .concept {
       display: block;
       color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      font-size: 18px;
+      font-size: 21.6px;
       font-weight: 760;
     }
     .review-table .mapping-row .problem .file-ref {
       display: block;
-      margin-top: 4px;
-      font-size: 13px;
+      margin-top: 4.8px;
+      font-size: 19.2px;
     }
-    .state-row { grid-template-columns: 205px 1fr; }
+    .state-row { grid-template-columns: 246px 1fr; }
     .state-key { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     .state-key .status-code {
       display: block;
-      margin-top: 5px;
+      margin-top: 6px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 14px;
+      font-size: 19.2px;
       letter-spacing: .08em;
     }
     .gated-process {
       display: grid;
       grid-template-columns: 1fr .86fr 1fr .86fr 1fr .86fr 1fr;
       align-items: stretch;
-      margin-top: 58px;
-      min-height: 300px;
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
+      margin-top: 69.6px;
+      min-height: 360px;
+      border-top: 1.2px solid var(--line);
+      border-bottom: 1.2px solid var(--line);
     }
     .process-stage,
     .process-gate {
@@ -844,80 +851,80 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 27px 22px;
+      padding: 32.4px 26.4px;
     }
     .process-stage {
       background: rgba(255,255,255,.018);
     }
     .process-stage + .process-gate,
-    .process-gate + .process-stage { border-left: 1px solid var(--line); }
+    .process-gate + .process-stage { border-left: 1.2px solid var(--line); }
     .process-stage .stage-index {
       color: var(--faint);
-      font-size: 14px;
+      font-size: 16.8px;
       font-weight: 740;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
     .process-stage .stage-title {
-      margin-top: 13px;
+      margin-top: 15.6px;
       color: var(--ink);
-      font-size: 25px;
+      font-size: 30px;
       line-height: 1.25;
       font-weight: 760;
     }
     .process-stage p {
-      margin: 14px 0 0;
+      margin: 16.8px 0 0;
       color: var(--muted);
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.45;
     }
     .process-gate {
-      border-top: 3px solid var(--amber);
+      border-top: 3.6px solid var(--amber);
       background: linear-gradient(180deg, rgba(255,200,107,.11), rgba(255,255,255,.018));
     }
     .process-gate .gate-index {
       color: var(--amber);
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 800;
       letter-spacing: .10em;
     }
     .process-gate .gate-title {
-      margin-top: 12px;
+      margin-top: 14.4px;
       color: var(--ink);
-      font-size: 23px;
+      font-size: 27.6px;
       line-height: 1.25;
       font-weight: 780;
     }
     .process-gate p {
-      margin: 13px 0 0;
+      margin: 15.6px 0 0;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 19.2px;
       line-height: 1.42;
     }
     .process-outcome {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 28px;
-      margin-top: 32px;
+      gap: 33.6px;
+      margin-top: 38.4px;
     }
     .process-outcome div {
-      padding-left: 20px;
-      border-left: 2px solid var(--cyan);
+      padding-left: 24px;
+      border-left: 2.4px solid var(--cyan);
       color: var(--muted);
-      font-size: 17px;
+      font-size: 20.4px;
       line-height: 1.4;
     }
     .process-outcome strong { color: var(--ink); }
     .confirmation-flow {
-      margin-top: 30px;
-      border-top: 1px solid var(--line);
+      margin-top: 36px;
+      border-top: 1.2px solid var(--line);
     }
     .confirm-row {
       display: grid;
-      grid-template-columns: 1.24fr 34px .95fr 34px 1.22fr;
+      grid-template-columns: 1.24fr 40.8px .95fr 40.8px 1.22fr;
       align-items: stretch;
-      min-height: 128px;
-      border-bottom: 1px solid var(--line);
+      min-height: 153.6px;
+      border-bottom: 1.2px solid var(--line);
     }
     .confirm-stage,
     .confirm-gate,
@@ -925,79 +932,79 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 18px 22px;
+      padding: 21.6px 26.4px;
     }
     .confirm-stage { background: rgba(255,255,255,.018); }
     .confirm-gate {
-      border-left: 3px solid var(--amber);
+      border-left: 3.6px solid var(--amber);
       background: linear-gradient(90deg, rgba(255,200,107,.10), rgba(255,255,255,.018));
     }
     .confirm-label {
       color: var(--faint);
-      font-size: 13px;
+      font-size: 15.6px;
       font-weight: 760;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
     .confirm-gate .confirm-label { color: var(--amber); }
     .confirm-title {
-      margin-top: 7px;
+      margin-top: 8.4px;
       color: var(--ink);
-      font-size: 22px;
+      font-size: 26.4px;
       line-height: 1.25;
       font-weight: 770;
     }
     .confirm-row p {
-      margin: 7px 0 0;
+      margin: 8.4px 0 0;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 19.2px;
       line-height: 1.36;
     }
     .confirm-arrow {
       display: grid;
       place-items: center;
       color: var(--faint);
-      font-size: 24px;
+      font-size: 28.8px;
     }
     .confirm-artifacts .file-ref {
       display: block;
-      font-size: 15px;
+      font-size: 18px;
       line-height: 1.42;
     }
-    .confirm-artifacts .file-ref + .file-ref { margin-top: 5px; }
+    .confirm-artifacts .file-ref + .file-ref { margin-top: 6px; }
     .design-handoff {
       display: grid;
       grid-template-columns: 1.25fr auto 1fr;
-      gap: 26px;
+      gap: 31.2px;
       align-items: center;
-      margin-top: 22px;
-      padding: 18px 22px;
-      border-left: 3px solid var(--cyan);
+      margin-top: 26.4px;
+      padding: 21.6px 26.4px;
+      border-left: 3.6px solid var(--cyan);
       background: rgba(96,230,210,.045);
       color: var(--muted);
-      font-size: 16px;
+      font-size: 19.2px;
       line-height: 1.4;
     }
     .design-handoff strong { color: var(--ink); }
-    .design-handoff .handoff-arrow { color: var(--cyan); font-size: 24px; }
+    .design-handoff .handoff-arrow { color: var(--cyan); font-size: 28.8px; }
 
     /* Controls */
     #controls {
       position: fixed;
       z-index: 20;
-      right: 20px;
-      bottom: 19px;
+      right: 24px;
+      bottom: 22.8px;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8.4px;
       opacity: .26;
       transition: opacity .2s ease;
     }
     #controls:hover, #controls:focus-within { opacity: 1; }
     #controls button {
-      width: 38px;
-      height: 38px;
-      border: 1px solid rgba(255,255,255,.18);
+      width: 45.6px;
+      height: 45.6px;
+      border: 1.2px solid rgba(255,255,255,.18);
       border-radius: 50%;
       background: rgba(7,16,29,.84);
       color: var(--ink);
@@ -1005,9 +1012,9 @@
     }
     #controls button:hover { border-color: rgba(96,230,210,.55); color: var(--cyan); }
     #counter {
-      min-width: 62px;
+      min-width: 74.4px;
       color: rgba(255,255,255,.68);
-      font-size: 13px;
+      font-size: 15.6px;
       text-align: center;
       font-variant-numeric: tabular-nums;
     }
@@ -1018,7 +1025,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 3px;
+      height: 3.6px;
       background: rgba(255,255,255,.06);
     }
     #progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--blue)); transition: width .24s ease; }
@@ -1029,23 +1036,233 @@
       z-index: 30;
       display: none;
       overflow: auto;
-      padding: 36px;
+      padding: 43.2px;
       background: rgba(3,7,12,.96);
     }
-    #overview.open { display: grid; grid-template-columns: repeat(3, minmax(300px, 1fr)); gap: 24px; align-content: start; }
+    #overview.open { display: grid; grid-template-columns: repeat(3, minmax(360px, 1fr)); gap: 28.8px; align-content: start; }
     .overview-card {
       aspect-ratio: 16 / 9;
-      padding: 24px;
-      border: 1px solid var(--line);
+      padding: 28.8px;
+      border: 1.2px solid var(--line);
       background: var(--navy-900);
       color: var(--ink);
       cursor: pointer;
       text-align: left;
     }
     .overview-card:hover { border-color: rgba(96,230,210,.5); }
-    .overview-card .ov-no { color: var(--cyan); font-size: 14px; font-weight: 740; }
-    .overview-card .ov-title { margin-top: 18px; font-size: 24px; line-height: 1.25; font-weight: 760; }
-    .overview-card .ov-desc { margin-top: 12px; color: var(--muted); font-size: 15px; line-height: 1.4; }
+    .overview-card .ov-no { color: var(--cyan); font-size: 16.8px; font-weight: 740; }
+    .overview-card .ov-title { margin-top: 21.6px; font-size: 28.8px; line-height: 1.25; font-weight: 760; }
+    .overview-card .ov-desc { margin-top: 14.4px; color: var(--muted); font-size: 18px; line-height: 1.4; }
+
+    /* User-manual layouts */
+    .guide-subtitle {
+      margin: 19.2px 0 0;
+      max-width: 1512px;
+      color: var(--muted);
+      font-size: 26.4px;
+      line-height: 1.48;
+    }
+    .guide-subtitle .file-ref { color: var(--cyan); }
+    .guide-rule {
+      margin-top: 26.4px;
+      padding: 19.2px 24px;
+      border-left: 3.6px solid var(--amber);
+      background: rgba(255,200,107,.055);
+      color: var(--muted);
+      font-size: 20.4px;
+      line-height: 1.42;
+    }
+    .guide-rule strong { color: var(--amber); }
+    .flat-table { border-top: 1.2px solid var(--line); }
+    .flat-row {
+      display: grid;
+      align-items: center;
+      min-height: 82.8px;
+      border-bottom: 1.2px solid var(--line);
+    }
+    .flat-row > div { padding-right: 31.2px; }
+    .flat-row.header {
+      min-height: 50.4px;
+      color: var(--faint);
+      font-size: 16.8px;
+      font-weight: 740;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .flat-row .key { color: var(--ink); font-size: 21.6px; font-weight: 760; }
+    .flat-row .detail { color: var(--muted); font-size: 20.4px; line-height: 1.4; }
+    .flat-row .action { color: var(--cyan); font-size: 19.2px; line-height: 1.4; font-weight: 680; }
+    .start-table .flat-row { grid-template-columns: .54fr 1.28fr .88fr; }
+    .start-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40.8px;
+      margin-top: 28.8px;
+    }
+    .start-summary > div { padding-top: 16.8px; border-top: 2.4px solid var(--cyan); }
+    .start-summary strong { display: block; color: var(--ink); font-size: 21.6px; }
+    .start-summary span { display: block; margin-top: 8.4px; color: var(--muted); font-size: 19.2px; line-height: 1.35; }
+    .route-guide .usage-row { min-height: 81.6px; grid-template-columns: 198px 1fr 246px; }
+    .route-guide .usage-row.header { min-height: 48px; }
+    .route-guide .usage-prompt { font-size: 20.4px; }
+    .route-guide .usage-entry { font-size: 18px; }
+    .init-manual {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    .baseline-compact {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      border-top: 1.2px solid var(--line);
+      border-left: 1.2px solid var(--line);
+    }
+    .baseline-compact > div {
+      min-height: 144px;
+      padding: 26.4px 28.8px;
+      border-right: 1.2px solid var(--line);
+      border-bottom: 1.2px solid var(--line);
+    }
+    .baseline-compact .index-cell { background: rgba(96, 230, 210, .065); }
+    .baseline-compact strong { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 22.8px; }
+    .baseline-compact span { display: block; margin-top: 9.6px; color: var(--muted); font-size: 19.2px; line-height: 1.36; }
+    .numbered-steps { counter-reset: guide-step; }
+    .numbered-step {
+      position: relative;
+      min-height: 99.6px;
+      padding: 15.6px 0 15.6px 64.8px;
+      border-bottom: 1.2px solid var(--line);
+      counter-increment: guide-step;
+    }
+    .numbered-step::before {
+      content: counter(guide-step, decimal-leading-zero);
+      position: absolute;
+      left: 0;
+      top: 16.8px;
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 19.2px;
+      font-weight: 760;
+    }
+    .numbered-step strong { display: block; color: var(--ink); font-size: 22.8px; }
+    .numbered-step span { display: block; margin-top: 6px; color: var(--muted); font-size: 18px; line-height: 1.38; }
+    .numbered-step .file-ref,
+    .numbered-step .contract-pair {
+      display: inline;
+      margin-top: 0;
+      font-size: inherit;
+      line-height: inherit;
+    }
+    .numbered-step .contract-pair { white-space: nowrap; }
+    .gate-manual .flat-row { grid-template-columns: .42fr .85fr .94fr 1.12fr .67fr; min-height: 144px; }
+    .gate-manual .flat-row.header { min-height: 50.4px; }
+    .gate-manual .gate-name { color: var(--amber); font-size: 20.4px; font-weight: 780; }
+    .gate-manual .gate-name .stage { display: block; margin-top: 4.8px; color: var(--faint); font-size: 15.6px; font-weight: 680; }
+    .gate-manual .result { color: var(--cyan); font-size: 18px; line-height: 1.4; }
+    .gate-manual .adjust { color: var(--muted); font-size: 18px; line-height: 1.4; }
+    .gate-manual .adjust .file-ref { color: var(--amber); }
+    .plan-manual { display: grid; grid-template-columns: 1fr 1fr; gap: 57.6px; }
+    .plan-file { padding: 28.8px 36px 26.4px; border-top: 3.6px solid var(--cyan); background: rgba(255,255,255,.025); }
+    .plan-file:nth-child(2) { border-top-color: var(--blue); }
+    .plan-file .name { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 26.4px; font-weight: 760; }
+    .plan-file:nth-child(2) .name { color: var(--blue); }
+    .plan-file .purpose { margin-top: 10.8px; color: var(--ink); font-size: 22.8px; font-weight: 720; }
+    .manual-list { margin: 20.4px 0 0; padding: 0; list-style: none; }
+    .manual-list li { position: relative; padding-left: 24px; color: var(--muted); font-size: 19.2px; line-height: 1.4; }
+    .manual-list li + li { margin-top: 9.6px; }
+    .manual-list li::before { content: "—"; position: absolute; left: 0; color: var(--cyan); }
+    .plan-file:nth-child(2) .manual-list li::before { color: var(--blue); }
+    .phase-manual .flat-row { grid-template-columns: .46fr 1.13fr 1.02fr .89fr; min-height: 121.2px; }
+    .phase-manual .flat-row.header { min-height: 50.4px; }
+    .phase-manual .phase-code { color: var(--ink); font-size: 20.4px; font-weight: 760; }
+    .phase-manual .phase-code .phase-id {
+      display: block;
+      margin-top: 6px;
+      color: var(--blue);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 15.6px;
+      font-weight: 720;
+      letter-spacing: .03em;
+    }
+    .task-loop {
+      display: grid;
+      grid-template-columns: .92fr 1.08fr;
+      gap: 76.8px;
+      height: 100%;
+    }
+    .task-loop .numbered-step { min-height: 86.4px; }
+    .task-loop .numbered-step strong { font-size: 21.6px; }
+    .artifact-delta { border-top: 1.2px solid var(--line); }
+    .artifact-delta .delta-row { display: grid; grid-template-columns: 264px 1fr; min-height: 73.2px; align-items: center; border-bottom: 1.2px solid var(--line); }
+    .artifact-delta .delta-row strong { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; }
+    .artifact-delta .delta-row span { color: var(--muted); font-size: 19.2px; line-height: 1.35; }
+    .closeout-user { display: grid; grid-template-columns: 1.08fr .92fr; gap: 72px; height: 100%; }
+    .participation-list { border-top: 1.2px solid var(--line); }
+    .participation-row {
+      display: grid;
+      grid-template-columns: 164px 1fr;
+      min-height: 112.8px;
+      align-items: center;
+      border-bottom: 1.2px solid var(--line);
+    }
+    .participation-row strong { color: var(--cyan); font-size: 21.6px; }
+    .participation-row span { color: var(--muted); font-size: 19.2px; line-height: 1.42; }
+    .acceptance-entry {
+      padding: 31.2px 33.6px;
+      border-top: 3.6px solid var(--blue);
+      background: rgba(255,255,255,.025);
+    }
+    .acceptance-entry .name { color: var(--blue); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 30px; font-weight: 780; }
+    .acceptance-entry .purpose { margin-top: 10.8px; color: var(--ink); font-size: 24px; font-weight: 720; }
+    .acceptance-entry .entry-row { padding: 18px 0; border-bottom: 1.2px solid var(--line); }
+    .acceptance-entry .entry-row strong { display: block; color: var(--ink); font-size: 19.2px; }
+    .acceptance-entry .entry-row span { display: block; margin-top: 4.8px; color: var(--muted); font-size: 18px; line-height: 1.38; }
+    .artifact-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 57.6px; height: 100%; }
+    .artifact-column h3 { margin: 0 0 14.4px; color: var(--ink); font-size: 24px; }
+    .artifact-file-list { border-top: 1.2px solid var(--line); }
+    .artifact-file {
+      display: grid;
+      grid-template-columns: 336px 1fr;
+      min-height: 103.2px;
+      align-items: center;
+      border-bottom: 1.2px solid var(--line);
+    }
+    .artifact-file strong { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; line-height: 1.35; }
+    .artifact-file span { color: var(--muted); font-size: 18px; line-height: 1.38; }
+    .artifact-column.support .artifact-file strong { color: var(--blue); }
+    .participation-row span .file-ref,
+    .acceptance-entry .entry-row span .file-ref,
+    .artifact-file span .file-ref,
+    .acceptance-outline span .file-ref {
+      display: inline;
+      margin: 0;
+      color: var(--cyan);
+      font-size: inherit;
+      line-height: inherit;
+    }
+    .status-manual { display: grid; grid-template-columns: 1.18fr .82fr; gap: 76.8px; height: 100%; }
+    .status-group h3 { margin: 0 0 14.4px; color: var(--ink); font-size: 24px; }
+    .status-line { display: grid; grid-template-columns: 174px 1fr; align-items: start; padding: 13.2px 0; border-bottom: 1.2px solid var(--line); }
+    .status-line strong { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; }
+    .status-line span { color: var(--muted); font-size: 18px; line-height: 1.35; }
+    .status-group + .status-group { margin-top: 24px; }
+    .status-secondary .status-group h3 { margin-bottom: 9.6px; font-size: 20.4px; }
+    .status-secondary .status-line { grid-template-columns: 132px 1fr; padding: 10.8px 0; }
+    .status-secondary .status-line strong,
+    .status-secondary .status-line span { font-size: 16.8px; }
+    .status-secondary .status-group + .status-group { margin-top: 19.2px; }
+    .acceptance-primary > h3 { margin: 0 0 16.8px; color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 28.8px; }
+    .acceptance-outline { display: grid; grid-template-columns: 1fr 1fr; gap: 0 33.6px; border-top: 1.2px solid var(--line); }
+    .acceptance-outline > div { min-height: 93.6px; padding: 15.6px 0; border-bottom: 1.2px solid var(--line); }
+    .acceptance-outline strong { color: var(--ink); font-size: 20.4px; }
+    .acceptance-outline span { display: block; margin-top: 6px; color: var(--muted); font-size: 16.8px; line-height: 1.35; }
+    .example-manual .flat-row { grid-template-columns: 138px 372px 1fr 396px; min-height: 103.2px; }
+    .example-manual .flat-row.header { min-height: 50.4px; }
+    .example-manual .seq { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; }
+    .example-manual .prompt { color: var(--ink); font-size: 19.2px; line-height: 1.38; }
+    .example-manual .check { color: var(--muted); font-size: 18px; line-height: 1.38; }
+    .cover-status { color: var(--good); font-weight: 720; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
@@ -1062,6 +1279,7 @@
         flex-direction: column;
         width: 16in;
         height: 9in;
+        transform: none !important;
         page-break-after: always;
         break-after: page;
         -webkit-print-color-adjust: exact;
@@ -1072,284 +1290,279 @@
   </style>
 </head>
 <body>
-  <main id="viewport" aria-label="前端 SDD Skill 能力与使用指南演示文稿">
+  <main id="viewport" aria-label="前端 SDD Skill 使用手册演示文稿">
     <div id="deck">
-      <section class="slide cover active" data-title="前端 SDD Skill 能力与使用指南" data-desc="从仓库接入、前端设计、任务拆分到实现、检视与验收">
+      <section class="slide cover active" data-title="前端 SDD Skill 使用手册" data-desc="按一个 app 与一个 Story 操作：输入、产物、确认门和验收">
         <div class="slide-kicker">
           <div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div>
-          <div class="section-name">CAPABILITY · USAGE · ARTIFACTS</div>
+          <div class="section-name">OPERATOR GUIDE · 2026.09.03</div>
         </div>
         <div class="hero">
-          <div class="eyebrow">使用指南</div>
-          <h1 class="display">前端 SDD Skill<br /><span class="accent">能力与使用指南</span></h1>
-          <p class="deck-subtitle">从仓库接入、前端设计、任务拆分到实现、<br />检视与验收的一条完整使用路径。</p>
+          <div class="eyebrow">使用手册</div>
+          <h1 class="display">前端 SDD Skill<br /><span class="accent">按规格实现，用证据验收</span></h1>
+          <p class="deck-subtitle">面向 Skill 使用者与前端开发：按阶段给输入，<br />检查真实产物，在确认门做决定。</p>
         </div>
         <div class="cover-meta">
-          <span>面向 Skill 使用者与前端开发</span>
+          <span class="cover-status">核心能力完成，持续优化中</span>
           <span class="divider"></span>
-          <span>2026.09.02</span>
+          <span>范围：单个独立 app × 单个 Story</span>
           <span class="navigation-hint">← → / Space 翻页 · F 全屏 · O 总览</span>
         </div>
       </section>
 
-      <section class="slide" data-title="一套 Skill 覆盖前端 Story 的完整交付" data-desc="使用者按阶段给目标，Skill 负责读仓、生成真实文件、执行验证并形成 acceptance.md">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">WHAT YOU GET</div></div>
-        <div class="slide-body verdict-layout">
-          <div>
-            <div class="eyebrow">核心能力</div>
-            <div class="statement">给出正确的阶段目标，<br />Skill 会把一个前端 Story<br />带到<span>可验收结果</span>。</div>
-            <p class="lead support">使用者不需要记住内部编排，只需要确认目标 app、Story、设计来源，以及关键阶段产出的内容是否正确。</p>
+      <section class="slide" data-title="开始前先把四个事实说清楚" data-desc="范围、需求锚点、视觉来源和当前动作决定从哪里进入">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">BEFORE YOU START</div></div>
+        <h2 class="slide-title">开始前先把<span class="accent">四个事实</span>说清楚</h2>
+        <p class="guide-subtitle">不需要写交接报文；用自然语言给出事实即可。等宽英文表示真实 Skill、目录、文件、字段或状态值。</p>
+        <div class="slide-body">
+          <div class="flat-table start-table">
+            <div class="flat-row header"><div>需要明确</div><div>建议提供的内容</div><div>不明确时会怎样</div></div>
+            <div class="flat-row"><div class="key">工作范围</div><div class="detail">仓库、目标 app、当前 <span class="file-ref">story_dir</span>；monorepo 要指出 <span class="file-ref">apps/web</span> 这类具体路径。</div><div class="action">多个 app 无唯一命中时暂停选择，不拿仓根兜底。</div></div>
+            <div class="flat-row"><div class="key">需求锚点</div><div class="detail"><span class="file-ref">SC-*</span>、<span class="file-ref">BR-*</span>、GWT 或现有 <span class="file-ref">story-delta-spec.md</span>。</div><div class="action">缺锚点时不能生成可追溯计划。</div></div>
+            <div class="flat-row"><div class="key">视觉来源</div><div class="detail">HTML 原型、参照页、逐条文字规格，或明确说明本 Story 纯逻辑。</div><div class="action">来源决定 <span class="file-ref">baseline_source</span>，无来源不自造像素规则。</div></div>
+            <div class="flat-row"><div class="key">当前动作</div><div class="detail">首次接入、做设计、只拆任务、执行、续跑，还是单独检视 diff / PR。</div><div class="action">已有合格产物会直接消费，不重复生成。</div></div>
           </div>
-          <div class="proof-stack">
-            <div class="proof-item"><span class="pill good">APP 级</span><div class="proof-title">建立可复用的仓库公共事实</div><p>识别技术栈与应用形态，准备开发环境，产出 <span class="file-ref">frontend-baselines/</span> 下的九类基线文件。</p></div>
-            <div class="proof-item"><span class="pill cyan">STORY 级</span><div class="proof-title">完成设计、计划和受控实现</div><p>前端设计写入 <span class="file-ref">requirement-frontend-design.md</span> / <span class="file-ref">story-delta-frontend-design.md</span>，执行清单与声明账本写入 <span class="file-ref">tasks.md</span> / <span class="file-ref">alpha-tests.md</span>。</p></div>
-            <div class="proof-item"><span class="pill amber">验收级</span><div class="proof-title">用证据回答“哪些已经成立”</div><p>检视证据与结果分别进入 <span class="file-ref">review-evidence.json</span> / <span class="file-ref">review-results.json</span>，验收结论写入 <span class="file-ref">acceptance.md</span>。</p></div>
+          <div class="start-summary">
+            <div><strong>范围默认值</strong><span>一次只处理一个独立 app × 一个 Story。</span></div>
+            <div><strong>外部副作用</strong><span>安装依赖、登录、seed、修改已有配置前会先请求授权。</span></div>
+            <div><strong>不能猜的内容</strong><span>API URL、字段、枚举、秘密值和用户未确认的视觉期望。</span></div>
           </div>
         </div>
-        <div class="slide-footer"><span>阅读约定：中文描述职责概念；等宽英文表示真实 Skill、文件或目录名称</span><span class="slide-no">02 / 12</span></div>
+        <div class="slide-footer"><span>最小开场示例：“在 apps/web 执行风险简报 Story；设计来源是 prototype/index.html。”</span><span class="slide-no">02 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="按当前要解决的问题选择入口" data-desc="五个 Skill 分别处理接入、设计、计划、执行和独立检视">
+      <section class="slide" data-title="先按当前状态选择入口" data-desc="每个入口只处理一个阶段，已有文件会被直接消费">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">CHOOSE THE ENTRY</div></div>
-        <h2 class="slide-title">按你现在要解决的问题，选择<span class="accent">对应入口</span></h2>
-        <div class="slide-body usage-layout">
-          <div class="install-block">
-            <h3>安装</h3>
-            <div class="code-line">npx skills add CCharlesMeng/moon-skills</div>
-            <p class="install-note">也可通过 Cursor 本地插件安装。安装后直接用自然语言描述当前目标。</p>
-            <div class="input-block"><h3>开始前确认</h3><p>目标 app、当前 Story / AC、可用设计来源，以及是否允许安装依赖、启动服务或使用外部账号。</p></div>
+        <h2 class="slide-title">先按当前状态选择<span class="accent">入口</span></h2>
+        <p class="guide-subtitle">安装：<span class="file-ref">npx skills add CCharlesMeng/moon-skills</span>。安装后直接描述目标，不需要记内部 Phase 名称。</p>
+        <div class="slide-body">
+          <div class="usage-list route-guide">
+            <div class="usage-row header"><div>当前状态</div><div>建议这样说</div><div>实际入口</div></div>
+            <div class="usage-row"><div class="usage-scene">app 尚未接入</div><div class="usage-prompt">“为 <span class="file-ref">apps/web</span> 建立 app baseline，并准备到可开发状态。”</div><div class="usage-entry">sdd-init-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">需求还没有前端方案</div><div class="usage-prompt">“根据需求、ux-decode 和现有代码，为风险简报产出前端设计。”</div><div class="usage-entry">sdd-design-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">设计已定，只拆计划</div><div class="usage-prompt">“生成 <span class="file-ref">tasks.md</span> 与 <span class="file-ref">alpha-tests.md</span>；只规划，不写代码。”</div><div class="usage-entry">sdd-task-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">开始或继续实现</div><div class="usage-prompt">“执行这个 Story”或“从未完成 Task 继续，只重取失效证据”。</div><div class="usage-entry">sdd-dev-frontend</div></div>
+            <div class="usage-row"><div class="usage-scene">只检查现有改动</div><div class="usage-prompt">“独立检视这个 diff / PR，按五格 lens 返回问题与证据。”</div><div class="usage-entry">sdd-review-frontend</div></div>
           </div>
-          <div class="usage-list">
-            <div class="usage-row header"><div>我要做什么</div><div>可以这样说</div><div>入口</div></div>
-            <div class="usage-row"><div class="usage-scene">首次接入</div><div class="usage-prompt">“为 apps/web 建立 app 基线文件（frontend-baselines/），并准备到可开发状态。”</div><div class="usage-entry">sdd-init-frontend</div></div>
-            <div class="usage-row"><div class="usage-scene">前端设计</div><div class="usage-prompt">“为这个 Requirement / Story 生成 requirement-frontend-design.md 与 Story 设计增量。”</div><div class="usage-entry">sdd-design-frontend</div></div>
-            <div class="usage-row"><div class="usage-scene">生成计划</div><div class="usage-prompt">“根据设计生成 tasks.md 和 alpha-tests.md。”</div><div class="usage-entry">sdd-task-frontend</div></div>
-            <div class="usage-row"><div class="usage-scene">执行 Story</div><div class="usage-prompt">“执行 / 继续这个前端 Story。”</div><div class="usage-entry">sdd-dev-frontend</div></div>
-            <div class="usage-row"><div class="usage-scene">单独检视</div><div class="usage-prompt">“用五格 lens 检视这个 diff / PR。”</div><div class="usage-entry">sdd-review-frontend</div></div>
-          </div>
+          <div class="guide-rule"><strong>通常主链：</strong><span class="file-ref">sdd-init-frontend</span> → <span class="file-ref">sdd-design-frontend</span> → <span class="file-ref">sdd-task-frontend</span> → <span class="file-ref">sdd-dev-frontend</span>。其中任一步已有合格产物，就从下一步开始。</div>
         </div>
-        <div class="slide-footer"><span>一个独立 app × 一个 Story 是最清晰、最稳定的使用范围</span><span class="slide-no">03 / 12</span></div>
+        <div class="slide-footer"><span>多 app、多仓或多 Story 由外层任务先拆分；本套前端 Skill 不把它们混成一个执行单元</span><span class="slide-no">03 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="首次接入先建立 app 级公共事实" data-desc="sdd-init-frontend 识别仓库、准备机器并产出 frontend-baselines/ 下的九类基线文件">
+      <section class="slide" data-title="首次接入要完成仓库识别、机器准备和基线落盘" data-desc="sdd-init-frontend 以一个 app 为单位建立 frontend-baselines">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-INIT-FRONTEND</div></div>
-        <h2 class="slide-title">首次接入先建立<span class="accent"> app 级公共事实</span></h2>
-        <div class="slide-body baseline-layout">
-          <div>
-            <div class="nine-number">9</div>
-            <div class="nine-label">类 app 基线文件<br /><span class="file-ref">frontend-baselines/</span></div>
-            <div class="nine-note">适合新仓接入、app 基线目录缺失，或需要把本机准备到能装、能起、能跑质量命令。</div>
-            <div class="example-strip"><div class="label">示例指令</div><div class="text">“扫描 apps/web，生成 frontend-baselines/ 下的 app 基线文件，并验证启动和质量命令。”</div></div>
-          </div>
-          <div>
-            <div class="baseline-files">
-              <div class="baseline-file"><div class="file">structure.md</div><div class="meaning">框架、形态与分层边界</div></div>
-              <div class="baseline-file"><div class="file">components.md</div><div class="meaning">组件资产与封装层</div></div>
-              <div class="baseline-file"><div class="file">routes.md</div><div class="meaning">路由与业务挂载点</div></div>
-              <div class="baseline-file"><div class="file">data.md</div><div class="meaning">状态容器与数据流</div></div>
-              <div class="baseline-file"><div class="file">api.md</div><div class="meaning">通信约定与请求出口</div></div>
-              <div class="baseline-file"><div class="file">styles.md</div><div class="meaning">样式体系与主题入口</div></div>
-              <div class="baseline-file"><div class="file">runtime.md</div><div class="meaning">启动、环境和质量命令</div></div>
-              <div class="baseline-file"><div class="file">tests.md</div><div class="meaning">测试能力与定位约定</div></div>
-              <div class="baseline-file"><div class="file">index.md</div><div class="meaning">场景索引与事实导航</div></div>
-            </div>
-            <div class="baseline-principle"><strong>开发者重点确认：</strong>框架与应用形态是否判断正确；命令是否真的可运行；monorepo 是否选中了正确 app。</div>
+        <h2 class="slide-title">首次接入：完成<span class="accent">仓库识别、机器准备和基线落盘</span></h2>
+        <p class="guide-subtitle">示例指令：“扫描 <span class="file-ref">apps/web</span>，建立 <span class="file-ref">frontend-baselines/</span>，并验证启动和质量命令可以执行。”</p>
+        <div class="slide-body init-manual">
+          <div class="baseline-compact">
+            <div><strong>structure.md</strong><span>框架、应用形态、分层边界</span></div>
+            <div><strong>components.md</strong><span>组件资产、封装层、复用入口</span></div>
+            <div><strong>routes.md</strong><span>路由装配与业务挂载点</span></div>
+            <div><strong>data.md</strong><span>状态容器、数据流与缓存习惯</span></div>
+            <div class="index-cell"><strong>index.md</strong><span>场景索引，只指向清单 ID / PATTERN</span></div>
+            <div><strong>styles.md</strong><span>样式体系、主题与资源入口</span></div>
+            <div><strong>runtime.md</strong><span>启动、服务、身份和质量命令</span></div>
+            <div><strong>tests.md</strong><span>测试通道与定位约定</span></div>
+            <div><strong>api.md</strong><span>跨需求稳定的通信约定</span></div>
           </div>
         </div>
-        <div class="slide-footer"><span>app 基线文件只保存公共事实；具体接口字段和 Story 需求进入对应设计文件</span><span class="slide-no">04 / 12</span></div>
+        <div class="slide-footer"><span>从 <span class="file-ref">index.md</span> 按场景进入对应文件；app 基线只保存跨 Story 复用的公共事实</span><span class="slide-no">04 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="前端设计把需求变成组件、数据和对接方案" data-desc="requirement-frontend-design.md 给出共享方案，story-delta-frontend-design.md 给出 Story 切片">
+      <section class="slide" data-title="前端设计的三次确认分别检查组件、对接和原型" data-desc="sdd-design-frontend 在设计流程内依次触发确认门一到三">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DESIGN-FRONTEND</div></div>
-        <h2 class="slide-title">前端设计把需求变成<span class="accent">组件、数据和对接方案</span></h2>
-        <div class="slide-body plan-layout">
-          <div class="artifact-stack" aria-label="前端设计产物示意">
-            <div class="artifact-sheet back"></div>
-            <div class="artifact-sheet mid"></div>
-            <div class="artifact-sheet front">
-              <div class="sheet-name">requirement-frontend-design.md</div>
-              <div class="sheet-line cyan midline"></div>
-              <div class="sheet-line"></div>
-              <div class="sheet-tags"><span class="sheet-tag">MODE</span><span class="sheet-tag">STACK</span><span class="sheet-tag">IFC</span><span class="sheet-tag">ROUTES</span></div>
-              <div class="sheet-line"></div>
-              <div class="sheet-name" style="margin-top:24px;color:var(--blue)">story-delta-frontend-design.md</div>
-            </div>
-          </div>
-          <div>
-            <div class="plan-point"><div class="point-title">Requirement 级前端设计</div><p><span class="file-ref">requirement-frontend-design.md</span>：模式、技术栈、共享 IFC、对接策略、模块与路由总览、共享组件和 Story 索引。</p></div>
-            <div class="plan-point"><div class="point-title">Story 级前端设计增量</div><p><span class="file-ref blue">story-delta-frontend-design.md</span> 给出 Story 切片；配套文件包括 <span class="file-ref">testability-map.md</span>、<span class="file-ref">examples/*.json</span> 与 <span class="file-ref">prototype/index.html</span>。</p></div>
-            <div class="plan-point"><div class="point-title">开发者审查重点</div><p>复用结论是否符合仓库事实；API 缺口是否显式；组件树和数据流是否能直接用于拆任务。</p></div>
-            <div class="example-strip"><div class="label">示例指令</div><div class="text">“根据 ux-decode、需求设计和现有代码，为风险简报 Story 产出前端设计。”</div></div>
+        <h2 class="slide-title">前端设计：三次确认分别检查<span class="accent">组件、对接和原型</span></h2>
+        <p class="guide-subtitle">输入：需求规格、领域设计、前端代码，推荐附 <span class="file-ref">ux-decode.md</span>。模式无法从材料判断时，先用确认门 ⓪ 选择“完整对接”或“静态实现”。</p>
+        <div class="slide-body">
+          <div class="flat-table gate-manual">
+            <div class="flat-row header"><div>流程位置</div><div>Skill 先产出什么</div><div>你检查什么</div><div>发现问题怎么调整</div><div>确认后写入</div></div>
+            <div class="flat-row"><div class="gate-name">确认门 ①<span class="stage">STEP ②</span></div><div class="detail">扫描存量组件，形成组件树；每项标明复用、新增或扩展。</div><div class="action">页面/区域、组件粒度、交互遗漏；扩展项逐条审批。</div><div class="adjust">回改 <span class="file-ref">§2</span> 组件树与分类，并同步 <span class="file-ref">testability-map.md</span>；扩展被拒绝则改为新增方案，重新确认 ①。</div><div class="result"><span class="file-ref">requirement-frontend-design.md §2</span><br /><span class="file-ref">testability-map.md</span></div></div>
+            <div class="flat-row"><div class="gate-name">确认门 ②<span class="stage">STEP ③–⑥</span></div><div class="detail">定义 API / IFC、字段映射、缺口、转换、请求时序或未来替换路径。</div><div class="action">完整对接：缺口与时序；静态实现：前端契约、对接预留、示例数据。</div><div class="adjust">先改 <span class="file-ref">§4.1</span> 契约；再按模式同步 <span class="file-ref">§3 / §4.2 / §5</span> 或 <span class="file-ref">§5 / §6</span> 与示例数据，重新确认 ②。</div><div class="result"><span class="file-ref">requirement-frontend-design.md §3–6</span><br /><span class="file-ref">examples/*.json</span>（按需）</div></div>
+            <div class="flat-row"><div class="gate-name">确认门 ③<span class="stage">STEP ⑧</span></div><div class="detail">用组件树、前端数据契约和示例数据生成 <span class="file-ref">prototype/index.html</span>。</div><div class="action">布局、组件粒度、数据 shape、缺口，以及原始截图的 ground truth。</div><div class="adjust">不直接补丁原型：布局/粒度回改 <span class="file-ref">§2</span>，数据 shape 回改 <span class="file-ref">§4.1</span>，示例内容回改 <span class="file-ref">§6</span>；重生成后重新确认 ③。</div><div class="result"><span class="file-ref">prototype/index.html</span><br />回写 §2 / §4.1 / §6</div></div>
           </div>
         </div>
-        <div class="slide-footer"><span>设计文件回答：组件怎么拆、数据从哪来怎么转、拼起来能不能跑</span><span class="slide-no">05 / 12</span></div>
+        <div class="slide-footer"><span>调整原则：先修正权威设计产物，再重生成下游并重新进入同一确认门</span><span class="slide-no">05 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="实现计划落到文件职责、验收声明和顺序" data-desc="sdd-task-frontend 产出 tasks.md 与 alpha-tests.md，两份工件互相追踪">
+      <section class="slide" data-title="计划阶段把实现职责和验证声明分开记录" data-desc="tasks.md 定义执行，alpha-tests.md 记录声明与证据状态">
         <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-TASK-FRONTEND</div></div>
-        <h2 class="slide-title">实现计划落到<span class="accent">文件职责、验收声明和顺序</span></h2>
+        <h2 class="slide-title">计划：把“做什么”和“怎样证明”<span class="accent">分开写</span></h2>
+        <p class="guide-subtitle">必须有 <span class="file-ref">story_dir</span>、需求锚点和两份文件 schema；前端设计或后端契约缺失可以降级，但必须在“风险与回滚”中显式登记。</p>
         <div class="slide-body">
-          <div class="deliverable-pair" style="height:auto">
-            <div class="deliverable-column">
-              <div class="deliverable-name">执行清单 · tasks.md</div>
-              <div class="deliverable-purpose">告诉开发“改哪里、做什么、按什么顺序”</div>
-              <ul class="deliverable-list">
-                <li>TaskPacket：app、Story、基线来源与风险事实</li>
-                <li>受影响路由、组件层级、状态归属与数据流</li>
-                <li>精确文件范围，以及每个文件的功能职责</li>
-                <li>Task 顺序、依赖、可能扩散、风险与回滚</li>
+          <div class="plan-manual">
+            <div class="plan-file">
+              <div class="name">tasks.md</div>
+              <div class="purpose">执行清单，也是验证范围与方法的唯一作者</div>
+              <ul class="manual-list">
+                <li><span class="file-ref">TaskPacket</span>：project、Story、搜索路径、视觉基线来源和风险 token。</li>
+                <li>受影响路由、组件层级与挂载点、状态归属、数据流、复用决策。</li>
+                <li>每个 Task 的精确文件范围；每个文件写清位置、职责和对外契约。</li>
+                <li>“用例追溯”把 <span class="file-ref">SC-*</span> / <span class="file-ref">BR-*</span> / GWT → AT → Task。</li>
+                <li>每条 AT 只在这里定义 <span class="file-ref">verification_scope</span> 与 <span class="file-ref">verification_method</span>。</li>
               </ul>
-              <div class="developer-check">开发者检查：文件清单是否完整但不过宽；每个 Task 是否真的会改代码；计划是否忠于设计。</div>
             </div>
-            <div class="deliverable-column">
-              <div class="deliverable-name">声明与证据账本 · alpha-tests.md</div>
-              <div class="deliverable-purpose">告诉团队“每条需求准备怎样证明”</div>
-              <ul class="deliverable-list">
-                <li>SC / BR / GWT 到 AT，再到具体 Task 的映射</li>
-                <li>S1 组件、S2 页面、S3 用户路径验证记录</li>
-                <li>verification_scope 与 verification_method</li>
-                <li>声明初始状态、Deferred AC 与人工验收记录</li>
+            <div class="plan-file">
+              <div class="name">alpha-tests.md</div>
+              <div class="purpose">声明状态与证据账本；计划阶段不伪造证据</div>
+              <ul class="manual-list">
+                <li>AC ↔ 证据映射只引用 AT，不重复抄验证范围和验证方法。</li>
+                <li>初始状态统一为 <span class="file-ref">UNVERIFIED</span>。</li>
+                <li><span class="file-ref">Deferred</span> 记录外部依赖、影响范围、解除条件和恢复入口。</li>
+                <li><span class="file-ref">manual_acceptance</span> 必须写依据、所需环境和所需证据；验收人/时间留空。</li>
+                <li>还原证据、完整代码指纹和计划外承接由 Dev 阶段追加。</li>
               </ul>
-              <div class="developer-check">开发者检查：每条 AC 是否有覆盖；判据是否可观察；人工验收是否真的只能由人完成。</div>
             </div>
           </div>
-          <div class="example-strip"><div class="label">示例指令</div><div class="text">“根据 Story 前端设计生成 tasks.md 和 alpha-tests.md；只规划，不写代码。”</div></div>
+          <div class="guide-rule"><strong>审查时拒绝：</strong>可粘贴运行的 JSX / CSS / 函数体、固定测试命令、为保险而扩大文件清单、把“缺测试通道”改判成人工验收。示例指令：“生成两份计划文件；只规划，不写代码。”</div>
         </div>
-        <div class="slide-footer"><span>计划写到文件职责，不提前写 JSX、CSS、函数体或具体测试实现</span><span class="slide-no">06 / 12</span></div>
+        <div class="slide-footer"><span>一个 Task 一种形态；还原先于逻辑；样式文件归还原 Task；计划外风险写“可能扩散”而不是偷偷放宽范围</span><span class="slide-no">06 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="执行阶段只在一个 Story 内冻结、实现和取证" data-desc="sdd-dev-frontend 确认 dev-baseline.md 中的 QA 基线，按 tasks.md 实现并按最终 diff 收口">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DEV-FRONTEND</div></div>
-        <h2 class="slide-title">执行阶段只在一个 Story 内<span class="accent">冻结、实现和取证</span></h2>
-        <p class="slide-subtitle">可以从头执行，也可以续跑；执行清单 <span class="file-ref">tasks.md</span> 管进度，声明与证据账本 <span class="file-ref blue">alpha-tests.md</span> 管状态与证据。</p>
+      <section class="slide" data-title="开始开发前先把验证范围和 QA 基线确认清楚" data-desc="从入口检查到 QA 基线确认，说明每一步会做什么、产出什么、需要确认什么">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DEV-FRONTEND · ENTRY</div></div>
+        <h2 class="slide-title">开始开发前，先把<span class="accent">怎么验收</span>说清楚</h2>
+        <p class="guide-subtitle">可以直接说：“执行这个 Story，设计来源是 HTML 原型。先让我确认 <span class="file-ref">dev-baseline.md</span> 里的 QA 基线，再开始实现。”</p>
         <div class="slide-body">
-          <div class="execution-track">
-            <div class="execution-phase"><div class="phase-code">PHASE -1 / 0</div><div class="phase-title">进入与校验</div><p>定位 app 与 Story，校验 app 基线文件、执行清单和起点质量能力，确定验证组合。</p><div class="output">执行起点 · dev-baseline.md</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE A1 / A2</div><div class="phase-title">规格与冻结</div><p>把原型或文字规格抽成设计事实；将 QA 基线写入 dev-baseline.md，确认后冻结。</p><div class="output">design-spec/ · restore-contract.json</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE B</div><div class="phase-title">按 Task 实现</div><p>按 tasks.md 修改业务代码，回填因果证据并同步 checkbox 与 alpha-tests.md。</p><div class="output">业务代码 · tasks.md · alpha-tests.md</div></div>
-            <div class="execution-phase"><div class="phase-code">PHASE C / D</div><div class="phase-title">检视与收口</div><p>按最终 diff 取证、检视和修复，最后逐条收口声明状态。</p><div class="output">review-evidence.json · review-results.json · acceptance.md</div></div>
-          </div>
-          <div class="single-gate">执行阶段的确认门：确认 <strong>QA 基线（dev-baseline.md 的“QA 基线”章节）</strong>；它是后续实现与还原的共同期望。</div>
-        </div>
-        <div class="slide-footer"><span>示例：“执行这个 Story；HTML 原型是设计来源，先确认 dev-baseline.md 中的 QA 基线。”</span><span class="slide-no">07 / 12</span></div>
-      </section>
-
-      <section class="slide" data-title="执行产物把期望、事实和结论分开保存" data-desc="遇到争议、续跑、修复或验收时，可以直接定位对应工件">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">DEV ARTIFACTS</div></div>
-        <h2 class="slide-title">执行产物把<span class="accent">期望、事实和结论</span>分开保存</h2>
-        <div class="slide-body">
-          <div class="mapping-table artifact-table">
-            <div class="mapping-row header"><div>产物</div><div>重点内容</div><div>什么时候看</div></div>
-            <div class="mapping-row"><div class="problem">dev-baseline.md</div><div class="mechanism">执行起点，以及确认后冻结的“QA 基线”章节</div><div class="value">开工与期望争议</div></div>
-            <div class="mapping-row"><div class="problem">design-spec/</div><div class="mechanism">设计事实目录：design-facts.json、block-index.md 与区块规格</div><div class="value">还原与局部回查</div></div>
-            <div class="mapping-row"><div class="problem">restore-contract.json<br />restore-adapter.json</div><div class="mechanism">冻结的还原期望，以及实现 locator / 采集方式</div><div class="value">视觉还原验证</div></div>
-            <div class="mapping-row"><div class="problem">restore-report-*.json</div><div class="mechanism">RED / YELLOW / GREEN 的逐项比对结果</div><div class="value">定位还原偏差</div></div>
-            <div class="mapping-row"><div class="problem">review-evidence.json</div><div class="mechanism">命令、场景、截图、DOM 与代码的原始事实</div><div class="value">追查证据来源</div></div>
-            <div class="mapping-row"><div class="problem">review-results.json</div><div class="mechanism">检视发现（Finding）、问题等级和覆盖范围</div><div class="value">修复与复检</div></div>
-            <div class="mapping-row"><div class="problem">acceptance.md</div><div class="mechanism">验收结论：完成范围、声明状态、待处理项与下一步</div><div class="value">最终验收与交接</div></div>
+          <div class="flat-table phase-manual">
+            <div class="flat-row header"><div>这一步</div><div>Skill 会做什么</div><div>你会看到什么</div><div>你需要确认</div></div>
+            <div class="flat-row"><div class="phase-code">确认入口<span class="phase-id">ENTRY</span></div><div class="detail">先确认目标 app、<span class="file-ref">tasks.md</span> 和 Story 对得上，再读取 <span class="file-ref">base-ref</span>。</div><div class="action"><span class="file-ref">frontend-baselines/</span><br /><span class="file-ref">tasks.md</span></div><div class="detail">是不是选对了 app；monorepo 路径是否唯一；Story 有没有串到别的 app。</div></div>
+            <div class="flat-row"><div class="phase-code">确定怎么验<span class="phase-id">PHASE -1 / 0</span></div><div class="detail">根据改动风险选择 <span class="file-ref">lite</span> 或 <span class="file-ref">standard</span>，并列出这次真正要跑的验证项。</div><div class="action"><span class="file-ref">dev-baseline.md</span><br /><span class="file-ref">evidence/portfolio.json</span>（initial）</div><div class="detail">这些验证是否覆盖本次风险；不需要为了保险固定跑“全量验证”。</div></div>
+            <div class="flat-row"><div class="phase-code">读取设计事实<span class="phase-id">PHASE A1</span></div><div class="detail">从原型中提取页面、区块和设计锚点，整理成后续可以追踪的设计事实。</div><div class="action"><span class="file-ref">&lt;requirement-dir&gt;/design-spec/</span><br /><span class="file-ref">design-inventory.md</span> · <span class="file-ref">design-facts.json</span> · <span class="file-ref">block-index.md</span></div><div class="detail">页面和区块有没有漏；来源是否正确；<span class="file-ref">blocks/*.md</span> 只在内容过长或明确点名时生成。</div></div>
+            <div class="flat-row"><div class="phase-code">确认 QA 基线<span class="phase-id">PHASE A2</span></div><div class="detail">把设计事实整理成 QA 基线。你确认后冻结，同时生成后续还原需要的契约。</div><div class="action"><span class="file-ref">dev-baseline.md / QA 基线</span><br /><span class="file-ref">evidence/restore-contract.json</span> · <span class="file-ref">evidence/restore-adapter.json</span></div><div class="detail">页面、区块、必测状态、来源和已知缺口是否准确；确认前不会开始写代码。</div></div>
           </div>
         </div>
-        <div class="slide-footer"><span>续跑先看 tasks.md 与 alpha-tests.md；最终交接先看 acceptance.md</span><span class="slide-no">08 / 12</span></div>
+        <div class="slide-footer"><span>这页通常只需要你确认一次 QA 基线；只有路径不清、需要外部授权或规格有缺口时才会额外暂停</span><span class="slide-no">07 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="五格审查分别回答五类问题" data-desc="每个 lens 有独立边界，开发者按事实修复，不把同一缺陷重复计算">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-REVIEW-FRONTEND</div></div>
-        <h2 class="slide-title">五格审查分别回答<span class="accent">五类问题</span></h2>
-        <div class="slide-body">
-          <div class="mapping-table review-table">
-            <div class="mapping-row header"><div>概念 / LENS · CELL</div><div>审查什么</div><div>开发者重点看</div></div>
-            <div class="mapping-row"><div class="problem"><span class="concept">还原检视</span><span class="file-ref">restore-lens · CODE-RESTORE</span></div><div class="mechanism">冻结区块、顺序、父子关系、数量和样式容差是否成立</div><div class="value">RED / YELLOW 原因与契约 ID</div></div>
-            <div class="mapping-row"><div class="problem"><span class="concept">布局检视</span><span class="file-ref">layout-lens · CODE-LAYOUT</span></div><div class="mechanism">不同视口、跨页结构、真实数据与层叠关系是否稳定</div><div class="value">触发场景与可复现影响</div></div>
-            <div class="mapping-row"><div class="problem"><span class="concept">规范检视</span><span class="file-ref">convention-lens · CODE-CONVENTION</span></div><div class="mechanism">是否遵守 app 基线文件中的 PATTERN 与 Requirement 工程决策</div><div class="value">适用场景、依据 ID 与豁免</div></div>
-            <div class="mapping-row"><div class="problem"><span class="concept">质量检视</span><span class="file-ref">quality-lens · CODE-QUALITY</span></div><div class="mechanism">职责、重复、状态归属、副作用、复杂度和性能是否有可观察问题</div><div class="value">不要只看风格，要看真实后果</div></div>
-            <div class="mapping-row"><div class="problem"><span class="concept">功能声明检视</span><span class="file-ref">test-lens · CODE-TEST</span></div><div class="mechanism">冻结功能声明、异常分支、接口契约与回归闭包是否被证据覆盖</div><div class="value">证据是否真正覆盖声明</div></div>
+      <section class="slide" data-title="实现阶段每个 Task 都要闭合任务、代码和证据" data-desc="Phase B 按未完成 Task 逐个实现并更新 tasks 与 alpha-tests">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DEV-FRONTEND · PHASE B</div></div>
+        <h2 class="slide-title">实现中：每个 Task 都走一次<span class="accent">证据闭环</span></h2>
+        <p class="guide-subtitle"><span class="file-ref">tasks.md</span> 管实现进度，<span class="file-ref">alpha-tests.md</span> 管声明状态；两者必须在同一轮同步更新。</p>
+        <div class="slide-body task-loop">
+          <div class="numbered-steps">
+            <div class="numbered-step"><strong>选一个未完成 Task</strong><span>读取它的文件职责、受影响 AT、形态和“可能扩散”；不把多个 Task 混成一轮。</span></div>
+            <div class="numbered-step"><strong>还原 Task 先取得 RED</strong><span>用冻结的同一份 <span class="contract-pair"><span class="file-ref">restore-contract.json</span> + <span class="file-ref">restore-adapter.json</span></span>，证明当前实现尚未满足期望。</span></div>
+            <div class="numbered-step"><strong>按文件职责实现</strong><span>计划外连带改动按扩散承接登记；不能借实现过程改设计或放宽已冻结期望。</span></div>
+            <div class="numbered-step"><strong>只取本 Task 改变声明的因果证据</strong><span>不在每个 Task 后固定跑全量测试；浏览器模块只有被 <span class="file-ref">portfolio.json</span> 选中才解析。</span></div>
+            <div class="numbered-step"><strong>取得 GREEN 并回填账本</strong><span>勾选 checkbox，写证据引用和合法状态；样式文件只归还原 Task。</span></div>
           </div>
-          <div class="example-strip"><div class="label">示例指令</div><div class="text">“以这个 Story 的冻结声明和 base-ref 为准，执行适用 lens，并把可复现的检视发现（Finding）写入 review-results.json。”</div></div>
-        </div>
-        <div class="slide-footer"><span>审查只判断；选哪些 lens、采集哪些事实、如何汇总由执行阶段负责</span><span class="slide-no">09 / 12</span></div>
-      </section>
-
-      <section class="slide" data-title="最终交付是一份可接手的验收结论" data-desc="acceptance.md 用已验证（PROVEN）、未验证（UNVERIFIED）、已暂缓（DEFERRED）说明交付状态">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">ACCEPTANCE</div></div>
-        <h2 class="slide-title">最终交付是一份<span class="accent">可接手的验收结论</span></h2>
-        <div class="slide-body evidence-layout">
           <div>
-            <div class="state-list">
-              <div class="state-row"><div class="state-key proven">已验证<span class="status-code">PROVEN</span></div><p>已有覆盖声明、并且仍然新鲜的证据。</p></div>
-              <div class="state-row"><div class="state-key unverified">未验证<span class="status-code">UNVERIFIED</span></div><p>尚未证明，同时给出需要怎样补验。</p></div>
-              <div class="state-row"><div class="state-key deferred">已暂缓<span class="status-code">DEFERRED</span></div><p>明确暂缓，并记录影响范围与解除条件。</p></div>
+            <div class="artifact-delta">
+              <div class="delta-row"><strong>tasks.md</strong><span>只更新 checkbox；验收内容仍由计划阶段所有。</span></div>
+              <div class="delta-row"><strong>alpha-tests.md</strong><span>回填证据、声明状态、Deferred、计划外承接；GREEN 行保存权威代码指纹。</span></div>
+              <div class="delta-row"><strong>evidence/restore-report-red.json</strong><span>实现前差异；与 GREEN 使用同一冻结契约。</span></div>
+              <div class="delta-row"><strong>evidence/restore-report-green.json</strong><span>实现后逐规则三色结果；新一轮覆盖当前文件。</span></div>
+              <div class="delta-row"><strong>.work/static-results.json</strong><span>同轮过程件；报告已吸收规则结论后可覆盖重算。</span></div>
             </div>
-            <div class="manual-note">人工验收只能由真实人员执行并签署；Agent 负责准备环境、步骤和所需证据。</div>
-          </div>
-          <div class="acceptance-file">
-            <div class="file-name">acceptance.md</div>
-            <div class="file-purpose">把机器事实翻译成开发、测试和负责人都能继续行动的结果。</div>
-            <div class="acceptance-sections">
-              <div class="acceptance-section"><strong>完成范围</strong><br />本次实际交付了什么</div>
-              <div class="acceptance-section"><strong>声明状态</strong><br />哪些已验证、未验证、已暂缓</div>
-              <div class="acceptance-section"><strong>需要你处理</strong><br />待决项与人工验收动作</div>
-              <div class="acceptance-section"><strong>你该知道</strong><br />建议级问题与已知限制</div>
-              <div class="acceptance-section"><strong>证据索引</strong><br />如何回到命令、场景和检视发现</div>
-              <div class="acceptance-section"><strong>唯一下一步</strong><br />现在最该执行的动作</div>
-            </div>
-            <div class="developer-check">收口检查：已验证（PROVEN）有新鲜证据；未验证（UNVERIFIED）有补验方式；已暂缓（DEFERRED）有解除条件。</div>
+            <div class="guide-rule"><strong>还原工具公开动作：</strong><span class="file-ref">contract</span>、<span class="file-ref">validate</span>、<span class="file-ref">static</span>、<span class="file-ref">report</span>。新产物写 v3；v2 只用于历史兼容读取。</div>
           </div>
         </div>
-        <div class="slide-footer"><span>不是把“完成”说得更好听，而是让完成范围和剩余动作都可追溯</span><span class="slide-no">10 / 12</span></div>
+        <div class="slide-footer"><span>机器盲区不塞进契约假装可判：图片裁切焦点、透明叠层观感等进入 <span class="file-ref">manual_acceptance</span></span><span class="slide-no">08 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="示例：一条风险简报 Story 如何走完全程" data-desc="从 frontend-baselines/ 到 acceptance.md，每一步都有明确文件和确认门">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">END-TO-END EXAMPLE</div></div>
-        <h2 class="slide-title">示例：一条风险简报 Story 如何<span class="accent">走完全程</span></h2>
-        <p class="slide-subtitle">示例需求：为“客户风险简报”增加高风险客户筛选，并按 HTML 原型还原页面。</p>
-        <div class="slide-body">
-          <div class="pipeline" style="margin-top:34px">
-            <div class="phase-node"><div class="phase-id">01 · INIT</div><div class="phase-dot"></div><div class="phase-name">接入 app</div><div class="phase-skill">sdd-init-frontend</div><div class="phase-desc">产物：app 基线文件<br /><span class="file-ref">frontend-baselines/</span></div></div>
-            <div class="phase-node"><div class="phase-id">02 · DESIGN</div><div class="phase-dot"></div><div class="phase-name">完成设计</div><div class="phase-skill confirm">设计确认门 ① / ② / ③</div><div class="phase-desc"><span class="file-ref">requirement-frontend-design.md</span><br /><span class="file-ref">story-delta-frontend-design.md</span></div></div>
-            <div class="phase-node"><div class="phase-id">03 · PLAN</div><div class="phase-dot"></div><div class="phase-name">拆任务</div><div class="phase-skill">sdd-task-frontend</div><div class="phase-desc">执行清单 <span class="file-ref">tasks.md</span><br />声明账本 <span class="file-ref">alpha-tests.md</span></div></div>
-            <div class="phase-node"><div class="phase-id">04 · BUILD</div><div class="phase-dot"></div><div class="phase-name">确认并实现</div><div class="phase-skill confirm">执行确认门 · QA 基线</div><div class="phase-desc">确认 <span class="file-ref">dev-baseline.md</span> 后实现；证据回填 <span class="file-ref">alpha-tests.md</span></div></div>
-            <div class="phase-node"><div class="phase-id">05 · ACCEPT</div><div class="phase-dot"></div><div class="phase-name">检视与验收</div><div class="phase-skill">sdd-review-frontend</div><div class="phase-desc">检视结果 <span class="file-ref">review-results.json</span><br />验收结论 <span class="file-ref">acceptance.md</span></div></div>
+      <section class="slide" data-title="收口阶段只在需要人判断时暂停" data-desc="内部复判与聚合由 Skill 完成，使用者只处理拍板和人工验收">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">SDD-DEV-FRONTEND · CLOSEOUT</div></div>
+        <h2 class="slide-title">收口阶段：只在<span class="accent">需要人判断</span>时找你</h2>
+        <p class="guide-subtitle">最终差异怎么复判、哪些证据要重取、检视结果怎么聚合，都是 Skill 内部工作；使用者不需要跟这些步骤。</p>
+        <div class="slide-body closeout-user">
+          <div>
+            <div class="participation-list">
+              <div class="participation-row"><strong>默认继续</strong><span>规格清楚、权限齐全、证据可取得时，Skill 会继续完成验证、修复和收口，不逐步等待确认。</span></div>
+              <div class="participation-row"><strong>需要你拍板</strong><span>只有选择会改变需求、范围或设计结论，或者需要新的外部授权时，才会带着明确选项暂停。</span></div>
+              <div class="participation-row"><strong>需要你验收</strong><span>声明属于 <span class="file-ref">manual_acceptance</span> 时，会给出路由、操作、预期和证据要求；真实人员执行后再回填。</span></div>
+              <div class="participation-row"><strong>发现未通过</strong><span>能在既定规格内修复的先修复；需要改规格或超出授权范围的，写进交付入口请你决定。</span></div>
+            </div>
           </div>
-          <div class="scenario-prompt"><strong>续跑示例：</strong>“继续客户风险简报 Story；从 tasks.md 的未完成 Task 开始，保留 dev-baseline.md 中已冻结的 QA 基线，只重取受影响证据。”</div>
+          <div>
+            <div class="acceptance-entry">
+              <div class="name">acceptance.md</div>
+              <div class="purpose">收口后只先打开这一份</div>
+              <div class="entry-row"><strong>先读第一句</strong><span>直接判断当前是可验收、部分验证，还是有明确阻断。</span></div>
+              <div class="entry-row"><strong>再看“需要你处理”</strong><span>这里才是需要拍板、补权限或执行人工验收的动作。</span></div>
+              <div class="entry-row"><strong>有疑问再往下追</strong><span>按文件引用进入 <span class="file-ref">alpha-tests.md</span> 或 <span class="file-ref">evidence/</span>，不用从内部过程文件猜结论。</span></div>
+            </div>
+            <div class="guide-rule"><strong>使用边界：</strong>内部出现的三色、检视角色和过程文件不要求使用者逐项解读；它们最终都要落成可执行的结论。</div>
+          </div>
         </div>
-        <div class="slide-footer"><span>每一步都可以独立进入；已有合格产物时直接消费，不重复生成</span><span class="slide-no">11 / 12</span></div>
+        <div class="slide-footer"><span>如果没有拍板项或人工验收项，收口阶段不会额外打断你</span><span class="slide-no">09 / 12</span></div>
       </section>
 
-      <section class="slide" data-title="三次确认嵌在前端设计流程中" data-desc="确认门①组件架构，确认门②接口与对接，确认门③静态原型视觉结果">
-        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">CONFIRMATION GATES</div></div>
-        <h2 class="slide-title">三次确认嵌在<span class="accent">前端设计流程</span>中</h2>
-        <p class="slide-subtitle">这里的确认门①–③属于 <span class="file-ref">sdd-design-frontend</span>；执行阶段的 QA 基线确认另见第 7 页。</p>
-        <div class="slide-body">
-          <div class="confirmation-flow">
-            <div class="confirm-row">
-              <div class="confirm-stage"><div class="confirm-label">STEP ② · 设计动作</div><div class="confirm-title">组件架构与存量盘点</div><p>形成组件树，标出复用、新增和扩展。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-gate"><div class="confirm-label">确认门 ①</div><div class="confirm-title">组件树与复用结论</div><p>确认结构、粒度、交互组件及扩展决策。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">requirement-frontend-design.md · 第 2 节</span><span class="file-ref">testability-map.md</span></div>
-            </div>
-            <div class="confirm-row">
-              <div class="confirm-stage"><div class="confirm-label">STEP ③–⑥ · 设计动作</div><div class="confirm-title">接口、数据与对接策略</div><p>定义 API / IFC、字段映射、缺口、时序与示例数据。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-gate"><div class="confirm-label">确认门 ②</div><div class="confirm-title">契约与对接决策</div><p>逐条确认关键接口与前后端边界。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">requirement-frontend-design.md · 第 3–6 节</span><span class="file-ref">examples/*.json</span></div>
-            </div>
-            <div class="confirm-row">
-              <div class="confirm-stage"><div class="confirm-label">STEP ⑧ · 设计动作</div><div class="confirm-title">生成静态原型</div><p>用组件树、前端数据契约和示例数据生成可视页面。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-gate"><div class="confirm-label">确认门 ③</div><div class="confirm-title">静态原型视觉确认</div><p>确认布局、粒度、数据 shape、缺口与设计稿对照。</p></div>
-              <div class="confirm-arrow">→</div>
-              <div class="confirm-artifacts"><div class="confirm-label">确认后的文件</div><span class="file-ref">prototype/index.html</span><span class="file-ref">requirement-frontend-design.md</span></div>
+      <section class="slide" data-title="常用产物按问题逐项打开" data-desc="每个真实文件只承担一种主要阅读目的">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">ARTIFACT MAP</div></div>
+        <h2 class="slide-title">常用产物：先按<span class="accent">你要回答的问题</span>找文件</h2>
+        <p class="guide-subtitle">不要一次打开整个目录。先读左侧四份人读文件；只有要核对来源或证据时，再进入右侧文件。</p>
+        <div class="slide-body artifact-guide">
+          <div class="artifact-column">
+            <h3>使用者通常先看 · <span class="file-ref">&lt;story-dir&gt;/</span></h3>
+            <div class="artifact-file-list">
+              <div class="artifact-file"><strong>acceptance.md</strong><span>“现在能不能验收？”——先给结论，再列需要你处理的动作。</span></div>
+              <div class="artifact-file"><strong>tasks.md</strong><span>“这次具体改什么？”——看 Task、文件职责、受影响声明和完成勾选。</span></div>
+              <div class="artifact-file"><strong>dev-baseline.md</strong><span>“开发按什么标准验证？”——看已经确认的 QA 基线和验证范围。</span></div>
+              <div class="artifact-file"><strong>alpha-tests.md</strong><span>“每条声明证到哪了？”——看 <span class="file-ref">PROVEN / UNVERIFIED / DEFERRED</span> 与证据引用。</span></div>
             </div>
           </div>
-          <div class="design-handoff">
-            <div><strong>设计交付：</strong><span class="file-ref">requirement-frontend-design.md</span> + 按需的 <span class="file-ref">story-delta-frontend-design.md</span></div>
-            <div class="handoff-arrow">→</div>
-            <div><strong>计划输入：</strong><span class="file-ref">tasks.md</span> + <span class="file-ref">alpha-tests.md</span></div>
+          <div class="artifact-column support">
+            <h3>需要核对时再看 · 设计与证据</h3>
+            <div class="artifact-file-list">
+              <div class="artifact-file"><strong>requirement-frontend-design.md</strong><span>Requirement 级公共设计：组件树、前端契约、数据预留和设计决策。</span></div>
+              <div class="artifact-file"><strong>story-delta-frontend-design.md</strong><span>当前 Story 相对公共设计新增或改动了什么。</span></div>
+              <div class="artifact-file"><strong>evidence/portfolio.json</strong><span>这一轮实际选择了哪些验证模块，以及所需执行环境。</span></div>
+              <div class="artifact-file"><strong>evidence/review-results.json</strong><span>聚合后的机器结果；从 <span class="file-ref">acceptance.md</span> 引用进入，不要求日常先读。</span></div>
+            </div>
           </div>
         </div>
-        <div class="slide-footer"><span>三次确认通过后，前端设计文件才进入 sdd-task-frontend 生成 tasks.md 与 alpha-tests.md</span><span class="slide-no">12 / 12</span></div>
+        <div class="slide-footer"><span>app 公共事实仍从 <span class="file-ref">frontend-baselines/index.md</span> 进入；过程文件 <span class="file-ref">.work/</span> 不作为交付阅读入口</span><span class="slide-no">10 / 12</span></div>
+      </section>
+
+      <section class="slide" data-title="验收时先读 acceptance 再按引用追证" data-desc="acceptance 是使用者入口，报告三色和声明状态只用于继续追证">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">ACCEPTANCE GUIDE</div></div>
+        <h2 class="slide-title">验收：先读<span class="accent">acceptance.md</span>给出的结论</h2>
+        <div class="slide-body status-manual">
+          <div class="acceptance-primary">
+            <h3>acceptance.md · 人工验收入口</h3>
+            <div class="acceptance-outline">
+              <div><strong>验收摘要</strong><span>第一句直接说明可验收、部分验证，或因哪些阻断暂不可验收。</span></div>
+              <div><strong>需要你处理</strong><span>拍板项、补权限动作与 <span class="file-ref">manual_acceptance</span> 的执行步骤。</span></div>
+              <div><strong>你该知道，但不用动</strong><span>建议级问题、交接信息和不影响当前验收的提醒。</span></div>
+              <div><strong>这次判了什么</strong><span>哪些范围已经判定，哪些未判，以及主动收窄了什么。</span></div>
+              <div><strong>按需章节</strong><span>改进建议、未决问题、暂缓项和规范候选有内容才出现。</span></div>
+              <div><strong>要往下追的话</strong><span>给出 <span class="file-ref">dev-baseline.md</span>、<span class="file-ref">alpha-tests.md</span> 与机器结果路径。</span></div>
+            </div>
+            <div class="guide-rule"><strong>人工验收不能代签：</strong><span class="file-ref">manual_acceptance</span> 只有真实人员可执行。示例见 <span class="file-ref">dashboard-sdd/acceptance.md</span>；权威登记在 <span class="file-ref">dashboard-sdd/alpha-tests.md</span>。</div>
+          </div>
+          <div class="status-secondary">
+            <div class="status-group">
+              <h3>需要追证时 · <span class="file-ref">restore-report-*.json</span></h3>
+              <div class="status-line"><strong>GREEN</strong><span>该还原规则通过。</span></div>
+              <div class="status-line"><strong>YELLOW</strong><span>条件未闭合，需要补证或落成明确状态。</span></div>
+              <div class="status-line"><strong>RED</strong><span>规则未满足，需要修复或调整声明。</span></div>
+            </div>
+            <div class="status-group">
+              <h3>需要查声明时 · <span class="file-ref">alpha-tests.md</span></h3>
+              <div class="status-line"><strong>PROVEN</strong><span>已验证，证据有效。</span></div>
+              <div class="status-line"><strong>UNVERIFIED</strong><span>未验证，按说明补验。</span></div>
+              <div class="status-line"><strong>DEFERRED</strong><span>等外部依赖，按解除条件恢复。</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>人工验收完成后再回填 <span class="file-ref">manual_outcome</span>、<span class="file-ref">manual_checked_by</span>、<span class="file-ref">manual_checked_at</span> 与 <span class="file-ref">evidence_refs</span></span><span class="slide-no">11 / 12</span></div>
+      </section>
+
+      <section class="slide" data-title="风险简报 Story 的完整操作顺序" data-desc="用一组具体指令串起初始化、设计确认、计划、实现和验收">
+        <div class="slide-kicker"><div class="brand"><span class="brand-mark"></span> FRONTEND SDD</div><div class="section-name">WORKED EXAMPLE</div></div>
+        <h2 class="slide-title">示例：风险简报 Story 的<span class="accent">完整操作顺序</span></h2>
+        <p class="guide-subtitle">需求：在 <span class="file-ref">apps/web</span> 增加“高风险客户筛选”，页面按 HTML 原型还原；API 尚未就绪，采用静态实现模式。</p>
+        <div class="slide-body">
+          <div class="flat-table example-manual">
+            <div class="flat-row header"><div>顺序</div><div>入口</div><div>可以直接这样说</div><div>结束时检查</div></div>
+            <div class="flat-row"><div class="seq">01 · INIT</div><div class="key"><span class="file-ref">sdd-init-frontend</span></div><div class="prompt">“为 <span class="file-ref">apps/web</span> 建立 baseline，并准备到可开发状态。”</div><div class="check"><span class="file-ref">structure.md</span> 的框架/形态正确；质量命令有实跑结论。</div></div>
+            <div class="flat-row"><div class="seq">02 · DESIGN</div><div class="key"><span class="file-ref">sdd-design-frontend</span></div><div class="prompt">“根据需求、ux-decode 和现有代码做前端设计；API 未就绪，使用静态实现模式。”</div><div class="check">依次完成确认门 ① 组件树、② 前端契约/预留/示例数据、③ 原型视觉确认。</div></div>
+            <div class="flat-row"><div class="seq">03 · PLAN</div><div class="key"><span class="file-ref">sdd-task-frontend</span></div><div class="prompt">“根据已确认设计生成 <span class="file-ref">tasks.md</span> 和 <span class="file-ref">alpha-tests.md</span>；只规划。”</div><div class="check">每个 SC / BR / GWT 能追到 AT 和 Task；文件职责准确，状态均未伪造。</div></div>
+            <div class="flat-row"><div class="seq">04 · BUILD</div><div class="key"><span class="file-ref">sdd-dev-frontend</span></div><div class="prompt">“执行这个 Story；原型是视觉来源。先给我确认 QA 基线，再逐 Task 实现。”</div><div class="check">确认 <span class="file-ref">dev-baseline.md / QA 基线</span>；同一 v3 契约取得 RED → GREEN。</div></div>
+            <div class="flat-row"><div class="seq">05 · RESUME / CLOSE</div><div class="key"><span class="file-ref">sdd-dev-frontend</span></div><div class="prompt">“从未完成 Task 继续；保留已冻结 QA 基线，只重取失效证据并收口。”</div><div class="check">先读 <span class="file-ref">acceptance.md</span>；按“需要你处理”完成人工验收或待决项。</div></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>实际使用时一轮只处理一个决策点；驳回确认门时回改对应设计产物，不带着错误期望继续实现</span><span class="slide-no">12 / 12</span></div>
       </section>
     </div>
   </main>
@@ -1375,7 +1588,7 @@
       const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
       function fitDeck() {
-        const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
         document.documentElement.style.setProperty('--scale', String(scale));
       }
 

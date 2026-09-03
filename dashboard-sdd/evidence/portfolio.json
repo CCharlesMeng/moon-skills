@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "phase": "initial",
+  "tier": {
+    "value": "lite",
+    "restore_tasks": [],
+    "blocking_triggers": [],
+    "changed_files": 1,
+    "max_changed_files": 5
+  },
+  "risk_triggers": [
+    "interaction"
+  ],
+  "trigger_sources": {
+    "interaction": [
+      "plan"
+    ]
+  },
+  "portfolio_narrowed": [],
+  "facts": {
+    "cross_page": false,
+    "shared_style": false,
+    "overflow_state": true,
+    "frozen_r": false,
+    "frozen_r5": false,
+    "frozen_r6": false,
+    "has_f3": false,
+    "has_s3_claim": false
+  },
+  "modules": [
+    "causal",
+    "targeted-quality"
+  ],
+  "review_roles": [],
+  "review_dimensions": {},
+  "claims": [
+    {
+      "id": "AT-US1-001",
+      "verification_scope": "S2_PAGE",
+      "verification_method": "manual_acceptance",
+      "task": "T1",
+      "modules": [
+        "causal"
+      ],
+      "required_profile": "live",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "AT-US1-002",
+      "verification_scope": "S2_PAGE",
+      "verification_method": "manual_acceptance",
+      "task": "T1",
+      "modules": [
+        "causal"
+      ],
+      "required_profile": "live",
+      "status": "UNVERIFIED"
+    }
+  ],
+  "previous": null
+}

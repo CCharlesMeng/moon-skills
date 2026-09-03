@@ -1,0 +1,86 @@
+{
+  "code": {
+    "base_ref": "example-base",
+    "code_fingerprint": "251d80353e9d30ed367dab8c342e1bfc7e951ad42b997c4cfe9d16491dfc96bb",
+    "files": [
+      {
+        "path": "dashboard-sdd/demo.html",
+        "sha256": "e8663a7e1f78b96e89ea7393e7a120ad21d0f852d0b25aa98d0dfd6933c77f95"
+      }
+    ],
+    "head": "example-head"
+  },
+  "evidence_epoch": "review-1",
+  "quality_gate": {
+    "commands": []
+  },
+  "runtime": {
+    "browser": "Chrome",
+    "dpr": 1,
+    "font_fingerprint": "system-ui",
+    "viewport": "1920x1080"
+  },
+  "scenarios": [],
+  "schema_version": 1,
+  "validation_portfolio": {
+    "claims": [
+      {
+        "id": "AT-US1-001",
+        "modules": [
+          "causal"
+        ],
+        "required_profile": "live",
+        "status": "UNVERIFIED",
+        "task": "T1",
+        "verification_method": "manual_acceptance",
+        "verification_scope": "S2_PAGE"
+      },
+      {
+        "id": "AT-US1-002",
+        "modules": [
+          "causal"
+        ],
+        "required_profile": "live",
+        "status": "UNVERIFIED",
+        "task": "T1",
+        "verification_method": "manual_acceptance",
+        "verification_scope": "S2_PAGE"
+      }
+    ],
+    "facts": {
+      "cross_page": false,
+      "frozen_r": false,
+      "frozen_r5": false,
+      "frozen_r6": false,
+      "has_f3": false,
+      "has_s3_claim": false,
+      "overflow_state": true,
+      "shared_style": false
+    },
+    "modules": [
+      "causal",
+      "targeted-quality"
+    ],
+    "phase": "initial",
+    "portfolio_narrowed": [],
+    "previous": null,
+    "review_dimensions": {},
+    "review_roles": [],
+    "risk_triggers": [
+      "interaction"
+    ],
+    "schema_version": 1,
+    "tier": {
+      "blocking_triggers": [],
+      "changed_files": 1,
+      "max_changed_files": 5,
+      "restore_tasks": [],
+      "value": "lite"
+    },
+    "trigger_sources": {
+      "interaction": [
+        "plan"
+      ]
+    }
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "claim_ledger": [
+    {
+      "actual_profile": null,
+      "claim_status": "UNVERIFIED",
+      "evidence": "",
+      "id": "AT-US1-001",
+      "note": "待真实人员执行动效体感验收并留下录屏"
+    },
+    {
+      "actual_profile": null,
+      "claim_status": "UNVERIFIED",
+      "evidence": "",
+      "id": "AT-US1-002",
+      "note": "待业务负责人确认文案并留下审批记录"
+    }
+  ],
+  "code_fingerprint": "251d80353e9d30ed367dab8c342e1bfc7e951ad42b997c4cfe9d16491dfc96bb",
+  "counts": {
+    "blocker": 0,
+    "claims_deferred": 0,
+    "claims_unverified": 2,
+    "decided": 0,
+    "deferred": 0,
+    "handoff": 2,
+    "manual_acceptance": 2,
+    "manual_pending": 2,
+    "norm_candidate": 0,
+    "open_question": 0,
+    "skipped": 0,
+    "suggestion": 0,
+    "unplanned_carry": 0
+  },
+  "coverage": {},
+  "decisions": [],
+  "deferred_candidates": [],
+  "evidence_epoch": "review-1",
+  "findings": [],
+  "handoff": [
+    {
+      "id": "AT-US1-001",
+      "kind": "manual_acceptance",
+      "needs_decision": false,
+      "user_visible_text": "AT-US1-001（SC-1 / BR-1）待人工验收，环境：Chrome，1920×1080，浏览器缩放 100%；打开 `dashboard-sdd/demo.html`；需留下15 秒录屏，包含连续滚动三次并展开、收起至少三张风险卡片"
+    },
+    {
+      "id": "AT-US1-002",
+      "kind": "manual_acceptance",
+      "needs_decision": false,
+      "user_visible_text": "AT-US1-002（SC-2 / BR-1）待人工验收，环境：同一页面，显示完整风险摘要与主要风险信号；由业务负责人验收；需留下业务审批记录链接，或包含完整摘要文案与审批结论的截图"
+    }
+  ],
+  "judged_files": {},
+  "known_gaps": {},
+  "manual_acceptance": [
+    {
+      "claim_status": "UNVERIFIED",
+      "evidence_refs": [],
+      "id": "AT-US1-001",
+      "manual_basis": "motion_judgment",
+      "manual_outcome": "NOT_RUN",
+      "required_environment": "Chrome，1920×1080，浏览器缩放 100%；打开 `dashboard-sdd/demo.html`",
+      "required_evidence": "15 秒录屏，包含连续滚动三次并展开、收起至少三张风险卡片",
+      "trace": "SC-1 / BR-1",
+      "verification_scope": "S2_PAGE"
+    },
+    {
+      "claim_status": "UNVERIFIED",
+      "evidence_refs": [],
+      "id": "AT-US1-002",
+      "manual_basis": "content_approval",
+      "manual_outcome": "NOT_RUN",
+      "required_environment": "同一页面，显示完整风险摘要与主要风险信号；由业务负责人验收",
+      "required_evidence": "业务审批记录链接，或包含完整摘要文案与审批结论的截图",
+      "trace": "SC-2 / BR-1",
+      "verification_scope": "S2_PAGE"
+    }
+  ],
+  "norm_candidates": [],
+  "open_questions": [],
+  "portfolio_narrowed": [],
+  "restore_contract": null,
+  "roles": {},
+  "schema_version": 1,
+  "skipped": {},
+  "unplanned_carry": [],
+  "validation_portfolio": {
+    "claims": [
+      {
+        "id": "AT-US1-001",
+        "modules": [
+          "causal"
+        ],
+        "required_profile": "live",
+        "status": "UNVERIFIED",
+        "task": "T1",
+        "verification_method": "manual_acceptance",
+        "verification_scope": "S2_PAGE"
+      },
+      {
+        "id": "AT-US1-002",
+        "modules": [
+          "causal"
+        ],
+        "required_profile": "live",
+        "status": "UNVERIFIED",
+        "task": "T1",
+        "verification_method": "manual_acceptance",
+        "verification_scope": "S2_PAGE"
+      }
+    ],
+    "facts": {
+      "cross_page": false,
+      "frozen_r": false,
+      "frozen_r5": false,
+      "frozen_r6": false,
+      "has_f3": false,
+      "has_s3_claim": false,
+      "overflow_state": true,
+      "shared_style": false
+    },
+    "modules": [
+      "causal",
+      "targeted-quality"
+    ],
+    "phase": "initial",
+    "portfolio_narrowed": [],
+    "previous": null,
+    "review_dimensions": {},
+    "review_roles": [],
+    "risk_triggers": [
+      "interaction"
+    ],
+    "schema_version": 1,
+    "tier": {
+      "blocking_triggers": [],
+      "changed_files": 1,
+      "max_changed_files": 5,
+      "restore_tasks": [],
+      "value": "lite"
+    },
+    "trigger_sources": {
+      "interaction": [
+        "plan"
+      ]
+    }
+  }
+}
