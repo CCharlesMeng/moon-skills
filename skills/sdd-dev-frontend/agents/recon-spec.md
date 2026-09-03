@@ -34,18 +34,16 @@
 
 | 档 | 取值 | 期望值取自 | 取证方式列写 |
 | --- | --- | --- | --- |
-| 1 | `原型` | `design-facts.json` + 本 Story 涉及区块的区块规格 | 冻结契约的 static / render / 按需 visual |
-| 2 | `参照页 <路由>` | 取值表追加的参照页事实：实测间距、字号、状态样式、空态处理、用到的样式/token `PATTERN-*` | 冻结契约的 static / render / 按需 visual |
+| 1 | `原型` | `design-facts.json` + 本 Story 涉及区块的按需区块规格 | 冻结契约的 static / render；机器盲区交人工目视 |
+| 2 | `参照页 <路由>` | 取值表追加的参照页事实：实测间距、字号、状态样式、空态处理、用到的样式/token `PATTERN-*` | 冻结契约的 static / render；机器盲区交人工目视 |
 | 3 | `文字规格` | `story-delta-frontend-design.md` 的文字规格 + `dev-baseline.md / 工程依据` 引用的样式/token `PATTERN-*` | static + 可用的 render；无外部视觉事实 |
 
-第 1 档的期望值全部来自抽取层产物，下面五项缺任何一项按前置缺失终止，**不得改为自己打开原型文件补齐**：
+第 1 档的期望值全部来自抽取层产物，下面三项缺任何一项按前置缺失终止，**不得改为自己打开原型文件补齐**：
 
 | 产物 | 位置 |
 | --- | --- |
 | 设计事实 | `<design-spec-dir>/design-facts.json` |
-| design tokens | `<design-spec-dir>/design-tokens.md` |
-| 界面清单 | `<design-spec-dir>/interface-inventory.md` |
-| 文案清单 | `<design-spec-dir>/content-inventory.md` |
+| 设计清单 | `<design-spec-dir>/design-inventory.md` |
 | 原型切分表 | `<design-spec-dir>/block-index.md` |
 | 区块规格 | `<design-spec-dir>/blocks/<区块名>.md`，本 Story `tasks.md` 覆盖到的每个区块各一份。**豁免**：`block-index.md` 头表标注 `切分来源：直通道（脚本切分）` 时不要求区块规格，期望值改取 `design-facts.json` 中该区块锚点下的结构、文案、token 与布局事实，引用时带该锚点 |
 
@@ -60,7 +58,7 @@
 ## 二、只读声明
 
 - **不得创建、修改、删除任何文件。** 两块产出以正文形式回传，由主 agent 落盘。
-- **不得读取原型 HTML 源码。** 期望值一律取自区块规格（直通道下取 `design-facts.json` 的区块锚点事实）；没写的就是没有，按第五节写 `未见`（必须写清查了哪个区块规格或 `design-facts.json` 锚点之后的未见，禁止裸写「未见」）。这是硬门禁第 9 条在本子代理上的对应约束，**本子代理不在它的例外名单里**——打开原型「确认一下」既绕过了抽取层的占位符标注，也会把整份稿子灌进上下文。
+- **不得读取原型 HTML 源码。** 期望值一律取自区块规格（直通道下取 `design-facts.json` 的区块锚点事实）；没写的就是没有，按第五节写 `未见`（必须写清查了哪个区块规格或 `design-facts.json` 锚点之后的未见，禁止裸写「未见」）。原型正文的唯一入口是确定性抽取脚本；打开原型「确认一下」会绕过占位符标注，也会把整份稿子灌进上下文。
 - **不得再委派子代理。**
 - 不得执行会改变仓库状态的命令（安装依赖、启动服务、跑构建、`git` 写操作）。读文件、列目录、检索是允许的。
 
@@ -88,16 +86,16 @@
 - **不发明响应式规格。** 上游没有规格时 R6 只承诺「不破」三项；需要改变布局结构的诉求记为 Open Question，不自行推断。
 - **不放宽标准。** 觉得某条做不到，走豁免表并写足理由；理由必须命中模板列的三类可接受理由之一。因外部依赖做不了的事不进豁免表，记入「已知缺口」由主 agent 走 Deferred。
 - **区块名逐字沿用切分表。** 第 1 档下 QA 基线还原侧引用的每个区块名都要能在 `block-index.md` 里找到，不自造名字、不改写；三个阶段靠这个名字认同一个东西。第 2 / 3 档跳过了抽取层、没有切分表，区块名取自 `tasks.md` 还原 Task 的区块划分，取不到时按「一屏可截 + 一个名词短语说得清」自行命名并在「已知缺口」登记一行，说明后续轮次以本基线的区块名为准。
-- **同时产出还原契约规则草稿。** 每条实际生成的 R 期望值一一对应一条同 `baseline_id` 规则，字段与模式严格按 `references/restore/contract.md`；期望值与设计事实出处来自本侧材料，绝不读取实现当前值。实现 locator 不进规则草稿。
-- **R1 的期望值写实现中立的结构事实**：元素的存在与数量、层级、角色（heading / img 等）、可访问名。**不得把原型 class 名写进期望值**——类名是设计稿侧工件，实现没有复刻它的义务，写进去会制造修不掉的 RED；类名只作为 `design_fact_source` 的锚点。CSS 值的期望键写计算样式 longhand（`background-color` 而非 `background`）；static 针写实现侧真实会出现的形态，颜色优先用仓内 token 名而不是原型字面量。
+- **同时产出还原契约规则草稿。** 一条基线行里的每个独立可判事实各写一条同 `baseline_id` 规则；期望值与出处只取本侧材料，绝不读取实现当前值。实现 locator 不进规则草稿。
+- **R1 的期望值写实现中立的结构事实**：用精确 locator 的 `count`，再按需要拆 `order` / `text` 采可访问名与文案。不得把原型 class 名写进 `expected`。CSS 期望键写计算样式 longhand；static 针只在仓库确有稳定 token/i18n/字面量时使用。
 - **基线头必须引用两类上游。** 当前 app 公共事实只引 `<repo-baseline-dir>` 里的 ID，不铺正文、不写指纹；本次场景、`base-ref` 与起点失败集合引用 `dev-baseline.md` 已存在的“执行起点（环境）”，不得复制成第二份表。
-- **检查层级不能越权。** R1/R2 默认 render；R3/R4 默认 static+render；R5 需要明确 fixture，造不出时后续为 YELLOW；R6 必须 render。**visual 层只有两类，写规则时必须填 `visual_blind_spot`**：`image-focus`（裁切后露出的是不是该露的那部分）、`composite`（`mix-blend-mode` / `backdrop-filter` / 多层透明度叠出来的实际观感）。这两类之外一律不加 visual——阴影写计算样式 longhand 走 render，字号字重行高同理，「谁压在谁上面」用 `check_mode: stacking` 走 render；指不出类别就说明它本来该是 render 或已知缺口。
+- **一条规则只走一层。** 有稳定源码针才写 `static_check`；其余写 render。R5 需要 fixture 时置顶层 `fixture_required: true`；R6 用 `overflow` / `overlap` / `clip` / `stacking`。图片裁切焦点与透明叠层观感等机器盲区不进契约，回传给主 agent 写入 `acceptance.md` 的人工目视说明。
 
 第 1 档另有两条硬约束，都是「区块规格标了什么就是什么」的具体化。
 
 #### R2 的期望值必须区分静态标签与动态数据位
 
-区块规格的「实例数据」块逐条标了哪些是静态标签、哪些是动态数据位（占位符假数据）。**直接采信这个标注，不自己判断哪条像真数据。** 直通道（无区块规格）时，分类入口改为 `content-inventory.md`，同样直接采信。
+区块规格的「实例数据」块逐条标了哪些是静态标签、哪些是动态数据位（占位符假数据）。**直接采信这个标注，不自己判断哪条像真数据。** 直通道（无区块规格）时，分类入口改为 `design-inventory.md` 的 Content Inventory，同样直接采信。
 
 | 文案类型 | R2 期望值怎么写 |
 | --- | --- |
@@ -156,26 +154,17 @@
 | 日期 | 变更项（编号） | 变更内容 | 理由 | 确认状态 | 新指纹 |
 | --- | --- | --- | --- | --- | --- |
 
-<!-- artifact: restore-contract-rules.json -->
+<!-- artifact: restore-contract-rules.stdin.json -->
 ```json
 {
   "rules": [
     {
-      "id": "R1-1",
+      "id": "R1-1-sections",
       "baseline_id": "R1-1",
-      "dimension": "R1",
-      "block": "<区块名>",
       "subject": "<判定对象>",
       "expected": "<具体期望>",
-      "check_mode": "structure",
-      "tolerance": {"css_px": 0},
-      "state_scenario": {"name": "default"},
-      "design_fact_source": {
-        "path": "<design-spec-dir>/design-facts.json",
-        "anchor": "<锚点>",
-        "key": "<事实键>"
-      },
-      "required_layers": ["render"]
+      "check_mode": "exact",
+      "scenario": "<需要时写进入状态的方法>"
     }
   ]
 }
@@ -192,4 +181,4 @@
 - 引用上游文字规格时给出文件与章节名。
 - **读不到就写「未见」，不要编。** 不接受「据说」「推测」「一般来说」。凡是靠推断得到的结论，标注 `推测` 并写明推断依据，或者干脆放进「已知缺口」。**「未见」必须附检索方式**——写清查了哪个文件、哪个区块规格锚点之后的未见；裸写「未见」不合格。
 - **写入「已知缺口」之前，候选事实必须先完成证据来源分类**（表头字段：`事实/问题`、`repo 有证据`、`prototype 有证据`、`分类`、`证据`；允许进提问的分类值仅 `user-only`、`conflict`）。分类结果与证据（或检索方式后的未见）一并写入该行；跳过分类直接提问，不合格。
-- 规则草稿必须是合法 JSON；R1–R6 每条基线编号恰好出现一次。默认容差、`static_check`、冻结豁免与模式约束逐条按 `references/restore/contract.md` 校验。
+- 规则草稿必须是合法 JSON；R1–R6 每条非“不适用”基线编号至少出现一次，一行中的多个独立事实拆成多条规则。默认容差、`static_check`、冻结豁免与模式约束逐条按 `references/restore/contract.md` 校验。

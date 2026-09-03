@@ -157,19 +157,6 @@
     };
   };
 
-  const directTexts = (element) => Array.from(element.childNodes)
-    .filter((node) => node.nodeType === Node.TEXT_NODE)
-    .map((node) => normalizeText(node.textContent))
-    .filter(Boolean);
-
-  // Keep this shape identical to design-facts.json blocks[].structure.
-  const structure = (element) => ({
-    tag: element.tagName.toLowerCase(),
-    classes: Array.from(element.classList).sort(),
-    texts: directTexts(element),
-    children: Array.from(element.children).map(structure)
-  });
-
   // 简写属性 → 计算样式 longhand。getComputedStyle 对简写返回整段序列化
   // （background 会带 none repeat scroll…），与期望值必然不等；输出键保留
   // 请求名，与契约 expected 的键对齐。verify_restore_contract.py 有同一份映射。
@@ -454,10 +441,6 @@
       return spec && spec.single ? (values[0] || "") : values;
     }
     if (kind === "order") return nodes.map((node) => accessibleName(node));
-    if (kind === "structure") {
-      const values = nodes.map(structure);
-      return spec && spec.single ? (values[0] || null) : values;
-    }
     if (kind === "style") {
       const values = nodes.map((node) => styleFacts(node, spec.properties, spec.pseudo));
       return spec && spec.single ? (values[0] || null) : values;
@@ -506,12 +489,17 @@
   const closedShadow = suspectClosedShadow();
 
   for (const rule of input.contract.rules || []) {
-    if (!(rule.required_layers || []).includes("render") || rule.frozen_exemption) continue;
-    const scenario = rule.state_scenario || {};
-    if (scenario.fixture_required && fixtureStatus[rule.id] !== "ready") {
+    const isV3 = input.contract.schema_version === 3;
+    const isRender = isV3
+      ? !rule.static_check && !rule.frozen_exemption
+      : (rule.required_layers || []).includes("render");
+    if (!isRender || rule.frozen_exemption) continue;
+    const legacyScenario = rule.state_scenario || {};
+    const fixtureRequired = isV3 ? rule.fixture_required : legacyScenario.fixture_required;
+    if (fixtureRequired && fixtureStatus[rule.id] !== "ready") {
       results[rule.id] = {
         status: "missing_fixture",
-        reason: `fixture not ready: ${scenario.fixture || scenario.name || rule.id}`
+        reason: `fixture not ready: ${legacyScenario.fixture || legacyScenario.name || rule.scenario || rule.id}`
       };
       continue;
     }
@@ -523,6 +511,15 @@
     try {
       const located = locate(entry.locators);
       if (!located.nodes.length) {
+        if (((entry.collect || {}).kind || "count") === "count") {
+          results[rule.id] = {
+            status: "ok",
+            actual: 0,
+            locator_used: located.locator,
+            matched: 0
+          };
+          continue;
+        }
         results[rule.id] = {
           status: "error",
           reason: closedShadow.length
@@ -552,6 +549,12 @@
     schema_version: 1,
     contract_sha256: input.contract.contract_sha256,
     page_available: true,
+    observed: {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      route: window.location
+        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+        : ""
+    },
     environment: {
       viewport: { width: window.innerWidth, height: window.innerHeight },
       dpr: window.devicePixelRatio,

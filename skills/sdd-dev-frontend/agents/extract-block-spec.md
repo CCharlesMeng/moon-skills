@@ -12,9 +12,7 @@
 | --- | --- | --- |
 | 本实例唯一的区块切片 | 追加表的 `区块切片路径` | 终止 |
 | 区块规格模板 | `<skill-dir>/references/templates/block-spec.md` | 终止 |
-| Design Tokens | `<design-spec-dir>/design-tokens.md` | 终止 |
-| Interface Inventory | `<design-spec-dir>/interface-inventory.md` | 终止 |
-| Content Inventory | `<design-spec-dir>/content-inventory.md` | 不终止；占位符按切片「文案分类」现判，并登记已知缺口 |
+| Design Inventory | `<design-spec-dir>/design-inventory.md` | 终止 |
 
 终止级前置缺失时只返回：
 
@@ -53,7 +51,7 @@
 ### 3.2 引用组件
 
 - 只引用 Interface Inventory 已有的 `IC-nn`。
-- 名称优先取「组件命名审订（extract-prototype）」；没有审订时沿用 `IC-nn` 并写「名称未审订」。
+- 名称沿用 Design Inventory 的 `IC-nn`；本层不审订组件名称。
 - 实例数只数当前区块里的实例。
 - 变体候选没有明确审订结论时写「未决」，不自行合并。
 
@@ -67,10 +65,10 @@
 
 ### 3.4 静态标签与动态数据位
 
-- 直接采信切片和 Content Inventory 的分类，不凭「看起来像数据」重新判断。
+- 直接采信切片和 Design Inventory 的 Content Inventory 分类，不凭「看起来像数据」重新判断。
 - 静态标签逐字记录，保留标点、单位、大小写。
 - 动态数据位只写格式模板与格式约束，**不得把样例值写进规格**。
-- 两处分类冲突时以 Content Inventory 为准，并在规格末尾「取证自检」后追加一行 `已知缺口：<冲突>`。
+- 两处分类冲突时以 Design Inventory 为准，并在规格末尾「取证自检」后追加一行 `已知缺口：<冲突>`。
 
 ### 3.5 R1–R6
 

@@ -84,7 +84,7 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 `manual_acceptance` 表示不写自动化测试代码，**不表示不需要验收声明**——它同样要有 GWT、预期结果和追溯关系。允许它的门禁与自动化强制触发器只定义在 [validation-policy.md](./validation-policy.md)，本文件不复制一份。
 
-**已进入冻结还原契约的视觉声明写 `restore_contract`，机器盲区剩余项由契约的 `visual` 层承接并落 YELLOW，不转 `manual_acceptance`。** 这条防的是同一条视觉声明出现两条合法路径：人工那条成本更低，分类会稳定偏向它，结果是绕过 R1–R6、冻结哈希与契约校验器。
+**视觉声明中机器能判的事实写 `restore_contract`；图片裁切焦点、透明叠层观感等纯机器盲区拆成 `manual_acceptance`，保留原 R 行追溯并写清路由、动作与证据要求。** 同一个可观察事实不得同时走两种方法；人工项不能替代本可进入 R1–R6 的机器判据。
 
 ### 执行环境档
 
@@ -123,7 +123,7 @@ Dev 遇到计划文件清单之外的必要改动时按下表处理，不默认�
 
 计划阶段不分派验收人、不建组织角色模型、不设多人会签。待人工项由 `acceptance.md` 统一列出，交付团队按自己的流程认领。
 
-`manual_outcome` 与还原、检视流水线的三色是两套词汇，对账只有两条：`FAILED` 与 RED 同级，受「三色真实」门禁约束，不得改写为 `PASSED`；还原契约 `visual` 层的 YELLOW 在人工维度上等价于 `NOT_RUN + UNVERIFIED`。
+`manual_outcome` 与还原、检视流水线的三色是两套词汇：`FAILED` 与 RED 同级，受「三色真实」门禁约束，不得改写为 `PASSED`；待目视的机器盲区保持 `NOT_RUN + UNVERIFIED`。
 
 `manual_acceptance` 声明只能由真实人员执行。agent、自测试与独立检视都不得用自己的观察替代签字，只能准备候选实现并把待验收项交出去；审批记录可以作为 `evidence_refs`。
 

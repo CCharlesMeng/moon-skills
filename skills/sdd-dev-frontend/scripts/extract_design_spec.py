@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Extract deterministic design-spec artifacts from a prototype HTML file.
-
-产出三份 Markdown、稳定的 design-facts.json、按锚点切片的单区块规格素材，
-并管理按需生成的不可变原型视觉缓存。零 LLM 参与，只用标准库。
-"""
+"""Extract deterministic design inventory and facts from prototype HTML."""
 
 from __future__ import annotations
 
@@ -12,7 +8,6 @@ import hashlib
 import html.parser
 import json
 import re
-import shutil
 import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -61,7 +56,6 @@ PROPERTY_GROUPS = (
 
 COLOR_RE = re.compile(r"(#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\))")
 URL_RE = re.compile(r"url\(\s*(['\"]?)([^)'\"]+)\1\s*\)")
-PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 # 占位符判据（产物里会原样列出，下游 agent 据此判定「不得作为 R2 期望值」）
 PLACEHOLDER_MASK_RE = re.compile(r"X{2,}")
@@ -1279,7 +1273,6 @@ def design_facts_payload(result: dict) -> dict:
         blocks.append(
             {
                 "anchor": record["anchor"],
-                "content_hash": record["hash"],
                 "content_sha256": hashlib.sha256(
                     serialize_subtree(element).encode("utf-8")
                 ).hexdigest(),
@@ -1906,181 +1899,32 @@ def find_block(result: dict, anchor: str) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-# 懒视觉缓存
-# --------------------------------------------------------------------------- #
-
-
-def parse_viewport(value: str) -> dict[str, int]:
-    match = re.fullmatch(r"(\d+)[xX×](\d+)", value.strip())
-    if not match:
-        raise ValueError("viewport 必须是 WIDTHxHEIGHT，如 1440x900")
-    width, height = (int(item) for item in match.groups())
-    if width <= 0 or height <= 0:
-        raise ValueError("viewport 宽高必须大于 0")
-    return {"width": width, "height": height}
-
-
-def visual_cache_identity(
-    prototype_fingerprint_value: str,
-    anchor: str,
-    viewport: dict[str, int],
-    dpr: float,
-    browser_engine: str,
-    browser_version: str,
-    font_fingerprint: str,
-) -> dict:
-    return {
-        "prototype_fingerprint": prototype_fingerprint_value,
-        "block_anchor": anchor,
-        "viewport": viewport,
-        "dpr": float(dpr),
-        "browser": {
-            "engine": browser_engine,
-            "version": browser_version,
-        },
-        "font_fingerprint": font_fingerprint,
-    }
-
-
-def visual_cache_fingerprint(identity: dict) -> str:
-    return hashlib.sha256(
-        json.dumps(
-            identity,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
-
-
-def visual_yellow_count(report_path: Path, anchor: str) -> int:
-    """Count only YELLOW rules that explicitly require visual evidence at anchor."""
-    report = json.loads(report_path.read_text(encoding="utf-8"))
-    entries = report.get("entries")
-    if not isinstance(entries, list):
-        raise ValueError("restore report 缺 entries 数组")
-    count = 0
-    for entry in entries:
-        if not isinstance(entry, dict) or entry.get("status") != "yellow":
-            continue
-        if "visual" not in entry.get("required_layers", []):
-            continue
-        source = entry.get("contract_source", {}).get("design_fact_source", {})
-        if isinstance(source, dict) and source.get("anchor") == anchor:
-            count += 1
-    return count
-
-
-def visual_cache_status(
-    facts_path: Path,
-    design_spec_dir: Path,
-    anchor: str,
-    viewport_value: str,
-    dpr: float,
-    browser_engine: str,
-    browser_version: str,
-    font_fingerprint: str,
-    yellow_count: int,
-    png_path: Path | None,
-) -> dict:
-    """Query or populate an immutable visual baseline cache.
-
-    With zero YELLOW visual rules the function returns ``not-needed`` and never
-    creates a directory. On a miss without ``png_path`` it returns
-    ``needs-capture`` so the caller can take exactly one browser screenshot.
-    """
-    if yellow_count < 0:
-        raise ValueError("yellow-count 不能为负数")
-    if yellow_count == 0:
-        return {
-            "status": "not-needed",
-            "reason": "没有 YELLOW 视觉项；机器可检项目不截图",
-        }
-
-    facts = json.loads(facts_path.read_text(encoding="utf-8"))
-    prototype = facts.get("prototype_fingerprint")
-    if not isinstance(prototype, str) or not re.fullmatch(r"[0-9a-f]{64}", prototype):
-        raise ValueError("design-facts.json 缺合法 prototype_fingerprint")
-    if not any(block.get("anchor") == anchor for block in facts.get("blocks", [])):
-        raise ValueError(f"区块锚点不在 design-facts.json：{anchor}")
-
-    viewport = parse_viewport(viewport_value)
-    identity = visual_cache_identity(
-        prototype,
-        anchor,
-        viewport,
-        dpr,
-        browser_engine,
-        browser_version,
-        font_fingerprint,
-    )
-    fingerprint = visual_cache_fingerprint(identity)
-    target = design_spec_dir / "visual-baseline" / fingerprint
-    manifest_path = target / "manifest.json"
-    cached_png = target / "prototype.png"
-
-    expected_manifest = {
-        "schema_version": 1,
-        "cache_fingerprint": fingerprint,
-        **identity,
-        "png": "prototype.png",
-    }
-    if target.exists():
-        if not manifest_path.is_file() or not cached_png.is_file():
-            raise ValueError(f"视觉缓存目录不完整，拒绝覆盖：{target}")
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if any(manifest.get(key) != value for key, value in expected_manifest.items()):
-            raise ValueError(f"视觉缓存 manifest 与缓存键不一致，拒绝覆盖：{target}")
-        cached_body = cached_png.read_bytes()
-        if not cached_body.startswith(PNG_SIGNATURE):
-            raise ValueError(f"视觉缓存 PNG 无效：{cached_png}")
-        if manifest.get("png_sha256") != hashlib.sha256(cached_body).hexdigest():
-            raise ValueError(f"视觉缓存 PNG 与 manifest 哈希不一致：{cached_png}")
-        return {
-            "status": "hit",
-            "cache_fingerprint": fingerprint,
-            "path": str(target),
-        }
-
-    if png_path is None:
-        return {
-            "status": "needs-capture",
-            "cache_fingerprint": fingerprint,
-            "path": str(target),
-            "reason": "存在 YELLOW 视觉项且缓存未命中；请截原型当前区块",
-        }
-    body = png_path.read_bytes()
-    if not body.startswith(PNG_SIGNATURE):
-        raise ValueError(f"--png 不是有效 PNG：{png_path}")
-
-    target.mkdir(parents=True, exist_ok=False)
-    shutil.copyfile(png_path, cached_png)
-    expected_manifest["png_sha256"] = hashlib.sha256(body).hexdigest()
-    manifest_path.write_text(
-        json.dumps(expected_manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    return {
-        "status": "created",
-        "cache_fingerprint": fingerprint,
-        "path": str(target),
-    }
-
-
-# --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
 
 
-ARTIFACTS = (
-    ("design-tokens.md", render_design_tokens),
-    ("interface-inventory.md", render_interface_inventory),
-    ("content-inventory.md", render_content_inventory),
-)
+def render_design_inventory(result: dict) -> str:
+    """Merge tokens, content, and repeated interface facts into one inventory."""
+    document: Document = result["document"]
+    lines = ["# Design Inventory", "", *provenance_lines(document), ""]
+    for renderer in (render_design_tokens, render_content_inventory, render_interface_inventory):
+        section = []
+        for line in renderer(result).splitlines():
+            if line == GENERATED_NOTE or line.startswith("> 来源：") or line.startswith("> 文档哈希："):
+                continue
+            section.append("#" + line if line.startswith("#") else line)
+        while section and not section[0]:
+            section.pop(0)
+        lines.extend(section)
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
+ARTIFACTS = (("design-inventory.md", render_design_inventory),)
 
 
 def write_artifacts(result: dict, out_dir: Path) -> list[str]:
-    """写三份 Markdown 与 design-facts.json。
+    """写一份 Markdown inventory 与 design-facts.json。
 
     Markdown may contain human naming amendments and is preserved while the legacy
     document hash matches. JSON is fully deterministic and is rewritten only when
@@ -2254,28 +2098,6 @@ def command_blocks(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def command_visual_cache(args: argparse.Namespace) -> int:
-    yellow_count = (
-        visual_yellow_count(Path(args.report).expanduser(), args.anchor)
-        if args.report
-        else args.yellow_count
-    )
-    payload = visual_cache_status(
-        Path(args.facts).expanduser(),
-        Path(args.design_spec_dir).expanduser(),
-        args.anchor,
-        args.viewport,
-        args.dpr,
-        args.browser_engine,
-        args.browser_version,
-        args.font_fingerprint,
-        yellow_count,
-        Path(args.png).expanduser() if args.png else None,
-    )
-    print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
-    return EXIT_OK
-
-
 def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("html", help="设计稿 HTML 文件路径")
     parser.add_argument(
@@ -2298,7 +2120,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    extract_parser = subparsers.add_parser("extract", help="产出三份全局产物（不给 --out-dir 则只打印统计）")
+    extract_parser = subparsers.add_parser("extract", help="产出 design inventory 与 facts（不给 --out-dir 则只打印统计）")
     add_common_arguments(extract_parser)
     extract_parser.add_argument("--out-dir", help="落盘目录，实际运行时取 <requirement-dir>/design-spec/")
     extract_parser.add_argument("--format", choices=["text", "json"], default="text")
@@ -2317,37 +2139,6 @@ def main(argv: list[str] | None = None) -> int:
     add_common_arguments(blocks_parser)
     blocks_parser.add_argument("--format", choices=["text", "json"], default="text")
 
-    visual_cache_parser = subparsers.add_parser(
-        "visual-cache",
-        help="仅在存在 YELLOW 视觉项时查询或写入不可变原型视觉缓存",
-    )
-    visual_cache_parser.add_argument("--facts", required=True, help="design-facts.json")
-    visual_cache_parser.add_argument(
-        "--design-spec-dir",
-        required=True,
-        help="<requirement-dir>/design-spec/",
-    )
-    visual_cache_parser.add_argument("--anchor", required=True)
-    visual_cache_parser.add_argument("--viewport", required=True, help="如 1440x900")
-    visual_cache_parser.add_argument("--dpr", type=float, required=True)
-    visual_cache_parser.add_argument("--browser-engine", required=True)
-    visual_cache_parser.add_argument("--browser-version", required=True)
-    visual_cache_parser.add_argument("--font-fingerprint", required=True)
-    visual_source = visual_cache_parser.add_mutually_exclusive_group(required=True)
-    visual_source.add_argument(
-        "--report",
-        help="机器报告；自动只数本锚点 required_layers 含 visual 的 YELLOW",
-    )
-    visual_source.add_argument(
-        "--yellow-count",
-        type=int,
-        help="兼容测试/底层调用；常规流程应使用 --report",
-    )
-    visual_cache_parser.add_argument(
-        "--png",
-        help="缓存未命中且已截图时给 PNG；查询命中时不需要",
-    )
-
     args = parser.parse_args(argv)
     try:
         if args.command == "extract":
@@ -2356,8 +2147,6 @@ def main(argv: list[str] | None = None) -> int:
             return command_block(args)
         if args.command == "blocks":
             return command_blocks(args)
-        if args.command == "visual-cache":
-            return command_visual_cache(args)
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR

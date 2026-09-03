@@ -56,26 +56,11 @@
   "scenarios": [
     {
       "id": "BE-1",
-      "consumers": ["review-layout", "self-test"],
       "page": "<页面与路由>",
       "fixture": {"name": "<名称>", "sha256": "<sha256>"},
       "viewport": {"width": 1200, "height": 800},
       "steps": ["<实际执行步骤>"],
       "observations": ["<原始文案、数值或几何事实>"],
-      "network": [
-        {
-          "method": "POST",
-          "path": "/api/orders",
-          "query": "<非敏感 query 或空>",
-          "request_header_names": ["Authorization", "X-Tenant"],
-          "request_schema_ref": "<契约锚点或 request body 的 sha256>",
-          "status": 201,
-          "response_schema_ref": "<契约锚点或 response 形状摘要>",
-          "correlation_id": "<响应头里的追踪 ID，无则省略>",
-          "side_effect": "<刷新后可观察到的服务端结果；mock 下写 mocked>"
-        }
-      ],
-      "profile": "mock | contract | live",
       "artifacts": ["<evidence-dir>/artifacts/ 下的截图或结构化结果路径"],
       "depends_on": ["src/view.tsx", "src/view.module.css"],
       "captured_dependency_hashes": {
@@ -100,6 +85,8 @@
 }
 ```
 
+上面是每个 scenario 的最小字段。只有一份事实被多个模块消费时加 `consumers[]`；只有声明依赖接口接缝时加 `profile` 与结构化 `network[]`（method、path、非敏感 header 名、request/response 契约引用、status、correlation id、副作用）。不要给普通页面观察预填这些可选字段。
+
 证据包只保存**原始事实**，不保存 `通过 / 不通过` 或级别。否则后来的检视只是复述证据所有者的判断，不再独立。
 
 **接口事实结构化，不写进 `observations[]` 的散文里。** `self-test` 的 F4 判据是「请求头、字段映射或错误码与冻结契约不符 → P0」，判据是结构化的，证据是散文就判不出来。凡是声明依赖接口行为的 scenario 都填 `network[]`：method / path / query / 非敏感 header **名**（不记值）/ request 与 response 的契约锚点或哈希 / status / correlation ID / 副作用观察。`profile` 记这次采集实际处在哪一档，回填账本「执行环境」列时抄它。
@@ -108,7 +95,7 @@
 
 ## 三、Phase B 场景就地入包
 
-Phase B Step ④ 已实际执行的浏览器 / 结构化渲染场景，不等 Phase C 再点一次，**也不另存一份「可提升事实」**。Step ⑥ 直接把原始事实写进 `review-evidence.json` 的 `scenarios[]`，标 `source: "phase-b"`，每条必须含上节全部 scenario 字段以及：
+Phase B 已实际执行的浏览器 / 结构化渲染场景，不等 Phase C 再点一次，**也不另存一份「可提升事实」**。当轮直接把原始事实写进 `review-evidence.json` 的 `scenarios[]`，标 `source: "phase-b"`，每条必须含上节全部 scenario 字段以及：
 
 - `captured_dependency_hashes`：完整覆盖 `depends_on`，记录采集当时每个依赖文件的内容 SHA-256；
 - `captured_runtime`：复制采集当时的非秘密 runtime 键；不能只依赖证据包顶部的当前 runtime，否则环境变化后旧场景会被误认成新环境事实；

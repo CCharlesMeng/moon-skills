@@ -3,19 +3,18 @@
   "evals": [
     {
       "id": 1,
-      "name": "machine-checkable-rules-do-not-take-screenshots",
+      "name": "count-zero-is-a-valid-green-expectation",
       "target": "scripts/verify_restore_contract.py",
       "gates": [
-        "硬门禁 10",
-        "硬门禁 12"
+        "硬门禁 10"
       ],
-      "prompt": "页面可启动，浏览器结构化采集可用。当前还原契约只有 R1 元素数量/顺序、R2 文案、R3 间距与颜色、R6 横向溢出规则，没有 visual 检查项。请执行还原轮 Step ①、②，并说明本轮最终到 Step ⑥时如何落账。",
-      "expected_output": "使用 static/render 生成机器报告，不为机器可检项截图；到 Step ⑥时 alpha-tests 只引用报告。",
+      "prompt": "冻结基线要求 `.empty-error` 数量为 0。页面可启动，采集器找到 0 个节点。请编译并执行这条 v3 规则。",
+      "expected_output": "expected=0 是完整判据，采集 actual=0，报告为 GREEN。",
       "expectations": [
-        "先校验 dev-baseline.md 与 restore-contract.json 的哈希一致性，再运行同一冻结契约",
-        "使用静态预检和无图片结构化渲染采集完成 R1/R2/R3/R6 判定",
-        "明确说明没有 visual YELLOW，因此不生成原型截图或实现截图",
-        "alpha-tests.md 对机器报告至少记录契约哈希、报告路径/指纹、三色摘要和回归摘要；记录头等既有字段照常保留，但不复制逐规则报告"
+        "编译器不得把数值 0 当作空 expected",
+        "count 采集在命中 0 个元素时返回 status=ok 与 actual=0",
+        "报告逐规则比较 expected=0 与 actual=0 并判 GREEN",
+        "报告保留 observed.viewport 与 observed.route"
       ]
     },
     {
@@ -26,42 +25,39 @@
         "硬门禁 2",
         "硬门禁 11"
       ],
-      "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和一条 visual_blind_spot=composite 的背景滤镜叠层。页面可用且截图可用。请继续执行。",
-      "expected_output": "先补结构化证据；剩下那条 visual 默认落 UNVERIFIED 并写补验方式，只有要把它收成 PROVEN 才取视觉证据。未解决 YELLOW 时不能实现或 GREEN。",
+      "prompt": "还原轮初次报告为 RED 0、YELLOW 2、GREEN 4。两条 YELLOW 分别是 R5 fixture 缺失和 R6 页面未打开。请继续执行。",
+      "expected_output": "先补 fixture 并恢复页面采集；未解决 YELLOW 时不能进入实现或宣称 GREEN。",
       "expectations": [
-        "初次只有 YELLOW 时不进入 Step ③ 实现，也不把报告判为 GREEN",
+        "初次存在 YELLOW 时不进入实现，也不把报告判为 GREEN",
         "先补 R5 状态 fixture 并重跑结构化采集",
-        "visual YELLOW 默认落 UNVERIFIED 并写补验方式，不默认截图；要收成 PROVEN 才生成或复用原型视觉缓存并截实现侧",
-        "取了视觉证据时，观察必须写成明确 red/green 结果后重跑报告；最终仍有未处置的 YELLOW 就不能完成还原轮"
+        "恢复页面后重新采集 R6，不能用源码推断替代运行时几何",
+        "最终仍有未处置的 YELLOW 就不能完成还原轮"
       ]
     },
     {
       "id": 3,
-      "name": "asset-change-invalidates-visual-cache",
-      "target": "scripts/extract_design_spec.py",
-      "prompt": "同一 HTML 的 DOM/CSS、区块锚点、视口、DPR、浏览器与字体都未变，但原型引用的 assets/icon.svg 文件内容改变。已有旧 visual-baseline 缓存，且当前仍有一条该区块的 visual-required YELLOW。请说明本轮如何处理设计事实与缓存。",
-      "expected_output": "资源内容变化改变原型指纹和缓存键，创建新缓存版本且不覆盖旧版本。",
+      "name": "reconfirmation-archives-active-reports",
+      "target": "scripts/verify_restore_contract.py",
+      "prompt": "用户重新确认了 dev-baseline.md，准备重编译 restore-contract.json。同目录已有 red 与 green 报告。请说明编译动作。",
+      "expected_output": "用 stdin 输入规则并带 --after-reconfirmation 编译；旧报告改名带 stale 与旧契约 sha8，不与活动报告混淆。",
       "expectations": [
-        "资源指纹按文件内容哈希而不是路径或 mtime 计算",
-        "资源内容变化必须改变 prototype_fingerprint",
-        "旧 visual-baseline 不能命中；新缓存写到新的 fingerprint 目录",
-        "旧缓存只读保留，不被覆盖或删除"
+        "编译前确认 dev-baseline.md 已冻结",
+        "规则从 stdin 输入，不强制生成中间规则文件",
+        "同目录旧 restore-report-*.json 改名为 restore-report-*.stale-<旧契约sha8>.json，文件名冲突时不覆盖",
+        "新契约保存新的 baseline_sha256 与 contract_sha256"
       ]
     },
     {
       "id": 4,
-      "name": "cache-key-is-stable-and-complete",
+      "name": "design-extraction-produces-one-human-inventory",
       "target": "scripts/extract_design_spec.py",
-      "gates": [
-        "硬门禁 12"
-      ],
-      "prompt": "原型只做空白与缩进重排，随后分别改变视口、DPR、浏览器版本和字体。当前存在一条 visual YELLOW。请说明设计指纹和视觉缓存命中规则。",
-      "expected_output": "格式化不改变原型指纹；任一环境键变化都让视觉缓存失配。",
+      "prompt": "Phase A1 收到一个 HTML 原型。请说明确定性抽取会生成什么，以及何时需要额外角色。",
+      "expected_output": "主 agent 直接运行脚本，得到 design-facts.json 与一份 design-inventory.md；仅跨候选归并或超大区块时派抽取角色。",
       "expectations": [
-        "仅空白格式变化不改变规范化 DOM/CSS 的 prototype_fingerprint",
-        "缓存键同时包含原型指纹、区块锚点、视口、DPR、浏览器引擎/版本和字体指纹",
-        "视口、DPR、浏览器版本或字体任一变化都创建新缓存版本",
-        "只有存在 visual YELLOW 时才尝试生成或命中视觉缓存"
+        "默认由主 agent 直接运行 extract_design_spec.py",
+        "机器事实只写 design-facts.json",
+        "供人阅读的 token、文案与界面清单合并为 design-inventory.md",
+        "只有需要跨候选归并时派 extract-prototype；单区块超过上下文预算时派 extract-block-spec"
       ]
     },
     {
@@ -76,7 +72,7 @@
       "prompt": "restore-contract.json 已存在，但有人在确认后直接修改了 dev-baseline.md 的 R3 间距，没有重新确认或编译契约。请执行还原轮。",
       "expected_output": "在任何检查或实现之前因基线哈希不一致硬失败，回到确认门。",
       "expectations": [
-        "先比较 restore-contract.json 保存的 baseline.sha256 与当前 dev-baseline.md 内容哈希",
+        "先比较 restore-contract.json 保存的 baseline_sha256 与当前 dev-baseline.md 内容哈希",
         "哈希不一致时拒绝生成 RED/GREEN 报告，也不进入实现",
         "不能静默更新契约、放宽容差或按当前实现重写期望",
         "要求记录基线变更、重新人工确认并重新编译契约"
@@ -84,17 +80,18 @@
     },
     {
       "id": 6,
-      "name": "static-pass-does-not-hide-render-failure",
+      "name": "static-and-render-rules-do-not-mask-each-other",
       "target": "scripts/verify_restore_contract.py",
       "gates": [
         "硬门禁 12"
       ],
-      "prompt": "R3 规则的仓内 token 静态预检通过，但浏览器页面打开后结构化采集脚本执行报错，未取得 computed style 和几何值。请汇总报告。",
-      "expected_output": "采集已尝试但失败，render-required 规则最终为 RED，而不是被 static GREEN 覆盖。",
+      "prompt": "同一条 R3 基线拆成两条规则：token 静态预检通过，但对应的 render 规则在页面采集时报错。请汇总报告。",
+      "expected_output": "static 规则为 GREEN，render 规则为 RED；整体为 RED，二者不会相互覆盖。",
       "expectations": [
-        "静态预检通过只验证 static 层，不能替代 required render 层",
+        "每条 v3 规则只有一种形态，同一基线事实可拆成多个独立规则",
+        "静态规则通过不能替代另一条 render 规则",
         "页面可用且采集已尝试但执行失败时把对应规则判为 RED",
-        "RED 项包含期望值、实际错误、契约出处和实现定位",
+        "RED 项包含 expected、actual、comparison 和 reasons",
         "整体报告因存在 RED 汇总为 RED"
       ]
     },
@@ -106,13 +103,13 @@
         "硬门禁 4",
         "硬门禁 11"
       ],
-      "prompt": "当前环境不能启动页面，也没有截图能力；源码可读。契约包含可静态扫描且本次会通过的 token 规则，以及 R4 实际 hover 状态和 R6 溢出规则。请执行并给最终状态。",
+      "prompt": "当前环境不能启动页面；源码可读。契约包含可静态扫描且本次会通过的 token 规则，以及 R4 实际 hover 状态和 R6 溢出规则。请执行并给最终状态。",
       "expected_output": "只执行静态支持项，R4/R6 保持 YELLOW，不能用源码对照冒充 GREEN。",
       "expectations": [
         "照常执行静态支持项并保存其结果",
         "依赖实际状态、computed style 或几何的 R4/R6 规则保持 YELLOW",
         "明确列出无法判定原因与 required_evidence",
-        "不截图、不声称视觉或结构化验证已完成，最终汇总为 YELLOW"
+        "不声称运行时验证已完成，最终汇总为 YELLOW"
       ]
     },
     {
@@ -127,7 +124,7 @@
       "expected_output": "保持原规则为 RED，只修实现；任何放宽都必须重新确认基线。",
       "expectations": [
         "16px 对 20px 在默认 ±1 CSS px 容差下判为 RED",
-        "Step ③ 只允许修复实现中的这个 RED，不允许自行扩大容差",
+        "实现步只允许修复这个 RED，不允许自行扩大容差",
         "如果业务确实要改变标准，必须记录理由并回到人工确认门",
         "在不改变冻结标准、只修实现的本轮中，重跑 GREEN 必须使用与 RED 相同的 contract_sha256"
       ]
@@ -142,7 +139,7 @@
       "prompt": "需要为一个 R2 标题文案和一个 R3 圆角生成 restore-contract.json。实现页面当前显示“订单中心”和 12px 圆角，且有可用的稳定 role/testid locator；design-facts.json 与冻结 dev-baseline.md 分别要求“订单列表”和 8px。请生成规则并执行。",
       "expected_output": "契约期望取自冻结基线和设计事实，实现值只作为 actual 与 locator。",
       "expectations": [
-        "R2 expected 使用“订单列表”，R3 expected 使用 8px，并记录 design_fact_source",
+        "R2 expected 使用“订单列表”，R3 expected 使用 8px；baseline_id 追溯冻结行",
         "实现的“订单中心”和 12px 只进入 actual，不反向修改设计事实或契约",
         "实现定位单独保存在 adapter，不能混入外部设计期望",
         "两条规则都生成包含外部出处与实现定位的 RED"
@@ -150,15 +147,15 @@
     },
     {
       "id": 10,
-      "name": "legacy-story-evidence-remains-readable",
+      "name": "legacy-v2-contract-remains-readable",
       "target": "scripts/verify_restore_contract.py",
-      "prompt": "一个已完成的旧 Story 没有 restore-contract.json；其 alpha-tests.md 明确包含标题“还原证据记录”“RED 双方截图”“GREEN 复核”，并有记录头、旧版 RED 差异清单、双方截图路径和 GREEN 实现截图。现在只需要读取历史证据并汇报状态，不修改实现。",
-      "expected_output": "识别为旧截图证据格式并按原流程读取，不强制迁移或伪造新契约。",
+      "prompt": "一个已完成 Story 留有 schema_version=2 的 restore-contract.json 与 schema_version=1 的 adapter。现在只需读取并复核，不修改实现。",
+      "expected_output": "v2 契约和 v1 adapter 保持可读，不强制迁移；新编译始终产出 v3。",
       "expectations": [
-        "先确认该 Story 确实没有 restore-contract.json",
-        "把证据识别为 legacy-screenshot-v1 并读取既有四块记录",
-        "不要求迁移历史 alpha-tests.md，也不生成虚假的 V2 报告或契约",
-        "明确说明只有新 Story 才必须使用 V2 冻结契约流程"
+        "validator 接受 schema_version=2 契约并核对基线哈希",
+        "adapter reader 接受 schema_version=1",
+        "不以 v3 自哈希算法重算旧契约并误判漂移",
+        "只有新编译的契约使用 schema_version=3"
       ]
     },
     {
@@ -515,11 +512,11 @@
       "gates": [
         "硬门禁 11"
       ],
-      "prompt": "T4 同时含还原与逻辑：还原契约明确 RED；逻辑测试通过点击尚未存在的按钮验证提交行为，当前失败原因只是找不到按钮。另有一条未处置的 visual YELLOW。为了省时间，是否可以把两个 RED 一起收集后共同实现？",
+      "prompt": "T4 同时含还原与逻辑：还原契约明确 RED；逻辑测试通过点击尚未存在的按钮验证提交行为，当前失败原因只是找不到按钮。另有一条 fixture 未就绪的 YELLOW。为了省时间，是否可以把两个 RED 一起收集后共同实现？",
       "expected_output": "不能走双通道：逻辑 RED 不是独立行为失败，且还原侧存在未处置 YELLOW。先处置再按默认顺序完成还原轮，再让逻辑测试以预期行为原因 RED，之后完成逻辑轮。",
       "expectations": [
         "识别找不到待还原 DOM 不是合格的独立逻辑 RED，不能把结构缺失重复记成两类失败",
-        "visual YELLOW 必须先处置（补证或落 UNVERIFIED 并写补验方式），不能作为 RED 进入实现，也使双通道条件失败",
+        "fixture YELLOW 必须先补齐并重跑，不能作为 RED 进入实现，也使双通道条件失败",
         "回退到先还原后逻辑不算流程失败；还原 GREEN 后重新取得原因正确的逻辑 RED",
         "仍保留两轮独立 6 步、证据与 AC 映射，不为追求少一轮而放宽 RED/GREEN 语义",
         "还原/逻辑通道的 RED/GREEN 仍使用各自稳定 ID 和 attempt"
@@ -639,7 +636,7 @@
     },
     {
       "id": 44,
-      "name": "prototype-source-stays-behind-extraction-subagents",
+      "name": "prototype-source-stays-behind-deterministic-extraction",
       "target": "references/phases/spec.md",
       "gates": [
         "硬门禁 9"
@@ -647,11 +644,11 @@
       "prompt": "Phase A1，baseline_source=prototype。已生成的区块规格里「筛选栏」的 R3 间距写着 `未见`，你怀疑是切分时漏了一段 CSS。原型 prototype/export-log.html 就在仓里，直接打开搜一下最快。请说明你会怎么做。",
       "expected_output": "主 agent 不读原型正文，先分辨 `未见` 是能力边界还是切分漏项，需要回查时只回查该区块并登记。",
       "expectations": [
-        "主 agent 不打开原型 HTML 正文，不用 cat / sed / 编辑器读它；原型正文的唯一入口是 extract-prototype 与 extract-block-spec 两个抽取角色",
+        "主 agent 不打开原型 HTML 正文，不用 cat / sed / 编辑器读它；原型正文的唯一入口是确定性 extract_design_spec.py",
         "先区分 `未见` 的来源：属于抽取器能力边界（外链样式表、at 规则、行内 style、非单类选择器）时是覆盖缺口，只有确属切分漏项才需要重切",
         "确需回查时只回查「筛选栏」这一个区块，不重读整份原型、不顺手复核其他区块",
         "这次回查必须登记（回查了哪个区块、原因、结论），不做无痕迹的私下确认",
-        "确属切分问题时派 extract-prototype 重切或 extract-block-spec 重出该区块规格，不由主 agent 手写规格把值补上",
+        "确属切分问题时用 extract_design_spec.py 只回查该锚点；候选段需要语义归并才派 extract-prototype，区块规格超过 12k 或用户点名才派 extract-block-spec，不由主 agent 手写值",
         "`未见` 是合法结论，不得用浏览器默认值、组件库默认或通用最佳实践顶替"
       ]
     },
@@ -674,38 +671,28 @@
     },
     {
       "id": 46,
-      "name": "tool-equivalence-suspect-never-becomes-an-exemption",
+      "name": "equivalent-css-serializations-normalize-before-comparison",
       "target": "references/restore/run.md",
-      "gates": [
-        "硬门禁 16"
-      ],
-      "prompt": "还原轮 GREEN 阶段，verify_restore_contract.py report --phase green 返回退出码 5，tool_equivalence_suspects[] 里有一条 R3-2：expected 是 `box-shadow: 0 1px 2px rgba(0,0,0,.08)`，实测采集到 `rgba(0, 0, 0, 0.08) 0px 1px 2px`。这一条已经改过两次都没变绿。你判断两侧其实是同一个值，只是序列化形态不同。请说明下一步。",
-      "expected_output": "按硬门禁 16 补两端归一化后重跑同一契约，或按 P7 上报工具缺口；不改实现、不加豁免。",
+      "prompt": "R3-2 的 expected 是 `box-shadow: 0 1px 2px rgba(0,0,0,.08)`，实测是 `rgba(0, 0, 0, 0.08) 0px 1px 2px`。字体 expected 用 `-apple-system`，实测是 `BlinkMacSystemFont`。请判定。",
+      "expected_output": "比较器先做 CSS 颜色、阴影顺序和系统字体别名归一化，两条均可判 GREEN。",
       "expectations": [
-        "先按退出码 5 优先于 3 处理：工具缺口没排除前 overall 是什么都不可信，不把这条当成一条普通 RED 继续走 RED 的升级路径",
-        "把该形态补进 verify_restore_contract.py 的 normalize / canonicalize 函数族与 collect_restore_facts.js 的同源别名表，两端映射同步改，然后重跑同一契约",
-        "不改产品实现去迎合字符串顺序，也不改写 expected 让它凑上实测值",
-        "不为它新增冻结豁免；豁免只表示已确认允许差异，不吸收工具缺口，「平台能力限制」这类理由在这里不成立",
-        "这一条不计入「同一报错修 3 次」的计数，不因此打断用户去请求批准一条豁免",
-        "补不了归一化或形态存疑时按 P7 上报工具等价缺口，附 rule_id 与两侧原值，而不是就地放行或标记通过"
+        "颜色表达统一为规范化 RGBA",
+        "阴影的颜色位置差异不改变等价判定",
+        "-apple-system、BlinkMacSystemFont 与 system-ui 映射为同一系统字体族",
+        "不修改产品实现去迎合浏览器序列化字符串"
       ]
     },
     {
       "id": 47,
-      "name": "visual-layer-only-takes-the-two-named-blind-spots",
+      "name": "v3-rule-has-exactly-one-form",
       "target": "agents/recon-spec.md",
-      "gates": [
-        "硬门禁 12"
-      ],
-      "prompt": "Phase A2 起草还原契约规则草稿。第 1 档原型，本 Story 涉及四条期望：卡片投影 `box-shadow: 0 1px 2px rgba(0,0,0,.08)`；标题字体是 14px/600/1.5 的思源黑体；封面图在 240×160 容器里裁切，设计稿里露出的是人物面部；一块半透明信息条压在封面图上，用了 backdrop-filter 与两层 opacity。请给出这四条的 required_layers 与 visual_blind_spot。",
-      "expected_output": "只有后两条进 visual 层，各自指名 image-focus 与 composite；投影与字体走 render 层判计算样式 longhand。",
+      "prompt": "Phase A2 起草 v3 规则：卡片间距可在页面采集；文案 key 可扫源码；一条产品确认允许的平台差异。请分别给出规则形态。",
+      "expected_output": "三条分别写 render、static、exempt；每条只能命中一种形态，不带旧版冗余字段。",
       "expectations": [
-        "投影不进 visual：写 render 层、期望键用计算样式 longhand，不因为「观感」把一条可判的规则推进盲区",
-        "字体不进 visual：font-family / font-size / font-weight / line-height 逐项走 render 层，栅格差异不作判据",
-        "封面图那条填 visual_blind_spot: image-focus，理由是裁切后露出哪一部分不可由几何导出；但「是否被裁、裁掉多少」仍用 clip / overflow 走 render 层，不并进 visual",
-        "半透明信息条那条填 visual_blind_spot: composite，理由是多层混合与背景滤镜的合成结果推不出来；遮挡几何仍用 overlap 走 render 层",
-        "不使用 shadow / font-raster / image-clip / stacking 这些已撤销的 visual_blind_spot 取值，编译期会因 visual_blind_spot 不合法而拒绝；层叠顺序另有 check_mode: stacking 走 render 层",
-        "不把判不了的规则以「等机器盲区」为由塞进 visual 层；指不出两类之一时写 render 或记已知缺口"
+        "render 规则带 check_mode、expected（阈值模式除外）与可选 tolerance",
+        "static 规则只带 static_check，定位文件留给 adapter",
+        "exempt 规则只带 frozen_exemption.id 与 reason",
+        "三种形态互斥；scenario 是自由字符串，fixture_required 是布尔值"
       ]
     },
     {
@@ -767,20 +754,20 @@
     },
     {
       "id": 51,
-      "name": "stacking-order-is-a-render-rule-not-a-visual-blind-spot",
+      "name": "stacking-order-is-a-render-rule",
       "target": "references/restore/contract.md",
       "gates": [
         "硬门禁 12"
       ],
-      "prompt": "Phase A2 起草规则草稿。区块规格写明：筛选面板展开时，下拉菜单必须完整浮在下方表格之上；表格容器上有一条 `transform: translateZ(0)`。现场实测下拉被表格盖住了一半。请给出这条的 check_mode、required_layers、expected 与 adapter 的 collect。",
-      "expected_output": "check_mode: stacking、required_layers: [render]、expected: {\"subject_on_top\": true}，collect 写 {\"kind\": \"stacking\", \"with_selector\": \"<表格容器>\"}。",
+      "prompt": "Phase A2 起草规则草稿。筛选面板展开时，下拉菜单必须完整浮在下方表格之上；表格容器上有 `transform: translateZ(0)`。现场实测下拉被表格盖住一半。请给出 v3 规则与 adapter collect。",
+      "expected_output": "check_mode=stacking、expected={\"subject_on_top\": true}；adapter collect 写 kind=stacking 与 with_selector。",
       "expectations": [
         "用 check_mode: stacking 而不是 overlap：下拉与表格本来就该重叠，相交量不为 0 是正常表现，overlap 判不出「谁压在谁上面」",
         "不写成 style 规则去比对 z-index 计算值：祖先的 transform 建了新层叠上下文时 z-index 计算值完全正常却不生效，比对数值看不出来",
-        "不填 visual_blind_spot、不进 visual 层：命中顺序是机器可判的，stacking 是已撤销的盲区取值，编译期会拒",
+        "stacking 是页面结构化采集规则，不引入额外证据层",
         "expected 写 {\"subject_on_top\": true} 布尔值；缺这个键编译期就拒，因为规则没有判据",
         "adapter 的 collect 必须给 with_selector 指明和谁比；层叠是二元关系，缺它无从判起",
-        "不把 transform 那条当成本 Story 要顺手删掉的东西——先让规则判红，修法归实现步，且报告的 stacking_hints 已经指出成因"
+        "不把 transform 那条当成本 Story 要顺手删掉的东西——先让规则判红，修法归实现步"
       ]
     },
     {

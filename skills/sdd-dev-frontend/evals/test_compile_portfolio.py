@@ -157,13 +157,13 @@ class ModuleTests(unittest.TestCase):
         self.assertIn("story", p["modules"])
         self.assertIn("story", p["claims"][0]["modules"])
 
-    def test_visual_without_frozen_r_selects_render_but_not_review_restore(self):
+    def test_visual_without_frozen_r_selects_render_but_not_restore_final(self):
         p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="visual"), phase="initial", plan_file_count=1)
         self.assertIn("render", p["modules"])
-        self.assertNotIn("review-restore", p["modules"])
+        self.assertNotIn("restore-final", p["modules"])
         p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="visual", restore_tasks="T1"), phase="initial", plan_file_count=1, qa_baseline_md=QA_WITH_R)
-        self.assertIn("review-restore", p["modules"])
-        self.assertEqual(p["review_dimensions"]["review-restore"], ["R1", "R6"])
+        self.assertIn("restore-final", p["modules"])
+        self.assertNotIn("restore-final", p["review_dimensions"])
 
     def test_review_layout_needs_a_cross_page_or_viewport_fact(self):
         p = MODULE.compile_portfolio(RULES, tasks_md(risk_triggers="visual"), phase="initial", plan_file_count=1)

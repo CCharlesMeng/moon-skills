@@ -104,6 +104,19 @@ class Element {
     return Object.prototype.hasOwnProperty.call(this.attributes, name);
   }
 
+  closest(selector) {
+    const attributeNames = String(selector)
+      .split(",")
+      .map((part) => part.trim().match(/^\[([\w-]+)\]$/)?.[1])
+      .filter(Boolean);
+    let current = this;
+    while (current) {
+      if (attributeNames.some((name) => current.hasAttribute(name))) return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
   getBoundingClientRect() {
     return { ...this._rect };
   }
@@ -192,7 +205,11 @@ function createDocument(bodyChildren) {
   };
 }
 
-function runCollector(input, { elements, viewport = { width: 1280, height: 720 } }) {
+function runCollector(input, {
+  elements,
+  viewport = { width: 1280, height: 720 },
+  route = { pathname: "/orders", search: "?status=open", hash: "#top" },
+}) {
   const document = createDocument(elements);
   const sandbox = {
     window: {
@@ -200,6 +217,7 @@ function runCollector(input, { elements, viewport = { width: 1280, height: 720 }
       innerWidth: viewport.width,
       innerHeight: viewport.height,
       devicePixelRatio: 1,
+      location: route,
       getComputedStyle(element) {
         const styles = element._styles || {};
         return {
@@ -234,12 +252,12 @@ function runCollector(input, { elements, viewport = { width: 1280, height: 720 }
 function textInput(ruleId, expectedText) {
   return {
     contract: {
+      schema_version: 3,
       contract_sha256: "test-sha",
       rules: [
         {
           id: ruleId,
-          required_layers: ["render"],
-          state_scenario: { name: "default" },
+          scenario: "default",
           expected: expectedText,
           check_mode: "exact",
         },
@@ -262,12 +280,12 @@ function textInput(ruleId, expectedText) {
 function clipInput(ruleId) {
   return {
     contract: {
+      schema_version: 3,
       contract_sha256: "test-sha",
       rules: [
         {
           id: ruleId,
-          required_layers: ["render"],
-          state_scenario: { name: "default" },
+          scenario: "default",
           expected: 0,
           check_mode: "clip",
         },
@@ -290,12 +308,12 @@ function clipInput(ruleId) {
 function stackingInput(ruleId) {
   return {
     contract: {
+      schema_version: 3,
       contract_sha256: "test-sha",
       rules: [
         {
           id: ruleId,
-          required_layers: ["render"],
-          state_scenario: { name: "default" },
+          scenario: "default",
           expected: { subject_on_top: true },
           check_mode: "stacking",
         },
@@ -348,6 +366,78 @@ function stackingScene({ tooltipPaintIndex, overlayPaintIndex }) {
   });
   return [card, overlay];
 }
+
+test("v3 count: zero matches is an observed value and route is recorded", () => {
+  const ruleId = "R1-empty-errors";
+  const input = {
+    contract: {
+      schema_version: 3,
+      contract_sha256: "test-sha",
+      rules: [{
+        id: ruleId,
+        baseline_id: "R1-1",
+        subject: "empty error banners",
+        check_mode: "exact",
+        expected: 0,
+      }],
+    },
+    adapter: {
+      schema_version: 2,
+      rules: {
+        [ruleId]: {
+          locators: [{ strategy: "css", selector: ".empty-error" }],
+          collect: { kind: "count" },
+        },
+      },
+    },
+    fixture_status: {},
+  };
+
+  const result = runCollector(input, { elements: [], viewport: { width: 720, height: 900 } });
+  assert.deepEqual(result.rules[ruleId].actual, 0);
+  assert.equal(
+    result.rules[ruleId].status,
+    "ok",
+    JSON.stringify(result.rules[ruleId])
+  );
+  assert.equal(result.observed.viewport.width, 720);
+  assert.equal(result.observed.viewport.height, 900);
+  assert.equal(result.observed.route, "/orders?status=open#top");
+});
+
+test("legacy contract still drives render collection", () => {
+  const ruleId = "R1-legacy";
+  const input = {
+    contract: {
+      schema_version: 2,
+      contract_sha256: "legacy-sha",
+      rules: [{
+        id: ruleId,
+        required_layers: ["render"],
+        state_scenario: { name: "default" },
+        check_mode: "structure",
+        expected: 1,
+      }],
+    },
+    adapter: {
+      schema_version: 1,
+      rules: {
+        [ruleId]: {
+          locators: [{ strategy: "testid", testid: "title" }],
+          collect: { kind: "count" },
+        },
+      },
+    },
+  };
+  const node = new Element("h2", { attributes: { "data-testid": "title" } });
+  const result = runCollector(input, { elements: [node] });
+  assert.equal(
+    result.rules[ruleId].status,
+    "ok",
+    JSON.stringify(result.rules[ruleId])
+  );
+  assert.equal(result.rules[ruleId].actual, 1);
+});
 
 test("stacking collect: GREEN tooltip above overlay, RED after paint-order mutation", () => {
   const ruleId = "R6-stacking";

@@ -2,7 +2,7 @@
 
 > 本文是项目级维护与使用说明，不属于 Skill 运行时上下文。运行时行为以 [`SKILL.md`](../../../skills/sdd-dev-frontend/SKILL.md) 为准。
 
-`sdd-dev-frontend` 用于把上游已经拆好的**一个前端 Story**，从 `tasks.md` 执行成可验收的前端代码、测试结果、机器还原报告、按需视觉证据和检视结论。
+`sdd-dev-frontend` 用于把上游已经拆好的**一个前端 Story**，从 `tasks.md` 执行成可验收的前端代码、测试结果、机器还原报告、人工目视项和检视结论。
 
 从使用者的角度，可以把它理解成一条带验收门禁的开发流水线：
 
@@ -65,12 +65,12 @@ flowchart LR
 | --- | --- | --- |
 | HTML 原型 | `<prototype-dir>` | 改用参照页或文字规格，证据可信度会降级 |
 | `requirement-frontend-design.md` | `<requirement-dir>/requirement-frontend-design.md` | 共享组件与对接模式会记为已知缺口 |
-| Test Design 用例 | 上游文档引用的位置 | F1 层级对账改用仓内测试命令补证 |
+| Test Design 用例 | 上游文档引用的位置 | 每条 AC 的可观察判定与证据映射改由仓内测试事实补证 |
 
 `tasks.md` 最好已经遵循这三项前端约定（完整口径见[执行契约的 Task 切分与步骤形状](../../../skills/sdd-dev-frontend/references/execution-contract.md#task-切分与步骤形状)）：
 
 - Task 按「逻辑 / 还原 / 机械」三种形态切分，步骤数随形态 2–5 步，不凑成统一步数；
-- 还原 Task 独占样式文件，其 Step ① 对冻结的外部设计契约取一次 RED 报告作为失败证据；
+- 还原 Task 独占样式文件，其实现前对冻结契约取一次 RED；新建页面尚不存在时明记“免 RED”；
 - TaskPacket 头带 `verification_schema=v2`，「用例追溯」表为每条 AT 写 `验证范围` 与 `验证方法`。
 
 即使没有遵循，skill 也会继续执行，但不会修改 `tasks.md` 的内容；它会在同一 Task 内分轮、每轮独立引用声明，取证成本通常更高。
@@ -169,10 +169,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 起点失败集合非常关键：后续回归不是要求仓库“从此全绿”，而是要求本 Story 不引入起点之外的新失败。未选的能力不探测、不生成空表。
 
-页面能力与截图能力分开判定：
-
-- 页面可用但不能截图：结构化渲染仍可判定机器可检规则；只有 visual 规则保持 YELLOW。
-- 页面不可用：只执行静态预检；依赖计算样式、几何、真实状态和视觉的规则保持 YELLOW。
+页面不可用时只执行静态预检；依赖计算样式、几何和真实状态的规则保持 YELLOW。图片焦点、透明叠层观感等机器盲区不进入还原契约，在人工验收入口列路由与目视动作。
 
 不会用源码阅读冒充浏览器实测，也不会把未验证维度写成 GREEN。
 
@@ -182,21 +179,19 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 处理顺序：
 
-1. 脚本抽取 design tokens、界面模式、文案分类和 `design-facts.json`；
-2. 将页面划分为“一屏可截、一个名词短语说得清”的区块；
-3. 为每个区块生成独立规格；
-4. 用内容哈希判断已有规格能否复用，只重抽变化或新增的区块。
+1. 主 agent 直接运行脚本，生成 `design-facts.json` 与合并后的人读 `design-inventory.md`；
+2. 从脚本切片头直接生成 `block-index.md`；候选段确需跨段归并时才派 `extract-prototype`；
+3. 只有单区块切片超过 12,000 字符或用户点名时才生成独立区块规格；
+4. 用内容哈希判断已有事实能否复用，只更新变化部分。
 
 **交接产物**
 
 | 产物 | 写入位置 | 下游如何使用 |
 | --- | --- | --- |
-| `design-tokens.md` | `<design-spec-dir>/` | 提供设计稿侧共享颜色、间距、字号等事实 |
-| `interface-inventory.md` | `<design-spec-dir>/` | 提供重复界面模式、`IC-nn` 编号、名称和变体关系 |
-| `content-inventory.md` | `<design-spec-dir>/` | 区分静态标签与动态数据位，避免把样例数据当成固定文案 |
+| `design-inventory.md` | `<design-spec-dir>/` | 合并设计 token、重复界面模式与静态/动态文案分类 |
 | `design-facts.json` | `<design-spec-dir>/` | 提供结构、静态文案、token、布局声明、资源内容/缺失状态和完整原型指纹 |
 | `block-index.md` | `<design-spec-dir>/` | 页面 → 区块切分表，记录锚点与内容哈希 |
-| `blocks/<区块名>.md` | `<design-spec-dir>/blocks/` | 当前区块的组件引用、token、布局值、文案、资源和 R1–R6 规格 |
+| `blocks/<区块名>.md` | `<design-spec-dir>/blocks/` | 按需生成的单区块规格；默认不生成 |
 
 `<design-spec-dir>` 恒为：
 
@@ -219,7 +214,7 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 
 | 勘察方向 | 关注内容 | 产物 |
 | --- | --- | --- |
-| 规格侧 | Story 功能理解、还原侧 R1–R6、功能侧 F1–F4、豁免、已知缺口 | `dev-baseline.md` |
+| 规格侧 | Story 功能理解、还原侧 R1–R6、功能侧 F3/F4、每条 AC 的可观察判定、豁免、已知缺口 | `dev-baseline.md` 与 `alpha-tests.md` |
 | 代码侧 | 当前 Story 应采用的 Requirement 决策与仓库 `PATTERN-*` | 并入 `dev-baseline.md / 工程依据`，只保存引用 |
 
 **交接产物**
@@ -228,18 +223,18 @@ HTML 原型目录：/workspace/specs/order-management/prototypes
 | --- | --- | --- |
 | 完整 `dev-baseline.md` | `<story-dir>/dev-baseline.md` | 已确认的 QA 基线、豁免、环境能力，以及 `PATTERN-*` / `REQ-DEC-*` 工程依据引用 |
 
-QA 基线的分类法固定为下面十个维度，不能增删；但它们是**候选分类**，每个 Story 只生成 AC、设计输入或风险触发器实际要求的行，不适用的分类直接省略：
+QA 基线按下面候选分类生成；每个 Story 只写 AC、设计输入或风险触发器实际要求的行，不适用的分类直接省略：
 
 | 还原侧 | 功能侧 |
 | --- | --- |
-| R1 区块与层级完整性 | F1 AC ↔ 测试层级映射 |
-| R2 文案一致性 | F2 每条 AC 的可观察判定 |
-| R3 间距与对齐 | F3 异常与边界分支 |
-| R4 状态样式 | F4 数据与接口契约 |
+| R1 区块与层级完整性 | 每条 AC 的可观察判定（写入 `alpha-tests.md`） |
+| R2 文案一致性 | F3 异常与边界分支 |
+| R3 间距与对齐 | F4 数据与接口契约 |
+| R4 状态样式 |  |
 | R5 空态与边界内容 |  |
 | R6 指定视口下的布局完整性 |  |
 
-这一阶段最后会展示 QA 基线全文和豁免表，请你确认。确认后，`dev-baseline.md` 冻结，并编译 Story 级 `restore-contract.json`。契约保存基线哈希，后续每次运行先校验一致性；实现定位另存 `restore-adapter.json`，优先级固定为 role/name → 精确文案 → 稳定 test id → CSS：
+这一阶段最后会展示 QA 基线全文和豁免表，请你确认。确认后，`dev-baseline.md` 冻结，并从 stdin 编译 Story 级 v3 `restore-contract.json`。契约保存基线哈希，后续每次运行先校验一致性；实现定位另存 `restore-adapter.json`，locator 策略与顺序自由：
 
 ```text
 冻结状态：已冻结 ✅
@@ -262,7 +257,7 @@ QA 基线的分类法固定为下面十个维度，不能增删；但它们是**
 | Task 类型 | 负责什么 | 完成后交接什么 |
 | --- | --- | --- |
 | 公共样式与骨架 Task | 新增或修改 token、公共布局组件、跨页复用的展示组件 | 稳定的公共视觉底座，供所有页面还原 Task 使用 |
-| 页面还原 Task | 一次落完页面全部区块的静态结构与样式，包括 hover / focus / disabled / 选中 / loading、空态和边界内容的静态呈现 | 页面骨架与样式文件；RED / GREEN 机器报告；按需视觉证据；`alpha-tests.md` 中的 `R-<Task>-<轮次>` 记录 |
+| 页面还原 Task | 一次落完页面全部区块的静态结构与样式，包括 hover / focus / disabled / 选中 / loading、空态和边界内容的静态呈现 | 页面骨架与样式文件；RED / GREEN 机器报告；机器盲区的人工目视说明；`alpha-tests.md` 中的 `R-<Task>-<轮次>` 记录 |
 | 逻辑 Task | 按 AC 接入状态迁移、条件渲染、数据变换和接口交互 | 逻辑代码、测试与 `test_case`（或登记待验收的 `manual_acceptance`）证据；原则上不再改样式文件 |
 | 机械 Task | 确无行为分支的类型、构建或引用对齐 | 编译 / 类型 / lint 通过即 `quality_gate`；不创建验收声明 |
 
@@ -309,10 +304,9 @@ Phase B 只取得当前 Task 改变声明的因果证据；交互状态矩阵、
 | `restore-adapter.json` | `<evidence-dir>/` | 实现 locator 与采集方式；RED 与 GREEN 之间不变 |
 | `restore-report-red.json` / `restore-report-green.json` | `<evidence-dir>/` | 同一契约在实现前后的三色结果 |
 | `review-evidence.json` 的 `phase-b` 场景 | `<evidence-dir>/review-evidence.json` | 带依赖哈希与运行时键的原始事实，供 Phase C 复用 |
-| 三层采集结果（static / render / visual） | `<work-dir>/` | 过程件，同轮 `report` 合并后没人再读；收口时随目录删 |
-| 按需原型视觉缓存 | `<design-spec-dir>/visual-baseline/<缓存指纹>/` | 仅在要把某条 visual YELLOW 收成 `PROVEN` 时才截 |
+| 采集结果（static / render） | `<work-dir>/` | 过程件，同轮 `report` 合并后没人再读；收口时随目录删 |
 
-还原轮中的“差异清单”只是机器报告的人类摘要。末步只把契约与报告的指纹、路径、摘要和可选视觉证据写进 `alpha-tests.md`；它始终是 AC 证据追溯的唯一账本。**visual YELLOW 默认落 `UNVERIFIED` 并写补验方式，不默认截图。**
+还原轮中的“差异清单”就是机器报告。末步只把契约 sha8、报告路径、三色与说明写进 `alpha-tests.md`；它始终是 AC 证据追溯的唯一账本。
 
 本阶段有三条保护边界：
 
@@ -326,7 +320,7 @@ Phase B 只取得当前 Task 改变声明的因果证据；交互状态矩阵、
 
 进入时先跑 `classify_diff.py` 取最终 diff 的机械事实，再用 `compile_portfolio.py --phase final --previous evidence/portfolio.json --out evidence/portfolio.json` 复判档位与组合——**只允许比 Phase 0 更多，不允许更少**；同一文件原地覆盖，Phase 0 的快照留在 `previous` 字段。派哪几路由这份最终组合决定，**不是每个 Story 都跑满**：没触发的角色不派、也不生成占位结果。每一路检查什么、怎么定级，全部来自 [`sdd-review-frontend`](../../../skills/sdd-review-frontend/SKILL.md)；本 skill 只负责选角色、备证据和汇总。
 
-组合含 `review-restore` 时，派发前主 agent 先按最终 diff 重跑**全部已冻结区块**的契约——Phase B 只跑过当前变更区块，后来的 Task 改了公共样式，先前区块的 GREEN 只在这里才会被推翻。
+组合含 `restore-final` 时，主 agent 用 `alpha-tests.md` GREEN 行记录的完整 `code=<sha256>` 比较当前代码指纹：未变直接复用 `restore-report-green.json`，缺值或变化则先重跑**全部已冻结区块**并覆盖它。聚合器直接把三色机械定级，不派额外角色。
 
 每条结论只有两级：
 
@@ -340,9 +334,9 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 | 产物 | 写入位置 | 交给下一步什么信息 |
 | --- | --- | --- |
 | `portfolio.json`（final） | `<evidence-dir>/` | 按最终 diff 复编译的验证组合，原地覆盖 Phase 0 版本并保留其快照；抄进 `review-evidence.json` 与 `dev-baseline.md` |
-| `restore-report-review.json` | `<evidence-dir>/` | 全部已冻结区块在最终 diff 下的三色结果，`review-restore` 只读它 |
+| `restore-report-green.json`（复用或覆盖） | `<evidence-dir>/` | 全部已冻结区块在最终代码状态下的三色结果；聚合器直接读取 |
 | `review-evidence.json` | `<evidence-dir>/` | 验证组合、代码指纹、命令与浏览器场景的原始事实；**不保存判断** |
-| `review-results.json` | `<evidence-dir>/` | 0–5 份角色回传的机器聚合与对账细节 |
+| `review-results.json` | `<evidence-dir>/` | 0–4 份角色回传与最终还原报告的机器聚合、对账细节 |
 | `artifacts/` | `<evidence-dir>/` | 被结论引用的截图与结构化结果；未被引用的不归档 |
 | `acceptance.md` | `<story-dir>/` | 给人的收口摘要：能不能验收、需要你处理什么、你该知道什么、往下追去哪；**整文件由聚合器渲染，不手写** |
 | `diff-facts.json`、RoleResult JSON、规范候选、决策文件 | `<work-dir>/` | 过程件；Phase D 退出门禁通过后整目录删 |
@@ -392,19 +386,15 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 | 产物 | 生命周期 | 生产阶段 | 主要消费者 |
 | --- | --- | --- | --- |
 | `<frontend-root>/frontend-baselines/` 九份按问句 baseline | app 级 | Phase -1 / `sdd-init-frontend` | 该 app 的所有 Requirement / Story |
-| `design-spec/design-tokens.md` | Requirement 级 | A1 | 区块规格抽取、QA 基线 |
-| `design-spec/interface-inventory.md` | Requirement 级 | A1 | 区块规格抽取 |
-| `design-spec/content-inventory.md` | Requirement 级 | A1 | 静态标签 / 动态数据位判定 |
+| `design-spec/design-inventory.md` | Requirement 级 | A1 | token、重复界面模式、静态/动态文案的一份人读清单 |
 | `design-spec/design-facts.json` | Requirement 级 | A1 | 冻结契约的结构、文案、token、布局和资源事实 |
 | `design-spec/block-index.md` | Requirement 级 | A1 | QA 基线、还原轮、证据定位 |
-| `design-spec/blocks/*.md` | Requirement 级 | A1 | QA 基线与还原轮的设计取值入口 |
-| `design-spec/visual-baseline/<fingerprint>/` | Requirement 级 | B 按需 | visual YELLOW 的只读原型缓存 |
+| `design-spec/blocks/*.md` | Requirement 级 | A1 按需 | 超大或点名区块的设计取值入口 |
 | `dev-baseline.md` | Story 级 | Phase 0 + A2 + C | Phase B 实现、Phase C 派发约束、`verify_restore_contract.py` 哈希锁 |
 | `evidence/portfolio.json` | Story 级 | Phase 0 写，C 原地覆盖 | `review-evidence.json / validation_portfolio`、`aggregate` 对账、解除 DEFERRED 时只编译受影响模块；`previous` 字段保留 Phase 0 快照 |
-| `evidence/restore-contract.json` | Story 级 | A2 | Phase B 还原轮、Phase C `review-restore` |
+| `evidence/restore-contract.json` | Story 级 | A2 | Phase B 还原轮、Phase C 最终还原聚合 |
 | `evidence/restore-adapter.json` | Story 级 | A2 + B | 将实现元素映射到契约规则 |
 | `evidence/restore-report-red/green.json` | Story 级 | B | 同一契约实现前后的三色结果 |
-| `evidence/restore-report-review.json` | Story 级 | C | 全部已冻结区块在最终 diff 下的三色结果 |
 | `tasks.md` checkbox | Story 级 | B | 失败恢复、Phase C 前置检查 |
 | `alpha-tests.md` | Story 级 | B + C + D | 唯一证据账本；`aggregate --alpha-tests` 直读它渲染 `acceptance.md` |
 | `evidence/review-evidence.json` | Story 级 | B + C | 检视角色共享的原始事实与新鲜度键 |
@@ -428,15 +418,9 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 <requirement-dir>/
 ├── requirement-frontend-design.md
 ├── design-spec/                         # Requirement 级设计事实
-│   ├── design-tokens.md
-│   ├── interface-inventory.md
-│   ├── content-inventory.md
+│   ├── design-inventory.md
 │   ├── design-facts.json
 │   ├── block-index.md
-│   ├── visual-baseline/
-│   │   └── <fingerprint>/
-│   │       ├── prototype.png
-│   │       └── manifest.json
 │   └── blocks/
 │       └── <区块名>.md
 └── <story-dir>/
@@ -450,7 +434,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
     │   ├── restore-adapter.json
     │   ├── restore-report-red.json
     │   ├── restore-report-green.json
-    │   ├── restore-report-review.json
+    │   ├── restore-report-*.stale-<sha8>.json
     │   ├── portfolio.json
     │   ├── review-evidence.json
     │   ├── review-results.json
@@ -460,7 +444,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 <repo-root>/                              # 只放实际前端代码与测试
 ```
 
-截图先落 `.work/`，只有被结论引用的才搬进 `evidence/artifacts/`，路径记在 `review-evidence.json` 对应 scenario 的 `artifacts[]`；其余随 `.work/` 一起删。`.work/` 里还有规则草稿、三层采集结果、`diff-facts.json`、RoleResult JSON 与决策文件——每一份都已并入 `evidence/` 的正式工件或可重算，丢了不构成证据缺口。
+截图先落 `.work/`，只有被结论引用的才搬进 `evidence/artifacts/`，路径记在 `review-evidence.json` 对应 scenario 的 `artifacts[]`；其余随 `.work/` 一起删。`.work/` 里还有 static/render 采集结果、`diff-facts.json`、RoleResult JSON 与决策文件——每一份都已并入 `evidence/` 的正式工件或可重算，丢了不构成证据缺口。还原规则草稿通过 stdin 编译，不落重复文件。
 
 ## 怎样判断是否真的完成
 
@@ -483,12 +467,12 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 | --- | --- | --- |
 | 没有 HTML 原型，但有同类参照页 | 先给出参照页候选，由你在确认门选择 | 还原基线为类比基线，可信度降级 |
 | 既无原型也无参照页 | 使用文字规格 + 仓内 token | 无视觉基线，只承诺文字规格、token 一致性和“不破” |
-| 无截图能力 | static / render 正常执行；visual 规则保持 YELLOW | 机器可检项不受影响；未补齐 visual 前还原轮不能 GREEN |
-| 页面无法启动 | 只执行 static；render-required 与 visual 规则保持 YELLOW | 结构、计算样式、几何和实际状态未验证，不能伪装成 GREEN |
+| 无截图能力 | static / render 正常执行；机器盲区进入人工验收入口 | 不影响机器契约；目视项不得由 agent 代签 |
+| 页面无法启动 | 只执行 static；render 规则保持 YELLOW | 结构、计算样式、几何和实际状态未验证，不能伪装成 GREEN |
 | 接口不可用 | 前端声明在 `mock` 档照样可 `PROVEN`；需要 `contract` / `live` 档的接缝声明记 `DEFERRED` 并写解除条件 | 整条 Story 不会全绿也不会全灰；后端就绪后走「解除 DEFERRED」 |
 | 缺起点失败集合 | 无法判断回归是否变差 | 不得声称「无回归」，REG 按 `unrun` 处理 |
 | 原型资源缺失 | 原型侧缺失的图标不参与 R1 差异判定 | 资源缺口与影响进入区块规格的「资源与降级」和 QA 基线的「已知缺口」 |
-| 比对器报 `suspected-tool-equivalence`（退出码 5） | 只补比对器两端映射或上报工具缺口 | 不改实现、不加豁免、不计入「修 3 次」 |
+| 字符串 RED 疑似只是浏览器序列化差异 | 先看报告 `hint` 与两侧原值；确认后补归一化并重跑 | 不改实现迎合字符串，也不新增豁免 |
 
 降级只改变证据强度或可执行范围，不会偷偷放宽已经确认的 QA 基线。
 
@@ -506,7 +490,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 - `alpha-tests.md` 中已有的 RED / GREEN 报告引用不会被无故覆盖；
 - Story 未变化时复用 `dev-baseline.md` 的工程依据；仓库规范有变动时只重选 ID，不复制正文；
 - 已冻结且内容未变的 QA 基线不会要求你重复确认；
-- 设计规格按区块内容哈希复用；原型指纹覆盖 DOM/CSS 与资源内容/缺失状态，视觉缓存按完整环境键只读复用；
+- 设计事实按原型与区块内容哈希复用；原型指纹覆盖 DOM/CSS 与资源内容/缺失状态；
 - `acceptance.md` 的检视结论按依赖失效：代码变化只作废依赖被改文件的那部分，未受影响的继续复用。
 
 如果上游修改了 `tasks.md` 或 Story 设计文档，视为 Story 已变化：勘察、QA 基线和确认门都需要重来。
@@ -522,8 +506,8 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 | “只做勘察” | 规格侧与代码侧勘察 |
 | “只做规格侧勘察” | 重出 QA 基线 |
 | “只做代码侧勘察” | 重出代码事实 |
-| “重跑还原契约” | 校验基线哈希，重跑 static / render / 按需 visual，更新同阶段报告 |
-| “补还原 YELLOW” | 按 `required_evidence` 补页面、状态 fixture、结构化采集或最后的视觉证据 |
+| “重跑还原契约” | 校验基线哈希，重跑 static / render，更新同阶段报告 |
+| “补还原 YELLOW” | 按原因补页面、状态 fixture 或结构化采集 |
 | “重跑布局检视” | 只更新 `acceptance.md` 的布局检视部分 |
 | “重跑代码规范检视” | 只更新代码规范检视部分 |
 | “重跑质量检视” | 只更新质量检视部分 |
@@ -539,7 +523,7 @@ Open Question 与 Deferred 候选单独列出，不混进这两级。待人工�
 - 认真审阅 Phase A 的 QA 基线。它是后续所有 RED / GREEN、检视分级和收口判断的共同依据。
 - 不要把“接口还没好”写成豁免；应使用 Deferred，并提供可观察的解除条件。
 - 如果要改变响应式布局结构，先补上游规格。上游没有响应式规格时，本 skill 只承诺“不破”：无横向滚动、无重叠、无内容截断。
-- 验收时先看 `acceptance.md`，再沿其中的路径追到 `dev-baseline.md`、`alpha-tests.md`，需要机器细节时才进 `evidence/`；只有报告引用 visual 项时才查看截图。
+- 验收时先看 `acceptance.md`，再沿其中的路径追到 `dev-baseline.md`、`alpha-tests.md`，需要机器细节时才进 `evidence/`；机器盲区按入口给出的路由和动作目视。
 
 ## 进一步阅读
 

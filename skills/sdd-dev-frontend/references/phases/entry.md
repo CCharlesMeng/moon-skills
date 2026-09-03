@@ -48,7 +48,7 @@
 
 ### 4. 建立执行上下文
 
-记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制 app baseline，也不记录任何 baseline 指纹。
+记录 `<base-ref>`、Story 文件范围、Requirement 决策和已知运行限制。上游未给 `<base-ref>` 时，仅在 Story 文件范围相对当前 `HEAD` 干净时把当前 `HEAD` 固定为起点；已有未归属改动时按 P7 请求确切引用，不把混合工作区交给 `classify_diff.py` 猜。只读取当前 Story 实际需要的 `PATTERN-*` / `REQ-DEC-*` 正文，不复制 app baseline，也不记录任何 baseline 指纹。
 
 按 `index.md` 的场景索引取 ID，再回读对应文件；读到的清单条目指路失效时**就地修那一条**并随本 Story 提交，不阻塞、不路由；规范条目不成立时攒进 `acceptance.md`，Story 收口时一次确认。规范节只有 `sdd-init-frontend` 能改。
 

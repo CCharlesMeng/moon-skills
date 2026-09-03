@@ -1835,7 +1835,7 @@
               <dt>拥有</dt>
               <dd>页面样式文件 / 组件骨架</dd>
               <dt>交接</dt>
-              <dd>RED / GREEN 报告 + 按需视觉证据 + R-记录</dd>
+              <dd>RED / GREEN 报告 + 机器盲区人工目视项 + R-记录</dd>
             </dl>
           </article>
 
@@ -2090,11 +2090,9 @@
               <span>设计稿事实，可跨 Story 复用</span>
             </div>
             <div class="artifact-list">
-              <span class="artifact">design-tokens.md</span>
+              <span class="artifact">design-inventory.md</span>
               <span class="artifact-arrow">→</span>
-              <span class="artifact">interface-inventory.md</span>
-              <span class="artifact-arrow">→</span>
-              <span class="artifact">content-inventory.md</span>
+              <span class="artifact">design-facts.json</span>
               <span class="artifact-arrow">→</span>
               <span class="artifact">block-index.md</span>
               <span class="artifact-arrow">→</span>
@@ -2361,10 +2359,9 @@
           purpose: "脚本抽取全局事实，再按“一屏可截”切区块；后续流程只读取区块规格，不反复通读 HTML 原型。",
           handoff: "<requirement-dir>/design-spec/",
           outputs: [
-            "design-tokens.md",
-            "interface-inventory.md",
-            "content-inventory.md",
-            "block-index.md 与 blocks/*.md"
+            "design-inventory.md 与 design-facts.json",
+            "block-index.md",
+            "按需 blocks/*.md"
           ],
           action: "无决策时不打断；哈希一致的区块自动复用"
         },
@@ -2390,7 +2387,7 @@
             "实现代码与测试",
             "已勾选的唯一进度清单",
             "L4 / L3 / 还原证据记录",
-            "AC ↔ 证据映射与按需视觉证据"
+            "AC ↔ 证据映射与机器盲区人工目视项"
           ],
           action: "仅在连续修 3 次失败或需要越界改动时决定"
         },

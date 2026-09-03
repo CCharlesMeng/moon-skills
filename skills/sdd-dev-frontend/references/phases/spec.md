@@ -12,13 +12,10 @@
 
 仅 `baseline_source=prototype` 执行；其他档位跳过整段。
 
-1. 用 `<skill-dir>/scripts/extract_design_spec.py` 生成或复用 `design-facts.json`、token、界面和内容清单。退出码 4 的每类覆盖缺口先登记，再显式确认后重跑；不直接绕过。
-2. 按原型内容哈希判断复用。哈希一致的设计事实和区块规格保留；失配只更新受影响部分，并删掉 `visual-baseline/` 下原型指纹已不等于新 `design-facts.json` 的缓存目录——它们再也命不中了。
-3. 根据脚本候选段选择分支：
-   - 小稿且候选段已是职责单一区块：主 agent 只读切片头生成 `block-index.md`。
-   - 需要归并或命名审订：派 `extract-prototype`。
-4. 对新增或哈希失配区块派 `extract-block-spec`；一区块一份，正文严格匹配 [templates/block-spec.md](../templates/block-spec.md)。
-5. 主 agent 不读原型正文。只有两个抽取角色可读；争议补证只回查单一区块并登记。
+1. 用 `<skill-dir>/scripts/extract_design_spec.py` 生成或复用 `design-facts.json` 与 `design-inventory.md`。退出码 4 的每类覆盖缺口先登记，再显式确认后重跑；不直接绕过。
+2. 按原型内容哈希判断复用；失配只更新受影响事实。主 agent 读取脚本切片头并直接生成 `block-index.md`，这是默认直通道。
+3. 只有候选段需要跨段归并时派 `extract-prototype`。只有单区块切片超过 12k 字符或用户点名时，才对该区块派 `extract-block-spec`；其他区块由后续直接读取 `design-facts.json` 锚点事实。
+4. 主 agent 不读原型正文。抽取角色只读所需切片；争议补证只回查单一区块并登记。
 
 A1 完成后再派 `recon-spec`，因为它的期望来源是完整设计事实，而不是未完成切片。
 
@@ -31,6 +28,6 @@ A1 完成后再派 `recon-spec`，因为它的期望来源是完整设计事实�
 3. 合并到 `dev-baseline.md`：工程依据、功能理解、适用 QA 声明、已知缺口、摘要与指纹。Story 只保存采用的 PATTERN/REQ-DEC ID，不复制正文。
 4. 对每个缺口按 QA 模板完成 `repo / prototype / user-only / conflict / 工作假设` 分类。只有 user-only/conflict 进入 P7；工作假设随确认门展示。
 5. 确认门只展示用户需要判断的内容：做什么、标准来源、适用声明、豁免、工作假设和未决问题。用户确认后记录时间与摘要并冻结；指出修改则更新后重新确认。
-6. 有还原声明时，把 `recon-spec` 回传的规则草稿落 `<work-dir>/restore-contract-rules.json`，按 [restore/contract.md](../restore/contract.md) 从冻结 QA 行编译 `<evidence-dir>/restore-contract.json`，实现 locator 单独写 `<evidence-dir>/restore-adapter.json`。无还原声明时不生成空契约。
+6. 有还原声明时，把 `recon-spec` 回传的规则 JSON 通过 `contract --rules -` stdin 直接编译为 `<evidence-dir>/restore-contract.json`，实现 locator 单独写 `<evidence-dir>/restore-adapter.json`。无还原声明时不生成空契约。
 
 退出：QA 基线已由用户确认，指纹已冻结，适用还原契约通过脚本校验。

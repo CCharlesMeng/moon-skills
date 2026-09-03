@@ -176,7 +176,6 @@ class AggregateTests(unittest.TestCase):
             review("review-convention", [f"C{i}" for i in range(1, 8)]),
             review("review-quality", [f"Q{i}" for i in range(1, 9)]),
             review("self-test", ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"]),
-            review("review-restore", [f"R{i}" for i in range(1, 7)]),
         ]
 
     def test_requires_assigned_coverage_and_same_epoch(self):
@@ -190,7 +189,6 @@ class AggregateTests(unittest.TestCase):
                     "review-convention": [f"C{i}" for i in range(1, 8)],
                     "review-quality": [f"Q{i}" for i in range(1, 9)],
                     "self-test": ["F1-1", "F2-1", "F3-1", "F4-1", "REG-1"],
-                    "review-restore": [f"R{i}" for i in range(1, 7)],
                 },
             )
         results = self.base_results()
@@ -321,42 +319,55 @@ class AggregateTests(unittest.TestCase):
                 expected_dimensions={"review-layout": ["L2", "L3"]},
             )
 
-    def test_restore_role_is_aggregated_and_bounded_to_its_dimensions(self):
-        selected = [review("review-restore", ["R1", "R5"])]
+    def test_restore_report_is_aggregated_without_a_review_role(self):
+        report = {
+            "phase": "green",
+            "contract_sha256": "a" * 64,
+            "overall": "green",
+            "summary": {"green": 1, "yellow": 0, "red": 0},
+            "observed": {"route": "/orders"},
+            "entries": [{"rule_id": "R1-1", "status": "green", "expected": 0, "actual": 0}],
+        }
         aggregate = MODULE.aggregate_results(
-            selected,
-            expected_roles=["review-restore"],
-            expected_dimensions={"review-restore": ["R1", "R5"]},
+            [], expected_roles=[], expected_dimensions={}, evidence_epoch="review-1",
+            code_fingerprint="fp", restore_report=report,
         )
-        # 线上值保持 review-restore / executed；只有渲染出来的报告用中文词。
-        self.assertEqual(aggregate["roles"], {"review-restore": "executed"})
-        self.assertIn("还原检视", MODULE.render_markdown(aggregate))
+        self.assertEqual(aggregate["roles"], {})
+        self.assertEqual(aggregate["restore_contract"]["overall"], "green")
+        self.assertEqual(aggregate["counts"]["blocker"], 0)
+        self.assertIn("冻结还原契约", MODULE.render_markdown(aggregate))
 
-        # R 维度只有 R1–R6；越界必须被拒，否则 restore 格可以借编号扩张判据。
-        out_of_range = review("review-restore", ["R7"])
-        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unknown dimensions"):
-            MODULE.aggregate_results([out_of_range], expected_roles=["review-restore"])
-
-        # 借用别格的维度号同样越界：restore 不得判 L/C/Q。
-        borrowed = review("review-restore", ["L3"])
-        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "unknown dimensions"):
-            MODULE.aggregate_results([borrowed], expected_roles=["review-restore"])
-
-    def test_restore_and_layout_reporting_one_issue_merge_into_one_finding(self):
-        # 同一 canonical_key 出现在两格，说明跨格了；聚合取高级别并保留两个来源，
-        # 让人能回原始证据判断该删掉哪一条，而不是在报告里出现两次。
-        restore = review("review-restore", ["R6"])
-        restore["findings"] = [finding("R6-1", "route:/orders|viewport:1280|overflow", "blocker")]
-        layout = review("review-layout", ["L3"])
-        layout["findings"] = [finding("L3-1", "route:/orders|viewport:1280|overflow")]
+    def test_restore_red_and_yellow_rows_become_direct_blockers(self):
+        report = {
+            "phase": "green",
+            "contract_sha256": "b" * 64,
+            "overall": "red",
+            "summary": {"green": 0, "yellow": 1, "red": 1},
+            "observed": {"route": "/orders"},
+            "entries": [
+                {"rule_id": "R3-1", "status": "red", "reasons": ["mismatch"], "expected": "16px", "actual": "20px"},
+                {"rule_id": "R6-1", "status": "yellow", "reasons": ["page unavailable"], "expected": None, "actual": None},
+            ],
+        }
         aggregate = MODULE.aggregate_results(
-            [restore, layout],
-            expected_roles=["review-restore", "review-layout"],
-            expected_dimensions={"review-restore": ["R6"], "review-layout": ["L3"]},
+            [], expected_roles=[], expected_dimensions={}, evidence_epoch="review-1",
+            code_fingerprint="fp", restore_report=report,
         )
-        self.assertEqual(aggregate["counts"]["blocker"], 1)
-        self.assertEqual(aggregate["counts"]["suggestion"], 0)
-        self.assertEqual(aggregate["findings"][0]["roles"], ["review-layout", "review-restore"])
+        self.assertEqual(aggregate["counts"]["blocker"], 2)
+        self.assertEqual({item["roles"][0] for item in aggregate["findings"]}, {"restore-contract"})
+        self.assertIn("expected=", aggregate["findings"][0]["basis"])
+
+    def test_restore_report_rejects_non_green_phase_and_unknown_dimension(self):
+        base = {
+            "phase": "red", "contract_sha256": "c" * 64, "overall": "red",
+            "summary": {}, "entries": [],
+        }
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "phase=green"):
+            MODULE.restore_report_result(base)
+        base["phase"] = "green"
+        base["entries"] = [{"rule_id": "R7-1", "status": "red"}]
+        with self.assertRaisesRegex(MODULE.ReviewPipelineError, "invalid restore report entry"):
+            MODULE.restore_report_result(base)
 
     def test_unexecuted_role_cannot_smuggle_skipped_dimensions(self):
         result = review("review-layout", ["L2"], status="unexecuted")

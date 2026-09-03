@@ -16,19 +16,21 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 ROLES = (
-    "review-restore",
     "review-layout",
     "review-convention",
     "review-quality",
     "self-test",
 )
-# self-test 不在这里：它的 dimension 是分配到的冻结基线行号（F2-1 / REG-2），
+# self-test 不在这里：它的 dimension 是分配到的冻结功能行或回归编号（F3-1 / REG-2），
 # 没有固定集合，只能靠 aggregate 的 assignment 比对。
 ROLE_DIMENSIONS = {
-    "review-restore": {f"R{index}" for index in range(1, 7)},
     "review-layout": {f"L{index}" for index in range(1, 7)},
     "review-convention": {f"C{index}" for index in range(1, 8)},
     "review-quality": {f"Q{index}" for index in range(1, 9)},
+}
+RESTORE_LEVELS = {
+    status: {f"R{index}": level for index in range(1, 7)}
+    for status, level in (("red", "blocker"), ("yellow", "blocker"), ("green", None))
 }
 JUDGMENT_KEYS = {
     "finding", "findings", "verdict", "conclusion", "level", "severity",
@@ -994,6 +996,56 @@ def manual_action_text(item: dict[str, Any]) -> str:
     return f"{item['id']}（{item['trace']}）{action}"
 
 
+def restore_report_result(raw: Any) -> dict[str, Any] | None:
+    """Turn the final GREEN report into the same findings shape as a review role."""
+    if raw is None:
+        return None
+    report = require_dict(raw, "restore-report-green.json")
+    if report.get("phase") != "green":
+        raise ReviewPipelineError("restore report used at aggregate must have phase=green")
+    contract_sha = require_text(report.get("contract_sha256"), "restore report contract_sha256")
+    entries = require_list(report.get("entries"), "restore report entries")
+    observed = report.get("observed") if isinstance(report.get("observed"), dict) else {}
+    route = observed.get("route") or "见 restore-report-green.json"
+    findings = []
+    for index, raw_entry in enumerate(entries):
+        entry = require_dict(raw_entry, f"restore report entries[{index}]")
+        rule_id = require_text(entry.get("rule_id"), f"restore report entries[{index}].rule_id")
+        dimension = rule_id.split("-", 1)[0]
+        status = entry.get("status")
+        if status not in RESTORE_LEVELS or dimension not in RESTORE_LEVELS[status]:
+            raise ReviewPipelineError(f"invalid restore report entry {rule_id}: {status}")
+        level = RESTORE_LEVELS[status][dimension]
+        if level is None:
+            continue
+        reasons = "；".join(str(item) for item in entry.get("reasons", [])) or "未说明原因"
+        expected = json.dumps(entry.get("expected"), ensure_ascii=False, sort_keys=True)
+        actual = json.dumps(entry.get("actual"), ensure_ascii=False, sort_keys=True)
+        findings.append({
+            "id": rule_id,
+            "canonical_key": f"restore:{rule_id}",
+            "dimension": dimension,
+            "level": level,
+            "summary": f"冻结还原规则 {rule_id} 为 {status.upper()}：{reasons}",
+            "location": route,
+            "basis": f"契约 {contract_sha[:8]}；expected={expected}；actual={actual}",
+            "evidence_ids": [f"restore:{rule_id}"],
+            "impact": f"冻结基线 {entry.get('baseline_id', rule_id)} 尚不能判为满足",
+            "suggested_action": (
+                "按报告实际值修复实现并重跑同一契约"
+                if status == "red"
+                else "按报告原因补齐页面、fixture 或结构化采集后重跑"
+            ),
+        })
+    return {
+        "role": "restore-contract",
+        "findings": findings,
+        "summary": report.get("summary", {}),
+        "overall": report.get("overall"),
+        "contract_sha256": contract_sha,
+    }
+
+
 def aggregate_results(
     results: list[dict[str, Any]],
     expected_roles: list[str] | tuple[str, ...] | None = None,
@@ -1008,6 +1060,7 @@ def aggregate_results(
     manual_acceptance: list[dict[str, Any]] | None = None,
     decisions: list[dict[str, Any]] | None = None,
     claim_ledger: list[dict[str, Any]] | None = None,
+    restore_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     validated = [validate_review_result(item) for item in results]
     if skip_rebuttals:
@@ -1110,7 +1163,11 @@ def aggregate_results(
                         f"({global_ids[identifier]}, {owner})"
                     )
                 global_ids[identifier] = owner
-    findings = merge_findings(validated)
+    restore_result = restore_report_result(restore_report)
+    finding_sources = list(validated)
+    if restore_result:
+        finding_sources.append(restore_result)
+    findings = merge_findings(finding_sources)
     questions = merge_named(validated, "open_questions")
     deferred = merge_named(validated, "deferred_candidates")
     # handoff 的文本一律由结构化字段拼，不再依赖角色自己写的一段自由文本——
@@ -1189,6 +1246,10 @@ def aggregate_results(
         "unplanned_carry": list(unplanned_carry or []),
         "manual_acceptance": list(manual_acceptance or []),
         "claim_ledger": list(claim_ledger or []),
+        "restore_contract": (
+            {key: restore_result[key] for key in ("overall", "summary", "contract_sha256")}
+            if restore_result else None
+        ),
         "decisions": list(decisions or []),
         "handoff": handoff,
         "counts": {
@@ -1245,7 +1306,6 @@ def attach_evidence_artifacts(
 """
 DISPLAY = {
     # 角色 / 格子
-    "review-restore": "还原检视",
     "review-layout": "布局检视",
     "review-convention": "规范检视",
     "review-quality": "质量检视",
@@ -1297,6 +1357,7 @@ DISPLAY = {
     "story": "用户路径",
     "regression": "回归",
     "targeted-quality": "定向质量",
+    "restore-final": "最终还原复核",
     # 规范候选类别
     "broken": "规范不再成立",
     "exemption-recurring": "豁免反复出现",
@@ -1489,6 +1550,8 @@ def render_markdown(aggregate: dict[str, Any]) -> str:
     # 逐行列出几十条「无发现」不帮任何决定，只会把上面的结论挤到看不见。
     lines += ["", "## 这次判了什么", ""]
     judged, unjudged = [], []
+    if (aggregate.get("restore_contract") or {}).get("overall") == "green":
+        judged.append("冻结还原契约")
     for role, status in aggregate["roles"].items():
         gaps = aggregate["known_gaps"][role]
         if status == "executed" and not gaps:
@@ -1612,6 +1675,14 @@ def command_aggregate(args: argparse.Namespace) -> None:
         source_evidence.get("validation_portfolio"),
         "review_evidence.validation_portfolio",
     )
+    restore_report = None
+    if "restore-final" in require_list(portfolio.get("modules", []), "validation_portfolio.modules"):
+        restore_path = evidence_path.with_name("restore-report-green.json")
+        contract_path = evidence_path.with_name("restore-contract.json")
+        restore_report = require_dict(read_json(restore_path), "restore-report-green.json")
+        contract = require_dict(read_json(contract_path), "restore-contract.json")
+        if restore_report.get("contract_sha256") != contract.get("contract_sha256"):
+            raise ReviewPipelineError("restore-report-green.json does not match restore-contract.json")
     expected_roles = require_list(
         portfolio.get("review_roles"),
         "review_evidence.validation_portfolio.review_roles",
@@ -1682,6 +1753,7 @@ def command_aggregate(args: argparse.Namespace) -> None:
         decisions=(
             validate_decisions(read_json(Path(args.decisions))) if args.decisions else []
         ),
+        restore_report=restore_report,
     )
     aggregate["validation_portfolio"] = portfolio
     aggregate["portfolio_narrowed"] = narrowed

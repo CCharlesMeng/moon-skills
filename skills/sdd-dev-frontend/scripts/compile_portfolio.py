@@ -227,7 +227,7 @@ def select_modules(
             hit = hit or bool(trigger_set & set(rule.get("any_trigger", [])))
             hit = hit or bool(scopes & set(rule.get("any_claim_scope", [])))
             hit = hit or any(rebuttal[0] in rule.get("any_rebuttal_prefix", []) for rebuttal in rebuttals)
-            # Facts are gates, not triggers: visual without a frozen R row selects render but not review-restore.
+            # Facts are gates, not triggers: visual without a frozen R row selects render but not restore-final.
             if rule.get("all_facts") and not all(facts.get(fact) for fact in rule["all_facts"]):
                 hit = False
             if rule.get("any_fact") and not any(facts.get(fact) for fact in rule["any_fact"]):

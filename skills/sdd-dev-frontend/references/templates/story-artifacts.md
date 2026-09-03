@@ -75,25 +75,18 @@
 
 ### 还原证据记录
 
-每个还原轮追加一条：
+每个还原轮追加一张两行表；契约只抄 sha8，报告指纹不抄。唯一例外是 GREEN 行在「说明」中保存完整代码指纹，供 Phase C 判断能否复用：
 
 ```markdown
 ### R-<Task>-<轮次> · <区块>
 
-| 项 | 值 |
-| --- | --- |
-| 受影响声明 | <AC / AT / R 行> |
-| 基线与契约 | <baseline fingerprint / contract sha256> |
-| 环境 | <route / fixture / viewport / runtime> |
-| RED | <evidence/restore-report-red.json + fingerprint + 三色摘要> |
-| GREEN | <evidence/restore-report-green.json + fingerprint + 三色摘要> |
-| 视觉补证 | <无；或 design-spec 视觉缓存 / evidence/artifacts 路径 + fingerprint> |
-| 相关依赖 | <depends_on + captured hashes> |
-| 状态 | PROVEN / UNVERIFIED / DEFERRED |
-| 说明 | <未证原因或解除条件；无则“无”> |
+| 轮 | 契约 | 报告文件 | 三色 | 说明 |
+| --- | --- | --- | --- | --- |
+| RED | `<contract sha8>` | `evidence/restore-report-red.json`；新建页面写“—（新建页面，免 RED）” | `<green / yellow / red>` | `<route / viewport / fixture；无则—>` |
+| GREEN | `<contract sha8>` | `evidence/restore-report-green.json` | `<green / yellow / red>` | `<route / viewport / fixture；code=<GREEN 时 review-evidence.json / code.code_fingerprint 的完整值>>` |
 ```
 
-RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未解决 YELLOW 都不能支持 `PROVEN`。视觉截图只在契约要求 visual 且结构化事实不足时记录。
+RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未解决 YELLOW 都不能支持 `PROVEN`。状态与证据依赖仍分别写入 AC ↔ 证据映射和 `review-evidence.json`，不在这里复制。
 
 ### 人工验收记录
 
@@ -178,6 +171,9 @@ RED/GREEN 必须来自同一冻结契约；哈希不一致、真实 RED 或未�
 
 ```markdown
 # <Story> · Alpha Tests
+## 每条 AC 的可观察判定
+| AC / AT | 页面与路由 | 操作 | 可观察结果 |
+| --- | --- | --- | --- |
 ## AC ↔ 证据映射
 | AT | 状态 | 执行环境 | 证据记录 | 新鲜度 | 说明 |
 | --- | --- | --- | --- | --- | --- |

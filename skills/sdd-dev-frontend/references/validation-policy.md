@@ -70,11 +70,11 @@ diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narro
 | 模块 | 最小充分证据 |
 | --- | --- |
 | `causal` | 改动前能暴露缺口、改动后能证明声明的同一通道；`test_case` 与 `restore_contract` 声明优先测试 RED/GREEN 或冻结契约，类型/构建类可用编译失败→通过，`manual_acceptance` 声明用最终人工证据收口、不要求伪造自动化 RED |
-| `render` | 变更区块的冻结契约；只执行规则要求的 static/render 层，视觉盲区才截图。机器盲区剩余项留在契约 `visual` 层，只有该区块没有冻结契约时才允许生成 `manual_acceptance` 声明 |
+| `render` | 变更区块的冻结契约；只执行 static/render 结构化判据。纯机器盲区不进入契约，拆成同区块的 `manual_acceptance` 声明 |
 | `story` | 合并后的最短用户操作序列，覆盖受影响 AC 与必要异常路径。**`navigation` / `auth` / `write` 命中即选中，没有「causal 证据已足够」的裁量**——跑不了（无浏览器驱动、后端不可达）是执行结果，记 unrun 并让依赖声明保持 `UNVERIFIED` 或 `DEFERRED`，不是编译时少选 |
 | `targeted-quality` | 覆盖改动依赖闭包的最窄 test/typecheck/lint/build 子集；仓库没有可安全收窄的入口时升级 |
 | `regression` | 受影响入口与下游消费者的回归；依赖闭包不可靠时运行 `runtime.md` 记录的全部质量命令 |
-| `review-restore` | 按最终 diff 重跑**全部已冻结区块**的契约，维度是冻结基线里实际存在的 R 行 |
+| `restore-final` | 代码指纹未变时复用 GREEN；变化时按最终 diff 重跑全部冻结区块，聚合器机械映射三色 |
 | `review-layout` | 只跑分配到的 L 维度，页面范围只覆盖风险闭包 |
 | `review-convention` | 只跑分配到的 C 维度；被 diff 反驳 `skip_when` 的维度一定在分配里 |
 | `review-quality` | 只跑分配到的 Q 维度 |
@@ -84,13 +84,13 @@ diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narro
 
 同一原始动作只执行一次。多个模块可引用同一条命令或浏览器场景，但各自保留判断。独立判断只在对应 review 模块被触发时成立，不要求五个角色成套出现，也不要求一个角色扫完它的全部分类。
 
-`render` 与 `review-restore` 跑的是同一套契约，范围不同：`render` 在 Phase B 只跑当前变更区块，`review-restore` 在 Phase C 按最终 diff 重跑全部已冻结区块。后来的 Task 改了公共样式时，先前区块的 GREEN 只有在这里才会被推翻。
+`render` 与 `restore-final` 跑的是同一套契约：前者在 Phase B 只跑当前变更区块；后者在 Phase C 先核代码指纹，变化时重跑全部冻结区块，未变时直接复用 GREEN。
 
 ## 五、执行时机
 
 - Phase B 只取得当前 Task 的 `causal` 证据；`render` 只跑当前变更区块的契约。把状态矩阵、跨页检查和宽回归留给候选阶段。`story` 模块不在 Phase B 执行。
 - Phase B 修复中只运行失败定位所需的最窄动作，不执行候选级全量门。
-- Phase C 按最终 diff 重编译验证组合；新增触发器只能增加模块。批量执行候选模块，先命令、后浏览器，再派适用的独立检视。`review-restore` 被选中时，重跑契约属于主 agent 的取证动作，在派发前完成。
+- Phase C 按最终 diff 重编译验证组合；新增触发器只能增加模块。批量执行候选模块，先命令、后浏览器，再派适用的独立检视。`restore-final` 被选中时由主 agent 复用或重跑 GREEN，不派角色。
 - Phase D 只失效依赖命中的证据和判断。修复引入新触发器时把对应模块加入组合；无触发器不得扩大重跑。最终组合没有全量模块时不补「最终全量门」；命令键仍新鲜就继续复用，不为收尾重跑一遍。
 
 ## 六、升级与收口
@@ -111,7 +111,7 @@ diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narro
 
 1. 拆成原子可观察声明，一个声明只验证一个行为点。混合场景拆成多条，不设 `hybrid`。
 2. 没有行为分支的，作为机械 Task 写 `quality_gate` 并省略 `verification_scope`，不新增验收声明。
-3. 视觉声明且所在区块已进入冻结还原契约的，写 `restore_contract`，到此为止。
+3. 视觉声明先拆事实：机器可检部分且所在区块已冻结的写 `restore_contract`；纯机器盲区继续走第 5 步的 `manual_acceptance` 资格门，不把整条视觉声明降为人工。
 4. 命中 §7.2 自动化强制触发器的，必须写 `test_case`；人工验收只能补充，不能替代。
 5. 全部满足 §7.3 人工资格门禁的，才允许写 `manual_acceptance`。
 6. 其余声明用仓库已有的最窄范围，以 `test_case` 取证。
@@ -151,8 +151,8 @@ diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narro
 
 | 值 | 适用条件 |
 | --- | --- |
-| `visual_judgment` | 视觉层级、品牌感、留白、字体观感等主观判断；**仅限该区块未进入冻结还原契约** |
-| `motion_judgment` | 动画自然度、眩晕感、体感流畅度；**同样仅限未进入冻结契约** |
+| `visual_judgment` | 图片裁切焦点、透明叠层观感、品牌感等无法转成稳定结构化判据的主观判断；不得替代同区块可机器判定的事实 |
+| `motion_judgment` | 动画自然度、眩晕感、体感流畅度；不得替代可量化的时序、性能或状态迁移断言 |
 | `device_dependency` | 触摸、软键盘、系统权限、摄像头、打印等真机或系统能力 |
 | `external_dependency` | SSO、浏览器扩展、外部嵌入页等不可稳定构造的真实接缝 |
 | `content_approval` | 文案、运营、法务、业务含义与品牌语气确认 |
@@ -171,7 +171,7 @@ diff 下限只能在其上扩，确要收窄某条下限触发器时用 `--narro
 | 跨页普通导航 | `S3_STORY + test_case` |
 | 鉴权、租户、提交、删除 | `test_case`，必要时另加人工验收声明 |
 | CSS 静态结构、溢出、遮挡 | `test_case`，范围按 tie-break 定 |
-| 视觉层级、品牌感、动效自然度（区块已冻结） | `restore_contract`，盲区落契约 `visual` 层 |
+| 图片裁切焦点、透明叠层观感、品牌感、动效自然度 | `manual_acceptance`；在 acceptance 中给路由与目视动作 |
 | 视觉层级、品牌感、动效自然度（无冻结契约） | `manual_acceptance` |
 | 真实软键盘、触摸手势、系统权限 | 本地规则 `test_case` + 接缝 `manual_acceptance`，拆两条声明 |
 | 第三方 SSO 真实账号联调 | adapter/错误映射 `test_case` + 接缝 `manual_acceptance` |

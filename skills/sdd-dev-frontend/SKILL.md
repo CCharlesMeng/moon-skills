@@ -52,14 +52,13 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 6. **子代理只读。** 子代理只回传正文；检视截图可写 `<work-dir>`，正式工件由主 agent 落盘。
 7. **范围受控。** 执行上游设计和对接模式，不改设计、不发明响应式规格、不跨仓。计划文件清单外的连带改动按共享契约的扩散承接规则处理并登记；未登记的计划外改动仍按越界处理。
 8. **冻结可追溯。** 开工后放宽期望必须记录理由并重新确认。
-9. **原型隔离。** 仅 `extract-prototype` / `extract-block-spec` 读取原型源码；其他角色只读 `<design-spec-dir>` 产物。争议时只回查一个区块并登记。
+9. **原型隔离。** 只有确定性 `extract_design_spec.py` 读取原型源码；主 agent 与所有子代理只读 `<design-spec-dir>` 产物。争议时只用脚本回查一个区块并登记。
 10. **哈希一致。** `dev-baseline.md` 与 `restore-contract.json` 哈希不一致时拒绝执行，不从当前实现反推期望。
 11. **三色真实。** 还原报告只用 RED/YELLOW/GREEN；YELLOW 不能改写为 GREEN。
-12. **证据分层。** 机器可检项用结构化事实；截图只补机器无法可靠判断的视觉项。
+12. **证据分工。** 机器可检项用结构化事实；图片焦点、透明叠层观感等机器盲区只进入人工验收入口，agent 不代签。
 13. **规范单一所有者。** `PATTERN-*` 正文只在 app baseline，且规范节只有 `sdd-init-frontend` 能改；Story 只保存采用的 ID，不记录 baseline 指纹。清单条目指路失效可就地修单条。
 14. **抽取缺口先登记。** 抽取器退出码 4 的每类覆盖缺口先进入已知缺口，再显式确认重跑。
 15. **浏览器按需解析。** 组合首次选择浏览器模块时才确定并实测 `<browser-driver>`；不可用只影响依赖声明。
-16. **工具缺口不变豁免。** `suspected-tool-equivalence` 退出码 5 只补比对器或上报工具缺口，不改产品实现、不加冻结豁免。
 
 ## 路径变量
 
@@ -75,7 +74,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 | `<skill-dir>` | 本 skill 目录 |
 | `<init-skill-dir>` | `<skill-dir>/../sdd-init-frontend/` |
 | `<review-pack-dir>` | `<skill-dir>/../sdd-review-frontend/` |
-| `<base-ref>` | 可选 Story 起点 git 引用 |
+| `<base-ref>` | Story 起点 git 引用；上游可不填，但 Phase 0 必须按 entry.md 解析后才能执行 diff 分类 |
 | `<browser-driver>` | 被选浏览器能力及已验证启动方式 |
 | `<evidence-dir>` | `<story-dir>/evidence/`；本 skill 产出的全部机器工件（JSON 与归档截图） |
 | `<work-dir>` | `<story-dir>/.work/`；只活在阶段内的过程件，收口后整目录删 |
@@ -97,7 +96,7 @@ description: 执行或续跑单个前端 Story：冻结验收基线、实现 tas
 | --- | --- |
 | 原型切分 / 区块规格 | `extract-prototype` / `extract-block-spec` |
 | 规格 / 代码勘察 | `recon-spec` / 风险触发时的 `recon-codebase` |
-| 独立检视 | 只派验证组合选中的 `review-restore`、`review-layout`、`review-convention`、`review-quality`、`self-test` |
+| 独立检视 | 只派验证组合选中的 `review-layout`、`review-convention`、`review-quality`、`self-test`；最终还原报告由聚合器机械定级 |
 
 Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的原始事实；派哪几格、参数怎么组装见 [review/dispatch.md](./references/review/dispatch.md)，检查项、定级与回传契约都不在本 Skill，按同一份指向 `sdd-review-frontend`。并发槽位不足时完成一份立即补派下一份，不等待整波。
 
@@ -113,7 +112,7 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 ├── acceptance.md                                  能不能验收（收口入口）
 ├── evidence/                                      机器件；acceptance.md 会指路进来
 │   ├── restore-contract.json · restore-adapter.json
-│   ├── restore-report-red.json · restore-report-green.json · restore-report-review.json
+│   ├── restore-report-red.json · restore-report-green.json
 │   ├── portfolio.json · review-evidence.json · review-results.json
 │   └── artifacts/                                 被结论引用的截图与结构化结果
 └── .work/                                         过程件；Phase D 退出后整目录删
@@ -126,9 +125,9 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 | `alpha-tests.md` | 回填证据、声明状态与 Deferred |
 | `dev-baseline.md` | Phase 0 写执行起点（环境），A2 追加冻结 QA 基线 |
 | `acceptance.md` | 给人的收口摘要，由 `aggregate` 整文件渲染，不手写 |
-| `design-spec/*` | Requirement 级确定性事实；原型或区块哈希变化时更新。`visual-baseline/` 下原型指纹已不匹配当前 `design-facts.json` 的缓存目录，在下一次 A1 抽取时删除 |
+| `design-spec/*` | Requirement 级 `design-facts.json`、`design-inventory.md`、`block-index.md` 与按需区块规格；原型或区块哈希变化时更新 |
 | `evidence/restore-contract.json` / `restore-adapter.json` | A2 冻结后编译；Phase B / C 跑的永远是这一份 |
-| `evidence/restore-report-{red,green,review}.json` | Phase B 的 RED / GREEN 与 Phase C 的重跑。三份都被 `alpha-tests.md` 的还原证据记录按路径与指纹引用，是证据不是过程件，不删 |
+| `evidence/restore-report-{red,green}.json` | Phase B 的 RED / GREEN；Phase C 代码指纹未变时复用 GREEN，变化时重跑并覆盖。重编译契约会把旧报告改名为 `.stale-<sha8>.json` |
 | `evidence/portfolio.json` | `compile_portfolio.py` 的唯一输出：Phase 0 写 initial，Phase C 以同一文件为 `--previous` 原地覆盖成 final，被比较过的 Phase 0 快照留在 `previous` 字段。`validation_portfolio` 抄进 `review-evidence.json`，`--markdown` 抄进 `dev-baseline.md` |
 | `evidence/review-evidence.json` | 验证组合、命令和场景原始事实；不保存判断 |
 | `evidence/review-results.json` | 适用角色聚合与结构化结论；`acceptance.md` 的机器侧 |
@@ -142,8 +141,7 @@ Phase C 角色共享 [review/evidence.md](./references/review/evidence.md) 的�
 
 | 文件 | 创建 | 消费点 | 之后 |
 | --- | --- | --- | --- |
-| `restore-contract-rules.json` | A2 `recon-spec` 回传的规则草稿落盘 | `verify_restore_contract.py contract` | 契约已含全部规则 |
-| `static-results.json` / `render-results*.json` / `visual-results.json` | 每次还原轮 | 同轮 `report` | 报告已含逐规则结论；下一轮直接覆盖 |
+| `static-results.json` / `render-results*.json` | 每次还原轮 | 同轮 `report` | 报告已含逐规则结论；下一轮直接覆盖。规则草稿经 stdin 直接编译，不落重复文件 |
 | `diff-facts.json` | Phase C 第 1 步 | `compile_portfolio.py --phase final`、`aggregate --diff-facts` | 解除 DEFERRED 时重算 |
 | `code-manifest.json` / `runtime.json` | 每次采集前 | `manage_review_pipeline.py scenarios` | 已并入 `review-evidence.json` |
 | `review-<角色>.json`（RoleResult） / `norm-candidates.json` / `decisions.json` | 子代理回传、用户答复后落盘 | `aggregate` | 已并入 `review-results.json` 与 `acceptance.md` |

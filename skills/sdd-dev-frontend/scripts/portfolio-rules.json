@@ -16,22 +16,14 @@
     "render": {"any_trigger": ["visual"]},
     "story": {"any_trigger": ["navigation", "auth", "write"], "any_claim_scope": ["S3_STORY"]},
     "regression": {"any_trigger": ["shared-boundary", "navigation", "auth", "write", "unknown-deps", "build-config"]},
-    "review-restore": {"any_trigger": ["visual"], "all_facts": ["frozen_r"]},
+    "restore-final": {"any_trigger": ["visual"], "all_facts": ["frozen_r"]},
     "review-layout": {"any_trigger": ["visual"], "any_fact": ["cross_page", "shared_style", "overflow_state", "frozen_r6"]},
     "review-convention": {"any_trigger": ["new-pattern", "shared-boundary", "build-config"], "any_rebuttal_prefix": ["C"]},
     "review-quality": {"any_trigger": ["async-state", "auth", "write", "performance", "shared-boundary"]},
     "self-test": {"all_modules": ["story"]}
   },
-  "review_roles": ["review-restore", "review-layout", "review-convention", "review-quality", "self-test"],
+  "review_roles": ["review-layout", "review-convention", "review-quality", "self-test"],
   "dimensions": {
-    "review-restore": {
-      "R1": {"frozen_rows": "R1"},
-      "R2": {"frozen_rows": "R2"},
-      "R3": {"frozen_rows": "R3"},
-      "R4": {"frozen_rows": "R4"},
-      "R5": {"frozen_rows": "R5"},
-      "R6": {"frozen_rows": "R6"}
-    },
     "review-layout": {
       "L1": {"any_fact": ["cross_page", "shared_style"]},
       "L2": {"any_state": ["overflow", "long-copy", "large-list"], "any_fact": ["frozen_r5"]},

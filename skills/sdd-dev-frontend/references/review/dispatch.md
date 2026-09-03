@@ -10,7 +10,7 @@
 
 | 何时 | 派出的格子 | 由谁决定 |
 | --- | --- | --- |
-| Phase C | 从 CODE-RESTORE / CODE-LAYOUT / CODE-CONVENTION / CODE-QUALITY / CODE-TEST 中选 | [validation-policy.md](../validation-policy.md) 的验证组合 |
+| Phase C | 从 CODE-LAYOUT / CODE-CONVENTION / CODE-QUALITY / CODE-TEST 中选 | [validation-policy.md](../validation-policy.md) 的验证组合；最终还原由聚合器直接读三色报告 |
 
 派发请求里的 `gate` 固定填 `sdd-dev`。未被组合选中的格不派、不生成占位结果。
 
@@ -18,7 +18,6 @@
 
 | 本 Skill 角色 | lens | checklist | 维度 |
 | --- | --- | --- | --- |
-| `review-restore` | restore-lens | [restore.md](../../../sdd-review-frontend/frontend-code-checklists/restore.md) | R1–R6 |
 | `review-layout` | layout-lens | [layout.md](../../../sdd-review-frontend/frontend-code-checklists/layout.md) | L1–L6 |
 | `review-convention` | convention-lens | [convention.md](../../../sdd-review-frontend/frontend-code-checklists/convention.md) | C1–C7 |
 | `review-quality` | quality-lens | [quality.md](../../../sdd-review-frontend/frontend-code-checklists/quality.md) | Q1–Q8 |
@@ -26,9 +25,7 @@
 
 维度号是 checklist 每条的 `legacy_id`，`validation_portfolio.review_dimensions` 与回传 JSON 都用它。哪些维度进入分配集由 [validation-policy.md](../validation-policy.md) 决定；触发条件写在 checklist 每条的 `skip_when`。
 
-**还原格分两半。** 比对由本 Skill 的 `verify_restore_contract.py` 做（见 [restore/run.md](../restore/run.md)），它产出的是**颜色**；`review-restore` 只把颜色翻成**级别**与处置——同一个 `red`，关键区块缺失与数量越界不是同一件事。
-
-主 agent 在派发前按最终 diff 用 `--phase green` 重跑全部已冻结区块的契约，报告写到 `<evidence-dir>/restore-report-review.json`，子代理只读它。Phase B 的 `render` 只跑当前区块，所以后续 Task 改了公共样式时，先前区块的 GREEN 只在这里才会被推翻。
+最终还原不派格：`restore-final` 模块按 [restore/run.md](../restore/run.md) 复用或重跑 `restore-report-green.json`，`manage_review_pipeline.py aggregate` 直接按三色与 R 维度映射级别。
 
 ## 三、派发时给子代理的读取清单
 
