@@ -1,4 +1,4 @@
 interface:
   display_name: "Session Optimize"
-  short_description: "按失败层定位会话问题，给出证据链与修法，复发问题记台账并申请固化，其余移交"
-  default_prompt: "Use $session-optimize to review this session: locate each failure at its earliest controllable layer, show me the evidence and the exact fix, log recurrences to the ledger, propose improvements for my approval, and hand off the rest."
+  short_description: "结合用户指导，独立评审目标、流程与交付，验证根因后提出可验证改进"
+  default_prompt: "Use $session-optimize to independently review this session against its goals and applicable contracts, challenge the workflow and delivered result, verify competing causes, and propose evidence-backed improvements; ask for my focus if I have not provided it."
